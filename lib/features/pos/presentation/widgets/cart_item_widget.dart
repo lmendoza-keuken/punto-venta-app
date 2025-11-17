@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pos_flutter_app/core/constants/app_colors.dart';
 import 'package:pos_flutter_app/core/constants/app_dimensions.dart';
+import 'package:pos_flutter_app/core/utils/extensions.dart';
 import 'package:pos_flutter_app/features/pos/domain/entities/cart_item.dart';
 
 class CartItemWidget extends StatelessWidget {
@@ -60,7 +61,7 @@ class CartItemWidget extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                '\$ ${_formatPrice(item.product.precio)}',
+                item.product.precio.formatToCurrency(),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w600,
@@ -120,7 +121,7 @@ class CartItemWidget extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '\$ ${_formatPrice(item.totalPrice)}',
+                item.totalPrice.formatToCurrency(),
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
@@ -168,7 +169,7 @@ class CartItemWidget extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        '\$ ${_formatPrice(item.product.precio)}',
+                        item.product.precio.formatToCurrency(),
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: AppColors.primary,
                               fontWeight: FontWeight.w600,
@@ -237,7 +238,7 @@ class CartItemWidget extends StatelessWidget {
 
             // Total
             Text(
-              '\$ ${_formatPrice(item.totalPrice)}',
+              item.totalPrice.formatToCurrency(),
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
@@ -248,46 +249,5 @@ class CartItemWidget extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  Widget _buildQuantityButton({
-    required IconData icon,
-    required VoidCallback onPressed,
-    bool isCompact = false,
-  }) {
-    final size = isCompact ? 20.0 : 24.0;
-    final iconSize = isCompact ? 12.0 : 14.0;
-
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.circular(size / 2),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onPressed,
-          borderRadius: BorderRadius.circular(size / 2),
-          child: Icon(
-            icon,
-            color: Colors.white,
-            size: iconSize,
-          ),
-        ),
-      ),
-    );
-  }
-
-  String _formatPrice(double price) {
-    return price.toStringAsFixed(2).replaceAll('.', ',');
   }
 }

@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
-import 'package:pos_flutter_app/app/routes/route_paths.dart';
 import 'package:pos_flutter_app/core/constants/app_colors.dart';
 import 'package:pos_flutter_app/core/constants/app_dimensions.dart';
 import 'package:pos_flutter_app/core/constants/app_string.dart';
+import 'package:pos_flutter_app/core/dialogs/logout_dialog.dart';
+import 'package:pos_flutter_app/core/utils/utils.dart';
 import 'package:pos_flutter_app/core/widgets/dynamic_date_time.dart';
-import 'package:pos_flutter_app/features/auth/prensetation/bloc/auth_bloc.dart';
-import 'package:pos_flutter_app/features/auth/prensetation/bloc/auth_event.dart';
 import 'package:pos_flutter_app/features/pos/domain/entities/saved_order.dart';
-import 'package:pos_flutter_app/features/pos/domain/usecases/complete_order_usecase.dart';
 import 'package:pos_flutter_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
 import 'package:pos_flutter_app/features/pos/presentation/bloc/cart/cart_event.dart';
 import 'package:pos_flutter_app/features/pos/presentation/bloc/cart/cart_state.dart';
@@ -26,6 +23,7 @@ import 'package:pos_flutter_app/features/pos/presentation/widgets/enchanced_sear
 import 'package:pos_flutter_app/features/pos/presentation/widgets/load_saved_orders_dialog.dart';
 import 'package:pos_flutter_app/features/pos/presentation/widgets/product_grid.dart';
 import 'package:pos_flutter_app/features/pos/presentation/widgets/reports_dialog.dart';
+import 'package:pos_flutter_app/features/pos/presentation/widgets/sale_confirm_dialog.dart';
 import 'package:pos_flutter_app/features/pos/presentation/widgets/save_order_dialog.dart';
 import 'package:pos_flutter_app/injection_container.dart' as di;
 
@@ -65,7 +63,6 @@ class _PosMainPageState extends State<PosMainPage> {
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                // Responsive: cambiar layout según el ancho de pantalla
                 if (constraints.maxWidth > 1200) {
                   return Row(
                     children: [
@@ -173,9 +170,10 @@ class _PosMainPageState extends State<PosMainPage> {
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.logout),
-          onPressed: _showLogoutDialog,
-        ),
+            icon: const Icon(Icons.logout),
+            onPressed: () {
+              showLogoutDialog(context);
+            }),
         const SizedBox(width: AppDimensions.paddingS),
       ],
     );
@@ -368,7 +366,7 @@ class _PosMainPageState extends State<PosMainPage> {
           return LayoutBuilder(
             builder: (context, constraints) {
               int crossAxisCount =
-                  _calculateCrossAxisCount(constraints.maxWidth);
+                  calculateCrossAxisCount(constraints.maxWidth);
 
               return ProductGrid(
                 products: state.products,
@@ -533,102 +531,13 @@ class _PosMainPageState extends State<PosMainPage> {
           onConfirmPressed: () {
             final cartState = context.read<CartBloc>().state;
             if (cartState is CartLoaded && cartState.items.isNotEmpty) {
-              _showConfirmDialog(cartState.total);
+              showConfirmDialog(cartState.total, context);
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('El carrito está vacío')),
               );
             }
           },
-        );
-      },
-    );
-  }
-
-  int _calculateCrossAxisCount(double width) {
-    if (width > 1400) return 5;
-    if (width > 1100) return 4;
-    if (width > 800) return 3;
-    if (width > 500) return 2;
-    return 1;
-  }
-
-  void _showLogoutDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Cerrar Sesión'),
-          content: const Text('¿Estás seguro que deseas cerrar sesión?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancelar'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                context.read<AuthBloc>().add(LogoutRequested());
-                context.go(RoutePaths.login);
-              },
-              child: const Text('Confirmar'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showConfirmDialog(double total) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Confirmar Venta'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Total a cobrar: \$${total.toStringAsFixed(2)}'),
-              const SizedBox(height: 16),
-              const Text('¿Deseas procesar esta venta?'),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancelar'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.of(context).pop();
-
-                final cartState = context.read<CartBloc>().state as CartLoaded;
-
-                // Guardar la orden completada
-                try {
-                  final completeOrderUsecase = di.sl<CompleteOrderUsecase>();
-                  await completeOrderUsecase(
-                    items: cartState.items,
-                    total: cartState.total,
-                    clientName:
-                        null, // Aquí podrías pasar el cliente seleccionado
-                    cashierName: 'Brayan', // Obtener del usuario logueado
-                  );
-                } catch (e) {
-                  print('Error al guardar orden completada: $e');
-                }
-
-                context.read<CartBloc>().add(ClearCart());
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Venta procesada exitosamente'),
-                    backgroundColor: AppColors.success,
-                  ),
-                );
-              },
-              child: const Text('Confirmar'),
-            ),
-          ],
         );
       },
     );

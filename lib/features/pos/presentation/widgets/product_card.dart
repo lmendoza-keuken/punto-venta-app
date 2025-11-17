@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_flutter_app/core/constants/app_colors.dart';
 import 'package:pos_flutter_app/core/constants/app_dimensions.dart';
+import 'package:pos_flutter_app/core/utils/extensions.dart';
+import 'package:pos_flutter_app/core/utils/utils.dart';
 import 'package:pos_flutter_app/features/pos/domain/entities/product.dart';
+import 'package:pos_flutter_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
 import 'package:pos_flutter_app/features/pos/presentation/bloc/cart/cart_state.dart';
-import '../bloc/cart/cart_bloc.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -43,7 +45,8 @@ class ProductCard extends StatelessWidget {
           elevation: 2,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
-            side: _getBorderSide(canRemoveQuantity, hasInsufficientQuantity),
+            side: getBorderSide(
+                canRemoveQuantity, hasInsufficientQuantity, isInDeleteMode),
           ),
           child: InkWell(
             onTap: onTap,
@@ -192,7 +195,7 @@ class ProductCard extends StatelessWidget {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        '\$ ${_formatPrice(product.precio)}',
+                                        product.precio.formatToCurrency(),
                                         style: Theme.of(context)
                                             .textTheme
                                             .titleMedium
@@ -231,7 +234,7 @@ class ProductCard extends StatelessWidget {
                   if (isInDeleteMode)
                     Container(
                       decoration: BoxDecoration(
-                        color: _getOverlayColor(
+                        color: getOverlayColor(
                             canRemoveQuantity, hasInsufficientQuantity),
                         borderRadius:
                             BorderRadius.circular(AppDimensions.borderRadiusM),
@@ -241,9 +244,9 @@ class ProductCard extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              _getOverlayIcon(
+                              getOverlayIcon(
                                   canRemoveQuantity, hasInsufficientQuantity),
-                              color: _getOverlayIconColor(
+                              color: getOverlayIconColor(
                                   canRemoveQuantity, hasInsufficientQuantity),
                               size: isCompact ? 24 : 32,
                             ),
@@ -288,44 +291,5 @@ class ProductCard extends StatelessWidget {
         );
       },
     );
-  }
-
-  BorderSide _getBorderSide(
-      bool canRemoveQuantity, bool hasInsufficientQuantity) {
-    if (hasInsufficientQuantity) {
-      return const BorderSide(color: AppColors.warning, width: 2);
-    } else if (canRemoveQuantity) {
-      return const BorderSide(color: AppColors.error, width: 2);
-    } else if (isInDeleteMode) {
-      return BorderSide(color: Colors.grey.shade400, width: 1);
-    }
-    return BorderSide.none;
-  }
-
-  Color _getOverlayColor(bool canRemoveQuantity, bool hasInsufficientQuantity) {
-    if (hasInsufficientQuantity) return AppColors.warning.withOpacity(0.15);
-    if (canRemoveQuantity) return AppColors.error.withOpacity(0.15);
-    return Colors.grey.withOpacity(0.15);
-  }
-
-  IconData _getOverlayIcon(
-      bool canRemoveQuantity, bool hasInsufficientQuantity) {
-    if (hasInsufficientQuantity) return Icons.warning;
-    if (canRemoveQuantity) return Icons.remove_shopping_cart;
-    return Icons.not_interested;
-  }
-
-  Color _getOverlayIconColor(
-      bool canRemoveQuantity, bool hasInsufficientQuantity) {
-    if (hasInsufficientQuantity) return AppColors.warning;
-    if (canRemoveQuantity) return AppColors.error;
-    return Colors.grey.shade600;
-  }
-
-  String _formatPrice(double price) {
-    if (price == 0) {
-      return 'Consultar';
-    }
-    return price.toStringAsFixed(2).replaceAll('.', ',');
   }
 }

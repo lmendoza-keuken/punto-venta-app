@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_flutter_app/core/constants/app_dimensions.dart';
+import 'package:pos_flutter_app/core/utils/utils.dart';
 import 'package:pos_flutter_app/features/pos/domain/entities/product.dart';
 import 'package:pos_flutter_app/features/pos/presentation/bloc/ui/ui_bloc.dart';
 import 'package:pos_flutter_app/features/pos/presentation/bloc/ui/ui_state.dart';
@@ -65,9 +66,9 @@ class ProductGrid extends StatelessWidget {
           padding: const EdgeInsets.all(AppDimensions.paddingM),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
-            childAspectRatio: _calculateAspectRatio(crossAxisCount),
-            crossAxisSpacing: _calculateSpacing(crossAxisCount),
-            mainAxisSpacing: _calculateSpacing(crossAxisCount),
+            childAspectRatio: calculateAspectRatio(crossAxisCount),
+            crossAxisSpacing: calculateSpacing(crossAxisCount),
+            mainAxisSpacing: calculateSpacing(crossAxisCount),
           ),
           itemCount: products.length,
           itemBuilder: (context, index) {
@@ -84,28 +85,5 @@ class ProductGrid extends StatelessWidget {
         );
       },
     );
-  }
-
-  double _calculateAspectRatio(int crossAxisCount) {
-    switch (crossAxisCount) {
-      case 1:
-        return 2.5;
-      case 2:
-        return 1.4;
-      case 3:
-        return 1.2;
-      case 4:
-        return 1.0;
-      case 5:
-        return 0.9;
-      default:
-        return 1.0;
-    }
-  }
-
-  double _calculateSpacing(int crossAxisCount) {
-    if (crossAxisCount >= 5) return AppDimensions.paddingS;
-    if (crossAxisCount >= 3) return AppDimensions.paddingM;
-    return AppDimensions.paddingL;
   }
 }

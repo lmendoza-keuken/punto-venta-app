@@ -22,7 +22,7 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
 
     // Credenciales de demo
     if (username == 'admin' && password == 'admin') {
-      final user = const UserModel(
+      const user = UserModel(
         id: '1',
         username: 'admin',
         name: 'Administrador',
@@ -31,7 +31,7 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
       await cacheUser(user);
       return user;
     } else if (username == 'user' && password == '1234') {
-      final user = const UserModel(
+      const user = UserModel(
         id: '2',
         username: 'user',
         name: 'Usuario Demo',

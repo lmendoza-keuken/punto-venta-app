@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_flutter_app/core/constants/app_colors.dart';
 import 'package:pos_flutter_app/core/constants/app_dimensions.dart';
 import 'package:pos_flutter_app/core/constants/app_string.dart';
+import 'package:pos_flutter_app/core/utils/extensions.dart';
 import 'package:pos_flutter_app/core/widgets/custom_butom.dart';
 import 'package:pos_flutter_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
 import 'package:pos_flutter_app/features/pos/presentation/bloc/cart/cart_event.dart';
@@ -251,7 +252,7 @@ class CartPanel extends StatelessWidget {
                     ),
               ),
               Text(
-                '\$ ${_formatPrice(state.total)}',
+                state.total.formatToCurrency(),
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: AppColors.primary,
@@ -301,9 +302,5 @@ class CartPanel extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _formatPrice(double price) {
-    return price.toStringAsFixed(2).replaceAll('.', ',');
   }
 }
