@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_flutter_app/core/constants/app_colors.dart';
+import 'package:pos_flutter_app/features/pos/domain/entities/client.dart';
 import 'package:pos_flutter_app/features/pos/domain/usecases/complete_order_usecase.dart';
 import 'package:pos_flutter_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
 import 'package:pos_flutter_app/features/pos/presentation/bloc/cart/cart_event.dart';
 import 'package:pos_flutter_app/features/pos/presentation/bloc/cart/cart_state.dart';
 import 'package:pos_flutter_app/injection_container.dart' as di;
 
-showConfirmDialog(double total, BuildContext context) {
+showConfirmDialog(
+    {required double total, required BuildContext context, Client? client}) {
   showDialog(
     context: context,
     builder: (BuildContext context) {
@@ -32,16 +34,14 @@ showConfirmDialog(double total, BuildContext context) {
 
               final cartState = context.read<CartBloc>().state as CartLoaded;
 
-              // Guardar la orden completada
               try {
                 final completeOrderUsecase = di.sl<CompleteOrderUsecase>();
                 await completeOrderUsecase(
                   items: cartState.items,
                   logItems: cartState.log,
                   total: cartState.total,
-                  clientName:
-                      null, // Aquí podrías pasar el cliente seleccionado
-                  cashierName: 'Brayan', // Obtener del usuario logueado
+                  clientName: client?.name ?? null,
+                  cashierName: 'Brayan',
                 );
               } catch (e) {
                 print('Error al guardar orden completada: $e');

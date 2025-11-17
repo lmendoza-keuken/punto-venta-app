@@ -6,10 +6,14 @@ import 'package:pos_flutter_app/core/constants/app_string.dart';
 import 'package:pos_flutter_app/core/dialogs/logout_dialog.dart';
 import 'package:pos_flutter_app/core/utils/utils.dart';
 import 'package:pos_flutter_app/core/widgets/dynamic_date_time.dart';
+import 'package:pos_flutter_app/features/pos/domain/entities/client.dart';
 import 'package:pos_flutter_app/features/pos/domain/entities/saved_order.dart';
 import 'package:pos_flutter_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
 import 'package:pos_flutter_app/features/pos/presentation/bloc/cart/cart_event.dart';
 import 'package:pos_flutter_app/features/pos/presentation/bloc/cart/cart_state.dart';
+import 'package:pos_flutter_app/features/pos/presentation/bloc/clients/clients_bloc.dart';
+import 'package:pos_flutter_app/features/pos/presentation/bloc/clients/clients_event.dart';
+import 'package:pos_flutter_app/features/pos/presentation/bloc/clients/clients_state.dart';
 import 'package:pos_flutter_app/features/pos/presentation/bloc/product/product_bloc.dart';
 import 'package:pos_flutter_app/features/pos/presentation/bloc/product/product_event.dart';
 import 'package:pos_flutter_app/features/pos/presentation/bloc/product/product_state.dart';
@@ -17,14 +21,16 @@ import 'package:pos_flutter_app/features/pos/presentation/bloc/reports/reports_b
 import 'package:pos_flutter_app/features/pos/presentation/bloc/ui/ui_bloc.dart';
 import 'package:pos_flutter_app/features/pos/presentation/bloc/ui/ui_event.dart';
 import 'package:pos_flutter_app/features/pos/presentation/widgets/action_buttons.dart';
+import 'package:pos_flutter_app/features/pos/presentation/widgets/add_client_dialog.dart';
 import 'package:pos_flutter_app/features/pos/presentation/widgets/cart_panel.dart';
 import 'package:pos_flutter_app/features/pos/presentation/widgets/category_tabs.dart';
 import 'package:pos_flutter_app/features/pos/presentation/widgets/enchanced_search_bar.dart';
 import 'package:pos_flutter_app/features/pos/presentation/widgets/load_saved_orders_dialog.dart';
+import 'package:pos_flutter_app/features/pos/presentation/widgets/payment_methods_dialog.dart';
 import 'package:pos_flutter_app/features/pos/presentation/widgets/product_grid.dart';
 import 'package:pos_flutter_app/features/pos/presentation/widgets/reports_dialog.dart';
-import 'package:pos_flutter_app/features/pos/presentation/widgets/sale_confirm_dialog.dart';
 import 'package:pos_flutter_app/features/pos/presentation/widgets/save_order_dialog.dart';
+import 'package:pos_flutter_app/features/pos/presentation/widgets/select_client_dialog.dart';
 import 'package:pos_flutter_app/injection_container.dart' as di;
 
 class PosMainPage extends StatefulWidget {
@@ -183,30 +189,32 @@ class _PosMainPageState extends State<PosMainPage> {
     return Container(
       padding: const EdgeInsets.all(AppDimensions.paddingM),
       color: AppColors.background,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return Row(
-            children: [
-              Text(
-                AppStrings.selectedClient,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: constraints.maxWidth > 600 ? 16 : 14,
-                    ),
-              ),
-              const SizedBox(width: AppDimensions.paddingM),
-              Expanded(
-                child: Text(
-                  AppStrings.noClientSelected,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
-                        fontSize: constraints.maxWidth > 600 ? 14 : 12,
-                      ),
-                ),
-              ),
-            ],
-          );
-        },
+      child: Row(
+        children: [
+          Text(AppStrings.selectedClient,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold)),
+          const SizedBox(width: AppDimensions.paddingM),
+          Expanded(
+            child: BlocBuilder<ClientsBloc, ClientsState>(
+              builder: (context, state) {
+                if (state is ClientsLoaded && state.selectedClient != null) {
+                  final c = state.selectedClient!;
+                  return Text(
+                      '${c.name} ${c.document != null ? '• ${c.document}' : ''}',
+                      style: Theme.of(context).textTheme.bodyMedium);
+                }
+                return Text(AppStrings.noClientSelected,
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(color: AppColors.textSecondary));
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -449,33 +457,52 @@ class _PosMainPageState extends State<PosMainPage> {
                         Text('Pedido "${result.name}" cargado exitosamente'),
                     backgroundColor: AppColors.success),
               );
-
+            }
+          },
+          onSelectClientPressed: () async {
+            final result = await showDialog(
+              context: context,
+              builder: (context) => BlocProvider.value(
+                value: context.read<ClientsBloc>(),
+                child: const SelectClientDialog(),
+              ),
+            );
+            if (result != null) {
+              // result is Client
+              context.read<ClientsBloc>().add(SelectClientEvent(result));
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Pedido "${result.name}" cargado exitosamente'),
-                  backgroundColor: AppColors.success,
-                  behavior: SnackBarBehavior.floating,
-                ),
+                    content: Text('Cliente ${result.name} seleccionado'),
+                    behavior: SnackBarBehavior.floating),
               );
             }
           },
-          onSelectClientPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                  content:
-                      Text('Función de selección de cliente no implementada')),
+          onAddClientPressed: () async {
+            final added = await showDialog(
+              context: context,
+              builder: (context) => BlocProvider.value(
+                value: context.read<ClientsBloc>(),
+                child: const AddClientDialog(),
+              ),
             );
-          },
-          onAddClientPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                  content: Text('Función de agregar cliente no implementada')),
-            );
+            if (added is Client) {
+              context.read<ClientsBloc>().add(SelectClientEvent(added));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                    content:
+                        Text('Cliente ${added.name} agregado y seleccionado')),
+              );
+            }
           },
           onConfirmPressed: () {
             final cartState = context.read<CartBloc>().state;
             if (cartState is CartLoaded && cartState.items.isNotEmpty) {
-              showConfirmDialog(cartState.total, context);
+              showDialog(
+                context: context,
+                builder: (context) => PaymentMethodsDialog(
+                  total: cartState.total,
+                ),
+              );
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('El carrito está vacío')),

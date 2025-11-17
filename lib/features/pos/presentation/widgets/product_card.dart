@@ -113,7 +113,7 @@ class ProductCard extends StatelessWidget {
 
                       // Imagen placeholder
                       Expanded(
-                        flex: isCompact ? 2 : 3,
+                        flex: isCompact ? 1 : 2,
                         child: Container(
                           width: double.infinity,
                           margin: EdgeInsets.symmetric(
@@ -151,81 +151,68 @@ class ProductCard extends StatelessWidget {
                       ),
 
                       // Información del producto
-                      Expanded(
-                        flex: 2,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Nombre del producto
-                            Text(
-                              product.descripcion.trim(),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(
-                                    fontSize: isCompact ? 14 : 10,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                              maxLines: isCompact ? 1 : 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Código: ${product.codigo}',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(
-                                    fontSize: isCompact ? 12 : 8,
-                                    color: AppColors.textHint,
-                                  ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-
-                            const Spacer(),
-
-                            // Precio y botón de acción
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        product.precio.formatToCurrency(),
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleMedium
-                                            ?.copyWith(
-                                              fontSize: isCompact ? 16 : 14,
-                                              fontWeight: FontWeight.bold,
-                                              color: product.oferta
-                                                  ? AppColors.warning
-                                                  : AppColors.primary,
-                                            ),
-                                      ),
-                                      Text(
-                                        product.rubro,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall
-                                            ?.copyWith(
-                                              fontSize: 10,
-                                              color: AppColors.textSecondary,
-                                            ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
-                                  ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Nombre del producto
+                          Text(
+                            product.descripcion.trim(),
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  fontSize: isCompact ? 14 : 10,
+                                  fontWeight: FontWeight.w600,
                                 ),
-                              ],
-                            ),
-                          ],
-                        ),
+                            maxLines: isCompact ? 1 : 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Código: ${product.codigo}',
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      fontSize: isCompact ? 12 : 8,
+                                      color: AppColors.textHint,
+                                    ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+
+                          // Precio y botón de acción
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Column(
+                                children: [
+                                  Text(
+                                    product.precio.formatToCurrency(),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(
+                                          fontSize: isCompact ? 16 : 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: product.oferta
+                                              ? AppColors.warning
+                                              : AppColors.primary,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          Text(
+                            product.rubro,
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      fontSize: 10,
+                                      color: AppColors.textSecondary,
+                                    ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
                     ],
                   ),
