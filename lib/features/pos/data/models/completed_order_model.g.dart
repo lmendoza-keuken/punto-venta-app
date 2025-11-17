@@ -13,6 +13,9 @@ CompletedOrderModel _$CompletedOrderModelFromJson(Map<String, dynamic> json) =>
       items: (json['items'] as List<dynamic>)
           .map((e) => CartItemModel.fromJson(e as Map<String, dynamic>))
           .toList(),
+      logs: (json['logs'] as List<dynamic>)
+          .map((e) => CartLogEntryModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
       total: (json['total'] as num).toDouble(),
       completedAt: DateTime.parse(json['completed_at'] as String),
       clientName: json['client_name'] as String?,
@@ -28,6 +31,7 @@ Map<String, dynamic> _$CompletedOrderModelToJson(
       'id': instance.id,
       'order_number': instance.orderNumber,
       'items': instance.items,
+      'logs': instance.logs,
       'total': instance.total,
       'completed_at': instance.completedAt.toIso8601String(),
       'client_name': instance.clientName,

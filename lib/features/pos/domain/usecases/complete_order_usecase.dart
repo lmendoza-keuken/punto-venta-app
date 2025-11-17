@@ -1,3 +1,5 @@
+import 'package:pos_flutter_app/features/pos/domain/entities/cart_log_entry.dart';
+
 import '../entities/completed_order.dart';
 import '../entities/cart_item.dart';
 import '../repositories/completed_orders_repository.dart';
@@ -9,6 +11,7 @@ class CompleteOrderUsecase {
 
   Future<CompletedOrder> call({
     required List<CartItem> items,
+    required List<CartLogEntry> logItems,
     required double total,
     String? clientName,
     required String cashierName,
@@ -27,6 +30,7 @@ class CompleteOrderUsecase {
       id: now.millisecondsSinceEpoch.toString(),
       orderNumber: orderNumber,
       items: items,
+      logs: logItems,
       total: total,
       completedAt: now,
       clientName: clientName?.trim(),

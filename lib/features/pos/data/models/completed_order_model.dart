@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:pos_flutter_app/features/pos/data/models/cart_log_entry_model.dart';
 import 'package:pos_flutter_app/features/pos/domain/entities/completed_order.dart';
 import 'cart_item_model.dart';
 
@@ -10,6 +11,7 @@ class CompletedOrderModel {
   @JsonKey(name: 'order_number')
   final String orderNumber;
   final List<CartItemModel> items;
+  final List<CartLogEntryModel> logs;
   final double total;
   @JsonKey(name: 'completed_at')
   final DateTime completedAt;
@@ -28,6 +30,7 @@ class CompletedOrderModel {
     required this.id,
     required this.orderNumber,
     required this.items,
+    required this.logs,
     required this.total,
     required this.completedAt,
     this.clientName,
@@ -47,6 +50,7 @@ class CompletedOrderModel {
       id: id,
       orderNumber: orderNumber,
       items: items.map((item) => item.toEntity()).toList(),
+      logs: logs.map((log) => log.toEntity()).toList(),
       total: total,
       completedAt: completedAt,
       clientName: clientName,
@@ -62,6 +66,7 @@ class CompletedOrderModel {
       id: order.id,
       orderNumber: order.orderNumber,
       items: order.items.map((item) => CartItemModel.fromEntity(item)).toList(),
+      logs: order.logs.map((log) => CartLogEntryModel.fromEntity(log)).toList(),
       total: order.total,
       completedAt: order.completedAt,
       clientName: order.clientName,

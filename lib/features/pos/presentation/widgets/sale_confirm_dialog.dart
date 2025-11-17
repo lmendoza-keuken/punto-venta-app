@@ -37,6 +37,7 @@ showConfirmDialog(double total, BuildContext context) {
                 final completeOrderUsecase = di.sl<CompleteOrderUsecase>();
                 await completeOrderUsecase(
                   items: cartState.items,
+                  logItems: cartState.log,
                   total: cartState.total,
                   clientName:
                       null, // Aquí podrías pasar el cliente seleccionado
