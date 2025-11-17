@@ -20,7 +20,9 @@ class SavedOrdersLocalDataSourceImpl implements SavedOrdersLocalDataSource {
     final jsonString = sharedPreferences.getString(savedOrdersKey);
     if (jsonString != null) {
       final List<dynamic> jsonList = json.decode(jsonString);
-      return jsonList.map((json) => SavedOrderModel.fromJson(json)).toList();
+      return jsonList
+          .map((json) => SavedOrderModel.fromJson(json as Map<String, dynamic>))
+          .toList();
     }
     return [];
   }

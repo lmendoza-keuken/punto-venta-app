@@ -2,20 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_flutter_app/core/constants/app_colors.dart';
 import 'package:pos_flutter_app/core/constants/app_dimensions.dart';
+import 'package:pos_flutter_app/core/utils/extensions.dart';
 import 'package:pos_flutter_app/core/widgets/custom_text_field.dart';
 import 'package:pos_flutter_app/features/pos/domain/entities/cart_item.dart';
+import 'package:pos_flutter_app/features/pos/domain/entities/cart_log_entry.dart';
 import 'package:pos_flutter_app/features/pos/presentation/bloc/saved_orders/saved_orders_bloc.dart';
 import 'package:pos_flutter_app/features/pos/presentation/bloc/saved_orders/saved_orders_event.dart';
 import 'package:pos_flutter_app/features/pos/presentation/bloc/saved_orders/saved_orders_state.dart';
 
 class SaveOrderDialog extends StatefulWidget {
   final List<CartItem> cartItems;
+  final List<CartLogEntry> cartLogItems;
   final double total;
   final String? clientName;
 
   const SaveOrderDialog({
     super.key,
     required this.cartItems,
+    required this.cartLogItems,
     required this.total,
     this.clientName,
   });
@@ -114,7 +118,7 @@ class _SaveOrderDialogState extends State<SaveOrderDialog> {
                           Text('Total:',
                               style: Theme.of(context).textTheme.titleMedium),
                           Text(
-                            '\$ ${widget.total.toStringAsFixed(2)}',
+                            widget.total.formatToCurrency(),
                             style: Theme.of(context)
                                 .textTheme
                                 .titleMedium
@@ -193,6 +197,7 @@ class _SaveOrderDialogState extends State<SaveOrderDialog> {
             SaveCurrentOrder(
               name: _nameController.text,
               items: widget.cartItems,
+              logItems: widget.cartLogItems,
               total: widget.total,
               clientName: _clientController.text.trim().isEmpty
                   ? null

@@ -16,6 +16,11 @@ SavedOrderModel _$SavedOrderModelFromJson(Map<String, dynamic> json) =>
       total: (json['total'] as num).toDouble(),
       createdAt: DateTime.parse(json['created_at'] as String),
       clientName: json['client_name'] as String?,
+      log: (json['log'] as List<dynamic>?)
+              ?.map(
+                  (e) => CartLogEntryModel.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
     );
 
 Map<String, dynamic> _$SavedOrderModelToJson(SavedOrderModel instance) =>
@@ -26,4 +31,5 @@ Map<String, dynamic> _$SavedOrderModelToJson(SavedOrderModel instance) =>
       'total': instance.total,
       'created_at': instance.createdAt.toIso8601String(),
       'client_name': instance.clientName,
+      'log': instance.log,
     };

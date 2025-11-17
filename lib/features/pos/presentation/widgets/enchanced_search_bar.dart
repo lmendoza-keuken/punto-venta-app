@@ -100,8 +100,6 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
   Widget _buildQuantityField() {
     return BlocBuilder<UiBloc, UiState>(
       builder: (context, state) {
-        final uiState = state as UiLoaded;
-
         return Container(
           width: 80,
           height: 56,

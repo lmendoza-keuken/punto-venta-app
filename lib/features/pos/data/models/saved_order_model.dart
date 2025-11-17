@@ -1,6 +1,7 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:pos_flutter_app/features/pos/domain/entities/saved_order.dart';
+import '../../domain/entities/saved_order.dart';
 import 'cart_item_model.dart';
+import 'cart_log_entry_model.dart';
 
 part 'saved_order_model.g.dart';
 
@@ -14,6 +15,7 @@ class SavedOrderModel {
   final DateTime createdAt;
   @JsonKey(name: 'client_name')
   final String? clientName;
+  final List<CartLogEntryModel> log;
 
   const SavedOrderModel({
     required this.id,
@@ -22,6 +24,7 @@ class SavedOrderModel {
     required this.total,
     required this.createdAt,
     this.clientName,
+    this.log = const [],
   });
 
   factory SavedOrderModel.fromJson(Map<String, dynamic> json) =>
@@ -33,10 +36,11 @@ class SavedOrderModel {
     return SavedOrder(
       id: id,
       name: name,
-      items: items.map((item) => item.toEntity()).toList(),
+      items: items.map((m) => m.toEntity()).toList(),
       total: total,
       createdAt: createdAt,
       clientName: clientName,
+      logs: log.map((l) => l.toEntity()).toList(),
     );
   }
 
@@ -44,10 +48,11 @@ class SavedOrderModel {
     return SavedOrderModel(
       id: order.id,
       name: order.name,
-      items: order.items.map((item) => CartItemModel.fromEntity(item)).toList(),
+      items: order.items.map((i) => CartItemModel.fromEntity(i)).toList(),
       total: order.total,
       createdAt: order.createdAt,
       clientName: order.clientName,
+      log: order.logs.map((e) => CartLogEntryModel.fromEntity(e)).toList(),
     );
   }
 }

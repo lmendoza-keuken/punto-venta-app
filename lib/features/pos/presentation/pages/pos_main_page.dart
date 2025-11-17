@@ -419,6 +419,7 @@ class _PosMainPageState extends State<PosMainPage> {
                 context: context,
                 builder: (context) => SaveOrderDialog(
                   cartItems: cartState.items,
+                  cartLogItems: cartState.log,
                   total: cartState.total,
                   clientName: null,
                 ),
@@ -439,13 +440,15 @@ class _PosMainPageState extends State<PosMainPage> {
             );
 
             if (result != null) {
-              context.read<CartBloc>().add(ClearCart());
-
-              for (final item in result.items) {
-                context
-                    .read<CartBloc>()
-                    .add(AddToCart(item.product, quantity: item.quantity));
-              }
+              context
+                  .read<CartBloc>()
+                  .add(ReplaceCart(items: result.items, log: result.logs));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                    content:
+                        Text('Pedido "${result.name}" cargado exitosamente'),
+                    backgroundColor: AppColors.success),
+              );
 
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(

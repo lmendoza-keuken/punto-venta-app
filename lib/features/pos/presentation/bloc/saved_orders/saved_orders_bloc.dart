@@ -39,6 +39,7 @@ class SavedOrdersBloc extends Bloc<SavedOrdersEvent, SavedOrdersState> {
       await saveOrderUsecase(
         name: event.name,
         items: event.items,
+        logs: event.logItems,
         total: event.total,
         clientName: event.clientName,
       );

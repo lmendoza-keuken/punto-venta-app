@@ -1,4 +1,6 @@
 import 'package:equatable/equatable.dart';
+import 'package:pos_flutter_app/features/pos/domain/entities/cart_item.dart';
+import 'package:pos_flutter_app/features/pos/domain/entities/cart_log_entry.dart';
 import 'package:pos_flutter_app/features/pos/domain/entities/product.dart';
 
 abstract class CartEvent extends Equatable {
@@ -16,6 +18,16 @@ class AddToCart extends CartEvent {
 
   @override
   List<Object> get props => [product, quantity];
+}
+
+class ReplaceCart extends CartEvent {
+  final List<CartItem> items;
+  final List<CartLogEntry> log;
+
+  const ReplaceCart({required this.items, this.log = const []});
+
+  @override
+  List<Object> get props => [items, log];
 }
 
 class RemoveFromCart extends CartEvent {
