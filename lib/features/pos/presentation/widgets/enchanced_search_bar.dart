@@ -54,8 +54,7 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
         final isCompact = constraints.maxWidth < 600;
 
         return Container(
-          padding: EdgeInsets.all(
-              isCompact ? AppDimensions.paddingS : AppDimensions.paddingM),
+          padding: const EdgeInsets.all(AppDimensions.paddingS),
           child: isCompact ? _buildCompactLayout() : _buildFullLayout(),
         );
       },

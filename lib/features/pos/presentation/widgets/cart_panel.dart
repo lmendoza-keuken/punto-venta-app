@@ -63,32 +63,19 @@ class CartPanel extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(
           isCompact ? AppDimensions.paddingS : AppDimensions.paddingM),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: const BorderRadius.only(
+      decoration: const BoxDecoration(
+        borderRadius: BorderRadius.only(
           topLeft: Radius.circular(AppDimensions.borderRadiusL),
           topRight: Radius.circular(AppDimensions.borderRadiusL),
         ),
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.shopping_cart,
-            color: Colors.white,
-          ),
-          SizedBox(
-              width:
-                  isCompact ? AppDimensions.paddingS : AppDimensions.paddingM),
           Expanded(
             child: Text(
-              AppStrings.cart,
+              AppStrings.cartSummary,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
                     fontSize: isCompact ? 16 : 18,
                   ),
             ),

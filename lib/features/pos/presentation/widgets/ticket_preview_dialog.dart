@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pos_flutter_app/core/constants/app_colors.dart';
 import 'package:pos_flutter_app/core/constants/app_dimensions.dart';
+import 'package:pos_flutter_app/core/utils/extensions.dart';
 import 'package:pos_flutter_app/features/pos/domain/entities/completed_order.dart';
 
 class TicketPreviewDialog extends StatelessWidget {
@@ -24,7 +25,6 @@ class TicketPreviewDialog extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(AppDimensions.paddingM),
               decoration: const BoxDecoration(
-                color: AppColors.primary,
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(AppDimensions.borderRadiusL),
                   topRight: Radius.circular(AppDimensions.borderRadiusL),
@@ -32,18 +32,17 @@ class TicketPreviewDialog extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.receipt, color: Colors.white),
+                  const Icon(Icons.receipt, color: AppColors.primary),
                   const SizedBox(width: AppDimensions.paddingS),
                   Text(
                     'Ticket - ${order.orderNumber}',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
                   ),
                   const Spacer(),
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
+                    icon: const Icon(Icons.close),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -83,7 +82,10 @@ class TicketPreviewDialog extends StatelessWidget {
                         ),
                       );
                     },
-                    icon: const Icon(Icons.print),
+                    icon: const Icon(
+                      Icons.print,
+                      color: Colors.white,
+                    ),
                     label: const Text('Imprimir'),
                   ),
                 ],
@@ -107,7 +109,7 @@ class TicketPreviewDialog extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header del negocio
+            // Header del negocio (Hardcoded por ahora)
             Center(
               child: Column(
                 children: [
@@ -143,10 +145,11 @@ class TicketPreviewDialog extends StatelessWidget {
             Text('Cajero: ${order.cashierName}'),
             if (order.clientName != null) Text('Cliente: ${order.clientName}'),
 
-            Container(
-              height: 1,
-              color: Colors.black,
-              margin: const EdgeInsets.symmetric(vertical: 12),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Divider(
+                color: Colors.black,
+              ),
             ),
 
             // Items
@@ -167,7 +170,7 @@ class TicketPreviewDialog extends StatelessWidget {
                                       fontWeight: FontWeight.w500),
                                 ),
                                 Text(
-                                  '\$ ${item.product.precio.toStringAsFixed(2)} x ${item.quantity}',
+                                  '${item.product.precio.formatToCurrency()} x ${item.quantity}',
                                   style: TextStyle(
                                       fontSize: 12, color: Colors.grey[600]),
                                 ),
@@ -175,7 +178,7 @@ class TicketPreviewDialog extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            '\$ ${item.totalPrice.toStringAsFixed(2)}',
+                            item.totalPrice.formatToCurrency(),
                             style: const TextStyle(fontWeight: FontWeight.w500),
                           ),
                         ],
@@ -183,10 +186,11 @@ class TicketPreviewDialog extends StatelessWidget {
                     ))
                 .toList(),
 
-            Container(
-              height: 1,
-              color: Colors.black,
-              margin: const EdgeInsets.symmetric(vertical: 12),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Divider(
+                color: Colors.black,
+              ),
             ),
 
             // Totales
@@ -194,20 +198,21 @@ class TicketPreviewDialog extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('Subtotal:'),
-                Text('\$ ${(order.total - order.totalTax).toStringAsFixed(2)}'),
+                Text((order.total - order.totalTax).formatToCurrency()),
               ],
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('IVA (21%):'),
-                Text('\$ ${order.totalTax.toStringAsFixed(2)}'),
+                Text(order.totalTax.formatToCurrency()),
               ],
             ),
-            Container(
-              height: 1,
-              color: Colors.black,
-              margin: const EdgeInsets.symmetric(vertical: 8),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: Divider(
+                color: Colors.black,
+              ),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -217,7 +222,7 @@ class TicketPreviewDialog extends StatelessWidget {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  '\$ ${order.total.toStringAsFixed(2)}',
+                  order.total.formatToCurrency(),
                   style: const TextStyle(
                       fontSize: 18, fontWeight: FontWeight.bold),
                 ),

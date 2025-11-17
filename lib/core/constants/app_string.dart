@@ -14,7 +14,7 @@ class AppStrings {
   static const String noClientSelected =
       'No hay cliente cargado. Por defecto se facturará como Consumidor Final (Factura B).';
   static const String catalog = 'Catálogo';
-  static const String cart = 'Carrito';
+  static const String cartSummary = 'Resumen del Pedido';
   static const String article = 'Artículo';
   static const String price = 'Precio';
   static const String quantity = 'Cant.';

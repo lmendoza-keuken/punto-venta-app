@@ -221,65 +221,6 @@ class _PosMainPageState extends State<PosMainPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header del catálogo
-          Container(
-            padding: const EdgeInsets.all(AppDimensions.paddingM),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.05),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(AppDimensions.borderRadiusL),
-                topRight: Radius.circular(AppDimensions.borderRadiusL),
-              ),
-              border: Border(
-                bottom: BorderSide(color: Colors.grey.shade200),
-              ),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.inventory,
-                  color: AppColors.primary,
-                  size: 24,
-                ),
-                const SizedBox(width: AppDimensions.paddingS),
-                Text(
-                  AppStrings.catalog,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
-                      ),
-                ),
-                const Spacer(),
-                BlocBuilder<ProductBloc, ProductState>(
-                  builder: (context, state) {
-                    if (state is ProductLoaded) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppDimensions.paddingM,
-                          vertical: AppDimensions.paddingS,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(
-                              AppDimensions.borderRadiusL),
-                        ),
-                        child: Text(
-                          '${state.products.length} productos',
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                        ),
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-              ],
-            ),
-          ),
-
           // Barra de búsqueda integrada
           _buildIntegratedSearchBar(),
 
@@ -297,7 +238,7 @@ class _PosMainPageState extends State<PosMainPage> {
 
   Widget _buildIntegratedSearchBar() {
     return Container(
-      padding: const EdgeInsets.all(AppDimensions.paddingM),
+      padding: const EdgeInsets.all(AppDimensions.paddingS),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         border: Border(

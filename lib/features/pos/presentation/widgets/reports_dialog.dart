@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:pos_flutter_app/core/constants/app_colors.dart';
 import 'package:pos_flutter_app/core/constants/app_dimensions.dart';
+import 'package:pos_flutter_app/core/utils/extensions.dart';
 import 'package:pos_flutter_app/features/pos/domain/entities/completed_order.dart';
 import 'package:pos_flutter_app/features/pos/presentation/bloc/reports/reports_bloc.dart';
 import 'package:pos_flutter_app/features/pos/presentation/bloc/reports/reports_event.dart';
@@ -66,7 +67,6 @@ class _ReportsDialogState extends State<ReportsDialog>
               Container(
                 padding: const EdgeInsets.all(AppDimensions.paddingM),
                 decoration: const BoxDecoration(
-                  color: AppColors.primary,
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(AppDimensions.borderRadiusL),
                     topRight: Radius.circular(AppDimensions.borderRadiusL),
@@ -74,18 +74,17 @@ class _ReportsDialogState extends State<ReportsDialog>
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.assessment, color: Colors.white),
+                    const Icon(Icons.assessment, color: AppColors.primary),
                     const SizedBox(width: AppDimensions.paddingS),
                     Text(
                       'Reportes de Ventas',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: Colors.white,
                             fontWeight: FontWeight.bold,
                           ),
                     ),
                     const Spacer(),
                     IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
+                      icon: const Icon(Icons.close, color: Colors.black),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ],
@@ -229,7 +228,7 @@ class _ReportsDialogState extends State<ReportsDialog>
           Expanded(
               child: _buildSummaryCard(
                   'Total Ventas',
-                  '\$ ${(summary['total_sales'] as double).toStringAsFixed(2)}',
+                  (summary['total_sales'] as double).formatToCurrency(),
                   Icons.attach_money,
                   AppColors.success)),
           Expanded(
@@ -241,7 +240,7 @@ class _ReportsDialogState extends State<ReportsDialog>
           Expanded(
               child: _buildSummaryCard(
                   'IVA Total',
-                  '\$ ${(summary['total_tax'] as double).toStringAsFixed(2)}',
+                  (summary['total_tax'] as double).formatToCurrency(),
                   Icons.percent,
                   AppColors.info)),
         ],
@@ -253,11 +252,9 @@ class _ReportsDialogState extends State<ReportsDialog>
       String title, String value, IconData icon, Color color) {
     return Card(
       child: Container(
-        padding: const EdgeInsets.all(AppDimensions.paddingM),
+        padding: const EdgeInsets.all(AppDimensions.paddingS),
         child: Column(
           children: [
-            Icon(icon, color: color, size: 32),
-            const SizedBox(height: 8),
             Text(
               title,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -303,48 +300,46 @@ class _ReportsDialogState extends State<ReportsDialog>
       itemCount: orders.length,
       itemBuilder: (context, index) {
         final order = orders[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: AppDimensions.paddingS),
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: AppColors.success,
-              child: Text(
-                order.totalItems.toString(),
-                style: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold),
+        return GestureDetector(
+          onTap: () => _showTicketPreview(order),
+          child: Card(
+            margin: const EdgeInsets.only(bottom: AppDimensions.paddingS),
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundColor: AppColors.success,
+                child: Text(
+                  order.totalItems.toString(),
+                  style: const TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold),
+                ),
               ),
-            ),
-            title: Text(
-              'Orden ${order.orderNumber}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Total: \$ ${order.total.toStringAsFixed(2)}'),
-                if (showDate)
-                  Text(
-                      'Fecha: ${DateFormat('dd/MM/yyyy HH:mm').format(order.completedAt)}'),
-                if (order.clientName != null)
-                  Text('Cliente: ${order.clientName}'),
-                Text('Cajero: ${order.cashierName}'),
-                Text('Pago: ${order.paymentMethod}'),
-              ],
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.visibility, color: AppColors.info),
-                  onPressed: () => _showTicketPreview(order),
-                  tooltip: 'Ver ticket',
-                ),
-                IconButton(
-                  icon: const Icon(Icons.print, color: AppColors.primary),
-                  onPressed: () => _reprintTicket(order),
-                  tooltip: 'Reimprimir ticket',
-                ),
-              ],
+              title: Text(
+                order.orderNumber,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Total: ${order.total.formatToCurrency()}'),
+                  if (showDate)
+                    Text(
+                        'Fecha: ${DateFormat('dd/MM/yyyy HH:mm').format(order.completedAt)}'),
+                  if (order.clientName != null)
+                    Text('Cliente: ${order.clientName}'),
+                  Text('Cajero: ${order.cashierName}'),
+                  Text('Pago: ${order.paymentMethod}'),
+                ],
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.visibility, color: AppColors.info),
+                    onPressed: () => _showTicketPreview(order),
+                    tooltip: 'Ver ticket',
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -400,9 +395,5 @@ class _ReportsDialogState extends State<ReportsDialog>
       context: context,
       builder: (context) => TicketPreviewDialog(order: order),
     );
-  }
-
-  void _reprintTicket(CompletedOrder order) {
-    context.read<ReportsBloc>().add(PrintTicket(order.id));
   }
 }
