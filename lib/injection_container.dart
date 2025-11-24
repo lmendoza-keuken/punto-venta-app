@@ -4,12 +4,15 @@ import 'package:pos_flutter_app/features/auth/data/repositories/auth_repositorie
 import 'package:pos_flutter_app/features/auth/prensetation/bloc/auth_bloc.dart';
 import 'package:pos_flutter_app/features/pos/data/datasources/client_local_datasource.dart';
 import 'package:pos_flutter_app/features/pos/data/datasources/completed_orders_local_datasource.dart';
+import 'package:pos_flutter_app/features/pos/data/datasources/printer_socket_datasource.dart';
 import 'package:pos_flutter_app/features/pos/data/datasources/product_local_data.datasource.dart';
 import 'package:pos_flutter_app/features/pos/data/datasources/saved_orders_local_dasource.dart';
 import 'package:pos_flutter_app/features/pos/data/repositories/client_repository_impl.dart';
 import 'package:pos_flutter_app/features/pos/data/repositories/completed_orders_repository_impl.dart';
+import 'package:pos_flutter_app/features/pos/data/repositories/printer_repository_impl.dart';
 import 'package:pos_flutter_app/features/pos/domain/repositories/client_repository.dart';
 import 'package:pos_flutter_app/features/pos/domain/repositories/completed_orders_repository.dart';
+import 'package:pos_flutter_app/features/pos/domain/repositories/printer_repository.dart';
 import 'package:pos_flutter_app/features/pos/domain/repositories/product_repository.dart';
 import 'package:pos_flutter_app/features/pos/domain/repositories/saved_orders_repository.dart';
 import 'package:pos_flutter_app/features/pos/domain/usecases/add_client_usecase.dart';
@@ -18,7 +21,9 @@ import 'package:pos_flutter_app/features/pos/domain/usecases/delete_client_useca
 import 'package:pos_flutter_app/features/pos/domain/usecases/get_clients_usecase.dart';
 import 'package:pos_flutter_app/features/pos/domain/usecases/get_reports_usecase.dart';
 import 'package:pos_flutter_app/features/pos/domain/usecases/load_ordes_usecase.dart';
+import 'package:pos_flutter_app/features/pos/domain/usecases/print_ticket_usecase.dart';
 import 'package:pos_flutter_app/features/pos/presentation/bloc/clients/clients_bloc.dart';
+import 'package:pos_flutter_app/features/pos/presentation/bloc/printer/printer_bloc.dart';
 import 'package:pos_flutter_app/features/pos/presentation/bloc/reports/reports_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -76,6 +81,7 @@ Future<void> init() async {
   sl.registerFactory(() => ReportsBloc(getReportsUsecase: sl()));
   sl.registerFactory(
       () => ClientsBloc(getClients: sl(), addClient: sl(), deleteClient: sl()));
+  sl.registerFactory(() => PrinterBloc(printTicketUsecase: sl()));
 
   // Use cases
   sl.registerLazySingleton(() => GetProductsUsecase(sl()));
@@ -87,6 +93,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetClientsUsecase(sl()));
   sl.registerLazySingleton(() => AddClientUsecase(sl()));
   sl.registerLazySingleton(() => DeleteClientUsecase(sl()));
+  sl.registerLazySingleton(() => PrintTicketUsecase(sl()));
 
   // Repository
   sl.registerLazySingleton<ProductRepository>(
@@ -99,7 +106,12 @@ Future<void> init() async {
     () => CompletedOrdersRepositoryImpl(localDataSource: sl()),
   );
   sl.registerLazySingleton<ClientRepository>(
-      () => ClientRepositoryImpl(localDataSource: sl()));
+    () => ClientRepositoryImpl(localDataSource: sl()),
+  );
+
+  sl.registerLazySingleton<PrinterRepository>(
+    () => PrinterRepositoryImpl(printerDatasource: sl()),
+  );
 
   // Data sources
   sl.registerLazySingleton<ProductLocalDataSource>(
@@ -113,6 +125,9 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<ClientLocalDataSource>(
       () => ClientLocalDataSourceImpl(sharedPreferences: sl()));
+  sl.registerLazySingleton<PrinterSocketDatasource>(
+    () => PrinterSocketDatasourceImpl(),
+  );
 
   //! External
   final sharedPreferences = await SharedPreferences.getInstance();
