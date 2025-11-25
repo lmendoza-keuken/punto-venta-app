@@ -29,4 +29,24 @@ class ProductRepositoryImpl implements ProductRepository {
   Future<List<String>> getCategories() async {
     return await localDataSource.getCategories();
   }
+  
+  @override
+  Future<Product> createProduct(Product product) {
+    // TODO: implement createProduct
+    throw UnimplementedError();
+  }
+  
+  @override
+  Future<void> deleteProduct(int codigo) {
+    // TODO: implement deleteProduct
+    throw UnimplementedError();
+  }
+  
+  @override
+  Future<Product> updateProduct(Product product) {
+    // TODO: implement updateProduct
+    throw UnimplementedError();
+  }
+
+
 }

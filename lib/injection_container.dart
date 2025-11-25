@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import 'package:punto_venta_app/core/database/database_helper.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
 import 'package:punto_venta_app/features/auth/data/repositories/auth_repositories_impl.dart';
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
@@ -25,10 +26,25 @@ import 'package:punto_venta_app/features/pos/domain/usecases/print_ticket_usecas
 import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_bloc.dart';
+import 'package:punto_venta_app/features/stock/data/datasources/stock_local_datasource.dart';
+import 'package:punto_venta_app/features/stock/data/repositories/stock_repository_impl.dart';
+import 'package:punto_venta_app/features/stock/domain/repositories/stock_repository.dart';
+import 'package:punto_venta_app/features/stock/domain/usecases/add_stock_usecase.dart';
+import 'package:punto_venta_app/features/stock/domain/usecases/adjust_stock_usecase.dart';
+import 'package:punto_venta_app/features/stock/domain/usecases/create_product_usecase.dart';
+import 'package:punto_venta_app/features/stock/domain/usecases/delete_product_usecase.dart';
+
+import 'package:punto_venta_app/features/stock/domain/usecases/get_all_products_usecase.dart';
+import 'package:punto_venta_app/features/stock/domain/usecases/get_product_stock_usecase.dart';
+import 'package:punto_venta_app/features/stock/domain/usecases/get_stock_movements_usecase.dart';
+import 'package:punto_venta_app/features/stock/domain/usecases/remove_stock_usecase.dart';
+import 'package:punto_venta_app/features/stock/domain/usecases/update_product_usecase.dart';
+import 'package:punto_venta_app/features/stock/presentation/bloc/stock_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:punto_venta_app/features/pos/data/datasources/printer_web_datasource.dart';
+import 'package:uuid/uuid.dart';
 
 import 'features/splash/presentation/bloc/splash_bloc.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
@@ -163,9 +179,56 @@ Future<void> init() async {
   sl.registerLazySingleton<ClientLocalDataSource>(
       () => ClientLocalDataSourceImpl(sharedPreferences: sl()));
 
+  //! Features - Stock
+  // Bloc
+  sl.registerFactory(() => StockBloc(
+        getAllProductsUsecase: sl(),
+        getProductStockUsecase: sl(),
+        // createProductUsecase: sl(),
+        // updateProductUsecase: sl(),
+        // deleteProductUsecase: sl(),
+        addStockUsecase: sl(),
+        removeStockUsecase: sl(),
+        adjustStockUsecase: sl(),
+        getStockMovementsUsecase: sl(),
+      ));
+
+  // Usecases
+  sl.registerLazySingleton(() => CreateProductUsecase(sl()));
+  sl.registerLazySingleton(() => UpdateProductUsecase(sl()));
+  sl.registerLazySingleton(() => DeleteProductUsecase(sl()));
+
+  sl.registerLazySingleton(() => GetProductStockUsecase(sl()));
+  sl.registerLazySingleton(() => GetAllProductsUsecase(sl()));
+  sl.registerLazySingleton(() => AddStockUsecase(sl()));
+  sl.registerLazySingleton(() => RemoveStockUsecase(sl()));
+  sl.registerLazySingleton(() => AdjustStockUsecase(sl()));
+  sl.registerLazySingleton(() => GetStockMovementsUsecase(sl()));
+
+  // Repository
+  sl.registerLazySingleton<StockRepository>(
+    () => StockRepositoryImpl(
+      productRepository: sl(),
+      localDatasource: sl(),
+      uuid: sl(),
+    ),
+  );
+
+  // Datasource
+  sl.registerLazySingleton<StockLocalDatasource>(
+    () => StockLocalDatasourceImpl(
+      databaseHelper: sl(),
+      uuid: sl(),
+    ),
+  );
+
+  // Database
+  sl.registerLazySingleton<DatabaseHelper>(() => DatabaseHelper.instance);
+
   //! External
   final sharedPreferences = await SharedPreferences.getInstance();
   sl.registerLazySingleton(() => sharedPreferences);
+  sl.registerLazySingleton<Uuid>(() => const Uuid());
 
   // HTTP client
   sl.registerLazySingleton(() => http.Client());

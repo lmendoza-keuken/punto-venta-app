@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:punto_venta_app/app/routes/route_paths.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/core/constants/app_string.dart';
@@ -175,6 +177,14 @@ class _PosMainPageState extends State<PosMainPage> {
         },
       ),
       actions: [
+         // NUEVO: Botón de Stock
+        IconButton(
+          icon: const Icon(Icons.inventory_2),
+          tooltip: 'Gestión de Stock',
+          onPressed: () {
+            context.push(RoutePaths.stock);
+          },
+        ),
         IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {
