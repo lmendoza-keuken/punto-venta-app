@@ -5,7 +5,9 @@ class PrintJob {
   final List<CartItem> items;
   final List<CartLogEntry> logItems;
   final double total;
+  final double totalTax;
   final String? clientName;
+  final String? paymentMethod;
   final String cashierName;
   final DateTime timestamp;
   final String ticketId;
@@ -14,7 +16,9 @@ class PrintJob {
     required this.items,
     required this.logItems,
     required this.total,
+    required this.totalTax,
     this.clientName,
+    this.paymentMethod,
     required this.cashierName,
     required this.timestamp,
     required this.ticketId,

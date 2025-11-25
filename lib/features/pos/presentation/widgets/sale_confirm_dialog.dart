@@ -140,6 +140,8 @@ class _ConfirmDialogContent extends StatelessWidget {
         logItems: cartState.log,
         total: cartState.total,
         clientName: client?.name,
+        totalTax: cartState.total * 0.21,
+        paymentMethod: 'Efectivo',
         cashierName: 'Brayan',
         timestamp: DateTime.now(),
         ticketId: DateTime.now().millisecondsSinceEpoch.toString(),

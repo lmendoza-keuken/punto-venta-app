@@ -16,20 +16,20 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
   Socket? _socket;
   bool _isConnected = false;
 
+  // 58mm = 32 caracteres, 80mm = 48 caracteres
+  static const int _lineWidth = 48;
+
   @override
   Future<bool> connect(PrinterConfig config) async {
     try {
-      print('🔌 Intentando conectar a ${config.ip}:${config.port}');
       _socket = await Socket.connect(config.ip, config.port)
           .timeout(Duration(milliseconds: config.timeout));
       _isConnected = true;
-      print('✅ Conexión exitosa');
-      
+
       await _initPrinter();
-      
+
       return true;
     } catch (e) {
-      print('❌ Error de conexión: $e');
       _isConnected = false;
       return false;
     }
@@ -57,46 +57,113 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
     if (!_isConnected || _socket == null) return false;
 
     try {
-      // Encabezado
-      await _printText("SOLUCIONES INFORMATICAS KEUKEN, S.A.");
+      // === ENCABEZADO CENTRADO ===
+      await _selectAlignment(1); 
+      await _setBold(true);
+      await _printText("SOLUCIONES INFORMATICAS");
       await _printAndFeedLine();
-      await _printText("Fecha: ${printJob.timestamp.toString()}");
+      await _printText("KEUKEN, S.A.");
+      await _printAndFeedLine();
+      await _setBold(false);
+      await _printText("Sistema de Punto de Venta");
+      await _printAndFeedLine();
+      await _printText("Tel: (555) 123-4567");
+      await _printAndFeedLine();
+      await _printAndFeedLine();
+
+      // Separador dinámico
+      await _printText(_buildSeparator('_'));
+      await _printAndFeedLine();
+      await _printAndFeedLine();
+
+
+      // === INFORMACIÓN DE LA ORDEN (IZQUIERDA) ===
+      await _selectAlignment(0);
+      await _printText("Orden: ${printJob.ticketId}");
+      await _printAndFeedLine();
+      await _printText("Fecha: ${_formatDate(printJob.timestamp)}");
+      await _printAndFeedLine();
+      await _printText("Hora: ${_formatTime(printJob.timestamp)}");
       await _printAndFeedLine();
       await _printText("Cajero: ${printJob.cashierName}");
       await _printAndFeedLine();
-      
-      if (printJob.clientName != null) {
+
+      if (printJob.clientName != null && printJob.clientName!.isNotEmpty) {
         await _printText("Cliente: ${printJob.clientName}");
         await _printAndFeedLine();
       }
 
-      await _printText("Ticket: ${printJob.ticketId}");
+      await _printText(_buildSeparator('_'));
       await _printAndFeedLine();
-      await _printText("================================");
       await _printAndFeedLine();
 
-      // Items del carrito
+
+      // === ITEMS ===
+      await _selectAlignment(0);
       for (final item in printJob.items) {
-        await _printText("${item.product.descripcion}");
+        await _printText(item.product.descripcion);
         await _printAndFeedLine();
-        await _printText("Cant: ${item.quantity} x ${item.product.precio.formatToCurrency()}");
-        await _printAndFeedLine();
-        await _printText("Subtotal: ${(item.quantity * item.product.precio).formatToCurrency()}");
-        await _printAndFeedLine();
-        await _printText("--------------------------------");
+
+        final precioUnit = item.product.precio.formatToCurrency();
+        final subtotalValue =
+            (item.quantity * item.product.precio).formatToCurrency();
+        final subtotal = subtotalValue;
+        final line = "  ${item.quantity} x $precioUnit";
+
+        // Calcular espacios dinámicamente
+        final totalSpaces = _lineWidth - line.length - subtotal.length;
+        final spacer = totalSpaces > 0 ? ' ' * totalSpaces : ' ';
+
+        await _printText("$line$spacer$subtotal");
         await _printAndFeedLine();
       }
 
-      // Total
-      await _printText("================================");
-      await _printAndFeedLine();
-      await _printText("TOTAL: ${printJob.total.formatToCurrency()}");
-      await _printAndFeedLine();
-      await _printText("================================");
+      // === SEPARADOR ===
+      await _printText(_buildSeparator('-'));
       await _printAndFeedLine();
 
-      // Código de barras del ticket
+      // === TOTALES ===
+      final subtotalAmount =
+          (printJob.total - printJob.totalTax).formatToCurrency();
+      final taxAmount = printJob.totalTax.formatToCurrency();
+      final totalAmount = printJob.total.formatToCurrency();
+
+      await _printLineWithValue("Subtotal:", subtotalAmount);
+      await _printLineWithValue("IVA (21%):", taxAmount);
+      await _printText(_buildSeparator('_'));
+      await _printAndFeedLine();
+
+      // Total en negrita
+      await _printAndFeedLine();
+      await _setBold(true);
+      await _setDoubleHeight(true);
+      await _printLineWithValue("TOTAL:", totalAmount);
+      await _setDoubleHeight(false);
+      await _setBold(false);
+      await _printText(_buildSeparator('_'));
+      await _printAndFeedLine();
+
+      // === INFORMACIÓN ADICIONAL ===
+      await _printAndFeedLine();
+      await _printText(
+          "Metodo de pago: ${printJob.paymentMethod ?? 'Efectivo'}");
+      await _printAndFeedLine();
+      final totalItems =
+          printJob.items.fold(0, (sum, item) => sum + item.quantity);
+      await _printText("Total de articulos: $totalItems");
+      await _printAndFeedLine();
+      await _printAndFeedLine();
+
+      // === CÓDIGO DE BARRAS ===
+      await _selectAlignment(1);
       await _printBarcode(69, printJob.ticketId);
+      await _printAndFeedLine();
+      await _printAndFeedLine();
+
+      // === PIE DE PÁGINA ===
+      await _printText("Gracias por su compra!");
+      await _printAndFeedLine();
+      await _printAndFeedLine();
       await _printAndFeedLine();
 
       // Cortar papel
@@ -104,23 +171,40 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
 
       return true;
     } catch (e) {
+      print('❌ Error al imprimir: $e');
       return false;
     }
   }
 
+  // === MÉTODOS AUXILIARES ===
+
+  String _buildSeparator(String char) {
+    return char * _lineWidth;
+  }
+
+  Future<void> _printLineWithValue(String label, String value) async {
+    final totalSpaces = _lineWidth - label.length - value.length;
+    final spacer = totalSpaces > 0 ? ' ' * totalSpaces : ' ';
+    await _printText("$label$spacer$value");
+    await _printAndFeedLine();
+  }
+
+  String _formatDate(DateTime date) {
+    return "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}";
+  }
+
+  String _formatTime(DateTime date) {
+    return "${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}:${date.second.toString().padLeft(2, '0')}";
+  }
+
   Future<bool> _initPrinter() async {
     try {
-      // Inicializar impresora (ESC @)
       await _sendData(Uint8List.fromList([0x1B, 0x40]));
-      
-      // Seleccionar alineación centro
-      await _selectAlignment(1);
-      
-      // Configurar código de barras
+
       await _selectHRICharacterPrintPosition(2);
       await _setBarcodeWidth(3);
       await _setBarcodeHeight(162);
-      
+
       return true;
     } catch (e) {
       return false;
@@ -151,7 +235,17 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
   }
 
   Future<bool> _selectAlignment(int alignment) async {
+    // 0 = Izquierda, 1 = Centro, 2 = Derecha
     return await _sendData(Uint8List.fromList([0x1B, 0x61, alignment]));
+  }
+
+  Future<bool> _setBold(bool enable) async {
+    return await _sendData(Uint8List.fromList([0x1B, 0x45, enable ? 1 : 0]));
+  }
+
+  Future<bool> _setDoubleHeight(bool enable) async {
+    return await _sendData(
+        Uint8List.fromList([0x1B, 0x21, enable ? 0x10 : 0x00]));
   }
 
   Future<bool> _setBarcodeWidth(int width) async {
@@ -168,7 +262,8 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
 
   Future<bool> _printBarcode(int codeType, String codeToPrint) async {
     try {
-      await _sendData(Uint8List.fromList([0x1D, 0x6B, codeType, codeToPrint.length]));
+      await _sendData(
+          Uint8List.fromList([0x1D, 0x6B, codeType, codeToPrint.length]));
       return await _printText(codeToPrint);
     } catch (e) {
       return false;

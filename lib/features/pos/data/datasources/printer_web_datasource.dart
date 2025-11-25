@@ -15,6 +15,9 @@ class PrinterWebDatasourceImpl implements PrinterWebDatasource {
   final String proxyUrl;
   bool _isConnected = false;
 
+  // 58mm = 32 caracteres, 80mm = 48 caracteres
+  static const int _lineWidth = 48;
+
   PrinterWebDatasourceImpl({
     this.proxyUrl = 'http://localhost:3000',
   });
@@ -74,7 +77,6 @@ class PrinterWebDatasourceImpl implements PrinterWebDatasource {
     try {
       print('📄 Generando ticket...');
       
-      // Construir comandos ESC/POS
       final commands = _buildEscPosCommands(printJob);
       
       print('📡 Enviando ${commands.length} bytes al servidor proxy...');
@@ -105,28 +107,42 @@ class PrinterWebDatasourceImpl implements PrinterWebDatasource {
     }
   }
 
-  /// Construye los comandos ESC/POS para la impresora térmica
-  /// Mismo diseño que printer_socket_datasource.dart
   List<int> _buildEscPosCommands(PrintJob printJob) {
     const ESC = 0x1B;
     const GS = 0x1D;
-    const LF = 0x0A; // Line Feed
+    const LF = 0x0A;
     
     final commands = <int>[];
 
-    // ===== INICIALIZAR IMPRESORA =====
-    commands.addAll([ESC, 0x40]); // ESC @ - Reset
+    // === INICIALIZAR IMPRESORA ===
+    commands.addAll([ESC, 0x40]); 
 
-    // ===== ALINEACIÓN CENTRO =====
-    commands.addAll([ESC, 0x61, 0x01]); // Centrar
+    // === ENCABEZADO CENTRADO ===
+    commands.addAll([ESC, 0x61, 0x01]); 
+    commands.addAll([ESC, 0x45, 0x01]); 
+    commands.addAll(utf8.encode('SOLUCIONES INFORMATICAS'));
+    commands.add(LF);
+    commands.addAll(utf8.encode('KEUKEN, S.A.'));
+    commands.add(LF);
+    commands.addAll([ESC, 0x45, 0x00]); 
+    commands.addAll(utf8.encode('Sistema de Punto de Venta'));
+    commands.add(LF);
+    commands.addAll(utf8.encode('Tel: (555) 123-4567'));
+    commands.add(LF);
+    commands.add(LF);
 
-    // ===== ENCABEZADO =====
-    commands.addAll(utf8.encode('SOLUCIONES INFORMATICAS KEUKEN, S.A.'));
+    // Separador dinámico
+    commands.addAll(utf8.encode(_buildSeparator('=')));
     commands.add(LF);
-    
-    commands.addAll(utf8.encode('Fecha: ${printJob.timestamp.toString()}'));
+
+    // === INFORMACIÓN DE LA ORDEN (IZQUIERDA) ===
+    commands.addAll([ESC, 0x61, 0x00]);   
+    commands.addAll(utf8.encode('Orden: ${printJob.ticketId}'));
     commands.add(LF);
-    
+    commands.addAll(utf8.encode('Fecha: ${_formatDate(printJob.timestamp)}'));
+    commands.add(LF);
+    commands.addAll(utf8.encode('Hora: ${_formatTime(printJob.timestamp)}'));
+    commands.add(LF);
     commands.addAll(utf8.encode('Cajero: ${printJob.cashierName}'));
     commands.add(LF);
     
@@ -135,57 +151,109 @@ class PrinterWebDatasourceImpl implements PrinterWebDatasource {
       commands.add(LF);
     }
 
-    commands.addAll(utf8.encode('Ticket: ${printJob.ticketId}'));
     commands.add(LF);
-    
-    commands.addAll(utf8.encode('================================'));
+    commands.addAll(utf8.encode(_buildSeparator('=')));
+    commands.add(LF);
     commands.add(LF);
 
-    // ===== ITEMS DEL CARRITO =====
+    // === ITEMS ===
+    commands.addAll([ESC, 0x61, 0x00]); 
     for (var item in printJob.items) {
+      // Nombre del producto
       commands.addAll(utf8.encode(item.product.descripcion));
       commands.add(LF);
       
-      commands.addAll(utf8.encode('Cant: ${item.quantity} x \$${item.product.precio.formatToCurrency()}'));
-      commands.add(LF);
+      // Formatear precios
+      final precioUnit = item.product.precio.formatToCurrency();
+      final subtotalValue = (item.quantity * item.product.precio).formatToCurrency();
+      final subtotal = subtotalValue;
       
-      final subtotal = (item.quantity * item.product.precio).formatToCurrency();
-      commands.addAll(utf8.encode('Subtotal: \$$subtotal'));
-      commands.add(LF);
+      // Cantidad x Precio
+      final line = '  ${item.quantity} x $precioUnit';
       
-      commands.addAll(utf8.encode('--------------------------------'));
+      // Calcular espacios dinámicamente
+      final totalSpaces = _lineWidth - line.length - subtotal.length;
+      final spacer = totalSpaces > 0 ? ' ' * totalSpaces : ' ';
+      
+      commands.addAll(utf8.encode('$line$spacer$subtotal'));
+      commands.add(LF);
       commands.add(LF);
     }
 
-    // ===== TOTAL =====
-    commands.addAll(utf8.encode('================================'));
-    commands.add(LF);
-    
-    commands.addAll(utf8.encode('TOTAL: \$${printJob.total.formatToCurrency()}'));
-    commands.add(LF);
-    
-    commands.addAll(utf8.encode('================================'));
+    // === SEPARADOR ===
+    commands.addAll(utf8.encode(_buildSeparator('-')));
     commands.add(LF);
 
-    // ===== CÓDIGO DE BARRAS =====
-    // Configurar posición HRI (debajo del código)
-    commands.addAll([GS, 0x48, 0x02]); // GS H 2
+    // === TOTALES ===
+    final subtotalAmount = (printJob.total - printJob.totalTax).formatToCurrency();
+    final taxAmount = printJob.totalTax.formatToCurrency();
+    final totalAmount = printJob.total.formatToCurrency();
+
+    commands.addAll(_buildLineWithValue('Subtotal:', subtotalAmount));
+    commands.addAll(_buildLineWithValue('IVA (21%):', taxAmount));
+    commands.add(LF);
+    commands.addAll(utf8.encode(_buildSeparator('=')));
+    commands.add(LF);
     
-    // Configurar ancho del código de barras
-    commands.addAll([GS, 0x77, 0x03]); // GS w 3
-    
-    // Configurar altura del código de barras
-    commands.addAll([GS, 0x68, 0xA2]); // GS h 162 (0xA2)
-    
-    // Imprimir código de barras CODE39 (tipo 69)
+    // Total en negrita y doble altura
+    commands.addAll([ESC, 0x45, 0x01]); 
+    commands.addAll([ESC, 0x21, 0x10]); 
+    commands.addAll(_buildLineWithValue('TOTAL:', totalAmount));
+    commands.addAll([ESC, 0x21, 0x00]); 
+    commands.addAll([ESC, 0x45, 0x00]); 
+    commands.add(LF);
+    commands.addAll(utf8.encode(_buildSeparator('=')));
+    commands.add(LF);
+    commands.add(LF);
+
+    // === INFORMACIÓN ADICIONAL ===
+    commands.addAll(utf8.encode('Metodo de pago: ${printJob.paymentMethod ?? 'Efectivo'}'));
+    commands.add(LF);
+    final totalItems = printJob.items.fold(0, (sum, item) => sum + item.quantity);
+    commands.addAll(utf8.encode('Total de articulos: $totalItems'));
+    commands.add(LF);
+    commands.add(LF);
+
+    // === CÓDIGO DE BARRAS ===
+    commands.addAll([ESC, 0x61, 0x01]); 
+    commands.addAll([GS, 0x48, 0x02]);
+    commands.addAll([GS, 0x77, 0x03]); 
+    commands.addAll([GS, 0x68, 0xA2]); 
     final ticketIdBytes = utf8.encode(printJob.ticketId);
     commands.addAll([GS, 0x6B, 69, ticketIdBytes.length]);
     commands.addAll(ticketIdBytes);
     commands.add(LF);
+    commands.add(LF);
 
-    // ===== CORTAR PAPEL =====
-    commands.addAll([GS, 0x56, 66, 0x01]); // GS V 66 1 - Corte parcial
+    // === PIE DE PÁGINA ===
+    commands.addAll(utf8.encode('Gracias por su compra!'));
+    commands.add(LF);
+    commands.add(LF);
+    commands.add(LF);
+
+    commands.addAll([GS, 0x56, 66, 0x01]); 
 
     return commands;
+  }
+
+  // === MÉTODOS AUXILIARES ===
+
+  String _buildSeparator(String char) {
+    return char * _lineWidth;
+  }
+
+  List<int> _buildLineWithValue(String label, String value) {
+    final totalSpaces = _lineWidth - label.length - value.length;
+    final spacer = totalSpaces > 0 ? ' ' * totalSpaces : ' ';
+    final line = '$label$spacer$value';
+    return [...utf8.encode(line), 0x0A];
+  }
+
+  String _formatDate(DateTime date) {
+    return "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}";
+  }
+
+  String _formatTime(DateTime date) {
+    return "${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}:${date.second.toString().padLeft(2, '0')}";
   }
 }
