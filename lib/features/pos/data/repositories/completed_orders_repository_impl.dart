@@ -1,7 +1,7 @@
-import 'package:pos_flutter_app/features/pos/data/datasources/completed_orders_local_datasource.dart';
-import 'package:pos_flutter_app/features/pos/data/models/completed_order_model.dart';
-import 'package:pos_flutter_app/features/pos/domain/entities/completed_order.dart';
-import 'package:pos_flutter_app/features/pos/domain/repositories/completed_orders_repository.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/completed_orders_local_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/models/completed_order_model.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
+import 'package:punto_venta_app/features/pos/domain/repositories/completed_orders_repository.dart';
 
 class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
   final CompletedOrdersLocalDataSource localDataSource;

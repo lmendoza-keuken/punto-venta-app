@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pos_flutter_app/core/constants/app_colors.dart';
-import 'package:pos_flutter_app/core/utils/extensions.dart';
-import 'package:pos_flutter_app/features/pos/domain/entities/client.dart';
-import 'package:pos_flutter_app/features/pos/domain/entities/print_job.dart';
-import 'package:pos_flutter_app/features/pos/domain/entities/printer_config.dart';
-import 'package:pos_flutter_app/features/pos/domain/usecases/complete_order_usecase.dart';
-import 'package:pos_flutter_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
-import 'package:pos_flutter_app/features/pos/presentation/bloc/cart/cart_event.dart';
-import 'package:pos_flutter_app/features/pos/presentation/bloc/cart/cart_state.dart';
-import 'package:pos_flutter_app/features/pos/presentation/bloc/printer/printer_bloc.dart';
-import 'package:pos_flutter_app/features/pos/presentation/bloc/printer/printer_event.dart';
-import 'package:pos_flutter_app/features/pos/presentation/bloc/printer/printer_state.dart';
-import 'package:pos_flutter_app/injection_container.dart' as di;
+import 'package:punto_venta_app/core/constants/app_colors.dart';
+import 'package:punto_venta_app/core/utils/extensions.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/client.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/printer_config.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/complete_order_usecase.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_event.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_state.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_event.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_state.dart';
+import 'package:punto_venta_app/injection_container.dart' as di;
 
 showConfirmDialog({
   required double total,
@@ -146,9 +146,9 @@ class _ConfirmDialogContent extends StatelessWidget {
       );
 
       const printerConfig = PrinterConfig(
-        ip: '192.168.1.100', // Cambiar por la IP de impresora
+        ip: '192.168.0.230', // Cambiar por la IP de impresora
         port: 9100, // Cambiar por el puerto de impresora
-        timeout: 5000,
+        timeout: 10000,
       );
 
       context.read<PrinterBloc>().add(PrintTicket(

@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
-import 'package:pos_flutter_app/features/pos/domain/entities/cart_item.dart';
-import 'package:pos_flutter_app/features/pos/domain/entities/cart_log_entry.dart';
-import 'package:pos_flutter_app/features/pos/domain/entities/product.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/cart_item.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
 
 abstract class CartEvent extends Equatable {
   const CartEvent();

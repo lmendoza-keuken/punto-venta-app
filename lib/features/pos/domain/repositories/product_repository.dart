@@ -1,4 +1,4 @@
-import 'package:pos_flutter_app/features/pos/domain/entities/product.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
 
 abstract class ProductRepository {
   Future<List<Product>> getProducts();

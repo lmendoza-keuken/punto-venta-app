@@ -1,5 +1,5 @@
-import 'package:pos_flutter_app/features/pos/domain/entities/completed_order.dart';
-import 'package:pos_flutter_app/features/pos/domain/repositories/completed_orders_repository.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
+import 'package:punto_venta_app/features/pos/domain/repositories/completed_orders_repository.dart';
 
 class GetReportsUsecase {
   final CompletedOrdersRepository repository;

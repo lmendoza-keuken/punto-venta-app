@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:pos_flutter_app/core/config/api_config.dart';
-import 'package:pos_flutter_app/features/pos/data/models/product_model.dart';
+import 'package:punto_venta_app/core/config/api_config.dart';
+import 'package:punto_venta_app/features/pos/data/models/product_model.dart';
 
 abstract class ProductLocalDataSource {
   Future<List<ProductModel>> getProducts();

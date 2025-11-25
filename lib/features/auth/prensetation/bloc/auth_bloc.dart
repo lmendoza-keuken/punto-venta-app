@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pos_flutter_app/features/auth/domain/usecases/login_usecase.dart';
-import 'package:pos_flutter_app/features/auth/domain/usecases/logout_usecase.dart';
+import 'package:punto_venta_app/features/auth/domain/usecases/login_usecase.dart';
+import 'package:punto_venta_app/features/auth/domain/usecases/logout_usecase.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 

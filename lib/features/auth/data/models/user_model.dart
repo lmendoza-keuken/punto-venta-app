@@ -1,5 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:pos_flutter_app/features/auth/domain/entities/user.dart';
+import 'package:punto_venta_app/features/auth/domain/entities/user.dart';
 
 part 'user_model.g.dart';
 

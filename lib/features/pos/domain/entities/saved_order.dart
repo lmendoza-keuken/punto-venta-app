@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:pos_flutter_app/features/pos/domain/entities/cart_log_entry.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
 import 'cart_item.dart';
 
 class SavedOrder extends Equatable {

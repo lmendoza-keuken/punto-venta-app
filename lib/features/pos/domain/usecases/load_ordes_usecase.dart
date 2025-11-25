@@ -1,5 +1,5 @@
-import 'package:pos_flutter_app/features/pos/domain/entities/saved_order.dart';
-import 'package:pos_flutter_app/features/pos/domain/repositories/saved_orders_repository.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/saved_order.dart';
+import 'package:punto_venta_app/features/pos/domain/repositories/saved_orders_repository.dart';
 
 class LoadSavedOrdersUsecase {
   final SavedOrdersRepository repository;

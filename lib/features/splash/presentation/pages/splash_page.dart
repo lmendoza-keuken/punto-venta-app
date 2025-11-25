@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pos_flutter_app/app/routes/route_paths.dart';
-import 'package:pos_flutter_app/core/constants/app_colors.dart';
-import 'package:pos_flutter_app/core/constants/app_string.dart';
-import 'package:pos_flutter_app/features/splash/presentation/bloc/splash_bloc.dart';
-import 'package:pos_flutter_app/features/splash/presentation/bloc/splash_event.dart';
-import 'package:pos_flutter_app/features/splash/presentation/bloc/splash_state.dart';
+import 'package:punto_venta_app/app/routes/route_paths.dart';
+import 'package:punto_venta_app/core/constants/app_colors.dart';
+import 'package:punto_venta_app/core/constants/app_string.dart';
+import 'package:punto_venta_app/features/splash/presentation/bloc/splash_bloc.dart';
+import 'package:punto_venta_app/features/splash/presentation/bloc/splash_event.dart';
+import 'package:punto_venta_app/features/splash/presentation/bloc/splash_state.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});

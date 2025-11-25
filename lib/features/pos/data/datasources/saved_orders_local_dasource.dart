@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:pos_flutter_app/features/pos/data/models/saved_order_model.dart';
+import 'package:punto_venta_app/features/pos/data/models/saved_order_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 abstract class SavedOrdersLocalDataSource {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pos_flutter_app/features/pos/domain/entities/client.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/client.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../bloc/clients/clients_bloc.dart';

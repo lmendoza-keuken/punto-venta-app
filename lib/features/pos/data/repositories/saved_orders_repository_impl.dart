@@ -1,7 +1,7 @@
-import 'package:pos_flutter_app/features/pos/data/datasources/saved_orders_local_dasource.dart';
-import 'package:pos_flutter_app/features/pos/data/models/saved_order_model.dart';
-import 'package:pos_flutter_app/features/pos/domain/entities/saved_order.dart';
-import 'package:pos_flutter_app/features/pos/domain/repositories/saved_orders_repository.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/saved_orders_local_dasource.dart';
+import 'package:punto_venta_app/features/pos/data/models/saved_order_model.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/saved_order.dart';
+import 'package:punto_venta_app/features/pos/domain/repositories/saved_orders_repository.dart';
 
 class SavedOrdersRepositoryImpl implements SavedOrdersRepository {
   final SavedOrdersLocalDataSource localDataSource;

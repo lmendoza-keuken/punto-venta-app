@@ -1,4 +1,4 @@
-import 'package:pos_flutter_app/features/pos/domain/entities/saved_order.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/saved_order.dart';
 
 abstract class SavedOrdersRepository {
   Future<List<SavedOrder>> getSavedOrders();

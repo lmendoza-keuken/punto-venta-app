@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pos_flutter_app/features/pos/domain/entities/completed_order.dart';
-import 'package:pos_flutter_app/features/pos/domain/usecases/get_reports_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/get_reports_usecase.dart';
 import 'reports_event.dart';
 import 'reports_state.dart';
 

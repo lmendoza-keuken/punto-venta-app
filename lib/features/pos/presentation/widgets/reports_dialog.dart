@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import 'package:pos_flutter_app/core/constants/app_colors.dart';
-import 'package:pos_flutter_app/core/constants/app_dimensions.dart';
-import 'package:pos_flutter_app/core/utils/extensions.dart';
-import 'package:pos_flutter_app/features/pos/domain/entities/completed_order.dart';
-import 'package:pos_flutter_app/features/pos/presentation/bloc/reports/reports_bloc.dart';
-import 'package:pos_flutter_app/features/pos/presentation/bloc/reports/reports_event.dart';
-import 'package:pos_flutter_app/features/pos/presentation/bloc/reports/reports_state.dart';
+import 'package:punto_venta_app/core/constants/app_colors.dart';
+import 'package:punto_venta_app/core/constants/app_dimensions.dart';
+import 'package:punto_venta_app/core/utils/extensions.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_event.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_state.dart';
 import 'ticket_preview_dialog.dart';
 
 class ReportsDialog extends StatefulWidget {

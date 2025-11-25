@@ -1,5 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:pos_flutter_app/features/pos/domain/entities/cart_item.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/cart_item.dart';
 import 'product_model.dart';
 
 part 'cart_item_model.g.dart';

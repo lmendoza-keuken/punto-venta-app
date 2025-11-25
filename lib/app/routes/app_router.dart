@@ -1,8 +1,8 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
-import 'package:pos_flutter_app/features/auth/prensetation/pages/login_page.dart';
-import 'package:pos_flutter_app/features/pos/presentation/pages/pos_main_page.dart';
-import 'package:pos_flutter_app/features/splash/presentation/pages/splash_page.dart';
+import 'package:punto_venta_app/features/auth/prensetation/pages/login_page.dart';
+import 'package:punto_venta_app/features/pos/presentation/pages/pos_main_page.dart';
+import 'package:punto_venta_app/features/splash/presentation/pages/splash_page.dart';
 import 'route_paths.dart';
 
 class AppRouter {

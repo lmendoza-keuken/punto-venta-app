@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:convert';
-import 'package:pos_flutter_app/core/utils/extensions.dart';
-import 'package:pos_flutter_app/features/pos/domain/entities/print_job.dart';
-import 'package:pos_flutter_app/features/pos/domain/entities/printer_config.dart';
+import 'package:punto_venta_app/core/utils/extensions.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/printer_config.dart';
 
 abstract class PrinterSocketDatasource {
   Future<bool> connect(PrinterConfig config);
@@ -19,15 +19,17 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
   @override
   Future<bool> connect(PrinterConfig config) async {
     try {
+      print('🔌 Intentando conectar a ${config.ip}:${config.port}');
       _socket = await Socket.connect(config.ip, config.port)
           .timeout(Duration(milliseconds: config.timeout));
       _isConnected = true;
+      print('✅ Conexión exitosa');
       
-      // Inicializar impresora
       await _initPrinter();
       
       return true;
     } catch (e) {
+      print('❌ Error de conexión: $e');
       _isConnected = false;
       return false;
     }
@@ -77,9 +79,9 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
       for (final item in printJob.items) {
         await _printText("${item.product.descripcion}");
         await _printAndFeedLine();
-        await _printText("Cant: ${item.quantity} x \$${item.product.precio.formatToCurrency()}");
+        await _printText("Cant: ${item.quantity} x ${item.product.precio.formatToCurrency()}");
         await _printAndFeedLine();
-        await _printText("Subtotal: \$${(item.quantity * item.product.precio).formatToCurrency()}");
+        await _printText("Subtotal: ${(item.quantity * item.product.precio).formatToCurrency()}");
         await _printAndFeedLine();
         await _printText("--------------------------------");
         await _printAndFeedLine();
@@ -88,7 +90,7 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
       // Total
       await _printText("================================");
       await _printAndFeedLine();
-      await _printText("TOTAL: \$${printJob.total.formatToCurrency()}");
+      await _printText("TOTAL: ${printJob.total.formatToCurrency()}");
       await _printAndFeedLine();
       await _printText("================================");
       await _printAndFeedLine();

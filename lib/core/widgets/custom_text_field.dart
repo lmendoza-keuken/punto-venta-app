@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pos_flutter_app/core/constants/app_dimensions.dart';
+import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 
 class CustomTextField extends StatelessWidget {
   final String label;

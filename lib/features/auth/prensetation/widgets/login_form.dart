@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pos_flutter_app/core/constants/app_dimensions.dart';
-import 'package:pos_flutter_app/core/constants/app_string.dart';
-import 'package:pos_flutter_app/core/utils/validators.dart';
-import 'package:pos_flutter_app/core/widgets/custom_butom.dart';
-import 'package:pos_flutter_app/core/widgets/custom_text_field.dart';
-import 'package:pos_flutter_app/features/auth/prensetation/bloc/auth_bloc.dart';
-import 'package:pos_flutter_app/features/auth/prensetation/bloc/auth_event.dart';
-import 'package:pos_flutter_app/features/auth/prensetation/bloc/auth_state.dart';
+import 'package:punto_venta_app/core/constants/app_dimensions.dart';
+import 'package:punto_venta_app/core/constants/app_string.dart';
+import 'package:punto_venta_app/core/utils/validators.dart';
+import 'package:punto_venta_app/core/widgets/custom_butom.dart';
+import 'package:punto_venta_app/core/widgets/custom_text_field.dart';
+import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
+import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_event.dart';
+import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_state.dart';
 
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key});

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:pos_flutter_app/core/utils/extensions.dart';
-import 'package:pos_flutter_app/features/pos/domain/entities/cart_log_entry.dart';
+import 'package:punto_venta_app/core/utils/extensions.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 

@@ -1,4 +1,4 @@
-import 'package:pos_flutter_app/features/auth/domain/entities/user.dart';
+import 'package:punto_venta_app/features/auth/domain/entities/user.dart';
 
 abstract class AuthRepository {
   Future<User> login(String username, String password);

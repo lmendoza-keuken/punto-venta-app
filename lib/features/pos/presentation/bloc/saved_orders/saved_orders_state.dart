@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:pos_flutter_app/features/pos/domain/entities/saved_order.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/saved_order.dart';
 
 abstract class SavedOrdersState extends Equatable {
   const SavedOrdersState();

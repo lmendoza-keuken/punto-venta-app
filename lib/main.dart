@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pos_flutter_app/features/auth/prensetation/bloc/auth_bloc.dart';
-import 'package:pos_flutter_app/features/pos/presentation/bloc/clients/clients_bloc.dart';
-import 'package:pos_flutter_app/features/pos/presentation/bloc/printer/printer_bloc.dart';
-import 'package:pos_flutter_app/features/pos/presentation/bloc/reports/reports_bloc.dart';
+import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_bloc.dart';
 import 'app/app.dart';
 import 'injection_container.dart' as di;
 import 'features/splash/presentation/bloc/splash_bloc.dart';

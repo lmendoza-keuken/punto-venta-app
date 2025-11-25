@@ -1,4 +1,4 @@
-import 'package:pos_flutter_app/features/pos/domain/entities/cart_log_entry.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
 
 import '../entities/completed_order.dart';
 import '../entities/cart_item.dart';

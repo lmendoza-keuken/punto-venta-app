@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:pos_flutter_app/core/constants/app_colors.dart';
-import 'package:pos_flutter_app/core/constants/app_dimensions.dart';
-import 'package:pos_flutter_app/core/constants/app_string.dart';
-import 'package:pos_flutter_app/core/widgets/custom_butom.dart';
+import 'package:punto_venta_app/core/constants/app_colors.dart';
+import 'package:punto_venta_app/core/constants/app_dimensions.dart';
+import 'package:punto_venta_app/core/constants/app_string.dart';
+import 'package:punto_venta_app/core/widgets/custom_butom.dart';
 
 class ActionButtons extends StatelessWidget {
   final VoidCallback onReportPressed;

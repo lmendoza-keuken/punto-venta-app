@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:pos_flutter_app/core/constants/app_colors.dart';
-import 'package:pos_flutter_app/core/constants/app_dimensions.dart';
+import 'package:punto_venta_app/core/constants/app_colors.dart';
+import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 
 BorderSide getBorderSide(
     bool canRemoveQuantity, bool hasInsufficientQuantity, bool isInDeleteMode) {

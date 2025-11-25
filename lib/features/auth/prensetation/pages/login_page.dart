@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pos_flutter_app/app/routes/route_paths.dart';
-import 'package:pos_flutter_app/core/constants/app_dimensions.dart';
-import 'package:pos_flutter_app/features/auth/prensetation/bloc/auth_bloc.dart';
-import 'package:pos_flutter_app/features/auth/prensetation/bloc/auth_state.dart';
-import 'package:pos_flutter_app/features/auth/prensetation/widgets/login_form.dart';
-import 'package:pos_flutter_app/features/auth/prensetation/widgets/login_header.dart';
+import 'package:punto_venta_app/app/routes/route_paths.dart';
+import 'package:punto_venta_app/core/constants/app_dimensions.dart';
+import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
+import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_state.dart';
+import 'package:punto_venta_app/features/auth/prensetation/widgets/login_form.dart';
+import 'package:punto_venta_app/features/auth/prensetation/widgets/login_header.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});

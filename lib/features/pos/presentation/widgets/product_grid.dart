@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pos_flutter_app/core/constants/app_dimensions.dart';
-import 'package:pos_flutter_app/core/utils/utils.dart';
-import 'package:pos_flutter_app/features/pos/domain/entities/product.dart';
-import 'package:pos_flutter_app/features/pos/presentation/bloc/ui/ui_bloc.dart';
-import 'package:pos_flutter_app/features/pos/presentation/bloc/ui/ui_state.dart';
+import 'package:punto_venta_app/core/constants/app_dimensions.dart';
+import 'package:punto_venta_app/core/utils/utils.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_state.dart';
 import 'product_card.dart';
 
 class ProductGrid extends StatelessWidget {

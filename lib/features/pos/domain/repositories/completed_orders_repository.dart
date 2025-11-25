@@ -1,4 +1,4 @@
-import 'package:pos_flutter_app/features/pos/domain/entities/completed_order.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
 
 abstract class CompletedOrdersRepository {
   Future<List<CompletedOrder>> getCompletedOrders();

@@ -1,4 +1,4 @@
-import 'package:pos_flutter_app/features/auth/data/models/user_model.dart';
+import 'package:punto_venta_app/features/auth/data/models/user_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 

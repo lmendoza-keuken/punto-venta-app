@@ -1,5 +1,5 @@
-import 'package:pos_flutter_app/features/auth/domain/entities/user.dart';
-import 'package:pos_flutter_app/features/auth/domain/repositories/auth_repository.dart';
+import 'package:punto_venta_app/features/auth/domain/entities/user.dart';
+import 'package:punto_venta_app/features/auth/domain/repositories/auth_repository.dart';
 
 class LoginUsecase {
   final AuthRepository repository;

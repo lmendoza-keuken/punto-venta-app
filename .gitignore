@@ -43,3 +43,13 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/android/app/.cxx
+/linux/flutter
+/linux
+*.cc
+*.g.dart
+*.gen.dart
+*.swift
+*.cc
+*.h
+*.cmake

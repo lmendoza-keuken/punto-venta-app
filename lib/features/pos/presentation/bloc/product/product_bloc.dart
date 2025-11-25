@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pos_flutter_app/features/pos/domain/usecases/get_products_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/get_products_usecase.dart';
 import 'product_event.dart';
 import 'product_state.dart';
 

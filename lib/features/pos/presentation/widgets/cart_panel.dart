@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pos_flutter_app/core/constants/app_string.dart';
-import 'package:pos_flutter_app/core/utils/extensions.dart';
-import 'package:pos_flutter_app/core/widgets/custom_butom.dart';
-import 'package:pos_flutter_app/features/pos/presentation/bloc/cart/cart_event.dart';
-import 'package:pos_flutter_app/features/pos/presentation/widgets/cart_log_item_widget.dart';
+import 'package:punto_venta_app/core/constants/app_string.dart';
+import 'package:punto_venta_app/core/utils/extensions.dart';
+import 'package:punto_venta_app/core/widgets/custom_butom.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_event.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/cart_log_item_widget.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../bloc/cart/cart_bloc.dart';

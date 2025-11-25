@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:pos_flutter_app/core/constants/app_dimensions.dart';
-import 'package:pos_flutter_app/core/constants/app_string.dart';
-import 'package:pos_flutter_app/core/constants/app_colors.dart';
+import 'package:punto_venta_app/core/constants/app_dimensions.dart';
+import 'package:punto_venta_app/core/constants/app_string.dart';
+import 'package:punto_venta_app/core/constants/app_colors.dart';
 
 class LoginHeader extends StatelessWidget {
   const LoginHeader({super.key});

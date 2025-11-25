@@ -1,6 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:pos_flutter_app/features/pos/data/models/cart_log_entry_model.dart';
-import 'package:pos_flutter_app/features/pos/domain/entities/completed_order.dart';
+import 'package:punto_venta_app/features/pos/data/models/cart_log_entry_model.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
 import 'cart_item_model.dart';
 
 part 'completed_order_model.g.dart';

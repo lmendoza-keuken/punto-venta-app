@@ -1,6 +1,6 @@
-import 'package:pos_flutter_app/features/pos/data/datasources/product_local_data.datasource.dart';
-import 'package:pos_flutter_app/features/pos/domain/entities/product.dart';
-import 'package:pos_flutter_app/features/pos/domain/repositories/product_repository.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/product_local_data.datasource.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
+import 'package:punto_venta_app/features/pos/domain/repositories/product_repository.dart';
 
 class ProductRepositoryImpl implements ProductRepository {
   final ProductLocalDataSource localDataSource;

@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pos_flutter_app/features/pos/domain/usecases/print_ticket_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/print_ticket_usecase.dart';
 import 'printer_event.dart';
 import 'printer_state.dart';
 

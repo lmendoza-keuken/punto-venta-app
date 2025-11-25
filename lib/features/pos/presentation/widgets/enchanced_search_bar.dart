@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pos_flutter_app/core/constants/app_string.dart';
-import 'package:pos_flutter_app/features/pos/presentation/bloc/ui/ui_state.dart';
+import 'package:punto_venta_app/core/constants/app_string.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_state.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
-import 'package:pos_flutter_app/features/pos/presentation/bloc/product/product_bloc.dart';
-import 'package:pos_flutter_app/features/pos/presentation/bloc/product/product_state.dart';
-import 'package:pos_flutter_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
-import 'package:pos_flutter_app/features/pos/presentation/bloc/cart/cart_event.dart';
-import 'package:pos_flutter_app/features/pos/presentation/bloc/ui/ui_bloc.dart';
-import 'package:pos_flutter_app/features/pos/presentation/bloc/ui/ui_event.dart';
-import 'package:pos_flutter_app/features/pos/domain/entities/product.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/product/product_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/product/product_state.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_event.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_event.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
 
 class EnhancedSearchBar extends StatefulWidget {
   final TextEditingController searchController;

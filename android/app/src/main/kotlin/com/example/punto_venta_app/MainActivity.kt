@@ -1,4 +1,4 @@
-package com.example.punto_venta_app
+package ar.com.keuken.punto_venta_app
 
 import io.flutter.embedding.android.FlutterActivity
 

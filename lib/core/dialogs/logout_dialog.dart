@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pos_flutter_app/app/routes/route_paths.dart';
-import 'package:pos_flutter_app/features/auth/prensetation/bloc/auth_bloc.dart';
-import 'package:pos_flutter_app/features/auth/prensetation/bloc/auth_event.dart';
+import 'package:punto_venta_app/app/routes/route_paths.dart';
+import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
+import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_event.dart';
 
 showLogoutDialog(BuildContext context) {
   showDialog(
