@@ -49,9 +49,13 @@ app.*.map.json
 *.cc
 *.g.dart
 *.gen.dart
+*.freezed.dart
 *.swift
-*.cc
 *.h
 *.cmake
+
+/**/*.g.dart
+/**/*.gen.dart
+/**/*.freezed.dart
 
 # FVM Version Cache

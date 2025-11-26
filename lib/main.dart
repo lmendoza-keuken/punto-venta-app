@@ -1,20 +1,28 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_bloc.dart';
+import 'package:punto_venta_app/firebase_options.dart';
+
 import 'app/app.dart';
-import 'injection_container.dart' as di;
-import 'features/splash/presentation/bloc/splash_bloc.dart';
-import 'features/pos/presentation/bloc/product/product_bloc.dart';
 import 'features/pos/presentation/bloc/cart/cart_bloc.dart';
-import 'features/pos/presentation/bloc/ui/ui_bloc.dart';
+import 'features/pos/presentation/bloc/product/product_bloc.dart';
 import 'features/pos/presentation/bloc/saved_orders/saved_orders_bloc.dart';
+import 'features/pos/presentation/bloc/ui/ui_bloc.dart';
+import 'features/splash/presentation/bloc/splash_bloc.dart';
+import 'injection_container.dart' as di;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await di.init();
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(const MyApp());
 }
 

@@ -1,0 +1,238 @@
+{
+  "project_info": {
+    "project_number": "532336033127",
+    "project_id": "keuken-mobile-fc114",
+    "storage_bucket": "keuken-mobile-fc114.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:532336033127:android:b17196ee6b69d3d01d03c2",
+        "android_client_info": {
+          "package_name": "ar.com.keuken.inventorymobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_NmLAbJL3j8oT8mAjQAxxb3s4o85_GNE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:532336033127:android:7f327bd86def10e81d03c2",
+        "android_client_info": {
+          "package_name": "ar.com.keuken.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_NmLAbJL3j8oT8mAjQAxxb3s4o85_GNE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:532336033127:android:136899ed79124ca21d03c2",
+        "android_client_info": {
+          "package_name": "ar.com.keuken.mobile.pedidos"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_NmLAbJL3j8oT8mAjQAxxb3s4o85_GNE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:532336033127:android:2b11c9597e7d194f1d03c2",
+        "android_client_info": {
+          "package_name": "ar.com.keuken.mobile.pedidos.debug"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_NmLAbJL3j8oT8mAjQAxxb3s4o85_GNE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:532336033127:android:59886c50684536871d03c2",
+        "android_client_info": {
+          "package_name": "ar.com.keuken.pedidos.supervisor"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_NmLAbJL3j8oT8mAjQAxxb3s4o85_GNE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:532336033127:android:65b2e3a4976977a91d03c2",
+        "android_client_info": {
+          "package_name": "ar.com.keuken.pickingmobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_NmLAbJL3j8oT8mAjQAxxb3s4o85_GNE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:532336033127:android:5540736ef2d178561d03c2",
+        "android_client_info": {
+          "package_name": "ar.com.keuken.punto_venta_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_NmLAbJL3j8oT8mAjQAxxb3s4o85_GNE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:532336033127:android:d4ad85c86d5e40d61d03c2",
+        "android_client_info": {
+          "package_name": "ar.com.keuken.recepcion"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_NmLAbJL3j8oT8mAjQAxxb3s4o85_GNE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:532336033127:android:a928d8ce2f0797591d03c2",
+        "android_client_info": {
+          "package_name": "ar.com.keuken.repartos_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_NmLAbJL3j8oT8mAjQAxxb3s4o85_GNE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:532336033127:android:ef328b560b652e021d03c2",
+        "android_client_info": {
+          "package_name": "ar.com.keuken.soporte_flutter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_NmLAbJL3j8oT8mAjQAxxb3s4o85_GNE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:532336033127:android:d1a35ee0b4de0ef31d03c2",
+        "android_client_info": {
+          "package_name": "ar.com.keuken.soportekeuken"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_NmLAbJL3j8oT8mAjQAxxb3s4o85_GNE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:532336033127:android:b12984799e75bd1a1d03c2",
+        "android_client_info": {
+          "package_name": "com.firvida.apkinstaller"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_NmLAbJL3j8oT8mAjQAxxb3s4o85_GNE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
