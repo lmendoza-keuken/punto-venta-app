@@ -53,3 +53,6 @@ app.*.map.json
 *.cc
 *.h
 *.cmake
+
+# FVM Version Cache
+.fvm/
