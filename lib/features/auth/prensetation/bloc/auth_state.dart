@@ -21,6 +21,36 @@ class AuthAuthenticated extends AuthState {
   List<Object> get props => [user];
 }
 
+class AuthCompanySelectionRequired extends AuthState {
+  final String email;
+  final List<Map<String, dynamic>> companies;
+  final bool autoSelected;
+
+  const AuthCompanySelectionRequired({
+    required this.email,
+    required this.companies,
+    required this.autoSelected,
+  });
+
+  @override
+  List<Object> get props => [email, companies, autoSelected];
+}
+
+class AuthCompanySelected extends AuthState {
+  final String email;
+  final int companyId;
+  final String companyName;
+
+  const AuthCompanySelected({
+    required this.email,
+    required this.companyId,
+    required this.companyName,
+  });
+
+  @override
+  List<Object> get props => [email, companyId, companyName];
+}
+
 class AuthUnauthenticated extends AuthState {}
 
 class AuthError extends AuthState {

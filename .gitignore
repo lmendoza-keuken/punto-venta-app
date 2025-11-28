@@ -59,3 +59,4 @@ app.*.map.json
 /**/*.freezed.dart
 
 # FVM Version Cache
+lib/features/auth/data/models/user_model.g.dart

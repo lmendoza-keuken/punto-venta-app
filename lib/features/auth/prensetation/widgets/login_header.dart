@@ -34,7 +34,7 @@ class LoginHeader extends StatelessWidget {
           ),
           const SizedBox(height: AppDimensions.paddingL),
           Text(
-            AppStrings.appName,
+            AppStrings.appNameComplete,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.bold,
@@ -42,7 +42,7 @@ class LoginHeader extends StatelessWidget {
           ),
           const SizedBox(height: AppDimensions.paddingS),
           Text(
-            'Ingresa tus credenciales para continuar',
+            'Inicia sesión con tu cuenta de Google',
             style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),

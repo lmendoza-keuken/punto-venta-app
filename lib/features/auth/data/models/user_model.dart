@@ -6,15 +6,24 @@ part 'user_model.g.dart';
 @JsonSerializable()
 class UserModel {
   final String id;
-  final String username;
   final String name;
-  final String role;
+  @JsonKey(name: 'tipo')
+  final String tipo;
+  final String? email;
+  final String? photoUrl;
+  final List<int>? companyIds;
+  final String? idsup;
+  final String? supervisor;
 
   const UserModel({
     required this.id,
-    required this.username,
     required this.name,
-    required this.role,
+    required this.tipo,
+    this.email,
+    this.photoUrl,
+    this.companyIds,
+    this.idsup,
+    this.supervisor,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) =>
@@ -22,21 +31,46 @@ class UserModel {
 
   Map<String, dynamic> toJson() => _$UserModelToJson(this);
 
+  factory UserModel.fromApiJson(
+    Map<String, dynamic> json,
+    String email,
+    int companyId,
+  ) {
+    return UserModel(
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      tipo: json['tipo']?.toString() ?? 'VEN',
+      email: email,
+      photoUrl: null,
+      companyIds: [companyId],
+      idsup: json['idsup']?.toString(),
+      supervisor: json['supervisor']?.toString(),
+    );
+  }
+
   User toEntity() {
     return User(
       id: id,
-      username: username,
       name: name,
-      role: role,
+      tipo: tipo,
+      email: email,
+      photoUrl: photoUrl,
+      companyIds: companyIds,
+      idsup: idsup,
+      supervisor: supervisor,
     );
   }
 
   factory UserModel.fromEntity(User user) {
     return UserModel(
       id: user.id,
-      username: user.username,
       name: user.name,
-      role: user.role,
+      tipo: user.tipo,
+      email: user.email,
+      photoUrl: user.photoUrl,
+      companyIds: user.companyIds,
+      idsup: user.idsup,
+      supervisor: user.supervisor,
     );
   }
 }

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
-import 'package:punto_venta_app/app/routes/route_paths.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/core/constants/app_string.dart';
 import 'package:punto_venta_app/core/dialogs/logout_dialog.dart';
 import 'package:punto_venta_app/core/utils/utils.dart';
 import 'package:punto_venta_app/core/widgets/dynamic_date_time.dart';
+import 'package:punto_venta_app/features/auth/domain/entities/user.dart';
+import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
+import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_state.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/client.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/saved_order.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
@@ -33,6 +34,7 @@ import 'package:punto_venta_app/features/pos/presentation/widgets/product_grid.d
 import 'package:punto_venta_app/features/pos/presentation/widgets/reports_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/save_order_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/select_client_dialog.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/settings_dialog.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 class PosMainPage extends StatefulWidget {
@@ -63,95 +65,95 @@ class _PosMainPageState extends State<PosMainPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: _buildAppBar(),
-      body: Column(
-        children: [
-          _buildClientInfo(),
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                if (constraints.maxWidth > 1200) {
-                  return Row(
-                    children: [
-                      Expanded(
-                        flex: 2,
-                        child: _buildCatalogSection(),
-                      ),
-                      const SizedBox(
-                        width: AppDimensions.cartPanelWidth * 1.5,
-                        child: CartPanel(),
-                      ),
-                    ],
-                  );
-                } else if (constraints.maxWidth > 800) {
-                  return Row(
-                    children: [
-                      Expanded(
-                        flex: 2,
-                        child: _buildCatalogSection(),
-                      ),
-                      const SizedBox(
-                        width: AppDimensions.cartPanelWidth * 0.85,
-                        child: CartPanel(),
-                      ),
-                    ],
-                  );
-                } else {
-                  return Column(
-                    children: [
-                      Expanded(
-                        flex: 2,
-                        child: _buildCatalogSection(),
-                      ),
-                      Container(
-                        height: 200,
-                        child: const CartPanel(),
-                      ),
-                    ],
-                  );
-                }
-              },
-            ),
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, authState) {
+        final user = authState is AuthAuthenticated ? authState.user : null;
+
+        return Scaffold(
+          appBar: _buildAppBar(user),
+          body: Column(
+            children: [
+              _buildClientInfo(),
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    if (constraints.maxWidth > 1200) {
+                      return Row(
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: _buildCatalogSection(),
+                          ),
+                          const SizedBox(
+                            width: AppDimensions.cartPanelWidth * 1.5,
+                            child: CartPanel(),
+                          ),
+                        ],
+                      );
+                    } else if (constraints.maxWidth > 800) {
+                      return Row(
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: _buildCatalogSection(),
+                          ),
+                          const SizedBox(
+                            width: AppDimensions.cartPanelWidth * 0.85,
+                            child: CartPanel(),
+                          ),
+                        ],
+                      );
+                    } else {
+                      return Column(
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: _buildCatalogSection(),
+                          ),
+                          SizedBox(
+                            height: 200,
+                            child: const CartPanel(),
+                          ),
+                        ],
+                      );
+                    }
+                  },
+                ),
+              ),
+              _buildActionButtons(),
+            ],
           ),
-          _buildActionButtons(),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
+  PreferredSizeWidget _buildAppBar(User? user) {
     return AppBar(
       title: LayoutBuilder(
         builder: (context, constraints) {
           return Row(
             children: [
-              const Icon(
-                Icons.point_of_sale,
-                color: AppColors.primary,
+              Column(
+                children: [
+                  const Text(AppStrings.keukenName),
+                  const Text(AppStrings.keukenDesc, style: TextStyle(color: AppColors.selectClientButton, fontSize: 14),),
+                ],
               ),
-              const SizedBox(width: AppDimensions.paddingS),
-              const Text(AppStrings.appName),
               const Spacer(),
 
-              // Responsive: mostrar diferentes elementos según el ancho
               if (constraints.maxWidth > 600) ...[
                 Text(
-                  'Cajero: Brayan',
+                  'Cajero: ${user?.name ?? "Desconocido"}',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                 ),
                 const SizedBox(width: AppDimensions.paddingS),
-                Text(
-                  '|',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
+                Text('|', style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(width: AppDimensions.paddingS),
                 Text(
-                  'Caja: 1',
+                  'ID: ${user?.id ?? "N/A"}',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -159,7 +161,6 @@ class _PosMainPageState extends State<PosMainPage> {
                 const SizedBox(width: AppDimensions.paddingM),
               ],
 
-              // Fecha y hora - responsive
               if (constraints.maxWidth > 400)
                 DynamicDateTime(
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -177,19 +178,51 @@ class _PosMainPageState extends State<PosMainPage> {
         },
       ),
       actions: [
-         // NUEVO: Botón de Stock
-        IconButton(
-          icon: const Icon(Icons.inventory_2),
-          tooltip: 'Gestión de Stock',
-          onPressed: () {
-            context.push(RoutePaths.stock);
+        if (user != null)
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: Text(
+                user.tipo,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ),
+           IconButton(
+          icon: const Icon(Icons.settings),
+          onPressed: () async {
+            final added = await showDialog(
+              context: context,
+              builder: (context) => BlocProvider.value(
+                value: context.read<ClientsBloc>(),
+                child: const SettingsDialog(),
+              ),
+            );
+            if (added is Client) {
+              context.read<ClientsBloc>().add(SelectClientEvent(added));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                    content:
+                        Text('Cliente ${added.name} agregado y seleccionado')),
+              );
+            }
+            // showSettingsDialog(context);
           },
         ),
         IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              showLogoutDialog(context);
-            }),
+          icon: const Icon(Icons.logout),
+          onPressed: () {
+            showLogoutDialog(context);
+          },
+        ),
         const SizedBox(width: AppDimensions.paddingS),
       ],
     );
@@ -239,13 +272,10 @@ class _PosMainPageState extends State<PosMainPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Barra de búsqueda integrada
           _buildIntegratedSearchBar(),
 
-          // Tabs de categorías integradas
           _buildIntegratedCategoryTabs(),
 
-          // Grid de productos
           Expanded(
             child: _buildProductGrid(),
           ),
@@ -478,7 +508,6 @@ class _PosMainPageState extends State<PosMainPage> {
               ),
             );
             if (result != null) {
-              // result is Client
               context.read<ClientsBloc>().add(SelectClientEvent(result));
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(

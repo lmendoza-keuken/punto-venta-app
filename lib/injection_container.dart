@@ -1,7 +1,11 @@
 import 'package:get_it/get_it.dart';
 import 'package:punto_venta_app/core/database/database_helper.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
+import 'package:punto_venta_app/features/auth/data/datasources/google_auth_datasource.dart';
+import 'package:punto_venta_app/features/auth/data/datasources/firestore_user_datasource.dart';
+import 'package:punto_venta_app/features/auth/data/datasources/user_api_datasource.dart';
 import 'package:punto_venta_app/features/auth/data/repositories/auth_repositories_impl.dart';
+import 'package:punto_venta_app/features/auth/domain/usecases/authenticate_user_usecase.dart';
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/client_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/completed_orders_local_datasource.dart';
@@ -48,7 +52,8 @@ import 'package:uuid/uuid.dart';
 
 import 'features/splash/presentation/bloc/splash_bloc.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
-import 'features/auth/domain/usecases/login_usecase.dart';
+import 'features/auth/domain/usecases/login_with_google_usecase.dart';
+import 'features/auth/domain/usecases/select_company_usecase.dart';
 import 'features/auth/domain/usecases/logout_usecase.dart';
 import 'features/pos/data/repositories/product_repository_impl.dart';
 import 'features/pos/data/repositories/saved_orders_repository_impl.dart';
@@ -69,22 +74,40 @@ Future<void> init() async {
   //! Features - Auth
   // Bloc
   sl.registerFactory(() => AuthBloc(
-        loginUsecase: sl(),
+        loginWithGoogleUsecase: sl(),
+        selectCompanyUsecase: sl(),
+        authenticateUserUseCase: sl(),
         logoutUsecase: sl(),
       ));
 
   // Use cases
-  sl.registerLazySingleton(() => LoginUsecase(sl()));
+  sl.registerLazySingleton(() => LoginWithGoogleUsecase(sl()));
+  sl.registerLazySingleton(() => SelectCompanyUseCase(sl()));
+  sl.registerLazySingleton(() => AuthenticateUserUseCase(sl()));
   sl.registerLazySingleton(() => LogoutUsecase(sl()));
 
   // Repository
   sl.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(localDataSource: sl()),
+    () => AuthRepositoryImpl(
+      localDataSource: sl(),
+      googleAuthDataSource: sl(),
+      firestoreUserDataSource: sl(),
+      userApiDataSource: sl(),
+    ),
   );
 
   // Data sources
+  sl.registerLazySingleton<GoogleAuthDataSource>(
+    () => GoogleAuthDataSourceImpl(),
+  );
+  sl.registerLazySingleton<FirestoreUserDataSource>(
+    () => FirestoreUserDataSourceImpl(),
+  );
   sl.registerLazySingleton<AuthLocalDataSource>(
     () => AuthLocalDataSourceImpl(sharedPreferences: sl()),
+  );
+  sl.registerLazySingleton<UserApiDataSource>(
+    () => UserApiDataSourceImpl(),
   );
 
   //! Features - POS

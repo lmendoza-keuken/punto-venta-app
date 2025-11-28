@@ -1,6 +1,9 @@
 class AppStrings {
   // App
   static const String appName = 'POS System';
+  static const String appNameComplete = 'Punto de Venta';
+  static const String keukenName = 'Keuken S.A.';
+  static const String keukenDesc = 'Soluciones Informáticas';
 
   // Auth
   static const String login = 'Iniciar Sesión';

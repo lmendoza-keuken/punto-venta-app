@@ -12,7 +12,12 @@
           "package_name": "ar.com.keuken.inventorymobile"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "532336033127-l4dh3ctrqf8uq8701jqt40naqt0a075m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB_NmLAbJL3j8oT8mAjQAxxb3s4o85_GNE"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "532336033127-l4dh3ctrqf8uq8701jqt40naqt0a075m.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "532336033127-3i4kqjk6uvbuk97kidgn3h6hg7hpicdo.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.recepcionApp"
+              }
+            }
+          ]
         }
       }
     },
@@ -31,7 +48,12 @@
           "package_name": "ar.com.keuken.mobile"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "532336033127-l4dh3ctrqf8uq8701jqt40naqt0a075m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB_NmLAbJL3j8oT8mAjQAxxb3s4o85_GNE"
@@ -39,7 +61,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "532336033127-l4dh3ctrqf8uq8701jqt40naqt0a075m.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "532336033127-3i4kqjk6uvbuk97kidgn3h6hg7hpicdo.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.recepcionApp"
+              }
+            }
+          ]
         }
       }
     },
@@ -50,7 +84,20 @@
           "package_name": "ar.com.keuken.mobile.pedidos"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "532336033127-fp0aep1s0kf7p8p0ubmjgkje8n5srh77.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "ar.com.keuken.mobile.pedidos",
+            "certificate_hash": "2921b780f777c62b639c9a757b6aceb14acb84c8"
+          }
+        },
+        {
+          "client_id": "532336033127-l4dh3ctrqf8uq8701jqt40naqt0a075m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB_NmLAbJL3j8oT8mAjQAxxb3s4o85_GNE"
@@ -58,7 +105,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "532336033127-l4dh3ctrqf8uq8701jqt40naqt0a075m.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "532336033127-3i4kqjk6uvbuk97kidgn3h6hg7hpicdo.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.recepcionApp"
+              }
+            }
+          ]
         }
       }
     },
@@ -69,7 +128,12 @@
           "package_name": "ar.com.keuken.mobile.pedidos.debug"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "532336033127-l4dh3ctrqf8uq8701jqt40naqt0a075m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB_NmLAbJL3j8oT8mAjQAxxb3s4o85_GNE"
@@ -77,7 +141,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "532336033127-l4dh3ctrqf8uq8701jqt40naqt0a075m.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "532336033127-3i4kqjk6uvbuk97kidgn3h6hg7hpicdo.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.recepcionApp"
+              }
+            }
+          ]
         }
       }
     },
@@ -88,7 +164,12 @@
           "package_name": "ar.com.keuken.pedidos.supervisor"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "532336033127-l4dh3ctrqf8uq8701jqt40naqt0a075m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB_NmLAbJL3j8oT8mAjQAxxb3s4o85_GNE"
@@ -96,7 +177,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "532336033127-l4dh3ctrqf8uq8701jqt40naqt0a075m.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "532336033127-3i4kqjk6uvbuk97kidgn3h6hg7hpicdo.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.recepcionApp"
+              }
+            }
+          ]
         }
       }
     },
@@ -107,7 +200,28 @@
           "package_name": "ar.com.keuken.pickingmobile"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "532336033127-4k37bsp5skdgh5q707h0ql2vdo6dineg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "ar.com.keuken.pickingmobile",
+            "certificate_hash": "c32f751f849e0bd0b19934e3fcc809bfc26cca12"
+          }
+        },
+        {
+          "client_id": "532336033127-l5hhgucrs2a0b05rbms0vergs68nfgba.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "ar.com.keuken.pickingmobile",
+            "certificate_hash": "887be8eea8f7dea98f3a7d8a228dbbbfe228f47e"
+          }
+        },
+        {
+          "client_id": "532336033127-l4dh3ctrqf8uq8701jqt40naqt0a075m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB_NmLAbJL3j8oT8mAjQAxxb3s4o85_GNE"
@@ -115,7 +229,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "532336033127-l4dh3ctrqf8uq8701jqt40naqt0a075m.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "532336033127-3i4kqjk6uvbuk97kidgn3h6hg7hpicdo.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.recepcionApp"
+              }
+            }
+          ]
         }
       }
     },
@@ -126,7 +252,20 @@
           "package_name": "ar.com.keuken.punto_venta_app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "532336033127-kbovuv2d91f4h9g511a6ikqoqssv9fki.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "ar.com.keuken.punto_venta_app",
+            "certificate_hash": "bdb9230e568d7c8c6a8dcbf734aee82f69955ef9"
+          }
+        },
+        {
+          "client_id": "532336033127-l4dh3ctrqf8uq8701jqt40naqt0a075m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB_NmLAbJL3j8oT8mAjQAxxb3s4o85_GNE"
@@ -134,7 +273,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "532336033127-l4dh3ctrqf8uq8701jqt40naqt0a075m.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "532336033127-3i4kqjk6uvbuk97kidgn3h6hg7hpicdo.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.recepcionApp"
+              }
+            }
+          ]
         }
       }
     },
@@ -145,7 +296,12 @@
           "package_name": "ar.com.keuken.recepcion"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "532336033127-l4dh3ctrqf8uq8701jqt40naqt0a075m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB_NmLAbJL3j8oT8mAjQAxxb3s4o85_GNE"
@@ -153,7 +309,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "532336033127-l4dh3ctrqf8uq8701jqt40naqt0a075m.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "532336033127-3i4kqjk6uvbuk97kidgn3h6hg7hpicdo.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.recepcionApp"
+              }
+            }
+          ]
         }
       }
     },
@@ -164,7 +332,12 @@
           "package_name": "ar.com.keuken.repartos_app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "532336033127-l4dh3ctrqf8uq8701jqt40naqt0a075m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB_NmLAbJL3j8oT8mAjQAxxb3s4o85_GNE"
@@ -172,7 +345,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "532336033127-l4dh3ctrqf8uq8701jqt40naqt0a075m.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "532336033127-3i4kqjk6uvbuk97kidgn3h6hg7hpicdo.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.recepcionApp"
+              }
+            }
+          ]
         }
       }
     },
@@ -183,7 +368,12 @@
           "package_name": "ar.com.keuken.soporte_flutter"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "532336033127-l4dh3ctrqf8uq8701jqt40naqt0a075m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB_NmLAbJL3j8oT8mAjQAxxb3s4o85_GNE"
@@ -191,7 +381,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "532336033127-l4dh3ctrqf8uq8701jqt40naqt0a075m.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "532336033127-3i4kqjk6uvbuk97kidgn3h6hg7hpicdo.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.recepcionApp"
+              }
+            }
+          ]
         }
       }
     },
@@ -202,7 +404,12 @@
           "package_name": "ar.com.keuken.soportekeuken"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "532336033127-l4dh3ctrqf8uq8701jqt40naqt0a075m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB_NmLAbJL3j8oT8mAjQAxxb3s4o85_GNE"
@@ -210,7 +417,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "532336033127-l4dh3ctrqf8uq8701jqt40naqt0a075m.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "532336033127-3i4kqjk6uvbuk97kidgn3h6hg7hpicdo.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.recepcionApp"
+              }
+            }
+          ]
         }
       }
     },
@@ -221,7 +440,12 @@
           "package_name": "com.firvida.apkinstaller"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "532336033127-l4dh3ctrqf8uq8701jqt40naqt0a075m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB_NmLAbJL3j8oT8mAjQAxxb3s4o85_GNE"
@@ -229,7 +453,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "532336033127-l4dh3ctrqf8uq8701jqt40naqt0a075m.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "532336033127-3i4kqjk6uvbuk97kidgn3h6hg7hpicdo.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.recepcionApp"
+              }
+            }
+          ]
         }
       }
     }
