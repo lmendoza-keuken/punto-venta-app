@@ -6,6 +6,7 @@ import 'package:punto_venta_app/features/auth/data/datasources/firestore_user_da
 import 'package:punto_venta_app/features/auth/data/datasources/user_api_datasource.dart';
 import 'package:punto_venta_app/features/auth/data/repositories/auth_repositories_impl.dart';
 import 'package:punto_venta_app/features/auth/domain/usecases/authenticate_user_usecase.dart';
+import 'package:punto_venta_app/features/auth/domain/usecases/change_chashier_usecase.dart';
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/client_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/completed_orders_local_datasource.dart';
@@ -78,6 +79,7 @@ Future<void> init() async {
         selectCompanyUsecase: sl(),
         authenticateUserUseCase: sl(),
         logoutUsecase: sl(),
+        changeCashierUseCase: sl(),
       ));
 
   // Use cases
@@ -85,6 +87,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => SelectCompanyUseCase(sl()));
   sl.registerLazySingleton(() => AuthenticateUserUseCase(sl()));
   sl.registerLazySingleton(() => LogoutUsecase(sl()));
+  sl.registerLazySingleton(() => ChangeCashierUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<AuthRepository>(

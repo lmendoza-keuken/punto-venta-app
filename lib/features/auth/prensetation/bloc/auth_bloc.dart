@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/features/auth/domain/usecases/authenticate_user_usecase.dart';
+import 'package:punto_venta_app/features/auth/domain/usecases/change_chashier_usecase.dart';
 import 'package:punto_venta_app/features/auth/domain/usecases/login_with_google_usecase.dart';
 import 'package:punto_venta_app/features/auth/domain/usecases/select_company_usecase.dart';
 import 'package:punto_venta_app/features/auth/domain/usecases/logout_usecase.dart';
@@ -11,12 +12,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthenticateUserUseCase authenticateUserUseCase;
   final SelectCompanyUseCase selectCompanyUsecase;
   final LogoutUsecase logoutUsecase;
+  final ChangeCashierUseCase changeCashierUseCase;
 
   AuthBloc({
     required this.loginWithGoogleUsecase,
     required this.authenticateUserUseCase,
     required this.selectCompanyUsecase,
     required this.logoutUsecase,
+    required this.changeCashierUseCase,
   }) : super(AuthInitial()) {
     on<LoginWithGoogleRequested>(_onLoginWithGoogleRequested);
     on<CompanySelected>(_onCompanySelected);
@@ -24,6 +27,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<LogoutEvent>(_onLogoutEvent);
     on<CheckAuthStatus>(_onCheckAuthStatus);
     on<AuthenticateUserRequested>(_onUserAuthenticationRequested);
+    on<ChangeCashierRequested>(_onChangeCashierRequested);
   }
 
   Future<void> _onLoginWithGoogleRequested(
@@ -114,6 +118,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthError(message: e.toString()));
     }
   }
+
+ Future<void> _onChangeCashierRequested(
+  ChangeCashierRequested event,
+  Emitter<AuthState> emit,
+) async {
+  try {
+    await changeCashierUseCase();
+  } catch (e) {
+    emit(AuthError(message: e.toString()));
+  }
+}
 
   Future<void> _onLogoutEvent(
     LogoutEvent event,

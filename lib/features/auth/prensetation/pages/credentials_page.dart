@@ -109,13 +109,7 @@ class _CredentialsPageState extends State<CredentialsPage> {
                                         ),
                                     textAlign: TextAlign.center,
                                   ),
-                                  // Text(
-                                  //   widget.email,
-                                  //   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  //         color: Colors.grey[600],
-                                  //       ),
-                                  //   textAlign: TextAlign.center,
-                                  // ),
+                                  
                                   const SizedBox(height: AppDimensions.paddingXL),
                   
                                   // Username Field

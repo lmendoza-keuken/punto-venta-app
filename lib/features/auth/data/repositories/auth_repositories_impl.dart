@@ -3,7 +3,9 @@ import 'package:punto_venta_app/features/auth/data/datasources/auth_local_dataso
 import 'package:punto_venta_app/features/auth/data/datasources/google_auth_datasource.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/firestore_user_datasource.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/user_api_datasource.dart';
+import 'package:punto_venta_app/features/auth/data/models/enterprise_model.dart';
 import 'package:punto_venta_app/features/auth/data/models/user_model.dart';
+import 'package:punto_venta_app/features/auth/domain/entities/enterprise.dart';
 import 'package:punto_venta_app/features/auth/domain/entities/user.dart';
 import 'package:punto_venta_app/features/auth/domain/repositories/auth_repository.dart';
 
@@ -68,6 +70,12 @@ class AuthRepositoryImpl implements AuthRepository {
 
     // ApiConfig.updateCompanyId(companyId.toString());
 
+    final enterpriseModel = EnterpriseModel(
+      id: selectedCompany.id,
+      name: selectedCompany.name,
+    );
+    await localDataSource.cacheEnterprise(enterpriseModel);
+
     return {
       'email': email,
       'companyId': companyId,
@@ -110,11 +118,18 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> logout() async {
-    // await googleAuthDataSource.signOut(); // Sign out from Google
+    await googleAuthDataSource.signOut();
+    await localDataSource.logout();
+    await localDataSource.clearEnterprise();
+    // Reset any necessary configurations (ApiConfig)
+     
+    ApiConfig.updateCompanyId("99999999"); // Reset a default
+  }
+
+  @override
+  Future<void> changeCashier() async {
     await localDataSource.logout();
 
-    // Reset any necessary configurations (ApiConfig)
-    ApiConfig.updateCompanyId("99999999"); // Reset a default
   }
 
   @override
