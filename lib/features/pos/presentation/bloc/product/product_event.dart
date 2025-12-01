@@ -28,3 +28,12 @@ class SearchProducts extends ProductEvent {
 }
 
 class LoadCategories extends ProductEvent {}
+
+class ChangePriceList extends ProductEvent {
+  final int listId;
+
+  const ChangePriceList(this.listId);
+
+  @override
+  List<Object> get props => [listId];
+}

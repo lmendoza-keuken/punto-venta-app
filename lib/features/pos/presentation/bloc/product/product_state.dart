@@ -17,12 +17,14 @@ class ProductLoaded extends ProductState {
   final List<String> categories;
   final String selectedCategory;
   final String searchQuery;
+  final int currentPriceList;
 
   const ProductLoaded({
     required this.products,
     required this.categories,
     this.selectedCategory = 'Todo',
     this.searchQuery = '',
+    this.currentPriceList = 13, 
   });
 
   ProductLoaded copyWith({
@@ -30,18 +32,20 @@ class ProductLoaded extends ProductState {
     List<String>? categories,
     String? selectedCategory,
     String? searchQuery,
+    int? currentPriceList,
   }) {
     return ProductLoaded(
       products: products ?? this.products,
       categories: categories ?? this.categories,
       selectedCategory: selectedCategory ?? this.selectedCategory,
       searchQuery: searchQuery ?? this.searchQuery,
+      currentPriceList: currentPriceList ?? this.currentPriceList,
     );
   }
 
   @override
   List<Object> get props =>
-      [products, categories, selectedCategory, searchQuery];
+      [products, categories, selectedCategory, searchQuery, currentPriceList];
 }
 
 class ProductError extends ProductState {

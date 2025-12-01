@@ -10,12 +10,15 @@ import 'package:punto_venta_app/features/auth/domain/usecases/change_chashier_us
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/client_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/completed_orders_local_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/invoice_remote_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/price_list_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/printer_socket_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/product_local_data.datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/saved_orders_local_dasource.dart';
 import 'package:punto_venta_app/features/pos/data/repositories/client_repository_impl.dart';
 import 'package:punto_venta_app/features/pos/data/repositories/completed_orders_repository_impl.dart';
+import 'package:punto_venta_app/features/pos/data/repositories/invoice_repository_impl.dart';
 import 'package:punto_venta_app/features/pos/data/repositories/printer_repository_impl.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/client_repository.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/completed_orders_repository.dart';
@@ -29,6 +32,7 @@ import 'package:punto_venta_app/features/pos/domain/usecases/get_clients_usecase
 import 'package:punto_venta_app/features/pos/domain/usecases/get_reports_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/load_ordes_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/print_ticket_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/send_invoice_usecase.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_bloc.dart';
@@ -97,6 +101,7 @@ Future<void> init() async {
       googleAuthDataSource: sl(),
       firestoreUserDataSource: sl(),
       userApiDataSource: sl(),
+      priceListLocalDataSource: sl(),
     ),
   );
 
@@ -114,12 +119,13 @@ Future<void> init() async {
     () => UserApiDataSourceImpl(),
   );
   sl.registerLazySingleton<PrinterLocalDataSource>(
-  () => PrinterLocalDataSourceImpl(sharedPreferences: sl()),
-);
+    () => PrinterLocalDataSourceImpl(sharedPreferences: sl()),
+  );
+
 
   //! Features - POS
   // Bloc
-  sl.registerFactory(() => ProductBloc(getProductsUsecase: sl()));
+  sl.registerFactory(() => ProductBloc(getProductsUsecase: sl(), priceListLocalDataSource: sl()));
   sl.registerFactory(() => CartBloc(manageCartUsecase: sl()));
   sl.registerFactory(() => UiBloc());
   sl.registerFactory(() => SavedOrdersBloc(
@@ -141,6 +147,8 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetClientsUsecase(sl()));
   sl.registerLazySingleton(() => AddClientUsecase(sl()));
   sl.registerLazySingleton(() => DeleteClientUsecase(sl()));
+  sl.registerLazySingleton(() => SendInvoiceUseCase(sl()));
+
   // sl.registerLazySingleton(() => PrintTicketUsecase(sl()));
 
   // Repository
@@ -155,6 +163,9 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<ClientRepository>(
     () => ClientRepositoryImpl(localDataSource: sl()),
+  );
+  sl.registerLazySingleton<InvoiceRepository>(
+    () => InvoiceRepositoryImpl(remote: sl()),
   );
 
   // ===== PRINTER =====
@@ -208,6 +219,12 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<ClientLocalDataSource>(
       () => ClientLocalDataSourceImpl(sharedPreferences: sl()));
+  sl.registerLazySingleton<InvoiceRemoteDataSource>(
+    () => InvoiceRemoteDataSourceImpl(client: sl()),
+  );
+   sl.registerLazySingleton<PriceListLocalDataSource>(
+    () => PriceListLocalDataSourceImpl(sharedPreferences: sl()),
+  );
 
   //! Features - Stock
   // Bloc

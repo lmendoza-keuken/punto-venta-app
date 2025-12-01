@@ -30,30 +30,11 @@ class ReplaceCart extends CartEvent {
   List<Object> get props => [items, log];
 }
 
-class RemoveFromCart extends CartEvent {
-  final String productId;
-
-  const RemoveFromCart(this.productId);
-
-  @override
-  List<Object> get props => [productId];
-}
-
 class RemoveQuantityFromCart extends CartEvent {
   final String productId;
   final int quantity;
 
   const RemoveQuantityFromCart(this.productId, this.quantity);
-
-  @override
-  List<Object> get props => [productId, quantity];
-}
-
-class UpdateQuantity extends CartEvent {
-  final String productId;
-  final int quantity;
-
-  const UpdateQuantity(this.productId, this.quantity);
 
   @override
   List<Object> get props => [productId, quantity];

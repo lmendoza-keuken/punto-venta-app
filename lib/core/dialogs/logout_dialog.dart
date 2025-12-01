@@ -87,9 +87,9 @@ Future<void> showLogoutDialog(BuildContext context) async {
                     backgroundColor: Colors.red.withOpacity(0.1),
                     title: 'Cerrar Sesión Completa',
                     subtitle: 'Salir de la aplicación',
-                    onTap: () {
-                      Navigator.of(dialogContext).pop();
+                    onTap: ()  {
                       context.read<AuthBloc>().add(LogoutRequested());
+                      Navigator.of(dialogContext).pop();
                       context.go(RoutePaths.login);
                     },
                   ),

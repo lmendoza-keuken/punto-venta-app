@@ -3,10 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/utils/extensions.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/price_list_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/client.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/complete_order_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/send_invoice_usecase.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_state.dart';
@@ -45,6 +47,8 @@ class _ConfirmDialogContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final iva = total * 0.21;
+    final totalConIva = total + iva;
     return BlocListener<PrinterBloc, PrinterState>(
       listener: (context, printerState) {
         if (printerState is PrinterSuccess) {
@@ -68,7 +72,7 @@ class _ConfirmDialogContent extends StatelessWidget {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Total a cobrar: ${total.formatToCurrency()}'),
+            Text('Total a cobrar: ${totalConIva.formatToCurrency()}'),
             const SizedBox(height: 16),
             const Text('¿Deseas procesar esta venta?'),
             const SizedBox(height: 16),
@@ -127,7 +131,8 @@ class _ConfirmDialogContent extends StatelessWidget {
     final cartState = context.read<CartBloc>().state as CartLoaded;
     final user = await di.sl<AuthLocalDataSource>().getCachedUser();
     final printerConfig =
-          await di.sl<PrinterLocalDataSource>().getPrinterConfig();
+        await di.sl<PrinterLocalDataSource>().getPrinterConfig();
+    final priceList = await di.sl<PriceListLocalDataSource>().getCurrentPriceList();
 
     try {
       final completeOrderUsecase = di.sl<CompleteOrderUsecase>();
@@ -144,6 +149,8 @@ class _ConfirmDialogContent extends StatelessWidget {
         logItems: cartState.log,
         total: cartState.total,
         clientName: client?.name,
+        client: client,
+        priceListId: priceList,
         totalTax: cartState.total * 0.21,
         paymentMethod: 'Efectivo',
         cashierName: user?.name ?? 'Desconocido',
@@ -151,7 +158,30 @@ class _ConfirmDialogContent extends StatelessWidget {
         ticketId: DateTime.now().millisecondsSinceEpoch.toString(),
       );
 
-      
+      final sendInvoice = di.sl<SendInvoiceUseCase>();
+
+      bool invoiceSent = false;
+      try {
+        invoiceSent = await sendInvoice(printJob);
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al enviar factura: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+
+      if (!invoiceSent) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('El envío de factura no fue exitoso.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
 
       context.read<PrinterBloc>().add(PrintTicket(
             printJob: printJob,
@@ -160,6 +190,7 @@ class _ConfirmDialogContent extends StatelessWidget {
 
       context.read<CartBloc>().add(ClearCart());
 
+      Navigator.of(context).pop();
       Navigator.of(context).pop();
 
       ScaffoldMessenger.of(context).showSnackBar(

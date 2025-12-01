@@ -3,6 +3,7 @@ import 'package:punto_venta_app/features/auth/data/datasources/auth_local_dataso
 import 'package:punto_venta_app/features/auth/data/datasources/google_auth_datasource.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/firestore_user_datasource.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/user_api_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/price_list_local_datasource.dart';
 import 'package:punto_venta_app/features/auth/data/models/enterprise_model.dart';
 import 'package:punto_venta_app/features/auth/data/models/user_model.dart';
 import 'package:punto_venta_app/features/auth/domain/entities/user.dart';
@@ -13,12 +14,14 @@ class AuthRepositoryImpl implements AuthRepository {
   final GoogleAuthDataSource googleAuthDataSource;
   final FirestoreUserDataSource firestoreUserDataSource;
   final UserApiDataSource userApiDataSource;
+  final PriceListLocalDataSource priceListLocalDataSource;
 
   AuthRepositoryImpl({
     required this.localDataSource,
     required this.googleAuthDataSource,
     required this.firestoreUserDataSource,
     required this.userApiDataSource,
+    required this.priceListLocalDataSource,
   });
 
   @override
@@ -64,22 +67,29 @@ class AuthRepositoryImpl implements AuthRepository {
       orElse: () => throw Exception('Empresa no encontrada'),
     );
 
-    // para debug
-    ApiConfig.updateCompanyId("99999999");
-
-    // ApiConfig.updateCompanyId(companyId.toString());
+    ApiConfig.updateCompanyConfig(
+      "99999999",
+      // selectedCompany.id.toString(),
+      selectedCompany.baseUrl,
+    );
 
     final enterpriseModel = EnterpriseModel(
       id: selectedCompany.id,
       name: selectedCompany.name,
+      baseUrl: selectedCompany.baseUrl,
+      listPriceId: selectedCompany.listPriceId,
     );
+
     await localDataSource.cacheEnterprise(enterpriseModel);
     await localDataSource.cacheEmail(email);
+    await priceListLocalDataSource
+        .savePriceList(selectedCompany.listPriceId ?? 13);
 
     return {
       'email': email,
       'companyId': companyId,
       'companyName': selectedCompany.name,
+      'listPriceId': selectedCompany.listPriceId,
     };
   }
 
@@ -107,7 +117,6 @@ class AuthRepositoryImpl implements AuthRepository {
 
       final userModel = UserModel.fromEntity(user);
 
-      // Guardar en caché local
       await localDataSource.cacheUser(userModel);
 
       return user;
@@ -122,15 +131,13 @@ class AuthRepositoryImpl implements AuthRepository {
     await localDataSource.logout();
     await localDataSource.clearEnterprise();
     await localDataSource.clearEmail();
-    // Reset any necessary configurations (ApiConfig)
-     
-    ApiConfig.updateCompanyId("99999999"); // Reset a default
+    await priceListLocalDataSource.clearPriceList();
+    ApiConfig.updateCompanyId("99999999");
   }
 
   @override
   Future<void> changeCashier() async {
     await localDataSource.logout();
-
   }
 
   @override

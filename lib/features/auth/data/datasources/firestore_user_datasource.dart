@@ -3,16 +3,22 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class Company {
   final int id;
   final String name;
+  final String? baseUrl;
+  final int? listPriceId;
 
   Company({
     required this.id,
     required this.name,
+    this.baseUrl,
+    this.listPriceId,
   });
 
   factory Company.fromFirestore(Map<String, dynamic> data,) {
     return Company(
       id: data['id'] ?? '',
       name: data['name'] ?? '',
+      baseUrl: data['baseUrl']?.toString(),
+      listPriceId: data['listPriceId'] ?? 0,
     );
   }
 
@@ -20,6 +26,8 @@ class Company {
     return {
       'id': id,
       'name': name,
+      'baseUrl': baseUrl,
+      'listPriceId': listPriceId,
     };
   }
 }

@@ -1,5 +1,6 @@
 import 'package:punto_venta_app/features/pos/domain/entities/cart_item.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/client.dart';
 
 class PrintJob {
   final List<CartItem> items;
@@ -7,6 +8,8 @@ class PrintJob {
   final double total;
   final double totalTax;
   final String? clientName;
+  final Client? client;
+  final int? priceListId;
   final String? paymentMethod;
   final String cashierName;
   final DateTime timestamp;
@@ -17,7 +20,9 @@ class PrintJob {
     required this.logItems,
     required this.total,
     required this.totalTax,
+    this.client,
     this.clientName,
+    this.priceListId,
     this.paymentMethod,
     required this.cashierName,
     required this.timestamp,

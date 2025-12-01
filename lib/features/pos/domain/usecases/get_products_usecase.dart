@@ -24,4 +24,8 @@ class GetProductsUsecase {
   Future<List<String>> getCategories() async {
     return await repository.getCategories();
   }
+
+  Future<void> updatePriceList(int listId) async {
+    await repository.updatePriceList(listId);
+  }
 }

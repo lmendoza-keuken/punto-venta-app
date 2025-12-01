@@ -163,6 +163,17 @@ class _PosMainPageState extends State<PosMainPage> {
                 ),
                 const SizedBox(width: AppDimensions.paddingM),
               ],
+
+              BlocBuilder<ProductBloc, ProductState>(
+                builder: (context, state) {
+                  if (state is ProductLoaded) {
+                    return Text('# Lista: ${state.currentPriceList}', style: TextStyle(fontSize: 16),);
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+              Padding(padding:  const EdgeInsets.only(right: AppDimensions.paddingM)),
+
               if (constraints.maxWidth > 400)
                 DynamicDateTime(
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(

@@ -126,26 +126,46 @@ class _CartPanelState extends State<CartPanel> {
   }
 
   Widget _buildSummary(BuildContext context, CartLoaded state) {
+    final subtotal = state.total;
+    final iva = subtotal * 0.21;
+    final totalConIva = subtotal + iva;
+
     return Container(
       padding: const EdgeInsets.all(AppDimensions.paddingM),
       child: Column(
         children: [
+          const SizedBox(height: AppDimensions.paddingS),
+          // Subtotal
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // TODO: deberia ir ese item?'
-              Text('Items: ', style: Theme.of(context).textTheme.bodyMedium),
-              const SizedBox(width: 8),
-
-              Text('${state.totalItems}',
+              Text('Subtotal:', style: Theme.of(context).textTheme.bodyMedium),
+              Text(subtotal.formatToCurrency(),
                   style: Theme.of(context)
                       .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold)),
-              const Spacer(),
+                      .bodyMedium
+                      ?.copyWith(fontWeight: FontWeight.w600)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          // IVA
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('IVA (21%):', style: TextStyle(color: Colors.grey[700])),
+              Text(iva.formatToCurrency(),
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Divider(height: 1, color: Colors.grey.shade300),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
               Text(AppStrings.total,
                   style: Theme.of(context).textTheme.bodyMedium),
-              const SizedBox(width: 8),
-              Text(state.total.formatToCurrency(),
+              Text(totalConIva.formatToCurrency(),
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       color: AppColors.primary, fontWeight: FontWeight.bold)),
             ],

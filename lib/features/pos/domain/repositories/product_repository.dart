@@ -7,5 +7,6 @@ abstract class ProductRepository {
   Future<List<String>> getCategories();
   Future<Product> createProduct(Product product);  
   Future<Product> updateProduct(Product product);  
-  Future<void> deleteProduct(int codigo);          
+  Future<void> deleteProduct(int codigo);
+  Future<void> updatePriceList(int listId); 
 }

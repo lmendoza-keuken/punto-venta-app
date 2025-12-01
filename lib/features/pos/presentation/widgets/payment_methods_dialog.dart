@@ -65,15 +65,92 @@ class _PaymentMethodsDialogState extends State<PaymentMethodsDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                'Total a cobrar: ${widget.total.formatToCurrency()}',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold),
+              // const Text('Seleccione los metodos de pago para esta venta.'),
+              const SizedBox(height: 12),
+              Row(
+                children: const [
+                  Icon(Icons.info_outline, size: 18, color: AppColors.primary),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Por el momento solo está habilitado el pago en efectivo.',
+                      style: TextStyle(fontSize: 13, color: Colors.black54),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              const Text('Seleccione los metodos de pago para esta venta.'),
+
+              const SizedBox(height: 8),
+              ListTile(
+                leading:
+                    const Icon(Icons.attach_money, color: AppColors.primary),
+                title: const Text('Efectivo'),
+                subtitle: const Text('Opción habilitada'),
+                trailing:
+                    const Icon(Icons.check_circle, color: AppColors.success),
+              ),
+              ListTile(
+                leading: const Icon(Icons.credit_card, color: Colors.grey),
+                title: const Text('Tarjeta (no disponible)'),
+                enabled: false,
+              ),
+              ListTile(
+                leading: const Icon(Icons.phone_iphone, color: Colors.grey),
+                title: const Text('MercadoPago / QR (no disponible)'),
+                enabled: false,
+              ),
+              const SizedBox(height: 15),
+              Builder(
+                builder: (context) {
+                  final iva = widget.total * 0.21;
+                  final totalConIva = widget.total + iva;
+                  return Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Subtotal:',
+                              style: TextStyle(color: Colors.grey[700])),
+                          Text(widget.total.formatToCurrency(),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('IVA (21%):',
+                              style: TextStyle(color: Colors.grey[700])),
+                          Text(iva.formatToCurrency(),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Divider(height: 1, color: Colors.grey[300]),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Total a cobrar:',
+                              style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.w600) ??
+                                  const TextStyle(fontWeight: FontWeight.w600)),
+                          Text(totalConIva.formatToCurrency(),
+                              style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.bold) ??
+                                  const TextStyle(fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ],
+                  );
+                },
+              ),
             ],
           ),
         ),
