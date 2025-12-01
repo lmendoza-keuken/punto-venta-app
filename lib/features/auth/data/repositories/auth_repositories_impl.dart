@@ -5,7 +5,6 @@ import 'package:punto_venta_app/features/auth/data/datasources/firestore_user_da
 import 'package:punto_venta_app/features/auth/data/datasources/user_api_datasource.dart';
 import 'package:punto_venta_app/features/auth/data/models/enterprise_model.dart';
 import 'package:punto_venta_app/features/auth/data/models/user_model.dart';
-import 'package:punto_venta_app/features/auth/domain/entities/enterprise.dart';
 import 'package:punto_venta_app/features/auth/domain/entities/user.dart';
 import 'package:punto_venta_app/features/auth/domain/repositories/auth_repository.dart';
 
@@ -75,6 +74,7 @@ class AuthRepositoryImpl implements AuthRepository {
       name: selectedCompany.name,
     );
     await localDataSource.cacheEnterprise(enterpriseModel);
+    await localDataSource.cacheEmail(email);
 
     return {
       'email': email,
@@ -121,6 +121,7 @@ class AuthRepositoryImpl implements AuthRepository {
     await googleAuthDataSource.signOut();
     await localDataSource.logout();
     await localDataSource.clearEnterprise();
+    await localDataSource.clearEmail();
     // Reset any necessary configurations (ApiConfig)
      
     ApiConfig.updateCompanyId("99999999"); // Reset a default

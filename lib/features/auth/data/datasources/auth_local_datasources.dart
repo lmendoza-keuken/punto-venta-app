@@ -4,47 +4,40 @@ import 'package:punto_venta_app/features/auth/data/models/user_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 abstract class AuthLocalDataSource {
-  Future<void> logout();
   Future<UserModel?> getCachedUser();
-  Future<EnterpriseModel?> getCachedEnterprise();
   Future<void> cacheUser(UserModel user);
+  Future<void> logout(); 
+  Future<EnterpriseModel?> getCachedEnterprise();
   Future<void> cacheEnterprise(EnterpriseModel enterprise);
+  Future<void> cacheEmail(String email);
+  Future<String?> getCachedEmail();
   Future<void> clearEnterprise();
+  Future<void> clearEmail();
 }
 
 class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   final SharedPreferences sharedPreferences;
-  static const String cachedUserKey = 'CACHED_USER';
+
+  UserModel? _volatileUser;
+
   static const String cachedEnterpriseKey = 'CACHED_ENTERPRISE';
+  static const String cachedEmailKey = 'CACHED_EMAIL';
 
   AuthLocalDataSourceImpl({required this.sharedPreferences});
 
-  
-  @override
-  Future<void> logout() async {
-    await sharedPreferences.remove(cachedUserKey);
-  }
-
-   @override
-  Future<void> clearEnterprise() async {
-    await sharedPreferences.remove(cachedEnterpriseKey);
-  }
-
   @override
   Future<UserModel?> getCachedUser() async {
-    final jsonString = sharedPreferences.getString(cachedUserKey);
-    if (jsonString != null) {
-      return UserModel.fromJson(json.decode(jsonString));
-    }
-    return null;
+    return _volatileUser;
   }
 
   @override
   Future<void> cacheUser(UserModel user) async {
-    await sharedPreferences.setString(
-      cachedUserKey,
-      json.encode(user.toJson()),
-    );
+    _volatileUser = user;
+  }
+
+  @override
+  Future<void> logout() async {
+    _volatileUser = null;
   }
 
   @override
@@ -63,5 +56,24 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
       json.encode(enterprise.toJson()),
     );
   }
-}
 
+  @override
+  Future<void> cacheEmail(String email) async {
+    await sharedPreferences.setString(cachedEmailKey, email);
+  }
+
+  @override
+  Future<String?> getCachedEmail() async {
+    return sharedPreferences.getString(cachedEmailKey);
+  }
+
+  @override
+  Future<void> clearEnterprise() async {
+    await sharedPreferences.remove(cachedEnterpriseKey);
+  }
+
+  @override
+  Future<void> clearEmail() async {
+    await sharedPreferences.remove(cachedEmailKey);
+  }
+}
