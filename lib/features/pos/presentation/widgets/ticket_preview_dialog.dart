@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/core/utils/extensions.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/printer_config.dart';
@@ -148,8 +149,10 @@ class _TicketPreviewContent extends StatelessWidget {
     );
   }
 
-  void _handlePrint(BuildContext context) {
-    // Crear PrintJob desde CompletedOrder
+  void _handlePrint(BuildContext context) async {
+    final printerConfig =
+          await di.sl<PrinterLocalDataSource>().getPrinterConfig();
+
     final printJob = PrintJob(
       items: order.items,
       logItems: order.logs,
@@ -162,12 +165,6 @@ class _TicketPreviewContent extends StatelessWidget {
       ticketId: order.id,
     );
 
-    // Configuración de la impresora
-    const printerConfig = PrinterConfig(
-      ip: '192.168.0.230', // Cambiar por tu IP
-      port: 9100,
-      timeout: 10000,
-    );
 
     // Disparar evento de impresión
     context.read<PrinterBloc>().add(PrintTicket(

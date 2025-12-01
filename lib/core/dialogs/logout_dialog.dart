@@ -59,7 +59,7 @@ Future<void> showLogoutDialog(BuildContext context) async {
                   ),
                   const SizedBox(height: AppDimensions.paddingXL),
                   if (email != null && companyId != null) ...[
-                    _ActionCard(
+                    ActionCard(
                       icon: Icons.people_alt,
                       iconColor: Colors.orange,
                       backgroundColor: Colors.orange.withOpacity(0.1),
@@ -81,7 +81,7 @@ Future<void> showLogoutDialog(BuildContext context) async {
                     ),
                     const SizedBox(height: AppDimensions.paddingM),
                   ],
-                  _ActionCard(
+                  ActionCard(
                     icon: Icons.exit_to_app,
                     iconColor: Colors.red,
                     backgroundColor: Colors.red.withOpacity(0.1),
@@ -120,7 +120,7 @@ Future<void> showLogoutDialog(BuildContext context) async {
   );
 }
 
-class _ActionCard extends StatelessWidget {
+class ActionCard extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
   final Color backgroundColor;
@@ -128,7 +128,8 @@ class _ActionCard extends StatelessWidget {
   final String subtitle;
   final VoidCallback onTap;
 
-  const _ActionCard({
+  const ActionCard({
+    super.key,
     required this.icon,
     required this.iconColor,
     required this.backgroundColor,

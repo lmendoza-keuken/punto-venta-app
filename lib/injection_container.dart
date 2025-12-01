@@ -10,6 +10,7 @@ import 'package:punto_venta_app/features/auth/domain/usecases/change_chashier_us
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/client_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/completed_orders_local_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/printer_socket_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/product_local_data.datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/saved_orders_local_dasource.dart';
@@ -112,6 +113,9 @@ Future<void> init() async {
   sl.registerLazySingleton<UserApiDataSource>(
     () => UserApiDataSourceImpl(),
   );
+  sl.registerLazySingleton<PrinterLocalDataSource>(
+  () => PrinterLocalDataSourceImpl(sharedPreferences: sl()),
+);
 
   //! Features - POS
   // Bloc

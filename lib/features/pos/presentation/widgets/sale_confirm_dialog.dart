@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/utils/extensions.dart';
+import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/client.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/printer_config.dart';
@@ -67,7 +69,7 @@ class _ConfirmDialogContent extends StatelessWidget {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Total a cobrar: \$${total.formatToCurrency()}'),
+            Text('Total a cobrar: ${total.formatToCurrency()}'),
             const SizedBox(height: 16),
             const Text('¿Deseas procesar esta venta?'),
             const SizedBox(height: 16),
@@ -124,6 +126,9 @@ class _ConfirmDialogContent extends StatelessWidget {
 
   void _confirmSale(BuildContext context) async {
     final cartState = context.read<CartBloc>().state as CartLoaded;
+    final user = await di.sl<AuthLocalDataSource>().getCachedUser();
+    final printerConfig =
+          await di.sl<PrinterLocalDataSource>().getPrinterConfig();
 
     try {
       final completeOrderUsecase = di.sl<CompleteOrderUsecase>();
@@ -132,7 +137,7 @@ class _ConfirmDialogContent extends StatelessWidget {
         logItems: cartState.log,
         total: cartState.total,
         clientName: client?.name,
-        cashierName: 'Brayan',
+        cashierName: user?.name ?? 'Desconocido',
       );
 
       final printJob = PrintJob(
@@ -142,16 +147,12 @@ class _ConfirmDialogContent extends StatelessWidget {
         clientName: client?.name,
         totalTax: cartState.total * 0.21,
         paymentMethod: 'Efectivo',
-        cashierName: 'Brayan',
+        cashierName: user?.name ?? 'Desconocido',
         timestamp: DateTime.now(),
         ticketId: DateTime.now().millisecondsSinceEpoch.toString(),
       );
 
-      const printerConfig = PrinterConfig(
-        ip: '192.168.0.230', // Cambiar por la IP de impresora
-        port: 9100, // Cambiar por el puerto de impresora
-        timeout: 10000,
-      );
+      
 
       context.read<PrinterBloc>().add(PrintTicket(
             printJob: printJob,

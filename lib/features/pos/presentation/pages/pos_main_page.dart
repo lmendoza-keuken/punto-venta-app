@@ -137,11 +137,14 @@ class _PosMainPageState extends State<PosMainPage> {
               Column(
                 children: [
                   const Text(AppStrings.keukenName),
-                  const Text(AppStrings.keukenDesc, style: TextStyle(color: AppColors.selectClientButton, fontSize: 14),),
+                  const Text(
+                    AppStrings.keukenDesc,
+                    style: TextStyle(
+                        color: AppColors.selectClientButton, fontSize: 14),
+                  ),
                 ],
               ),
               const Spacer(),
-
               if (constraints.maxWidth > 600) ...[
                 Text(
                   'Cajero: ${user?.name ?? "Desconocido"}',
@@ -160,7 +163,6 @@ class _PosMainPageState extends State<PosMainPage> {
                 ),
                 const SizedBox(width: AppDimensions.paddingM),
               ],
-
               if (constraints.maxWidth > 400)
                 DynamicDateTime(
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -196,26 +198,29 @@ class _PosMainPageState extends State<PosMainPage> {
               ),
             ),
           ),
-           IconButton(
-          icon: const Icon(Icons.settings),
-          onPressed: () async {
-            final added = await showDialog(
-              context: context,
-              builder: (context) => BlocProvider.value(
-                value: context.read<ClientsBloc>(),
-                child: const SettingsDialog(),
-              ),
-            );
-            if (added is Client) {
-              context.read<ClientsBloc>().add(SelectClientEvent(added));
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                    content:
-                        Text('Cliente ${added.name} agregado y seleccionado')),
+        Visibility(
+          visible: user != null && user.tipo == 'ADMIN',
+          child: IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () async {
+              final added = await showDialog(
+                context: context,
+                builder: (context) => BlocProvider.value(
+                  value: context.read<ClientsBloc>(),
+                  child: const SettingsDialog(),
+                ),
               );
-            }
-            // showSettingsDialog(context);
-          },
+              if (added is Client) {
+                context.read<ClientsBloc>().add(SelectClientEvent(added));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content: Text(
+                          'Cliente ${added.name} agregado y seleccionado')),
+                );
+              }
+              // showSettingsDialog(context);
+            },
+          ),
         ),
         IconButton(
           icon: const Icon(Icons.logout),
@@ -273,9 +278,7 @@ class _PosMainPageState extends State<PosMainPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildIntegratedSearchBar(),
-
           _buildIntegratedCategoryTabs(),
-
           Expanded(
             child: _buildProductGrid(),
           ),
