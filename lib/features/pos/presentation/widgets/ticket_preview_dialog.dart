@@ -7,7 +7,6 @@ import 'package:punto_venta_app/core/utils/extensions.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
-import 'package:punto_venta_app/features/pos/domain/entities/printer_config.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_state.dart';

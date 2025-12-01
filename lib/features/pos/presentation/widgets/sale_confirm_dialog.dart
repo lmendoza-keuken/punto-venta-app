@@ -6,7 +6,6 @@ import 'package:punto_venta_app/features/auth/data/datasources/auth_local_dataso
 import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/client.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
-import 'package:punto_venta_app/features/pos/domain/entities/printer_config.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/complete_order_usecase.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_event.dart';

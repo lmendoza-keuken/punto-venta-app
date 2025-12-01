@@ -6,7 +6,6 @@ import '../../../../core/constants/app_dimensions.dart';
 import '../bloc/clients/clients_bloc.dart';
 import '../bloc/clients/clients_event.dart';
 import '../bloc/clients/clients_state.dart';
-import 'add_client_dialog.dart';
 
 class SelectClientDialog extends StatefulWidget {
   const SelectClientDialog({super.key});
@@ -33,24 +32,7 @@ class _SelectClientDialogState extends State<SelectClientDialog> {
           const SizedBox(width: AppDimensions.paddingS),
           Text('Seleccionar Cliente',
               style: Theme.of(context).textTheme.titleLarge),
-          // const Spacer(),
-          // ElevatedButton.icon(
-          //   onPressed: () async {
-          //     final client = await showDialog(
-          //       context: context,
-          //       builder: (_) => const AddClientDialog(),
-          //     );
-          //     if (client != null) {
-          //       // Reload list
-          //       context.read<ClientsBloc>().add(LoadClients());
-          //     }
-          //   },
-          //   icon: const Icon(Icons.person_add),
-          //   label: const Text('Agregar Cliente'),
-          //   style: ElevatedButton.styleFrom(
-          //       backgroundColor: Colors.white,
-          //       foregroundColor: AppColors.primary),
-          // ),
+         
         ],
       ),
       content: SizedBox(
