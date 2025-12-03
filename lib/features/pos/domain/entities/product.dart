@@ -1,10 +1,11 @@
 import 'package:equatable/equatable.dart';
+import 'package:punto_venta_app/features/pos/data/models/barcode_model.dart';
 
 class Product extends Equatable {
   final int codigo;
   final String descripcion;
-  final double precio; // Usaremos lista13 como precio base
-  final String rubro; // Categoría basada en rubro
+  final double? precio; 
+  final String rubro; 
   final String marca;
   final String capacidad;
   final int pack;
@@ -20,12 +21,13 @@ class Product extends Equatable {
   final int idProveedor;
   final bool objetivable;
   final bool usaListaPrecios;
-  final bool oferta; // Si oferta13 es 1
+  final bool oferta; 
+  final List<BarcodeModel>? barcodes;
 
   const Product({
     required this.codigo,
     required this.descripcion,
-    required this.precio,
+    this.precio,
     required this.rubro,
     required this.marca,
     required this.capacidad,
@@ -43,9 +45,9 @@ class Product extends Equatable {
     required this.objetivable,
     required this.usaListaPrecios,
     required this.oferta,
+    this.barcodes,
   });
 
-  // Getters para compatibilidad con el código existente
   String get id => codigo.toString();
   String get name => descripcion.trim();
   String get code => codigo.toString();
@@ -76,5 +78,6 @@ class Product extends Equatable {
         objetivable,
         usaListaPrecios,
         oferta,
+        barcodes,
       ];
 }

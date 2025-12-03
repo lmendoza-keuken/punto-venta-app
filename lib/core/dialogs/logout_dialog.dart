@@ -12,6 +12,7 @@ import 'package:punto_venta_app/injection_container.dart' as di;
 Future<void> showLogoutDialog(BuildContext context) async {
   final localDataSource = di.sl<AuthLocalDataSource>();
   final cachedEnterprise = await localDataSource.getCachedEnterprise();
+  final cachedEmail = await localDataSource.getCachedEmail();
 
   if (!context.mounted) return;
 
@@ -24,14 +25,10 @@ Future<void> showLogoutDialog(BuildContext context) async {
           int? companyId;
           String? companyName;
 
-          if (cachedEnterprise != null) {
+          if (cachedEnterprise != null && cachedEmail != null) {
             companyId = cachedEnterprise.id;
             companyName = cachedEnterprise.name;
-          }
-
-          if (state is AuthAuthenticated) {
-            email = state.user.email;
-            companyId ??= state.user.companyIds?.first;
+            email = cachedEmail;
           }
 
           return Dialog(
@@ -87,7 +84,7 @@ Future<void> showLogoutDialog(BuildContext context) async {
                     backgroundColor: Colors.red.withOpacity(0.1),
                     title: 'Cerrar Sesión Completa',
                     subtitle: 'Salir de la aplicación',
-                    onTap: ()  {
+                    onTap: () {
                       context.read<AuthBloc>().add(LogoutRequested());
                       Navigator.of(dialogContext).pop();
                       context.go(RoutePaths.login);

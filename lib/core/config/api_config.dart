@@ -5,9 +5,10 @@ class ApiConfig {
   static String get productosUrl => '$_baseUrl/articulos.json';
   static String get preciosArticulosUrl => '$_baseUrl/preciosarticulos.json';
   static String get usersUrl => '$_baseUrl/users.json';
+  static String get barcode => '$_baseUrl/barcode.json'; 
 
 
-  static String get barcode => '$_baseUrl/barcode.json'; // Por el momento no se usa
+
   static String get clientsUrl => '$_baseUrl/clientes.json'; // Por el momento no se usa
   static String get stockUrl => '$_baseUrl/stock.json'; // Por el momento no se usa
 

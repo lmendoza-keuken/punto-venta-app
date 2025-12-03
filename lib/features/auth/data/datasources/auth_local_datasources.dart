@@ -1,60 +1,69 @@
-import 'dart:convert';
-import 'package:punto_venta_app/features/auth/data/models/enterprise_model.dart';
-import 'package:punto_venta_app/features/auth/data/models/user_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/user_model.dart';
+import '../models/enterprise_model.dart';
+import 'dart:convert';
 
 abstract class AuthLocalDataSource {
-  Future<UserModel?> getCachedUser();
   Future<void> cacheUser(UserModel user);
-  Future<void> logout(); 
-  Future<EnterpriseModel?> getCachedEnterprise();
+  Future<UserModel?> getCachedUser();
+  Future<void> cacheToken(String token);
+  Future<String?> getToken();
   Future<void> cacheEnterprise(EnterpriseModel enterprise);
+  Future<EnterpriseModel?> getCachedEnterprise();
   Future<void> cacheEmail(String email);
   Future<String?> getCachedEmail();
+  Future<void> logout();
   Future<void> clearEnterprise();
   Future<void> clearEmail();
 }
 
 class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   final SharedPreferences sharedPreferences;
-
-  UserModel? _volatileUser;
-
-  static const String cachedEnterpriseKey = 'CACHED_ENTERPRISE';
-  static const String cachedEmailKey = 'CACHED_EMAIL';
+  static const cachedUserKey = 'CACHED_USER';
+  static const cachedTokenKey = 'CACHED_TOKEN';
+  static const cachedEnterpriseKey = 'CACHED_ENTERPRISE';
+  static const cachedEmailKey = 'CACHED_EMAIL';
 
   AuthLocalDataSourceImpl({required this.sharedPreferences});
 
   @override
-  Future<UserModel?> getCachedUser() async {
-    return _volatileUser;
-  }
-
-  @override
   Future<void> cacheUser(UserModel user) async {
-    _volatileUser = user;
+    final jsonString = jsonEncode(user.toJson());
+    await sharedPreferences.setString(cachedUserKey, jsonString);
   }
 
   @override
-  Future<void> logout() async {
-    _volatileUser = null;
+  Future<UserModel?> getCachedUser() async {
+    final jsonString = sharedPreferences.getString(cachedUserKey);
+    if (jsonString != null) {
+      return UserModel.fromJson(jsonDecode(jsonString));
+    }
+    return null;
+  }
+
+  @override
+  Future<void> cacheToken(String token) async {
+    await sharedPreferences.setString(cachedTokenKey, token);
+  }
+
+  @override
+  Future<String?> getToken() async {
+    return sharedPreferences.getString(cachedTokenKey);
+  }
+
+  @override
+  Future<void> cacheEnterprise(EnterpriseModel enterprise) async {
+    final jsonString = jsonEncode(enterprise.toJson());
+    await sharedPreferences.setString(cachedEnterpriseKey, jsonString);
   }
 
   @override
   Future<EnterpriseModel?> getCachedEnterprise() async {
     final jsonString = sharedPreferences.getString(cachedEnterpriseKey);
     if (jsonString != null) {
-      return EnterpriseModel.fromJson(json.decode(jsonString));
+      return EnterpriseModel.fromJson(jsonDecode(jsonString));
     }
     return null;
-  }
-
-  @override
-  Future<void> cacheEnterprise(EnterpriseModel enterprise) async {
-    await sharedPreferences.setString(
-      cachedEnterpriseKey,
-      json.encode(enterprise.toJson()),
-    );
   }
 
   @override
@@ -65,6 +74,12 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   @override
   Future<String?> getCachedEmail() async {
     return sharedPreferences.getString(cachedEmailKey);
+  }
+
+  @override
+  Future<void> logout() async {
+    await sharedPreferences.remove(cachedUserKey);
+    await sharedPreferences.remove(cachedTokenKey);
   }
 
   @override

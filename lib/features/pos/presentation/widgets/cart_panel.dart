@@ -126,9 +126,22 @@ class _CartPanelState extends State<CartPanel> {
   }
 
   Widget _buildSummary(BuildContext context, CartLoaded state) {
-    final subtotal = state.total;
-    final iva = subtotal * 0.21;
-    final totalConIva = subtotal + iva;
+    double subtotal = 0;
+    double totalIva = 0;
+
+    for (var entry in state.log) {
+      final precio = entry.item.product.precio ?? 0;
+      final cantidad = entry.item.quantity;
+      final tasaIva = entry.item.iva / 100; 
+      
+      final precioTotal = precio * cantidad;
+      final ivaArticulo = precioTotal * tasaIva;
+      
+      subtotal += precioTotal;
+      totalIva += ivaArticulo;
+    }
+
+    final totalConIva = subtotal + totalIva;
 
     return Container(
       padding: const EdgeInsets.all(AppDimensions.paddingM),
@@ -148,12 +161,11 @@ class _CartPanelState extends State<CartPanel> {
             ],
           ),
           const SizedBox(height: 6),
-          // IVA
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('IVA (21%):', style: TextStyle(color: Colors.grey[700])),
-              Text(iva.formatToCurrency(),
+              Text('IVA:', style: TextStyle(color: Colors.grey[700])),
+              Text(totalIva.formatToCurrency(),
                   style: const TextStyle(fontWeight: FontWeight.w600)),
             ],
           ),

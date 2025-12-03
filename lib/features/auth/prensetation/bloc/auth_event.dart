@@ -36,20 +36,20 @@ class CompanySelected extends AuthEvent {
 }
 
 class AuthenticateUserRequested extends AuthEvent {
-  final String email;
-  final int companyId;
+  // final String email;
+  // final int companyId;
   final String username;
   final String password;
 
   const AuthenticateUserRequested({
-    required this.email,
-    required this.companyId,
+        // required this.email,
+        // required this.companyId,
     required this.username,
     required this.password,
   });
 
   @override
-  List<Object> get props => [email, companyId, username, password];
+  List<Object> get props => [username, password];
 }
 
 class ChangeCashierRequested extends AuthEvent {} 

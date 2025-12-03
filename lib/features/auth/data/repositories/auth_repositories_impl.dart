@@ -82,42 +82,44 @@ class AuthRepositoryImpl implements AuthRepository {
 
     await localDataSource.cacheEnterprise(enterpriseModel);
     await localDataSource.cacheEmail(email);
-    await priceListLocalDataSource
-        .savePriceList(selectedCompany.listPriceId ?? 13);
+    await priceListLocalDataSource.savePriceList(13);
+    // await priceListLocalDataSource
+    //     .savePriceList(selectedCompany.listPriceId ?? 0);
 
     return {
       'email': email,
       'companyId': companyId,
       'companyName': selectedCompany.name,
-      'listPriceId': selectedCompany.listPriceId,
+      'listPriceId': 13,
+      // 'listPriceId': selectedCompany.listPriceId,
     };
   }
 
   @override
   Future<User> authenticateUser(
-    String email,
-    int companyId,
     String userId,
     String password,
   ) async {
     try {
-      final userData =
+      final authData =
           await userApiDataSource.authenticateUser(userId, password);
 
+      final token = authData['token'] as String;
+      final userData = authData['user'] as Map<String, dynamic>;
+
       final user = User(
-        id: userData['id']?.toString() ?? userId,
+        id: userData['id']?.toString() ?? '',
         name: userData['name']?.toString() ?? '',
-        tipo: userData['tipo']?.toString() ?? '',
-        idsup: userData['idsup']?.toString() ?? '',
-        supervisor: userData['supervisor']?.toString() ?? '',
-        email: email,
-        photoUrl: userData['photoUrl']?.toString(),
-        companyIds: [companyId],
+        password: userData['password']?.toString() ?? '',
+        tipo: userData['role']?.toString() ?? '',
+        isActive: userData['is_active'] ?? true, 
+        phoneNumber: userData['phone_number']?.toString() ?? '',    
       );
 
       final userModel = UserModel.fromEntity(user);
 
       await localDataSource.cacheUser(userModel);
+      await localDataSource.cacheToken(token);
 
       return user;
     } catch (e) {

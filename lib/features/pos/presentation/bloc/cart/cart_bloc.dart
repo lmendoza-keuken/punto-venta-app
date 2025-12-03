@@ -28,7 +28,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     final entry = CartLogEntry(
       id: _randomId(),
       type: CartActionType.add,
-      item: CartItem(product: event.product, quantity: event.quantity),
+      item: CartItem(product: event.product, quantity: event.quantity, iva: event.product.iva),
       timestamp: DateTime.now(),
     );
 
@@ -68,7 +68,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       id: _randomId(),
       type: CartActionType.remove,
       item:
-          CartItem(product: existingProduct.product, quantity: event.quantity),
+          CartItem(product: existingProduct.product, quantity: event.quantity, iva: existingProduct.iva),
       timestamp: DateTime.now(),
     );
     final newLog = List<CartLogEntry>.from(currentLog)..add(entry);

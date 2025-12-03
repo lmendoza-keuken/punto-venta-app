@@ -19,12 +19,14 @@ class _AddClientDialogState extends State<AddClientDialog> {
   final _nameCtrl = TextEditingController();
   final _docCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
+  final _addressCtrl = TextEditingController();
 
   @override
   void dispose() {
     _nameCtrl.dispose();
     _docCtrl.dispose();
     _phoneCtrl.dispose();
+    _addressCtrl.dispose();
     super.dispose();
   }
 
@@ -37,7 +39,8 @@ class _AddClientDialogState extends State<AddClientDialog> {
       document: _docCtrl.text.trim().isEmpty ? null : _docCtrl.text.trim(),
       phone: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
       email: null,
-      address: null,
+      address:
+          _addressCtrl.text.trim().isEmpty ? null : _addressCtrl.text.trim(),
     );
     context.read<ClientsBloc>().add(AddClientEvent(client));
     Navigator.of(context).pop(client);
@@ -68,6 +71,9 @@ class _AddClientDialogState extends State<AddClientDialog> {
               const SizedBox(height: AppDimensions.paddingS),
               CustomTextField(
                   label: 'Teléfono (opcional)', controller: _phoneCtrl),
+              const SizedBox(height: AppDimensions.paddingS),
+              CustomTextField(
+                  label: 'Dirección (opcional)', controller: _addressCtrl),
             ],
           ),
         ),

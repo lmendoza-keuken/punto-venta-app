@@ -7,23 +7,19 @@ part 'user_model.g.dart';
 class UserModel {
   final String id;
   final String name;
-  @JsonKey(name: 'tipo')
+  @JsonKey(name: 'role')
   final String tipo;
-  final String? email;
-  final String? photoUrl;
-  final List<int>? companyIds;
-  final String? idsup;
-  final String? supervisor;
+  final String password;
+  final String? isActive;
+  final String? phoneNumber;
 
   const UserModel({
     required this.id,
     required this.name,
     required this.tipo,
-    this.email,
-    this.photoUrl,
-    this.companyIds,
-    this.idsup,
-    this.supervisor,
+    required this.password,
+    this.isActive,
+    this.phoneNumber,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) =>
@@ -39,12 +35,10 @@ class UserModel {
     return UserModel(
       id: json['id']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
-      tipo: json['tipo']?.toString() ?? 'VEN',
-      email: email,
-      photoUrl: null,
-      companyIds: [companyId],
-      idsup: json['idsup']?.toString(),
-      supervisor: json['supervisor']?.toString(),
+      tipo: json['role']?.toString() ?? 'VEN',
+      password: json['password']?.toString() ?? '',
+      isActive: json['is_active']?.toString(),
+      phoneNumber: json['phone_number']?.toString(),
     );
   }
 
@@ -53,11 +47,9 @@ class UserModel {
       id: id,
       name: name,
       tipo: tipo,
-      email: email,
-      photoUrl: photoUrl,
-      companyIds: companyIds,
-      idsup: idsup,
-      supervisor: supervisor,
+      password: password,
+      isActive: isActive,
+      phoneNumber: phoneNumber,
     );
   }
 
@@ -66,11 +58,9 @@ class UserModel {
       id: user.id,
       name: user.name,
       tipo: user.tipo,
-      email: user.email,
-      photoUrl: user.photoUrl,
-      companyIds: user.companyIds,
-      idsup: user.idsup,
-      supervisor: user.supervisor,
+      password: user.password,
+      isActive: user.isActive,
+      phoneNumber: user.phoneNumber,
     );
   }
 }

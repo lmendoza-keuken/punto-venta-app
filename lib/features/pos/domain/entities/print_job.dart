@@ -11,7 +11,8 @@ class PrintJob {
   final Client? client;
   final int? priceListId;
   final String? paymentMethod;
-  final String cashierName;
+  final String? cashierName;
+  final int? cashierId;
   final DateTime timestamp;
   final String ticketId;
 
@@ -25,6 +26,7 @@ class PrintJob {
     this.priceListId,
     this.paymentMethod,
     required this.cashierName,
+    this.cashierId,
     required this.timestamp,
     required this.ticketId,
   });

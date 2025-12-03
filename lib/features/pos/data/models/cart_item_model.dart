@@ -8,10 +8,13 @@ part 'cart_item_model.g.dart';
 class CartItemModel {
   final ProductModel product;
   final int quantity;
+  @JsonKey(defaultValue: 0.0)
+  final double iva;
 
   const CartItemModel({
     required this.product,
     required this.quantity,
+    this.iva = 0.0,
   });
 
   factory CartItemModel.fromJson(Map<String, dynamic> json) =>
@@ -23,6 +26,7 @@ class CartItemModel {
     return CartItem(
       product: product.toEntity(),
       quantity: quantity,
+      iva: iva,
     );
   }
 
@@ -30,6 +34,7 @@ class CartItemModel {
     return CartItemModel(
       product: ProductModel.fromEntity(cartItem.product),
       quantity: cartItem.quantity,
+      iva: cartItem.iva,
     );
   }
 }

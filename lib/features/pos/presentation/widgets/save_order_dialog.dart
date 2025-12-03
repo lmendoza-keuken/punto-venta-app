@@ -6,6 +6,8 @@ import 'package:punto_venta_app/core/utils/extensions.dart';
 import 'package:punto_venta_app/core/widgets/custom_text_field.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_item.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/saved_orders/saved_orders_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/saved_orders/saved_orders_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/saved_orders/saved_orders_state.dart';
@@ -204,6 +206,7 @@ class _SaveOrderDialogState extends State<SaveOrderDialog> {
                   : _clientController.text.trim(),
             ),
           );
+      context.read<CartBloc>().add(ClearCart());
     }
   }
 }

@@ -186,7 +186,7 @@ class ProductCard extends StatelessWidget {
                               Column(
                                 children: [
                                   Text(
-                                    product.precio.formatToCurrency(),
+                                    product.precio?.formatToCurrency() ?? '-',
                                     style: Theme.of(context)
                                         .textTheme
                                         .titleMedium

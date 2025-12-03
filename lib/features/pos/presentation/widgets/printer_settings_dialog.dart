@@ -39,15 +39,15 @@ Future<void> showPrinterSettingsDialog(BuildContext context) async {
                   validator: (v) =>
                       (v == null || v.isEmpty) ? 'Ingresa la IP' : null,
                 ),
-                const SizedBox(height: AppDimensions.paddingM),
-                TextFormField(
-                  controller: portController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Puerto'),
-                  validator: (v) => (v == null || int.tryParse(v) == null)
-                      ? 'Puerto inválido'
-                      : null,
-                ),
+                // const SizedBox(height: AppDimensions.paddingM),
+                // TextFormField(
+                //   controller: portController,
+                //   keyboardType: TextInputType.number,
+                //   decoration: const InputDecoration(labelText: 'Puerto'),
+                //   validator: (v) => (v == null || int.tryParse(v) == null)
+                //       ? 'Puerto inválido'
+                //       : null,
+                // ),
                 const SizedBox(height: AppDimensions.paddingM),
                 TextFormField(
                   controller: timeoutController,

@@ -15,7 +15,7 @@ class ManageCartUsecase {
         quantity: newCart[existingItemIndex].quantity + quantity,
       );
     } else {
-      newCart.add(CartItem(product: product, quantity: quantity));
+      newCart.add(CartItem(product: product, quantity: quantity , iva: product.iva));
     }
 
     return newCart;

@@ -1,70 +1,68 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:punto_venta_app/core/config/api_config.dart';
+import 'package:punto_venta_app/core/network/dio_client.dart';
 
 abstract class UserApiDataSource {
   Future<Map<String, dynamic>> authenticateUser(String userId, String password);
 }
 
 class UserApiDataSourceImpl implements UserApiDataSource {
-  List<Map<String, dynamic>>? _cachedUsers;
+  final Dio _dio;
 
-  Future<List<Map<String, dynamic>>> _fetchUsers() async {
-    if (_cachedUsers != null) {
-      return _cachedUsers!;
-    }
-
-    try {
-      final response = await http.get(
-        Uri.parse(ApiConfig.usersUrl),
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "POST, GET, OPTIONS, PUT, DELETE, HEAD",
-        },
-      );
-
-      if (response.statusCode == 200) {
-        List<dynamic> jsonData;
-        try {
-          final String responseBody = utf8.decode(response.bodyBytes);
-          jsonData = json.decode(responseBody);
-        } catch (e) {
-          final String responseBody = latin1.decode(response.bodyBytes);
-          jsonData = json.decode(responseBody);
-        }
-
-        _cachedUsers = jsonData
-            .map((json) => json as Map<String, dynamic>)
-            .toList();
-
-        return _cachedUsers!;
-      } else {
-        throw Exception('Error al cargar usuarios: ${response.statusCode}');
-      }
-    } catch (e) {
-      throw Exception('Error de conexión: $e');
-    }
-  }
+  UserApiDataSourceImpl({Dio? dio}) : _dio = dio ?? DioClient.instance;
 
   @override
-  Future<Map<String, dynamic>> authenticateUser(String userId, String password) async {
-    final users = await _fetchUsers();
-
+  Future<Map<String, dynamic>> authenticateUser(
+      String userId, String password) async {
     try {
-      final user = users.firstWhere(
-        (user) =>
-            user['id']?.toString() == userId &&
-            user['password']?.toString() == password,
+      final url = 'http://192.168.0.16:8000/users/login';
+
+      final response = await _dio.post(
+        url,
+        // ApiConfig.loginUrl, // Necesitas agregar esta URL en ApiConfig
+        data: {
+          'id': userId,
+          'password': password,
+        },
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          responseType: ResponseType.json,
+        ),
       );
 
-      return user;
-    } catch (e) {
-      throw Exception('ID de usuario o contraseña incorrectos');
-    }
-  }
 
-  void clearCache() {
-    _cachedUsers = null;
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data as Map<String, dynamic>;
+
+
+        return {
+          'token': data['token'],
+          'user': data['user'],
+        };
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          message: 'Error al autenticar: ${response.statusCode}',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionTimeout) {
+        throw Exception('Tiempo de conexión agotado');
+      } else if (e.type == DioExceptionType.receiveTimeout) {
+        throw Exception('Tiempo de respuesta agotado');
+      } else if (e.response?.statusCode == 401 || e.response?.statusCode == 403) {
+        throw Exception('Credenciales inválidas');
+      } else if (e.response != null) {
+        throw Exception(
+            'Error del servidor: ${e.response?.statusCode} - ${e.response?.data}');
+      } else {
+        throw Exception('Error de conexión: ${e.message}');
+      }
+    } catch (e) {
+      throw Exception('Error al autenticar usuario: $e');
+    }
   }
 }

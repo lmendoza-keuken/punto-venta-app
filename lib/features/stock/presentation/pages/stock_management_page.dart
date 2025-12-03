@@ -25,7 +25,7 @@ class StockManagementPage extends StatelessWidget {
         final authState = context.read<AuthBloc>().state;
         
         if (authState is AuthAuthenticated) {
-          bloc.setCurrentUser(authState.user.id, authState.user.username);
+          bloc.setCurrentUser(authState.user.id, authState.user.name);
         }
         
         bloc.add(LoadProducts());

@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'dart:io';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:punto_venta_app/core/config/api_config.dart';
+import 'package:punto_venta_app/core/network/dio_client.dart';
 import 'package:punto_venta_app/features/pos/data/models/invoice_payload_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
 
@@ -10,46 +10,78 @@ abstract class InvoiceRemoteDataSource {
 }
 
 class InvoiceRemoteDataSourceImpl implements InvoiceRemoteDataSource {
-  final http.Client client;
+  final Dio _dio;
   final Duration timeout;
 
   InvoiceRemoteDataSourceImpl({
-    required this.client,
-    this.timeout = const Duration(seconds: 10),
-  });
+    Dio? dio,
+    this.timeout = const Duration(seconds: 15),
+  }) : _dio = dio ?? DioClient.instance;
 
   @override
   Future<bool> sendInvoice(PrintJob job) async {
-    final url = ApiConfig.invoiceUrl;
+    // final url = ApiConfig.invoiceUrl;
+    final url = 'http://192.168.0.16:8000/tickets/'; // Cambiado de https a http
 
     if (url.isEmpty) {
-      await Future.delayed(const Duration(seconds: 3));
+      print('⚠️ [INVOICE] URL vacía, simulando envío exitoso');
+      await Future.delayed(const Duration(seconds: 1));
       return true;
     }
-
-    final uri = Uri.parse(url);
 
     final payload = InvoicePayload.fromPrintJob(job).toJson();
 
     try {
-      final response = await client
-          .post(
-            uri,
-            headers: {
-              HttpHeaders.contentTypeHeader: 'application/json; charset=utf-8',
-            },
-            body: json.encode(payload),
-          )
-          .timeout(timeout);
+      print('🔵 [INVOICE] Enviando factura a: $url');
+      print('🔵 [INVOICE] Payload: ${jsonEncode(payload)}');
+
+      final response = await _dio.post(
+        url,
+        data: payload,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+          },
+          sendTimeout: timeout,
+          receiveTimeout: timeout,
+          validateStatus: (status) => status != null && status < 500, 
+        ),
+      );
+
+      print('🔵 [INVOICE] Respuesta: ${response.statusCode}');
+      print('🔵 [INVOICE] Body: ${response.data}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        print('✅ [INVOICE] Factura enviada exitosamente');
         return true;
       } else {
+        print('⚠️ [INVOICE] Código de respuesta inesperado: ${response.statusCode}');
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          message: 'Invoice API error: ${response.statusCode} ${response.data}',
+        );
+      }
+    } on DioException catch (e) {
+      print('🔴 [INVOICE ERROR] DioException: ${e.type}');
+      print('🔴 [INVOICE ERROR] Message: ${e.message}');
+
+      if (e.type == DioExceptionType.sendTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        throw Exception('Timeout al enviar factura después de ${timeout.inSeconds}s');
+      } else if (e.type == DioExceptionType.connectionTimeout) {
+        throw Exception('Tiempo de conexión agotado. Verifica que el servidor esté activo en $url');
+      } else if (e.type == DioExceptionType.connectionError) {
+        throw Exception('Error de conexión. Verifica la red y que el servidor esté disponible');
+      } else if (e.response != null) {
         throw Exception(
-            'Invoice API error: ${response.statusCode} ${response.body}');
+            'Error al enviar factura: ${e.response?.statusCode} - ${e.response?.data}');
+      } else {
+        throw Exception('Error de conexión al enviar factura: ${e.message}');
       }
     } catch (e) {
-      rethrow;
+      print('🔴 [INVOICE ERROR] Error inesperado: $e');
+      throw Exception('Error inesperado al enviar factura: $e');
     }
   }
 }

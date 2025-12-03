@@ -47,8 +47,24 @@ class _ConfirmDialogContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iva = total * 0.21;
-    final totalConIva = total + iva;
+    final cartState = context.read<CartBloc>().state;
+    double totalIva = 0;
+
+    if (cartState is CartLoaded) {
+      for (var entry in cartState.log) {
+        final precio = entry.item.product.precio ?? 0;
+        final cantidad = entry.item.quantity;
+        final tasaIva = entry.item.iva / 100;
+
+        final precioTotal = precio * cantidad;
+        final ivaArticulo = precioTotal * tasaIva;
+
+        totalIva += ivaArticulo;
+      }
+    }
+
+    final totalConIva = total + totalIva;
+
     return BlocListener<PrinterBloc, PrinterState>(
       listener: (context, printerState) {
         if (printerState is PrinterSuccess) {
@@ -128,13 +144,24 @@ class _ConfirmDialogContent extends StatelessWidget {
   }
 
   void _confirmSale(BuildContext context) async {
-    final cartState = context.read<CartBloc>().state as CartLoaded;
-    final user = await di.sl<AuthLocalDataSource>().getCachedUser();
-    final printerConfig =
-        await di.sl<PrinterLocalDataSource>().getPrinterConfig();
-    final priceList = await di.sl<PriceListLocalDataSource>().getCurrentPriceList();
-
     try {
+      final cartState = context.read<CartBloc>().state as CartLoaded;
+      final user = await di.sl<AuthLocalDataSource>().getCachedUser();
+      final printerConfig =
+          await di.sl<PrinterLocalDataSource>().getPrinterConfig();
+      final priceList =
+          await di.sl<PriceListLocalDataSource>().getCurrentPriceList();
+      double totalTax = 0;
+      for (var entry in cartState.log) {
+        final precio = entry.item.product.precio ?? 0;
+        final cantidad = entry.item.quantity;
+        final tasaIva = entry.item.iva / 100;
+
+        final precioTotal = precio * cantidad;
+        final ivaArticulo = precioTotal * tasaIva;
+
+        totalTax += ivaArticulo;
+      }
       final completeOrderUsecase = di.sl<CompleteOrderUsecase>();
       await completeOrderUsecase(
         items: cartState.items,
@@ -143,7 +170,6 @@ class _ConfirmDialogContent extends StatelessWidget {
         clientName: client?.name,
         cashierName: user?.name ?? 'Desconocido',
       );
-
       final printJob = PrintJob(
         items: cartState.items,
         logItems: cartState.log,
@@ -151,13 +177,13 @@ class _ConfirmDialogContent extends StatelessWidget {
         clientName: client?.name,
         client: client,
         priceListId: priceList,
-        totalTax: cartState.total * 0.21,
+        totalTax: totalTax,
         paymentMethod: 'Efectivo',
         cashierName: user?.name ?? 'Desconocido',
+        cashierId: int.tryParse(user?.id ?? ''),
         timestamp: DateTime.now(),
         ticketId: DateTime.now().millisecondsSinceEpoch.toString(),
       );
-
       final sendInvoice = di.sl<SendInvoiceUseCase>();
 
       bool invoiceSent = false;

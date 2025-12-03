@@ -103,7 +103,7 @@ class ProductListItem extends StatelessWidget {
           ],
         ),
         trailing: Text(
-          product.precio.formatToCurrency(),
+          product.precio?.formatToCurrency() ?? '-',
           style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,

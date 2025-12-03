@@ -7,11 +7,9 @@ class AuthenticateUserUseCase {
   AuthenticateUserUseCase(this.repository);
 
   Future<User> call(
-    String email,
-    int companyId,
     String username,
     String password,
   ) async {
-    return await repository.authenticateUser(email, companyId, username, password);
+    return await repository.authenticateUser(username, password);
   }
 }

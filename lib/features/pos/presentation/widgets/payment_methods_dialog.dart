@@ -4,6 +4,8 @@ import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/core/utils/extensions.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/client.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/saved_orders/saved_orders_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/saved_orders/saved_orders_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/sale_confirm_dialog.dart';
@@ -65,7 +67,6 @@ class _PaymentMethodsDialogState extends State<PaymentMethodsDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // const Text('Seleccione los metodos de pago para esta venta.'),
               const SizedBox(height: 12),
               Row(
                 children: const [
@@ -79,7 +80,6 @@ class _PaymentMethodsDialogState extends State<PaymentMethodsDialog> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 8),
               ListTile(
                 leading:
@@ -100,10 +100,25 @@ class _PaymentMethodsDialogState extends State<PaymentMethodsDialog> {
                 enabled: false,
               ),
               const SizedBox(height: 15),
-              Builder(
-                builder: (context) {
-                  final iva = widget.total * 0.21;
-                  final totalConIva = widget.total + iva;
+              BlocBuilder<CartBloc, CartState>(
+                builder: (context, cartState) {
+                  double totalIva = 0;
+
+                  if (cartState is CartLoaded) {
+                    for (var entry in cartState.log) {
+                      final precio = entry.item.product.precio ?? 0;
+                      final cantidad = entry.item.quantity;
+                      final tasaIva = entry.item.iva / 100;
+
+                      final precioTotal = precio * cantidad;
+                      final ivaArticulo = precioTotal * tasaIva;
+
+                      totalIva += ivaArticulo;
+                    }
+                  }
+
+                  final totalConIva = widget.total + totalIva;
+
                   return Column(
                     children: [
                       Row(
@@ -120,9 +135,9 @@ class _PaymentMethodsDialogState extends State<PaymentMethodsDialog> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('IVA (21%):',
+                          Text('IVA:',
                               style: TextStyle(color: Colors.grey[700])),
-                          Text(iva.formatToCurrency(),
+                          Text(totalIva.formatToCurrency(),
                               style:
                                   const TextStyle(fontWeight: FontWeight.w600)),
                         ],

@@ -94,8 +94,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
     try {
       final user = await authenticateUserUseCase(
-        event.email,
-        event.companyId,
         event.username,
         event.password,
       );
@@ -119,16 +117,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
- Future<void> _onChangeCashierRequested(
-  ChangeCashierRequested event,
-  Emitter<AuthState> emit,
-) async {
-  try {
-    await changeCashierUseCase();
-  } catch (e) {
-    emit(AuthError(message: e.toString()));
+  Future<void> _onChangeCashierRequested(
+    ChangeCashierRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    try {
+      await changeCashierUseCase();
+    } catch (e) {
+      emit(AuthError(message: e.toString()));
+    }
   }
-}
 
   Future<void> _onLogoutEvent(
     LogoutEvent event,

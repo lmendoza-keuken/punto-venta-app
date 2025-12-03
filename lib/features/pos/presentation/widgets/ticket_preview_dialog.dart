@@ -250,7 +250,7 @@ class _TicketPreviewContent extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                '  ${item.quantity} x ${item.product.precio.formatToCurrency()}',
+                                '  ${item.quantity} x ${item.product.precio?.formatToCurrency() ?? '-'}',
                                 style: TextStyle(
                                     fontSize: 12, color: Colors.grey[600]),
                               ),
@@ -284,7 +284,7 @@ class _TicketPreviewContent extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('IVA (21%):'),
+                const Text('IVA:'),
                 Text(order.totalTax.formatToCurrency()),
               ],
             ),

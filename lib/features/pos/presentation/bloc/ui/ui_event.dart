@@ -18,6 +18,8 @@ class SetQuantity extends UiEvent {
 
 class ToggleDeleteMode extends UiEvent {}
 
+class ToggleBarcodeSearch extends UiEvent {}
+
 class ResetQuantity extends UiEvent {}
 
 class ResetUiState extends UiEvent {}

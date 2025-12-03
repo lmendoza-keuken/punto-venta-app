@@ -51,7 +51,9 @@ class AppStrings {
 
   // Search
   static const String searchHint =
-      'Buscar productos o escanear código de barras...';
+      'Buscar productos por descripción o código...';
+  static const String searchBarCodeHint =
+      'Escanear código de barras...';
 
   // Validations
   static const String requiredField = 'Este campo es requerido';

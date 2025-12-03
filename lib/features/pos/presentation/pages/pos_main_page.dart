@@ -163,17 +163,20 @@ class _PosMainPageState extends State<PosMainPage> {
                 ),
                 const SizedBox(width: AppDimensions.paddingM),
               ],
-
               BlocBuilder<ProductBloc, ProductState>(
                 builder: (context, state) {
                   if (state is ProductLoaded) {
-                    return Text('# Lista: ${state.currentPriceList}', style: TextStyle(fontSize: 16),);
+                    return Text(
+                      '# Lista: ${state.currentPriceList}',
+                      style: TextStyle(fontSize: 16),
+                    );
                   }
                   return const SizedBox.shrink();
                 },
               ),
-              Padding(padding:  const EdgeInsets.only(right: AppDimensions.paddingM)),
-
+              Padding(
+                  padding:
+                      const EdgeInsets.only(right: AppDimensions.paddingM)),
               if (constraints.maxWidth > 400)
                 DynamicDateTime(
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -210,26 +213,17 @@ class _PosMainPageState extends State<PosMainPage> {
             ),
           ),
         Visibility(
-          visible: user != null && user.tipo == 'ADMIN',
+          visible: user != null && user.tipo == 'ADM',
           child: IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () async {
-              final added = await showDialog(
+              await showDialog(
                 context: context,
                 builder: (context) => BlocProvider.value(
                   value: context.read<ClientsBloc>(),
                   child: const SettingsDialog(),
                 ),
               );
-              if (added is Client) {
-                context.read<ClientsBloc>().add(SelectClientEvent(added));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                      content: Text(
-                          'Cliente ${added.name} agregado y seleccionado')),
-                );
-              }
-              // showSettingsDialog(context);
             },
           ),
         ),
@@ -406,9 +400,10 @@ class _PosMainPageState extends State<PosMainPage> {
                       );
                     }
                   } else {
+                     product.precio != null ?
                     context
                         .read<CartBloc>()
-                        .add(AddToCart(product, quantity: quantity));
+                        .add(AddToCart(product, quantity: quantity)) : null;
                   }
 
                   context.read<UiBloc>().add(ResetQuantity());

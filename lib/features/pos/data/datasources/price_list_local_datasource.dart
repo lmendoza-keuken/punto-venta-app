@@ -13,7 +13,7 @@ class PriceListLocalDataSourceImpl implements PriceListLocalDataSource {
 
   @override
   Future<int> getCurrentPriceList() async {
-    return sharedPreferences.getInt(_priceListKey) ?? 13;
+    return sharedPreferences.getInt(_priceListKey)!;
   }
 
   @override

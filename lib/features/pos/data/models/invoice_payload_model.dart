@@ -9,26 +9,22 @@ import 'package:punto_venta_app/features/pos/domain/entities/client.dart';
 class InvoicePayload {
   final String ticketId;
   final String timestamp;
-  final String cashier;
-  final Map<String, dynamic> client;
+  final int? cashier;
+  final Map<String, dynamic>? client;
   final String paymentMethod;
   final double total;
   final double totalTax;
-  final List<Map<String, dynamic>> items;
   final List<Map<String, dynamic>> logItems;
-  final int? priceListId;
 
   InvoicePayload({
     required this.ticketId,
     required this.timestamp,
-    required this.cashier,
+    this.cashier,
     required this.client,
     required this.paymentMethod,
     required this.total,
     required this.totalTax,
-    required this.items,
     required this.logItems,
-    this.priceListId,
   });
 
   Map<String, dynamic> toJson() => {
@@ -39,37 +35,17 @@ class InvoicePayload {
         'paymentMethod': paymentMethod,
         'total': total,
         'totalTax': totalTax,
-        'items': items,
-        'logItems': logItems,
-        'priceListId': priceListId,
+        'items': logItems,
       };
 
   factory InvoicePayload.fromPrintJob(PrintJob job) {
-    Map<String, dynamic> serializeClient(Client? c) {
-      if (c == null) return {};
+    Map<String, dynamic>? serializeClient(Client? c) {
+      if (c == null) return null;
       try {
         return (c as dynamic).toJson() as Map<String, dynamic>;
       } catch (_) {
         final model = ClientModel.fromEntity(c);
         return model.toJson();
-      }
-    }
-
-    Map<String, dynamic> serializeCartItem(CartItem item) {
-      try {
-        return (item as dynamic).toJson() as Map<String, dynamic>;
-      } catch (_) {
-        final model = CartItemModel.fromEntity(item);
-        final unitPrice = double.tryParse(model.product.lista13?.replaceAll(',', '.') ?? '') ?? 0.0;
-        final quantity = model.quantity;
-        return {
-          'productId': model.product.codigo,
-          'productName': model.product.descripcion,
-          'quantity': quantity,
-          'discount': 0,
-          'unitPrice': unitPrice,
-          'totalItem': (unitPrice * (quantity.toDouble())),
-        };
       }
     }
 
@@ -79,7 +55,9 @@ class InvoicePayload {
       } catch (_) {
         final cartLogItem = CartLogEntryModel.fromEntity(itemLog);
         final itemModel = CartItemModel.fromEntity(itemLog.item);
-        final unitPrice = double.tryParse(itemModel.product.lista13?.replaceAll(',', '.') ?? '') ?? 0.0;
+        final unitPrice = double.tryParse(
+                itemModel.product.precio?.replaceAll(',', '.') ?? '') ??
+            0.0;
         final quantity = itemModel.quantity;
         return {
           'id': cartLogItem.id,
@@ -89,23 +67,23 @@ class InvoicePayload {
           'discount': 0,
           'quantity': quantity,
           'unitPrice': unitPrice,
+          'iva': itemModel.iva,
+          'impuesto_interno': itemModel.product.impuestoInterno,
+          'priceListId': job.priceListId,
         };
       }
     }
 
-
-
     return InvoicePayload(
       ticketId: job.ticketId,
       timestamp: job.timestamp.toIso8601String(),
-      cashier: job.cashierName,
+      cashier: job.cashierId,
       client: serializeClient(job.client),
       paymentMethod: job.paymentMethod ?? '',
       total: job.total,
       totalTax: job.totalTax,
-      items: job.items.map(serializeCartItem).toList(),
+      // items: job.items.map(serializeCartItem).toList(),
       logItems: job.logItems.map(serializeCartLogItem).toList(),
-      priceListId: job.priceListId,
     );
   }
 }

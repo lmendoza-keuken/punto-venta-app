@@ -1,5 +1,7 @@
+import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:punto_venta_app/core/database/database_helper.dart';
+import 'package:punto_venta_app/core/network/dio_client.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/google_auth_datasource.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/firestore_user_datasource.dart';
@@ -116,7 +118,7 @@ Future<void> init() async {
     () => AuthLocalDataSourceImpl(sharedPreferences: sl()),
   );
   sl.registerLazySingleton<UserApiDataSource>(
-    () => UserApiDataSourceImpl(),
+    () => UserApiDataSourceImpl(dio: sl()),
   );
   sl.registerLazySingleton<PrinterLocalDataSource>(
     () => PrinterLocalDataSourceImpl(sharedPreferences: sl()),
@@ -209,7 +211,7 @@ Future<void> init() async {
 
   // Data sources
   sl.registerLazySingleton<ProductLocalDataSource>(
-    () => ProductLocalDataSourceImpl(),
+    () => ProductLocalDataSourceImpl(dio: sl()),
   );
   sl.registerLazySingleton<SavedOrdersLocalDataSource>(
     () => SavedOrdersLocalDataSourceImpl(sharedPreferences: sl()),
@@ -220,7 +222,7 @@ Future<void> init() async {
   sl.registerLazySingleton<ClientLocalDataSource>(
       () => ClientLocalDataSourceImpl(sharedPreferences: sl()));
   sl.registerLazySingleton<InvoiceRemoteDataSource>(
-    () => InvoiceRemoteDataSourceImpl(client: sl()),
+    () => InvoiceRemoteDataSourceImpl(dio: sl()),
   );
    sl.registerLazySingleton<PriceListLocalDataSource>(
     () => PriceListLocalDataSourceImpl(sharedPreferences: sl()),
@@ -272,10 +274,12 @@ Future<void> init() async {
   // Database
   sl.registerLazySingleton<DatabaseHelper>(() => DatabaseHelper.instance);
 
+
   //! External
   final sharedPreferences = await SharedPreferences.getInstance();
   sl.registerLazySingleton(() => sharedPreferences);
   sl.registerLazySingleton<Uuid>(() => const Uuid());
+  sl.registerLazySingleton<Dio>(() => DioClient.instance);
 
   // HTTP client
   sl.registerLazySingleton(() => http.Client());

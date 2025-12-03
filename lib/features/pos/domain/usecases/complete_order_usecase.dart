@@ -24,7 +24,18 @@ class CompleteOrderUsecase {
     final now = DateTime.now();
     final orderNumber = _generateOrderNumber(now);
     final totalItems = items.fold(0, (sum, item) => sum + item.quantity);
-    final totalTax = total * 0.21; // IVA del 21%
+
+    double totalTax = 0;
+    for (var item in items) {
+      final precio = item.product.precio ?? 0;
+      final cantidad = item.quantity;
+      final tasaIva = item.product.iva / 100;
+
+      final precioTotal = precio * cantidad;
+      final ivaArticulo = precioTotal * tasaIva;
+
+      totalTax += ivaArticulo;
+    }
 
     final order = CompletedOrder(
       id: now.millisecondsSinceEpoch.toString(),
@@ -41,6 +52,7 @@ class CompleteOrderUsecase {
     );
 
     await repository.saveCompletedOrder(order);
+
     return order;
   }
 

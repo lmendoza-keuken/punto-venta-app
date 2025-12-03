@@ -42,8 +42,6 @@ class _CredentialsPageState extends State<CredentialsPage> {
     if (_formKey.currentState!.validate()) {
       context.read<AuthBloc>().add(
             AuthenticateUserRequested(
-              email: widget.email,
-              companyId: widget.companyId,
               username: _usernameController.text.trim(),
               password: _passwordController.text.trim(),
             ),
@@ -95,32 +93,38 @@ class _CredentialsPageState extends State<CredentialsPage> {
                         child: Card(
                           elevation: 8,
                           child: Padding(
-                            padding: const EdgeInsets.all(AppDimensions.paddingXL),
+                            padding:
+                                const EdgeInsets.all(AppDimensions.paddingXL),
                             child: Form(
                               key: _formKey,
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  
                                   Text(
                                     widget.companyName,
-                                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headlineSmall
+                                        ?.copyWith(
                                           fontWeight: FontWeight.bold,
                                         ),
                                     textAlign: TextAlign.center,
                                   ),
-                                  
-                                  const SizedBox(height: AppDimensions.paddingXL),
-                  
+
+                                  const SizedBox(
+                                      height: AppDimensions.paddingXL),
+
                                   // Username Field
                                   TextFormField(
                                     controller: _usernameController,
                                     enabled: !isLoading,
                                     decoration: InputDecoration(
                                       labelText: 'Usuario',
-                                      prefixIcon: const Icon(Icons.person_outline),
+                                      prefixIcon:
+                                          const Icon(Icons.person_outline),
                                       border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
+                                        borderRadius: BorderRadius.circular(
+                                            AppDimensions.borderRadiusM),
                                       ),
                                     ),
                                     validator: (value) {
@@ -131,8 +135,9 @@ class _CredentialsPageState extends State<CredentialsPage> {
                                     },
                                     onFieldSubmitted: (_) => _handleLogin(),
                                   ),
-                                  const SizedBox(height: AppDimensions.paddingM),
-                  
+                                  const SizedBox(
+                                      height: AppDimensions.paddingM),
+
                                   // Password Field
                                   TextFormField(
                                     controller: _passwordController,
@@ -140,19 +145,24 @@ class _CredentialsPageState extends State<CredentialsPage> {
                                     obscureText: _obscurePassword,
                                     decoration: InputDecoration(
                                       labelText: 'Contraseña',
-                                      prefixIcon: const Icon(Icons.lock_outline),
+                                      prefixIcon:
+                                          const Icon(Icons.lock_outline),
                                       suffixIcon: IconButton(
                                         icon: Icon(
-                                          _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                                          _obscurePassword
+                                              ? Icons.visibility
+                                              : Icons.visibility_off,
                                         ),
                                         onPressed: () {
                                           setState(() {
-                                            _obscurePassword = !_obscurePassword;
+                                            _obscurePassword =
+                                                !_obscurePassword;
                                           });
                                         },
                                       ),
                                       border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
+                                        borderRadius: BorderRadius.circular(
+                                            AppDimensions.borderRadiusM),
                                       ),
                                     ),
                                     validator: (value) {
@@ -163,25 +173,31 @@ class _CredentialsPageState extends State<CredentialsPage> {
                                     },
                                     onFieldSubmitted: (_) => _handleLogin(),
                                   ),
-                                  const SizedBox(height: AppDimensions.paddingXL),
-                  
+                                  const SizedBox(
+                                      height: AppDimensions.paddingXL),
+
                                   // Login Button
                                   SizedBox(
                                     height: 50,
                                     child: ElevatedButton(
-                                      onPressed: isLoading ? null : _handleLogin,
+                                      onPressed:
+                                          isLoading ? null : _handleLogin,
                                       child: isLoading
                                           ? const SizedBox(
                                               height: 24,
                                               width: 24,
                                               child: CircularProgressIndicator(
                                                 strokeWidth: 2,
-                                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                                valueColor:
+                                                    AlwaysStoppedAnimation<
+                                                        Color>(Colors.white),
                                               ),
                                             )
                                           : const Text(
                                               'Ingresar',
-                                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                              style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600),
                                             ),
                                     ),
                                   ),
@@ -195,26 +211,26 @@ class _CredentialsPageState extends State<CredentialsPage> {
                   ),
                 ),
                 Padding(
-                padding: const EdgeInsets.all(AppDimensions.paddingM),
-                child: Column(
-                  children: [
-                    Text(
-                      AppStrings.keukenName,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    const SizedBox(height: AppDimensions.paddingXS),
-                    Text(
-                      AppStrings.keukenDesc,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.selectClientButton,
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+                  padding: const EdgeInsets.all(AppDimensions.paddingM),
+                  child: Column(
+                    children: [
+                      Text(
+                        AppStrings.keukenName,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      const SizedBox(height: AppDimensions.paddingXS),
+                      Text(
+                        AppStrings.keukenDesc,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppColors.selectClientButton,
+                            ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
               ],
             ),
           ),

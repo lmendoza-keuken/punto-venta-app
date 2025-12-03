@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:punto_venta_app/core/constants/app_string.dart';
+import 'package:punto_venta_app/features/pos/data/models/barcode_model.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_state.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimensions.dart';
@@ -62,79 +64,107 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
     final uiState = context.read<UiBloc>().state;
     int qty = 1;
     bool isDeleteMode = false;
+    bool isBarcodeMode = false;
+
     if (uiState is UiLoaded) {
       qty = uiState.selectedQuantity;
       isDeleteMode = uiState.isDeleteMode;
+      isBarcodeMode = uiState.isBarcodeSearchEnabled;
     }
 
     final productBloc = context.read<ProductBloc>();
     final prodState = productBloc.state;
     Product? found;
+    BarcodeModel? matchedBarcode;
+
     if (prodState is ProductLoaded) {
-      try {
-        found = prodState.products.firstWhere(
-          (p) =>
-              p.code.toLowerCase() == code.toLowerCase() ||
-              p.id.toLowerCase() == code.toLowerCase(),
-        );
-      } catch (_) {
-        found = null;
+      if (isBarcodeMode) {
+        for (var product in prodState.products) {
+          if (product.barcodes != null) {
+            for (var barcode in product.barcodes!) {
+              if (barcode.codigoBarra.toString() == code) {
+                found = product;
+                matchedBarcode = barcode;
+                break;
+              }
+            }
+            if (found != null) break;
+          }
+        }
+      } else {
+        try {
+          final productCode = int.parse(code);
+          found = prodState.products.cast<Product?>().firstWhere(
+                (p) => p!.codigo == productCode,
+                orElse: () => null,
+              );
+        } catch (_) {
+          found = null;
+        }
       }
     }
 
     if (found == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('No se encontró un producto con código "$code".'),
+          content: Text('Producto no encontrado: $code'),
+          backgroundColor: AppColors.error,
           duration: const Duration(seconds: 2),
-          behavior: SnackBarBehavior.floating,
         ),
       );
       widget.searchController.clear();
-      widget.onClearSearch();
-      context.read<UiBloc>().add(ResetQuantity());
       return;
+    }
+
+    int finalQuantity = qty;
+    if (matchedBarcode != null) {
+      finalQuantity = qty * matchedBarcode.unidades;
+
+      String tipoVentaMsg = '';
+      switch (matchedBarcode.tipoVenta) {
+        case 1:
+          tipoVentaMsg = 'Unidad';
+          break;
+        case 2:
+          tipoVentaMsg = 'Pack (${matchedBarcode.unidades} unidades)';
+          break;
+        case 3:
+          tipoVentaMsg = 'Bulto (${matchedBarcode.unidades} unidades)';
+          break;
+      }
+
+      if (tipoVentaMsg.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Tipo de venta: $tipoVentaMsg'),
+            backgroundColor: AppColors.info,
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
     }
 
     final cartBloc = context.read<CartBloc>();
     if (isDeleteMode) {
       final quantityInCart = cartBloc.getProductQuantityInCart(found.id);
-
-      if (quantityInCart == 0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${found.name} no está en el carrito'),
-            duration: const Duration(seconds: 1),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: AppColors.info,
-          ),
-        );
-      } else if (quantityInCart >= qty) {
-        cartBloc.add(RemoveQuantityFromCart(found.id, qty));
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${found.name} x$qty eliminado del carrito'),
-            duration: const Duration(seconds: 1),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-
-      widget.searchController.clear();
-      widget.onClearSearch();
-      context.read<UiBloc>().add(ResetQuantity());
-      return;
+      cartBloc.add(RemoveQuantityFromCart(found.code, quantityInCart));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${found.name} eliminado del carrito'),
+          backgroundColor: AppColors.error,
+          duration: const Duration(seconds: 1),
+        ),
+      );
+    } else {
+      cartBloc.add(AddToCart(found, quantity: finalQuantity));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$finalQuantity x ${found.name} agregado'),
+          backgroundColor: AppColors.success,
+          duration: const Duration(seconds: 1),
+        ),
+      );
     }
-
-    cartBloc.add(AddToCart(found, quantity: qty));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${found.name} x$qty agregado al carrito'),
-        duration: const Duration(seconds: 1),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
 
     widget.searchController.clear();
     widget.onClearSearch();
@@ -167,6 +197,10 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
         Expanded(child: _buildSearchField()),
         const SizedBox(width: AppDimensions.paddingM),
 
+        // Switch de código de barras
+        _buildBarcodeSwitch(),
+        const SizedBox(width: AppDimensions.paddingM),
+
         // Botón de eliminar (derecha)
         _buildDeleteButton(),
       ],
@@ -176,10 +210,12 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
   Widget _buildCompactLayout() {
     return Column(
       children: [
-        // Primera fila: Cantidad y eliminar
+        // Primera fila: Cantidad, switch y eliminar
         Row(
           children: [
             _buildQuantityField(),
+            const SizedBox(width: AppDimensions.paddingS),
+            _buildBarcodeSwitch(),
             const Spacer(),
             _buildDeleteButton(),
           ],
@@ -189,6 +225,56 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
         // Segunda fila: Búsqueda
         _buildSearchField(),
       ],
+    );
+  }
+
+  Widget _buildBarcodeSwitch() {
+    return BlocBuilder<UiBloc, UiState>(
+      builder: (context, state) {
+        final uiState = state as UiLoaded;
+
+        return Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            color: uiState.isBarcodeSearchEnabled
+                ? AppColors.success
+                : Colors.white,
+            borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
+            border: Border.all(
+              color: uiState.isBarcodeSearchEnabled
+                  ? AppColors.success
+                  : Colors.grey.shade300,
+              width: 2,
+            ),
+            boxShadow: uiState.isBarcodeSearchEnabled
+                ? [
+                    BoxShadow(
+                      color: AppColors.success.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
+              onTap: () {
+                context.read<UiBloc>().add(ToggleBarcodeSearch());
+              },
+              child: Icon(
+                FontAwesomeIcons.barcode,
+                color: uiState.isBarcodeSearchEnabled
+                    ? Colors.white
+                    : AppColors.textSecondary,
+                size: 24,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -263,36 +349,51 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
   }
 
   Widget _buildSearchField() {
-    return TextField(
-      controller: widget.searchController,
-      autofocus: widget.autofocus,
-      decoration: InputDecoration(
-        hintText: AppStrings.searchHint,
-        prefixIcon: const Icon(Icons.search, color: AppColors.primary),
-        suffixIcon: widget.searchController.text.isNotEmpty
-            ? IconButton(
-                icon: const Icon(Icons.clear, color: AppColors.textSecondary),
-                onPressed: widget.onClearSearch,
-              )
-            : null,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
-        ),
-        filled: true,
-        fillColor: Colors.white,
-      ),
-      onChanged: widget.onSearchChanged,
-      onSubmitted: (value) {
-        _handleCodeInput(value);
+    return BlocBuilder<UiBloc, UiState>(
+      builder: (context, state) {
+        final uiState = state as UiLoaded;
+
+        return TextField(
+          controller: widget.searchController,
+          autofocus: widget.autofocus,
+          decoration: InputDecoration(
+            hintText: uiState.isBarcodeSearchEnabled
+                ? AppStrings.searchBarCodeHint
+                : AppStrings.searchHint,
+            prefixIcon: Icon(
+              uiState.isBarcodeSearchEnabled
+                  ? FontAwesomeIcons.barcode
+                  : Icons.search,
+              color: AppColors.primary,
+            ),
+            suffixIcon: widget.searchController.text.isNotEmpty
+                ? IconButton(
+                    icon:
+                        const Icon(Icons.clear, color: AppColors.textSecondary),
+                    onPressed: widget.onClearSearch,
+                  )
+                : null,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
+              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+          ),
+          onChanged:
+              uiState.isBarcodeSearchEnabled ? null : widget.onSearchChanged,
+          onSubmitted: (value) {
+            _handleCodeInput(value);
+          },
+        );
       },
     );
   }

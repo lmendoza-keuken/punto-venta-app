@@ -104,9 +104,9 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
         await _printText(item.product.descripcion);
         await _printAndFeedLine();
 
-        final precioUnit = item.product.precio.formatToCurrency();
+        final precioUnit = item.product.precio?.formatToCurrency();
         final subtotalValue =
-            (item.quantity * item.product.precio).formatToCurrency();
+            (item.quantity * (item.product.precio ?? 0.0)).formatToCurrency();
         final subtotal = subtotalValue;
         final line = "  ${item.quantity} x $precioUnit";
 
@@ -129,7 +129,7 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
       final totalAmount = printJob.total.formatToCurrency();
 
       await _printLineWithValue("Subtotal:", subtotalAmount);
-      await _printLineWithValue("IVA (21%):", taxAmount);
+      await _printLineWithValue("IVA:", taxAmount);
       await _printText(_buildSeparator('_'));
       await _printAndFeedLine();
 
