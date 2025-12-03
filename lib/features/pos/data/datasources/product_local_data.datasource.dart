@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:punto_venta_app/core/config/api_config.dart';
 import 'package:punto_venta_app/core/network/dio_client.dart';
+import 'package:punto_venta_app/features/pos/data/models/category_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/product_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/precio_articulo_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/barcode_model.dart';
@@ -11,7 +12,7 @@ abstract class ProductLocalDataSource {
   Future<List<ProductModel>> getProductsByCategory(String category);
   Future<List<ProductModel>> searchProducts(String query);
   Future<ProductModel?> searchByBarcode(String barcode);
-  Future<List<String>> getCategories();
+  Future<List<CategoryModel>> getCategories();
   Future<List<PrecioArticuloModel>> getPreciosArticulos();
   Future<Map<int, PrecioArticuloModel>> getPreciosByLista(int listaPrecio);
   void setListaPrecio(int lista);
@@ -23,11 +24,12 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
   List<ProductModel>? _cachedProducts;
   List<PrecioArticuloModel>? _cachedPrecios;
   List<BarcodeModel>? _cachedBarcodes;
+  List<CategoryModel>? _cachedCategories;
   int _listaActual;
 
   ProductLocalDataSourceImpl({
     Dio? dio,
-    int listaInicial = 13,
+    int listaInicial = 1,
   })  : _dio = dio ?? DioClient.instance,
         _listaActual = listaInicial;
 
@@ -47,7 +49,8 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
 
     try {
       final response = await _dio.get(
-        ApiConfig.barcode,
+        'http://192.168.0.16:8000/barcodes/',
+        // ApiConfig.barcode,
         options: Options(
           responseType: ResponseType.json,
         ),
@@ -83,7 +86,8 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
 
     try {
       final response = await _dio.get(
-        ApiConfig.productosUrl,
+        'http://192.168.0.16:8000/articles/',
+        // ApiConfig.productosUrl,
         options: Options(
           responseType: ResponseType.json,
         ),
@@ -131,7 +135,8 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
 
     try {
       final response = await _dio.get(
-        ApiConfig.preciosArticulosUrl,
+        'http://192.168.0.16:8000/prices_list/',
+        // ApiConfig.preciosArticulosUrl,
         options: Options(
           responseType: ResponseType.json,
         ),
@@ -194,10 +199,10 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
 
     final barcodesByProduct = <int, List<BarcodeModel>>{};
     for (var barcode in barcodes) {
-      if (!barcodesByProduct.containsKey(barcode.codigo)) {
-        barcodesByProduct[barcode.codigo] = [];
+      if (!barcodesByProduct.containsKey(barcode.idArticle)) {
+        barcodesByProduct[barcode.idArticle ?? 0] = [];
       }
-      barcodesByProduct[barcode.codigo]!.add(barcode);
+      barcodesByProduct[barcode.idArticle]!.add(barcode);
     }
 
     Map<int, PrecioArticuloModel>? precios;
@@ -208,13 +213,13 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
     }
 
     return products.map((product) {
-      final productBarcodes = barcodesByProduct[product.codigo] ?? [];
-      final precio = precios?[product.codigo];
+      final productBarcodes = barcodesByProduct[product.id] ?? [];
+      final precio = precios?[product.id];
 
       return product.copyWith(
         barcodes: productBarcodes,
-        precio: precio?.precio,
-        oferta: precio?.oferta ?? '0',
+        precio: precio?.precioDouble,
+        oferta: int.tryParse(precio?.oferta ?? '0'),
       );
     }).toList();
   }
@@ -226,7 +231,7 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
     for (var product in products) {
       if (product.barcodes != null) {
         for (var productBarcode in product.barcodes!) {
-          if (productBarcode.codigoBarra.toString() == barcode) {
+          if (productBarcode.barcode.toString() == barcode) {
             return product;
           }
         }
@@ -245,7 +250,7 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
 
     return products
         .where(
-            (product) => product.rubro?.toLowerCase() == category.toLowerCase())
+            (product) => product.descripcionRubro?.toLowerCase() == category.toLowerCase())
         .toList();
   }
 
@@ -258,10 +263,9 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
     final lowerQuery = query.toLowerCase();
     return products
         .where((product) =>
-            (product.descripcion ?? "").toLowerCase().contains(lowerQuery) ||
-            product.codigo.toString().contains(lowerQuery) ||
-            (product.marca ?? "").toLowerCase().contains(lowerQuery) ||
-            (product.rubro ?? "").toLowerCase().contains(lowerQuery) ||
+            (product.descriComercial ?? "").toLowerCase().contains(lowerQuery) ||
+            product.id.toString().contains(lowerQuery) ||
+            (product.descripcionRubro ?? "").toLowerCase().contains(lowerQuery) ||
             _hasMatchingBarcode(product, lowerQuery))
         .toList();
   }
@@ -270,28 +274,51 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
     if (product.barcodes == null) return false;
 
     return product.barcodes!
-        .any((barcode) => barcode.codigoBarra.toString().contains(query));
+        .any((barcode) => barcode.barcode.toString().contains(query));
   }
 
   @override
-  Future<List<String>> getCategories() async {
-    final products = await _fetchProducts();
+  Future<List<CategoryModel>> getCategories() async {
+   if (_cachedCategories != null) {
+      return _cachedCategories!;
+    }
 
-    final categories = products
-        .map((product) => product.rubro!)
-        .where((rubro) => rubro.isNotEmpty)
-        .toSet()
-        .toList();
+    try {
+      final response = await _dio.get(
+        'http://192.168.0.16:8000/categories/',
+        // ApiConfig.barcode,
+        options: Options(
+          responseType: ResponseType.json,
+        ),
+      );
 
-    categories.sort();
-    categories.insert(0, 'Todo');
+      if (response.statusCode == 200) {
+        final List<dynamic> jsonData = response.data is String
+            ? json.decode(response.data)
+            : response.data;
 
-    return categories;
+        _cachedCategories = jsonData
+            .map((json) => CategoryModel.fromJson(json as Map<String, dynamic>))
+            .toList();
+
+        return _cachedCategories!;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          message: 'Error al cargar categorías: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      _cachedCategories = [];
+      return _cachedCategories!;
+    }
   }
 
   void clearCache() {
     _cachedProducts = null;
     _cachedPrecios = null;
     _cachedBarcodes = null;
+    _cachedCategories = null;
   }
 }

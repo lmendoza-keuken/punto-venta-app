@@ -124,10 +124,10 @@ Future<void> init() async {
     () => PrinterLocalDataSourceImpl(sharedPreferences: sl()),
   );
 
-
   //! Features - POS
   // Bloc
-  sl.registerFactory(() => ProductBloc(getProductsUsecase: sl(), priceListLocalDataSource: sl()));
+  sl.registerFactory(() =>
+      ProductBloc(getProductsUsecase: sl(), priceListLocalDataSource: sl()));
   sl.registerFactory(() => CartBloc(manageCartUsecase: sl()));
   sl.registerFactory(() => UiBloc());
   sl.registerFactory(() => SavedOrdersBloc(
@@ -224,7 +224,7 @@ Future<void> init() async {
   sl.registerLazySingleton<InvoiceRemoteDataSource>(
     () => InvoiceRemoteDataSourceImpl(dio: sl()),
   );
-   sl.registerLazySingleton<PriceListLocalDataSource>(
+  sl.registerLazySingleton<PriceListLocalDataSource>(
     () => PriceListLocalDataSourceImpl(sharedPreferences: sl()),
   );
 
@@ -273,7 +273,6 @@ Future<void> init() async {
 
   // Database
   sl.registerLazySingleton<DatabaseHelper>(() => DatabaseHelper.instance);
-
 
   //! External
   final sharedPreferences = await SharedPreferences.getInstance();

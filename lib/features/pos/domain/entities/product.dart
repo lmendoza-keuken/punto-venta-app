@@ -2,81 +2,67 @@ import 'package:equatable/equatable.dart';
 import 'package:punto_venta_app/features/pos/data/models/barcode_model.dart';
 
 class Product extends Equatable {
-  final int codigo;
-  final String descripcion;
-  final double? precio; 
-  final String rubro; 
-  final String marca;
-  final String capacidad;
-  final int pack;
-  final int uxb;
-  final String linea;
-  final String sublinea;
-  final String pesopromedio;
-  final String formaventa;
-  final double iva;
-  final double costo;
-  final String suspendidoVenta;
-  final String suspendidoQuiebre;
+  final int id;
+  final String descripcionComercial;
+  final int? fraccionado;
+  final int stock;
   final int idProveedor;
-  final bool objetivable;
-  final bool usaListaPrecios;
-  final bool oferta; 
+  final double iva;
+  final int impint;
+  final String sepesa;
+  final double pesoneto;
+  final String idRubro;
+  final String suspendidoVenta;
+  final String suspendidoParaCompra;
+  final String activo;
+  final String descripcionRubro;
+  final double? precio;
+  final bool oferta;
   final List<BarcodeModel>? barcodes;
 
   const Product({
-    required this.codigo,
-    required this.descripcion,
-    this.precio,
-    required this.rubro,
-    required this.marca,
-    required this.capacidad,
-    required this.pack,
-    required this.uxb,
-    required this.linea,
-    required this.sublinea,
-    required this.pesopromedio,
-    required this.formaventa,
-    required this.iva,
-    required this.costo,
-    required this.suspendidoVenta,
-    required this.suspendidoQuiebre,
+    required this.id,
+    required this.descripcionComercial,
+    this.fraccionado,
+    required this.stock,
     required this.idProveedor,
-    required this.objetivable,
-    required this.usaListaPrecios,
+    required this.iva,
+    required this.impint,
+    required this.sepesa,
+    required this.pesoneto,
+    required this.idRubro,
+    required this.suspendidoVenta,
+    required this.suspendidoParaCompra,
+    required this.activo,
+    required this.descripcionRubro,
+    this.precio,
     required this.oferta,
     this.barcodes,
   });
 
-  String get id => codigo.toString();
-  String get name => descripcion.trim();
-  String get code => codigo.toString();
-  String get category => rubro;
-  String? get imageUrl => null; // No hay imágenes en la API
-  int get stock => suspendidoVenta == 'N' ? 100 : 0; // Simular stock
-  String get description => '$marca - $descripcion';
+  String get idStr => id.toString();
+  String get name => descripcionComercial.trim();
+  String get code => id.toString();
+  String get category => descripcionRubro.isNotEmpty ? descripcionRubro : idRubro;
+  String? get imageUrl => null;
 
   @override
   List<Object?> get props => [
-        codigo,
-        descripcion,
-        precio,
-        rubro,
-        marca,
-        capacidad,
-        pack,
-        uxb,
-        linea,
-        sublinea,
-        pesopromedio,
-        formaventa,
-        iva,
-        costo,
-        suspendidoVenta,
-        suspendidoQuiebre,
+        id,
+        descripcionComercial,
+        fraccionado,
+        stock,
         idProveedor,
-        objetivable,
-        usaListaPrecios,
+        iva,
+        impint,
+        sepesa,
+        pesoneto,
+        idRubro,
+        suspendidoVenta,
+        suspendidoParaCompra,
+        activo,
+        descripcionRubro,
+        precio,
         oferta,
         barcodes,
       ];

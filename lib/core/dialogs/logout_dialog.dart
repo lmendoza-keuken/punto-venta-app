@@ -124,6 +124,7 @@ class ActionCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback onTap;
+  final bool enabled;
 
   const ActionCard({
     super.key,
@@ -133,6 +134,7 @@ class ActionCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.enabled = true,
   });
 
   @override
@@ -140,13 +142,13 @@ class ActionCard extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: onTap,
+        onTap: enabled ? onTap : null,
         borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
         child: Container(
           padding: const EdgeInsets.all(AppDimensions.paddingL),
           decoration: BoxDecoration(
             border: Border.all(
-              color: iconColor.withOpacity(0.3),
+              color: enabled ? iconColor.withOpacity(0.3) : Colors.grey.withOpacity(0.3),
               width: 1.5,
             ),
             borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
@@ -157,13 +159,13 @@ class ActionCard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: backgroundColor,
+                  color: enabled ? backgroundColor : Colors.grey.withOpacity(0.1),
                   borderRadius:
                       BorderRadius.circular(AppDimensions.borderRadiusM),
                 ),
                 child: Icon(
                   icon,
-                  color: iconColor,
+                  color:  enabled ? iconColor : Colors.grey,
                   size: 24,
                 ),
               ),
@@ -176,7 +178,7 @@ class ActionCard extends StatelessWidget {
                       title,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: iconColor,
+                            color:  enabled ? iconColor : Colors.grey,
                           ),
                     ),
                     const SizedBox(height: AppDimensions.paddingXS),
@@ -192,7 +194,7 @@ class ActionCard extends StatelessWidget {
               Icon(
                 Icons.arrow_forward_ios,
                 size: 16,
-                color: iconColor.withOpacity(0.5),
+                color:  enabled ? iconColor.withOpacity(0.5) : Colors.grey.withOpacity(0.5),
               ),
             ],
           ),

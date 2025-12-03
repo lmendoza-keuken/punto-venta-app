@@ -8,16 +8,17 @@ class BarcodeModel with _$BarcodeModel {
   const BarcodeModel._();
 
   const factory BarcodeModel({
-    required int codigo,
-    @JsonKey(name: 'barcode') required int codigoBarra,
-    required int unidades,
-    required int tipoVenta,
+    @JsonKey(name: 'id') int? id,
+    @JsonKey(name: 'id_article') int? idArticle,
+    @JsonKey(name: 'barcode') int? barcode,
+    @JsonKey(name: 'unidades') int? unidades,
+    @JsonKey(name: 'tipo') int? tipoVenta,
   }) = _BarcodeModel;
 
   factory BarcodeModel.fromJson(Map<String, dynamic> json) =>
       _$BarcodeModelFromJson(json);
 
-  bool get isWeighted => codigoBarra.toString().startsWith('20');
+  bool get isWeighted => barcode.toString().startsWith('20');
 
   String get tipoVentaTexto {
     switch (tipoVenta) {

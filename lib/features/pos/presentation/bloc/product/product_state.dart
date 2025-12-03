@@ -24,7 +24,7 @@ class ProductLoaded extends ProductState {
     required this.categories,
     this.selectedCategory = 'Todo',
     this.searchQuery = '',
-    this.currentPriceList = 13, 
+    required this.currentPriceList, 
   });
 
   ProductLoaded copyWith({

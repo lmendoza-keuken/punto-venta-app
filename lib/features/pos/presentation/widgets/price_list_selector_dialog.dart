@@ -26,7 +26,7 @@ class _PriceListSelectorDialogState extends State<PriceListSelectorDialog> {
   @override
   void initState() {
     super.initState();
-    _selectedList = widget.currentList > 0 ? widget.currentList : 13; // ✅ Validar que no sea 0
+    _selectedList = widget.currentList > 0 ? widget.currentList : 1;
     _loadAvailablePriceLists();
   }
 
@@ -43,9 +43,9 @@ class _PriceListSelectorDialogState extends State<PriceListSelectorDialog> {
         _isLoading = false;
         
         if (!_availableLists.contains(_selectedList)) {
-          _selectedList = _availableLists.contains(13) 
-              ? 13 
-              : (_availableLists.isNotEmpty ? _availableLists.first : 13);
+          _selectedList = _availableLists.contains(1) 
+              ? 1 
+              : (_availableLists.isNotEmpty ? _availableLists.first : 1);
         }
       });
     } catch (e) {
@@ -146,7 +146,7 @@ void showPriceListSelectorDialog(BuildContext context, int currentList) {
   showDialog(
     context: context,
     builder: (context) => PriceListSelectorDialog(
-      currentList: currentList > 0 ? currentList : 13, 
+      currentList: currentList > 0 ? currentList : 1, 
     ),
   );
 }

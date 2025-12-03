@@ -27,7 +27,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     try {
       int currentList = await priceListLocalDataSource.getCurrentPriceList();
       if (currentList <= 0) {
-        currentList = 13;
+        currentList = 1;
         await priceListLocalDataSource.savePriceList(currentList);
       }
       
@@ -113,7 +113,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     emit(ProductLoading());
     
     try {
-      final listId = event.listId > 0 ? event.listId : 13;
+      final listId = event.listId > 0 ? event.listId : 1;
       
       await priceListLocalDataSource.savePriceList(listId);
       await getProductsUsecase.updatePriceList(listId);

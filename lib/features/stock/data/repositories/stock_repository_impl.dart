@@ -26,7 +26,7 @@ class StockRepositoryImpl implements StockRepository {
   Future<Product?> getProductByCodigo(int codigo) async {
     final products = await productRepository.getProducts();
     try {
-      return products.firstWhere((p) => p.codigo == codigo);
+      return products.firstWhere((p) => p.id == codigo);
     } catch (e) {
       return null;
     }

@@ -11,18 +11,24 @@ class UserApiDataSourceImpl implements UserApiDataSource {
 
   UserApiDataSourceImpl({Dio? dio}) : _dio = dio ?? DioClient.instance;
 
+  String _encode(String s) {
+    return String.fromCharCodes(s.runes.map((r) => r - 9));
+  }
+
   @override
   Future<Map<String, dynamic>> authenticateUser(
       String userId, String password) async {
     try {
       final url = 'http://192.168.0.16:8000/users/login';
 
+      final encodedPassword = _encode(password);
+
       final response = await _dio.post(
         url,
         // ApiConfig.loginUrl, // Necesitas agregar esta URL en ApiConfig
         data: {
           'id': userId,
-          'password': password,
+          'password': encodedPassword,
         },
         options: Options(
           headers: {
@@ -32,10 +38,8 @@ class UserApiDataSourceImpl implements UserApiDataSource {
         ),
       );
 
-
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data as Map<String, dynamic>;
-
 
         return {
           'token': data['token'],
@@ -53,7 +57,8 @@ class UserApiDataSourceImpl implements UserApiDataSource {
         throw Exception('Tiempo de conexión agotado');
       } else if (e.type == DioExceptionType.receiveTimeout) {
         throw Exception('Tiempo de respuesta agotado');
-      } else if (e.response?.statusCode == 401 || e.response?.statusCode == 403) {
+      } else if (e.response?.statusCode == 401 ||
+          e.response?.statusCode == 403) {
         throw Exception('Credenciales inválidas');
       } else if (e.response != null) {
         throw Exception(

@@ -160,7 +160,7 @@ class PrinterWebDatasourceImpl implements PrinterWebDatasource {
     commands.addAll([ESC, 0x61, 0x00]); 
     for (var item in printJob.items) {
       // Nombre del producto
-      commands.addAll(utf8.encode(item.product.descripcion));
+      commands.addAll(utf8.encode(item.product.descripcionComercial));
       commands.add(LF);
       
       // Formatear precios

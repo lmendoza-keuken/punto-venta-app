@@ -134,7 +134,7 @@ class ProductCard extends StatelessWidget {
                               if (!isCompact) ...[
                                 const SizedBox(height: 4),
                                 Text(
-                                  product.marca,
+                                  product.descripcionComercial.trim(),
                                   style: const TextStyle(
                                     fontSize: 8,
                                     color: AppColors.textHint,
@@ -156,7 +156,7 @@ class ProductCard extends StatelessWidget {
                         children: [
                           // Nombre del producto
                           Text(
-                            product.descripcion.trim(),
+                            product.descripcionComercial.trim(),
                             style: Theme.of(context)
                                 .textTheme
                                 .titleMedium
@@ -169,7 +169,7 @@ class ProductCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'Código: ${product.codigo}',
+                            'Código: ${product.id}',
                             style:
                                 Theme.of(context).textTheme.bodySmall?.copyWith(
                                       fontSize: isCompact ? 14 : 10,
@@ -203,7 +203,7 @@ class ProductCard extends StatelessWidget {
                             ],
                           ),
                           Text(
-                            product.rubro,
+                            product.descripcionRubro.trim(),
                             style:
                                 Theme.of(context).textTheme.bodySmall?.copyWith(
                                       fontSize: 10,

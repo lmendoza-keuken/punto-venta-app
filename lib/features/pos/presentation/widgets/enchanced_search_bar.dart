@@ -82,7 +82,7 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
         for (var product in prodState.products) {
           if (product.barcodes != null) {
             for (var barcode in product.barcodes!) {
-              if (barcode.codigoBarra.toString() == code) {
+              if (barcode.barcode.toString() == code) {
                 found = product;
                 matchedBarcode = barcode;
                 break;
@@ -95,7 +95,7 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
         try {
           final productCode = int.parse(code);
           found = prodState.products.cast<Product?>().firstWhere(
-                (p) => p!.codigo == productCode,
+                (p) => p!.id == productCode,
                 orElse: () => null,
               );
         } catch (_) {
@@ -118,7 +118,7 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
 
     int finalQuantity = qty;
     if (matchedBarcode != null) {
-      finalQuantity = qty * matchedBarcode.unidades;
+      finalQuantity = qty * (matchedBarcode.unidades ?? 1);
 
       String tipoVentaMsg = '';
       switch (matchedBarcode.tipoVenta) {
@@ -146,8 +146,8 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
 
     final cartBloc = context.read<CartBloc>();
     if (isDeleteMode) {
-      final quantityInCart = cartBloc.getProductQuantityInCart(found.id);
-      cartBloc.add(RemoveQuantityFromCart(found.code, quantityInCart));
+      final quantityInCart = cartBloc.getProductQuantityInCart(found.id.toString());
+      cartBloc.add(RemoveQuantityFromCart(found.id.toString(), quantityInCart));
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('${found.name} eliminado del carrito'),

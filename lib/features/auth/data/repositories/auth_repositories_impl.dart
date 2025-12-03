@@ -82,7 +82,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
     await localDataSource.cacheEnterprise(enterpriseModel);
     await localDataSource.cacheEmail(email);
-    await priceListLocalDataSource.savePriceList(13);
+    await priceListLocalDataSource.savePriceList(1);
     // await priceListLocalDataSource
     //     .savePriceList(selectedCompany.listPriceId ?? 0);
 
@@ -90,7 +90,7 @@ class AuthRepositoryImpl implements AuthRepository {
       'email': email,
       'companyId': companyId,
       'companyName': selectedCompany.name,
-      'listPriceId': 13,
+      'listPriceId': 1,
       // 'listPriceId': selectedCompany.listPriceId,
     };
   }

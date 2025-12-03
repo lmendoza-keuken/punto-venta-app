@@ -152,6 +152,7 @@ class _ConfirmDialogContent extends StatelessWidget {
       final priceList =
           await di.sl<PriceListLocalDataSource>().getCurrentPriceList();
       double totalTax = 0;
+
       for (var entry in cartState.log) {
         final precio = entry.item.product.precio ?? 0;
         final cantidad = entry.item.quantity;
@@ -162,6 +163,7 @@ class _ConfirmDialogContent extends StatelessWidget {
 
         totalTax += ivaArticulo;
       }
+
       final completeOrderUsecase = di.sl<CompleteOrderUsecase>();
       await completeOrderUsecase(
         items: cartState.items,
@@ -170,6 +172,7 @@ class _ConfirmDialogContent extends StatelessWidget {
         clientName: client?.name,
         cashierName: user?.name ?? 'Desconocido',
       );
+
       final printJob = PrintJob(
         items: cartState.items,
         logItems: cartState.log,
@@ -184,54 +187,70 @@ class _ConfirmDialogContent extends StatelessWidget {
         timestamp: DateTime.now(),
         ticketId: DateTime.now().millisecondsSinceEpoch.toString(),
       );
-      final sendInvoice = di.sl<SendInvoiceUseCase>();
 
+      final sendInvoice = di.sl<SendInvoiceUseCase>();
       bool invoiceSent = false;
+      
       try {
         invoiceSent = await sendInvoice(printJob);
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al enviar factura: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: No se pudo enviar la factura - $e'),
+              backgroundColor: AppColors.error,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+          Navigator.of(context).pop();
+        }
         return;
       }
 
       if (!invoiceSent) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('El envío de factura no fue exitoso.'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Error: La factura no se pudo enviar'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+          Navigator.of(context).pop();
+        }
         return;
       }
 
-      context.read<PrinterBloc>().add(PrintTicket(
-            printJob: printJob,
-            config: printerConfig,
-          ));
+      if (context.mounted) {
+        context.read<PrinterBloc>().add(PrintTicket(
+              printJob: printJob,
+              config: printerConfig,
+            ));
 
-      context.read<CartBloc>().add(ClearCart());
+        await context.read<PrinterBloc>().stream.firstWhere(
+          (state) => state is PrinterSuccess || state is PrinterError,
+        );
 
-      Navigator.of(context).pop();
-      Navigator.of(context).pop();
+        context.read<CartBloc>().add(ClearCart());
+        Navigator.of(context).pop();
+        Navigator.of(context).pop();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Venta procesada exitosamente'),
-          backgroundColor: AppColors.success,
-        ),
-      );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Venta procesada exitosamente'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al procesar venta: $e'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al procesar venta: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        Navigator.of(context).pop();
+      }
     }
   }
 }

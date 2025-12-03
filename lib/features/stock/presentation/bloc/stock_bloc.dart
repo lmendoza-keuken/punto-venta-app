@@ -49,8 +49,8 @@ class StockBloc extends Bloc<StockEvent, StockState> {
       
       final stockMap = <int, int>{};
       for (final product in products) {
-        final stock = await getProductStockUsecase(product.codigo);
-        stockMap[product.codigo] = stock;
+        final stock = await getProductStockUsecase(product.id);
+        stockMap[product.id] = stock;
       }
       
       emit(StockLoaded(products, stockMap));
@@ -81,8 +81,8 @@ class StockBloc extends Bloc<StockEvent, StockState> {
       final products = await getAllProductsUsecase();
       final stockMap = <int, int>{};
       for (final product in products) {
-        final stock = await getProductStockUsecase(product.codigo);
-        stockMap[product.codigo] = stock;
+        final stock = await getProductStockUsecase(product.id);
+        stockMap[product.id] = stock;
       }
       
       emit(StockOperationSuccess('Stock agregado exitosamente', products, stockMap));
@@ -113,8 +113,8 @@ class StockBloc extends Bloc<StockEvent, StockState> {
       final products = await getAllProductsUsecase();
       final stockMap = <int, int>{};
       for (final product in products) {
-        final stock = await getProductStockUsecase(product.codigo);
-        stockMap[product.codigo] = stock;
+        final stock = await getProductStockUsecase(product.id);
+        stockMap[product.id] = stock;
       }
       
       emit(StockOperationSuccess('Stock removido exitosamente', products, stockMap));
@@ -145,8 +145,8 @@ class StockBloc extends Bloc<StockEvent, StockState> {
       final products = await getAllProductsUsecase();
       final stockMap = <int, int>{};
       for (final product in products) {
-        final stock = await getProductStockUsecase(product.codigo);
-        stockMap[product.codigo] = stock;
+        final stock = await getProductStockUsecase(product.id);
+        stockMap[product.id] = stock;
       }
       
       emit(StockOperationSuccess('Stock ajustado exitosamente', products, stockMap));

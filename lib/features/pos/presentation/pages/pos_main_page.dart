@@ -372,11 +372,11 @@ class _PosMainPageState extends State<PosMainPage> {
                   if (isDeleteMode) {
                     final cartBloc = context.read<CartBloc>();
                     final quantityInCart =
-                        cartBloc.getProductQuantityInCart(product.id);
+                        cartBloc.getProductQuantityInCart(product.id.toString());
 
                     if (quantityInCart >= quantity) {
                       cartBloc
-                          .add(RemoveQuantityFromCart(product.id, quantity));
+                          .add(RemoveQuantityFromCart(product.id.toString(), quantity));
                     } else if (quantityInCart > 0) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(

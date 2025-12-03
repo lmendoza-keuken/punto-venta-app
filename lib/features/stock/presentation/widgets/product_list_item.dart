@@ -49,7 +49,7 @@ class ProductListItem extends StatelessWidget {
           ),
         ),
         title: Text(
-          product.descripcion,
+          product.descripcionComercial,
           style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 16,
@@ -60,7 +60,7 @@ class ProductListItem extends StatelessWidget {
           children: [
             const SizedBox(height: 4),
             Text(
-              'Código: ${product.codigo}',
+              'Código: ${product.id}',
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.grey.shade600,

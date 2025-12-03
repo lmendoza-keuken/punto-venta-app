@@ -23,11 +23,11 @@ class StockManagementPage extends StatelessWidget {
       create: (context) {
         final bloc = di.sl<StockBloc>();
         final authState = context.read<AuthBloc>().state;
-        
+
         if (authState is AuthAuthenticated) {
           bloc.setCurrentUser(authState.user.id, authState.user.name);
         }
-        
+
         bloc.add(LoadProducts());
         return bloc;
       },
@@ -82,11 +82,13 @@ class _StockManagementViewState extends State<_StockManagementView> {
                 hintText: 'Buscar producto...',
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
+                  borderRadius:
+                      BorderRadius.circular(AppDimensions.borderRadiusM),
                   borderSide: BorderSide(color: Colors.grey.shade300),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
+                  borderRadius:
+                      BorderRadius.circular(AppDimensions.borderRadiusM),
                   borderSide: BorderSide(color: Colors.grey.shade300),
                 ),
                 filled: true,
@@ -194,12 +196,16 @@ class _StockManagementViewState extends State<_StockManagementView> {
                   );
                 }
 
-                final filteredProducts = products.where((product) =>
-                  ( product.descripcion).toLowerCase().contains(_searchQuery) ||
-                      (product.codigo.toString()).contains(_searchQuery) ||
-                      ( product.marca ).toLowerCase().contains(_searchQuery) ||
-                      ( product.rubro  ).toLowerCase().contains(_searchQuery)
-                ).toList();
+                final filteredProducts = products
+                    .where((product) =>
+                        (product.descripcionComercial)
+                            .toLowerCase()
+                            .contains(_searchQuery) ||
+                        (product.id.toString()).contains(_searchQuery) ||
+                        (product.descripcionRubro)
+                            .toLowerCase()
+                            .contains(_searchQuery))
+                    .toList();
 
                 if (filteredProducts.isEmpty) {
                   return Center(
@@ -239,7 +245,8 @@ class _StockManagementViewState extends State<_StockManagementView> {
                       return ProductListItem(
                         product: product,
                         onEdit: () => _showEditDialog(context, product),
-                        onDelete: () => _showDeleteConfirmation(context, product),
+                        onDelete: () =>
+                            _showDeleteConfirmation(context, product),
                         onAddStock: () => _showStockDialog(
                           context,
                           product,
@@ -298,7 +305,8 @@ class _StockManagementViewState extends State<_StockManagementView> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Confirmar eliminación'),
-        content: Text('¿Estás seguro de que deseas eliminar "${product.descripcion}"?'),
+        content: Text(
+            '¿Estás seguro de que deseas eliminar "${product.descripcion}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),

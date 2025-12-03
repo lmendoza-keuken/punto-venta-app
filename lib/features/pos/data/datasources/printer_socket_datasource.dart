@@ -101,7 +101,7 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
       // === ITEMS ===
       await _selectAlignment(0);
       for (final item in printJob.items) {
-        await _printText(item.product.descripcion);
+        await _printText(item.product.descripcionComercial);
         await _printAndFeedLine();
 
         final precioUnit = item.product.precio?.formatToCurrency();

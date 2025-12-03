@@ -122,7 +122,7 @@ class _StockMovementDialogState extends State<StockMovementDialog> {
                           ),
                         ),
                         Text(
-                          widget.product.descripcion,
+                          widget.product.descripcionComercial,
                           style: const TextStyle(
                             fontSize: 14,
                             color: Colors.white70,
@@ -262,21 +262,21 @@ class _StockMovementDialogState extends State<StockMovementDialog> {
     switch (widget.operationType) {
       case StockOperationType.add:
         context.read<StockBloc>().add(AddStock(
-              productCodigo: widget.product.codigo,
+              productCodigo: widget.product.id,
               quantity: quantity,
               reason: reason,
             ));
         break;
       case StockOperationType.remove:
         context.read<StockBloc>().add(RemoveStock(
-              productCodigo: widget.product.codigo,
+              productCodigo: widget.product.id,
               quantity: quantity,
               reason: reason,
             ));
         break;
       case StockOperationType.adjust:
         context.read<StockBloc>().add(AdjustStock(
-              productCodigo: widget.product.codigo,
+              productCodigo: widget.product.id,
               newStock: quantity,
               reason: reason,
             ));

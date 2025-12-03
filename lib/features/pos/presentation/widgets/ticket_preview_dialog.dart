@@ -117,9 +117,8 @@ class _TicketPreviewContent extends StatelessWidget {
                           child: const Text('Cerrar'),
                         ),
                         ElevatedButton.icon(
-                          onPressed: isLoading
-                              ? null
-                              : () => _handlePrint(context),
+                          onPressed:
+                              isLoading ? null : () => _handlePrint(context),
                           icon: isLoading
                               ? const SizedBox(
                                   width: 16,
@@ -134,7 +133,8 @@ class _TicketPreviewContent extends StatelessWidget {
                                   Icons.print,
                                   color: Colors.white,
                                 ),
-                          label: Text(isLoading ? 'Imprimiendo...' : 'Imprimir'),
+                          label:
+                              Text(isLoading ? 'Imprimiendo...' : 'Imprimir'),
                         ),
                       ],
                     );
@@ -150,7 +150,7 @@ class _TicketPreviewContent extends StatelessWidget {
 
   void _handlePrint(BuildContext context) async {
     final printerConfig =
-          await di.sl<PrinterLocalDataSource>().getPrinterConfig();
+        await di.sl<PrinterLocalDataSource>().getPrinterConfig();
 
     final printJob = PrintJob(
       items: order.items,
@@ -163,7 +163,6 @@ class _TicketPreviewContent extends StatelessWidget {
       timestamp: order.completedAt,
       ticketId: order.id,
     );
-
 
     // Disparar evento de impresión
     context.read<PrinterBloc>().add(PrintTicket(
@@ -221,7 +220,8 @@ class _TicketPreviewContent extends StatelessWidget {
               children: [
                 Text(
                     'Fecha: ${DateFormat('dd/MM/yyyy').format(order.completedAt)}'),
-                Text('Hora: ${DateFormat('HH:mm:ss').format(order.completedAt)}'),
+                Text(
+                    'Hora: ${DateFormat('HH:mm:ss').format(order.completedAt)}'),
               ],
             ),
             Text('Cajero: ${order.cashierName}'),
@@ -243,7 +243,7 @@ class _TicketPreviewContent extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            item.product.descripcion,
+                            item.product.descripcionComercial,
                             style: const TextStyle(fontWeight: FontWeight.w500),
                           ),
                           Row(

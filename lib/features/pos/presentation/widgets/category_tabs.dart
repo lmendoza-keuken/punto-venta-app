@@ -38,6 +38,10 @@ class _CategoryTabsState extends State<CategoryTabs> {
 
   @override
   Widget build(BuildContext context) {
+    final displayedCategories = widget.categories.contains('Todo')
+        ? widget.categories
+        : ['Todo', ...widget.categories];
+
     return SizedBox(
       height: AppDimensions.categoryTabHeight + 10,
       child: ScrollConfiguration(
@@ -53,15 +57,18 @@ class _CategoryTabsState extends State<CategoryTabs> {
               padding: const EdgeInsets.symmetric(
                   horizontal: AppDimensions.paddingM),
               physics: const BouncingScrollPhysics(),
-              itemCount: widget.categories.length,
+              itemCount: displayedCategories.length,
               separatorBuilder: (context, index) =>
                   const SizedBox(width: AppDimensions.paddingXS),
               itemBuilder: (context, index) {
-                final category = widget.categories[index];
+                final category = displayedCategories[index];
                 final isSelected = category == widget.selectedCategory;
 
                 return GestureDetector(
-                  onTap: () => widget.onCategorySelected(category),
+                  onTap: () {
+                    final newCategory = isSelected ? 'Todo' : category;
+                    widget.onCategorySelected(newCategory);
+                  },
                   child: Container(
                     height: AppDimensions.categoryTabHeight,
                     padding: const EdgeInsets.symmetric(

@@ -4,8 +4,12 @@ part 'precio_articulo_model.g.dart';
 
 @JsonSerializable()
 class PrecioArticuloModel {
+  @JsonKey(name: 'id_producto')
   final int producto;
+
+  @JsonKey(name: 'id_lista', fromJson: _idListaFromJson, toJson: _idListaToJson)
   final int listaPrecio;
+
   final String precio;
   final String oferta;
 
@@ -29,5 +33,13 @@ class PrecioArticuloModel {
     }
   }
 
-  bool get esOferta => oferta == "1";
+  bool get esOferta => oferta == "1" || oferta == "true";
+
+  static int _idListaFromJson(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    return int.tryParse(value.toString()) ?? 0;
+  }
+
+  static dynamic _idListaToJson(int value) => value;
 }

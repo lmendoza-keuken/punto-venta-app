@@ -55,20 +55,18 @@ class InvoicePayload {
       } catch (_) {
         final cartLogItem = CartLogEntryModel.fromEntity(itemLog);
         final itemModel = CartItemModel.fromEntity(itemLog.item);
-        final unitPrice = double.tryParse(
-                itemModel.product.precio?.replaceAll(',', '.') ?? '') ??
-            0.0;
+        final unitPrice = itemModel.product.precio ?? 0.0;
         final quantity = itemModel.quantity;
         return {
           'id': cartLogItem.id,
           'type': cartLogItem.type.toString(),
-          'productId': itemModel.product.codigo,
-          'productName': itemModel.product.descripcion,
+          'productId': itemModel.product.id,
+          'productName': itemModel.product.descriComercial,
           'discount': 0,
           'quantity': quantity,
           'unitPrice': unitPrice,
           'iva': itemModel.iva,
-          'impuesto_interno': itemModel.product.impuestoInterno,
+          'impuesto_interno': itemModel.product.impint,
           'priceListId': job.priceListId,
         };
       }

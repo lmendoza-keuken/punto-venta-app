@@ -20,7 +20,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
     return FutureBuilder<int>(
       future: priceListDataSource.getCurrentPriceList(),
       builder: (context, snapshot) {
-        final currentList = snapshot.data ?? 13; 
+        final currentList = snapshot.data ?? 1;
 
         return AlertDialog(
           title: const Text('Configuración de administrador'),
@@ -62,6 +62,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
                   title: 'Configurar Modo de la App',
                   subtitle: 'Configurar Modo En linea / Modo Offline',
                   onTap: () {},
+                  enabled: false,
                 ),
               ],
             ),
@@ -77,4 +78,3 @@ class _SettingsDialogState extends State<SettingsDialog> {
     );
   }
 }
-

@@ -26,10 +26,10 @@ class PrinterBloc extends Bloc<PrinterEvent, PrinterState> {
       if (success) {
         emit(const PrinterSuccess('Ticket impreso exitosamente'));
       } else {
-        emit(const PrinterError('Error al imprimir ticket'));
+        emit(const PrinterError('No se pudo conectar con la impresora. Verifica la configuración.'));
       }
     } catch (e) {
-      emit(PrinterError('Error de conexión: ${e.toString()}'));
+      emit(PrinterError('Error de conexión con la impresora: ${e.toString()}'));
     }
   }
 
