@@ -13,11 +13,13 @@ abstract class CartEvent extends Equatable {
 class AddToCart extends CartEvent {
   final Product product;
   final int quantity;
+  final bool? isWeighted;
+  final double? weightKg;
+  final double? pricePerKg;
 
-  const AddToCart(this.product, {this.quantity = 1});
-
+  const AddToCart(this.product, {this.quantity = 1, this.isWeighted, this.weightKg, this.pricePerKg});
   @override
-  List<Object> get props => [product, quantity];
+  List<Object> get props => [product, quantity, weightKg ?? 0, pricePerKg ?? 0];
 }
 
 class ReplaceCart extends CartEvent {
@@ -33,11 +35,14 @@ class ReplaceCart extends CartEvent {
 class RemoveQuantityFromCart extends CartEvent {
   final String productId;
   final int quantity;
+  final bool? isWeighted;
+  final double? weightKg;
+  final double? pricePerKg;
 
-  const RemoveQuantityFromCart(this.productId, this.quantity);
+  const RemoveQuantityFromCart(this.productId, this.quantity, {this.isWeighted, this.weightKg, this.pricePerKg});
 
   @override
-  List<Object> get props => [productId, quantity];
+  List<Object> get props => [productId, quantity, weightKg ?? 0, pricePerKg ?? 0];
 }
 
 class ClearCart extends CartEvent {}

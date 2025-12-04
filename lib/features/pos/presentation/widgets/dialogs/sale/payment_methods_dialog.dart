@@ -8,7 +8,7 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_bloc.da
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/saved_orders/saved_orders_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/saved_orders/saved_orders_state.dart';
-import 'package:punto_venta_app/features/pos/presentation/widgets/sale_confirm_dialog.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/sale/sale_confirm_dialog.dart';
 
 class PaymentMethodsDialog extends StatefulWidget {
   final double total;

@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/client.dart';
 import 'package:uuid/uuid.dart';
-import '../../../../core/constants/app_dimensions.dart';
-import '../../../../core/widgets/custom_text_field.dart';
-import '../bloc/clients/clients_bloc.dart';
-import '../bloc/clients/clients_event.dart';
+import '../../../../../../core/constants/app_dimensions.dart';
+import '../../../../../../core/widgets/custom_text_field.dart';
+import '../../../bloc/clients/clients_bloc.dart';
+import '../../../bloc/clients/clients_event.dart';
 
 class AddClientDialog extends StatefulWidget {
   const AddClientDialog({super.key});
@@ -33,6 +33,7 @@ class _AddClientDialogState extends State<AddClientDialog> {
   void _save() {
     if (!_formKey.currentState!.validate()) return;
     final id = const Uuid().v4();
+
     final client = Client(
       id: id,
       name: _nameCtrl.text.trim(),
@@ -42,6 +43,7 @@ class _AddClientDialogState extends State<AddClientDialog> {
       address:
           _addressCtrl.text.trim().isEmpty ? null : _addressCtrl.text.trim(),
     );
+    
     context.read<ClientsBloc>().add(AddClientEvent(client));
     Navigator.of(context).pop(client);
   }

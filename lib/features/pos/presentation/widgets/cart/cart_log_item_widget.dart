@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:punto_venta_app/core/utils/extensions.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_dimensions.dart';
+import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/constants/app_dimensions.dart';
 
 class CartLogItemWidget extends StatelessWidget {
   final CartLogEntry entry;
@@ -51,7 +51,9 @@ class CartLogItemWidget extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      '$sign${entry.item.quantity}',
+                      (entry.item.isWeighted ?? false)
+                          ? '$sign${entry.item.weightKg} kg'
+                          : '$sign${entry.item.quantity}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Colors.grey.shade600,
                           fontWeight: FontWeight.bold),
@@ -69,7 +71,7 @@ class CartLogItemWidget extends StatelessWidget {
             ),
           ),
           Text(
-            '$sign ${((entry.item.product.precio ?? 0.0) * entry.item.quantity).formatToCurrency()}',
+            '$sign ${(entry.item.isWeighted ?? false) ? ((entry.item.pricePerKg ?? 0.0)).formatToCurrency() : ((entry.item.product.precio ?? 0.0) * entry.item.quantity).formatToCurrency()}',
             style: Theme.of(context)
                 .textTheme
                 .bodyMedium

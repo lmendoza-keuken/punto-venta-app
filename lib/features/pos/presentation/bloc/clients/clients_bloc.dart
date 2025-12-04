@@ -9,7 +9,7 @@ class ClientsBloc extends Bloc<ClientsEvent, ClientsState> {
   final GetClientsUsecase getClients;
   final AddClientUsecase addClient;
   final DeleteClientUsecase deleteClient;
-
+ 
   ClientsBloc({
     required this.getClients,
     required this.addClient,

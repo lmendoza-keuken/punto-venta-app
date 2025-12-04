@@ -35,7 +35,7 @@ class _PriceListSelectorDialogState extends State<PriceListSelectorDialog> {
       final dataSource = di.sl<ProductLocalDataSource>();
       final precios = await dataSource.getPreciosArticulos();
       
-      final listsSet = precios.map((p) => p.listaPrecio).toSet();
+      final listsSet = precios.map((p) => p.listId).toSet();
       final lists = listsSet.toList()..sort();
       
       setState(() {

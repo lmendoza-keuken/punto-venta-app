@@ -88,6 +88,7 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
       final response = await _dio.get(
         'http://192.168.0.16:8000/articles/',
         // ApiConfig.productosUrl,
+        queryParameters: {'limit': 500},
         options: Options(
           responseType: ResponseType.json,
         ),
@@ -100,7 +101,7 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
 
         _cachedProducts = jsonData
             .map((json) => ProductModel.fromJson(json as Map<String, dynamic>))
-            .where((product) => product.suspendidoVenta == 'N')
+            .where((product) => product.suspendedForSale == 'N')
             .toList();
 
         return _cachedProducts!;
@@ -137,6 +138,7 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
       final response = await _dio.get(
         'http://192.168.0.16:8000/prices_list/',
         // ApiConfig.preciosArticulosUrl,
+        queryParameters: {'limit': 3500},
         options: Options(
           responseType: ResponseType.json,
         ),
@@ -184,8 +186,8 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
     final preciosByProducto = <int, PrecioArticuloModel>{};
 
     for (var precio in precios) {
-      if (precio.listaPrecio == listaPrecio) {
-        preciosByProducto[precio.producto] = precio;
+      if (precio.listId == listaPrecio) {
+        preciosByProducto[precio.productId] = precio;
       }
     }
 
@@ -199,10 +201,10 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
 
     final barcodesByProduct = <int, List<BarcodeModel>>{};
     for (var barcode in barcodes) {
-      if (!barcodesByProduct.containsKey(barcode.idArticle)) {
-        barcodesByProduct[barcode.idArticle ?? 0] = [];
+      if (!barcodesByProduct.containsKey(barcode.articleId)) {
+        barcodesByProduct[barcode.articleId ?? 0] = [];
       }
-      barcodesByProduct[barcode.idArticle]!.add(barcode);
+      barcodesByProduct[barcode.articleId]!.add(barcode);
     }
 
     Map<int, PrecioArticuloModel>? precios;
@@ -218,8 +220,8 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
 
       return product.copyWith(
         barcodes: productBarcodes,
-        precio: precio?.precioDouble,
-        oferta: int.tryParse(precio?.oferta ?? '0'),
+        precio: precio?.priceAsDouble,
+        oferta: int.tryParse(precio?.salePrice ?? '0'),
       );
     }).toList();
   }
@@ -250,7 +252,7 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
 
     return products
         .where(
-            (product) => product.descripcionRubro?.toLowerCase() == category.toLowerCase())
+            (product) => product.categoryDescription?.toLowerCase() == category.toLowerCase())
         .toList();
   }
 
@@ -263,9 +265,9 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
     final lowerQuery = query.toLowerCase();
     return products
         .where((product) =>
-            (product.descriComercial ?? "").toLowerCase().contains(lowerQuery) ||
+            (product.description ?? "").toLowerCase().contains(lowerQuery) ||
             product.id.toString().contains(lowerQuery) ||
-            (product.descripcionRubro ?? "").toLowerCase().contains(lowerQuery) ||
+            (product.categoryDescription ?? "").toLowerCase().contains(lowerQuery) ||
             _hasMatchingBarcode(product, lowerQuery))
         .toList();
   }

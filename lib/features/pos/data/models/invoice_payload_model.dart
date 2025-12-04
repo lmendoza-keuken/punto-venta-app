@@ -61,12 +61,12 @@ class InvoicePayload {
           'id': cartLogItem.id,
           'type': cartLogItem.type.toString(),
           'productId': itemModel.product.id,
-          'productName': itemModel.product.descriComercial,
+          'productName': itemModel.product.description,
           'discount': 0,
           'quantity': quantity,
           'unitPrice': unitPrice,
           'iva': itemModel.iva,
-          'impuesto_interno': itemModel.product.impint,
+          'impuesto_interno': itemModel.product.internalTax,
           'priceListId': job.priceListId,
         };
       }

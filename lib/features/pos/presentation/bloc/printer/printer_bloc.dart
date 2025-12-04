@@ -10,7 +10,7 @@ class PrinterBloc extends Bloc<PrinterEvent, PrinterState> {
     on<PrintTicket>(_onPrintTicket);
     on<CheckPrinterStatus>(_onCheckPrinterStatus);
   }
-
+ 
   Future<void> _onPrintTicket(
     PrintTicket event,
     Emitter<PrinterState> emit,

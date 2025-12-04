@@ -36,10 +36,10 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
     super.initState();
     if (isEditing) {
       _codigoController.text = widget.product!.id.toString();
-      _descripcionController.text = widget.product!.descripcionComercial;
+      _descripcionController.text = widget.product!.description;
       _precioController.text = widget.product!.precio.toString();
       _stockController.text = widget.product!.stock.toString();
-      _categoriaController.text = widget.product!.descripcionRubro;
+      _categoriaController.text = widget.product!.categoryDescription;
     }
   }
 

@@ -28,7 +28,14 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     final entry = CartLogEntry(
       id: _randomId(),
       type: CartActionType.add,
-      item: CartItem(product: event.product, quantity: event.quantity, iva: event.product.iva),
+      item: CartItem(
+        product: event.product,
+        quantity: event.quantity,
+        iva: event.product.vat,
+        isWeighted: event.isWeighted,
+        weightKg: event.weightKg,
+        pricePerKg: event.pricePerKg,
+      ),
       timestamp: DateTime.now(),
     );
 
@@ -60,15 +67,21 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     final totalItems = manageCartUsecase.getTotalItems(newItems);
 
     final existingProduct = currentItems.firstWhere(
-      (it) => it.product.id == event.productId,
+      (it) => it.product.id.toString() == event.productId,
     );
 
     final currentLog = _getCurrentLog();
     final entry = CartLogEntry(
       id: _randomId(),
       type: CartActionType.remove,
-      item:
-          CartItem(product: existingProduct.product, quantity: event.quantity, iva: existingProduct.iva),
+      item: CartItem(
+        product: existingProduct.product,
+        quantity: event.quantity,
+        iva: existingProduct.iva,
+        isWeighted: event.isWeighted,
+        weightKg: event.weightKg,
+        pricePerKg: event.pricePerKg,
+      ),
       timestamp: DateTime.now(),
     );
     final newLog = List<CartLogEntry>.from(currentLog)..add(entry);
@@ -106,7 +119,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   int getProductQuantityInCart(String productId) {
     final currentItems = _getCurrentItems();
     final found = currentItems.firstWhere(
-      (it) => it.product.id == productId,
+      (it) => it.product.id.toString() == productId,
     );
     return found.quantity;
   }

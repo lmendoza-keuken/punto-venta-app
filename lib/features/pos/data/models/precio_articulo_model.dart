@@ -4,20 +4,22 @@ part 'precio_articulo_model.g.dart';
 
 @JsonSerializable()
 class PrecioArticuloModel {
-  @JsonKey(name: 'id_producto')
-  final int producto;
+  @JsonKey(name: 'product_id')
+  final int productId;
 
-  @JsonKey(name: 'id_lista', fromJson: _idListaFromJson, toJson: _idListaToJson)
-  final int listaPrecio;
+  @JsonKey(name: 'list_id', fromJson: _idListaFromJson, toJson: _idListaToJson)
+  final int listId;
 
-  final String precio;
-  final String oferta;
+  @JsonKey(name: 'price')
+  final String price;
+  @JsonKey(name: 'sale_price')
+  final String salePrice;
 
   const PrecioArticuloModel({
-    required this.producto,
-    required this.listaPrecio,
-    required this.precio,
-    required this.oferta,
+    required this.productId,
+    required this.listId,
+    required this.price,
+    required this.salePrice,
   });
 
   factory PrecioArticuloModel.fromJson(Map<String, dynamic> json) =>
@@ -25,15 +27,15 @@ class PrecioArticuloModel {
 
   Map<String, dynamic> toJson() => _$PrecioArticuloModelToJson(this);
 
-  double get precioDouble {
+  double get priceAsDouble {
     try {
-      return double.parse(precio.replaceAll(',', '.'));
+      return double.parse(price.replaceAll(',', '.'));
     } catch (e) {
       return 0.0;
     }
   }
 
-  bool get esOferta => oferta == "1" || oferta == "true";
+  bool get isSalePrice => salePrice == "1" || salePrice == "true";
 
   static int _idListaFromJson(dynamic value) {
     if (value == null) return 0;

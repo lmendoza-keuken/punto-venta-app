@@ -122,7 +122,7 @@ class _StockMovementDialogState extends State<StockMovementDialog> {
                           ),
                         ),
                         Text(
-                          widget.product.descripcionComercial,
+                          widget.product.description,
                           style: const TextStyle(
                             fontSize: 14,
                             color: Colors.white70,

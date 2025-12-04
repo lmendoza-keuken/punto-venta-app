@@ -243,7 +243,7 @@ class _TicketPreviewContent extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            item.product.descripcionComercial,
+                            item.product.description,
                             style: const TextStyle(fontWeight: FontWeight.w500),
                           ),
                           Row(

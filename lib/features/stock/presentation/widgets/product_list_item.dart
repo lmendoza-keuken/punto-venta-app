@@ -49,7 +49,7 @@ class ProductListItem extends StatelessWidget {
           ),
         ),
         title: Text(
-          product.descripcionComercial,
+          product.description,
           style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 16,

@@ -4,11 +4,11 @@ import 'package:punto_venta_app/core/constants/app_string.dart';
 import 'package:punto_venta_app/core/utils/extensions.dart';
 import 'package:punto_venta_app/core/widgets/custom_butom.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_event.dart';
-import 'package:punto_venta_app/features/pos/presentation/widgets/cart_log_item_widget.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_dimensions.dart';
-import '../bloc/cart/cart_bloc.dart';
-import '../bloc/cart/cart_state.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/cart/cart_log_item_widget.dart';
+import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/constants/app_dimensions.dart';
+import '../../bloc/cart/cart_bloc.dart';
+import '../../bloc/cart/cart_state.dart';
 
 class CartPanel extends StatefulWidget {
   const CartPanel({super.key});
@@ -27,6 +27,7 @@ class _CartPanelState extends State<CartPanel> {
     super.dispose();
   }
 
+  //TODO: Mover a un Widget extensions
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollController.hasClients) return;
@@ -129,16 +130,25 @@ class _CartPanelState extends State<CartPanel> {
     double subtotal = 0;
     double totalIva = 0;
 
+    //TODO:  Cambiar para solo recibir los totales calculados
     for (var entry in state.log) {
       final precio = entry.item.product.precio ?? 0;
+      final isWeighted = entry.item.isWeighted ?? false;
+      final pricePerKg = entry.item.pricePerKg ?? 0.0;
       final cantidad = entry.item.quantity;
-      final tasaIva = entry.item.iva / 100; 
-      
-      final precioTotal = precio * cantidad;
-      final ivaArticulo = precioTotal * tasaIva;
-      
-      subtotal += precioTotal;
-      totalIva += ivaArticulo;
+      final tasaIva = entry.item.iva / 100;
+
+      if (isWeighted) {
+        final precioTotal = pricePerKg;
+        final ivaArticulo = precioTotal * tasaIva;
+        subtotal += precioTotal;
+        totalIva += ivaArticulo;
+      } else {
+        final precioTotal = precio * cantidad;
+        final ivaArticulo = precioTotal * tasaIva;
+        subtotal += precioTotal;
+        totalIva += ivaArticulo;
+      }
     }
 
     final totalConIva = subtotal + totalIva;
@@ -201,6 +211,8 @@ class _CartPanelState extends State<CartPanel> {
     );
   }
 
+
+  //TODO:  Mover a un Widget aparte
   Widget _buildEmptyCart(BuildContext context) {
     return Center(
       child: Column(

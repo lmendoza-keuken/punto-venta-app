@@ -3,65 +3,65 @@ import 'package:punto_venta_app/features/pos/data/models/barcode_model.dart';
 
 class Product extends Equatable {
   final int id;
-  final String descripcionComercial;
-  final int? fraccionado;
+  final String description;
+  final int? fractional;
   final int stock;
-  final int idProveedor;
-  final double iva;
-  final int impint;
-  final String sepesa;
-  final double pesoneto;
-  final String idRubro;
-  final String suspendidoVenta;
-  final String suspendidoParaCompra;
-  final String activo;
-  final String descripcionRubro;
+  final int supplierId;
+  final double vat;
+  final int internalTax;
+  final String isWeighted;
+  final double netWeight;
+  final String categoryId;
+  final String suspendedForSale;
+  final String suspendedForPurchase;
+  final String isActive;
+  final String categoryDescription;
   final double? precio;
   final bool oferta;
   final List<BarcodeModel>? barcodes;
 
   const Product({
     required this.id,
-    required this.descripcionComercial,
-    this.fraccionado,
+    required this.description,
+    this.fractional,
     required this.stock,
-    required this.idProveedor,
-    required this.iva,
-    required this.impint,
-    required this.sepesa,
-    required this.pesoneto,
-    required this.idRubro,
-    required this.suspendidoVenta,
-    required this.suspendidoParaCompra,
-    required this.activo,
-    required this.descripcionRubro,
+    required this.supplierId,
+    required this.vat,
+    required this.internalTax,
+    required this.isWeighted,
+    required this.netWeight,
+    required this.categoryId,
+    required this.suspendedForSale,
+    required this.suspendedForPurchase,
+    required this.isActive,
+    required this.categoryDescription,
     this.precio,
     required this.oferta,
     this.barcodes,
   });
 
   String get idStr => id.toString();
-  String get name => descripcionComercial.trim();
+  String get name => description.trim();
   String get code => id.toString();
-  String get category => descripcionRubro.isNotEmpty ? descripcionRubro : idRubro;
+  String get category => categoryDescription.isNotEmpty ? categoryDescription : categoryId;
   String? get imageUrl => null;
 
   @override
   List<Object?> get props => [
         id,
-        descripcionComercial,
-        fraccionado,
+        description,
+        fractional,
         stock,
-        idProveedor,
-        iva,
-        impint,
-        sepesa,
-        pesoneto,
-        idRubro,
-        suspendidoVenta,
-        suspendidoParaCompra,
-        activo,
-        descripcionRubro,
+        supplierId,
+        vat,
+        internalTax,
+        isWeighted,
+        netWeight,
+        categoryId,
+        suspendedForSale,
+        suspendedForPurchase,
+        isActive,
+        categoryDescription,
         precio,
         oferta,
         barcodes,

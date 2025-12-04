@@ -29,7 +29,7 @@ class ProductRepositoryImpl implements ProductRepository {
   @override
   Future<List<String>> getCategories() async {
     final categoryModels = await localDataSource.getCategories();
-    return categoryModels.map((category) => category.descripcion ?? '').toList();
+    return categoryModels.map((category) => category.description ?? '').toList();
   }
 
   @override

@@ -15,7 +15,7 @@ class ManageCartUsecase {
         quantity: newCart[existingItemIndex].quantity + quantity,
       );
     } else {
-      newCart.add(CartItem(product: product, quantity: quantity , iva: product.iva));
+      newCart.add(CartItem(product: product, quantity: quantity , iva: product.vat));
     }
 
     return newCart;
@@ -27,7 +27,7 @@ class ManageCartUsecase {
     final List<CartItem> newCart = List.from(currentCart);
 
     final existingItemIndex = newCart.indexWhere(
-      (item) => item.product.id == productId,
+      (item) => item.product.id.toString() == productId,
     );
 
     if (existingItemIndex != -1) {

@@ -34,6 +34,7 @@ class ActionButtons extends StatelessWidget {
           top: BorderSide(color: Colors.grey.shade200),
         ),
       ),
+      //TODO:  Modificar dentro del widget responsive
       child: isCompact ? _buildCompactLayout() : _buildFullLayout(),
     );
   }

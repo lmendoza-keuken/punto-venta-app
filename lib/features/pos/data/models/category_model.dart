@@ -9,7 +9,7 @@ class CategoryModel with _$CategoryModel {
 
   const factory CategoryModel({
     @JsonKey(name: 'id') String? id,
-    @JsonKey(name: 'descripcion') String? descripcion,
+    @JsonKey(name: 'description') String? description,
   }) = _CategoryModel;
 
   factory CategoryModel.fromJson(Map<String, dynamic> json) =>

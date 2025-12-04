@@ -198,11 +198,11 @@ class _StockManagementViewState extends State<_StockManagementView> {
 
                 final filteredProducts = products
                     .where((product) =>
-                        (product.descripcionComercial)
+                        (product.description)
                             .toLowerCase()
                             .contains(_searchQuery) ||
                         (product.id.toString()).contains(_searchQuery) ||
-                        (product.descripcionRubro)
+                        (product.categoryDescription)
                             .toLowerCase()
                             .contains(_searchQuery))
                     .toList();

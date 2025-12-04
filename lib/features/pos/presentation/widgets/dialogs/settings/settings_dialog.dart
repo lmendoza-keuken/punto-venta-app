@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:punto_venta_app/core/dialogs/logout_dialog.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/price_list_local_datasource.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
-import 'package:punto_venta_app/features/pos/presentation/widgets/printer_settings_dialog.dart';
-import 'package:punto_venta_app/features/pos/presentation/widgets/price_list_selector_dialog.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/printer_settings_dialog.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/price_list_selector_dialog.dart';
 
 class SettingsDialog extends StatefulWidget {
   const SettingsDialog({super.key});

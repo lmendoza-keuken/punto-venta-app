@@ -26,8 +26,10 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    //TODO:  sacar el bloc bulder fuera del widget
     return BlocBuilder<CartBloc, CartState>(
       builder: (context, cartState) {
+        //TODO:  sacar cuenta al Grid
         int quantityInCart = 0;
         if (cartState is CartLoaded) {
           quantityInCart = cartState.items
@@ -134,7 +136,7 @@ class ProductCard extends StatelessWidget {
                               if (!isCompact) ...[
                                 const SizedBox(height: 4),
                                 Text(
-                                  product.descripcionComercial.trim(),
+                                  product.description.trim(),
                                   style: const TextStyle(
                                     fontSize: 8,
                                     color: AppColors.textHint,
@@ -156,7 +158,7 @@ class ProductCard extends StatelessWidget {
                         children: [
                           // Nombre del producto
                           Text(
-                            product.descripcionComercial.trim(),
+                            product.description.trim(),
                             style: Theme.of(context)
                                 .textTheme
                                 .titleMedium
@@ -203,7 +205,7 @@ class ProductCard extends StatelessWidget {
                             ],
                           ),
                           Text(
-                            product.descripcionRubro.trim(),
+                            product.categoryDescription.trim(),
                             style:
                                 Theme.of(context).textTheme.bodySmall?.copyWith(
                                       fontSize: 10,

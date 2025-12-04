@@ -30,6 +30,7 @@ class ProductGrid extends StatelessWidget {
     }
 
     if (products.isEmpty) {
+      //TODO:  Mover a un Widget aparte 
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -73,6 +74,7 @@ class ProductGrid extends StatelessWidget {
           itemCount: products.length,
           itemBuilder: (context, index) {
             final product = products[index];
+            //TODO:  Cambiar UIBloc a un valueNotifier 
             return ProductCard(
               product: product,
               isInDeleteMode: uiState.isDeleteMode,

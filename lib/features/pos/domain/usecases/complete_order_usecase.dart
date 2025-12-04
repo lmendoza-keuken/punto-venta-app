@@ -29,7 +29,7 @@ class CompleteOrderUsecase {
     for (var item in items) {
       final precio = item.product.precio ?? 0;
       final cantidad = item.quantity;
-      final tasaIva = item.product.iva / 100;
+      final tasaIva = item.product.vat / 100;
 
       final precioTotal = precio * cantidad;
       final ivaArticulo = precioTotal * tasaIva;

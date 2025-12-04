@@ -10,11 +10,17 @@ class CartItemModel {
   final int quantity;
   @JsonKey(defaultValue: 0.0)
   final double iva;
+  final bool? isWeighted;
+  final double? weightKg;
+  final double? pricePerKg;
 
   const CartItemModel({
     required this.product,
     required this.quantity,
     this.iva = 0.0,
+    this.isWeighted,
+    this.weightKg,
+    this.pricePerKg,
   });
 
   factory CartItemModel.fromJson(Map<String, dynamic> json) =>
@@ -27,6 +33,9 @@ class CartItemModel {
       product: product.toEntity(),
       quantity: quantity,
       iva: iva,
+      isWeighted: isWeighted,
+      weightKg: weightKg,
+      pricePerKg: pricePerKg,
     );
   }
 
@@ -35,6 +44,9 @@ class CartItemModel {
       product: ProductModel.fromEntity(cartItem.product),
       quantity: cartItem.quantity,
       iva: cartItem.iva,
+      isWeighted: cartItem.isWeighted,
+      weightKg: cartItem.weightKg,
+      pricePerKg: cartItem.pricePerKg,
     );
   }
 }

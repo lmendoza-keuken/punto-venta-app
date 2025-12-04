@@ -23,18 +23,18 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/product/product_s
 import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_event.dart';
-import 'package:punto_venta_app/features/pos/presentation/widgets/action_buttons.dart';
-import 'package:punto_venta_app/features/pos/presentation/widgets/add_client_dialog.dart';
-import 'package:punto_venta_app/features/pos/presentation/widgets/cart_panel.dart';
-import 'package:punto_venta_app/features/pos/presentation/widgets/category_tabs.dart';
-import 'package:punto_venta_app/features/pos/presentation/widgets/enchanced_search_bar.dart';
-import 'package:punto_venta_app/features/pos/presentation/widgets/load_saved_orders_dialog.dart';
-import 'package:punto_venta_app/features/pos/presentation/widgets/payment_methods_dialog.dart';
-import 'package:punto_venta_app/features/pos/presentation/widgets/product_grid.dart';
-import 'package:punto_venta_app/features/pos/presentation/widgets/reports_dialog.dart';
-import 'package:punto_venta_app/features/pos/presentation/widgets/save_order_dialog.dart';
-import 'package:punto_venta_app/features/pos/presentation/widgets/select_client_dialog.dart';
-import 'package:punto_venta_app/features/pos/presentation/widgets/settings_dialog.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/product/action_buttons.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/client/add_client_dialog.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/cart/cart_panel.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/product/category_tabs.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/product/search_bar.dart/enchanced_search_bar.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/order/load_saved_orders_dialog.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/sale/payment_methods_dialog.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/product/product_grid.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/report/reports_dialog.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/order/save_order_dialog.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/client/select_client_dialog.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/settings_dialog.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 class PosMainPage extends StatefulWidget {
@@ -77,6 +77,7 @@ class _PosMainPageState extends State<PosMainPage> {
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
+                    //TODO:  Cambiar a un widget responsive, no varios if
                     if (constraints.maxWidth > 1200) {
                       return Row(
                         children: [
@@ -272,6 +273,7 @@ class _PosMainPageState extends State<PosMainPage> {
     );
   }
 
+  //TODO: Cambiar a un Widget Card
   Widget _buildCatalogSection() {
     return Card(
       margin: const EdgeInsets.all(AppDimensions.paddingM),

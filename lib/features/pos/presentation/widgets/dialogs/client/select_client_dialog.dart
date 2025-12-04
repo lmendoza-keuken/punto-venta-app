@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/client.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_dimensions.dart';
-import '../bloc/clients/clients_bloc.dart';
-import '../bloc/clients/clients_event.dart';
-import '../bloc/clients/clients_state.dart';
+import '../../../../../../core/constants/app_colors.dart';
+import '../../../../../../core/constants/app_dimensions.dart';
+import '../../../bloc/clients/clients_bloc.dart';
+import '../../../bloc/clients/clients_event.dart';
+import '../../../bloc/clients/clients_state.dart';
 
 class SelectClientDialog extends StatefulWidget {
   const SelectClientDialog({super.key});

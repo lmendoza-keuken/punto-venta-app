@@ -38,7 +38,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final result = await loginWithGoogleUsecase();
 
-      if (result['autoSelected'] == true && result['companies'].length == 1) {
+      if (result['autoSelected'] == true) {
         final company = result['companies'][0];
         final selectResult = await selectCompanyUsecase(
           result['email'],
