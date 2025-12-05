@@ -1,6 +1,7 @@
 import 'package:punto_venta_app/features/pos/data/models/cart_item_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/cart_log_entry_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/client_model.dart';
+import 'package:punto_venta_app/features/pos/data/models/tax_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/client.dart';
@@ -12,7 +13,7 @@ class InvoicePayload {
   final Map<String, dynamic>? client;
   final String paymentMethod;
   final double total;
-  final double totalTax;
+  final List<TaxModel> totalTax;
   final List<Map<String, dynamic>> logItems;
 
   InvoicePayload({
@@ -33,7 +34,7 @@ class InvoicePayload {
         'client': client,
         'paymentMethod': paymentMethod,
         'total': total,
-        'totalTax': totalTax,
+        'totalTax': totalTax.map((t) => t.toJson()).toList(),
         'items': logItems,
       };
 
@@ -48,33 +49,69 @@ class InvoicePayload {
       }
     }
 
+    final Map<double, double> totalsByPercentage = {};
+
     Map<String, dynamic> serializeCartLogItem(CartLogEntry itemLog) {
       try {
         return (itemLog as dynamic).toJson() as Map<String, dynamic>;
       } catch (_) {
         final cartLogItem = CartLogEntryModel.fromEntity(itemLog);
         final itemModel = CartItemModel.fromEntity(itemLog.item);
+
         final unitPrice = itemModel.product.precio ?? 0.0;
         final quantity = itemModel.quantity;
         final weightKg = itemLog.item.weightKg;
-        final isWeighted = (itemLog.item.isWeighted);
+        final isWeighted = (itemLog.item.isWeighted == true);
+
+        final double taxableBase = isWeighted
+            ? (itemModel.pricePerKg ?? unitPrice)
+            : unitPrice * quantity;
+
+        final double taxPercentage = (itemModel.iva ?? 0) + 0.0;
+        final double taxAmount = taxableBase * (taxPercentage / 100.0);
+
+        final List<TaxModel> taxes = [
+          TaxModel(
+            id: 1,
+            percentage: taxPercentage,
+            amount: double.parse(taxAmount.toStringAsFixed(2)),
+          ),
+        ];
+
+        totalsByPercentage.update(
+          taxPercentage,
+          (prev) => prev + taxAmount,
+          ifAbsent: () => taxAmount,
+        );
 
         return {
           'id': cartLogItem.id,
           'type': cartLogItem.type.toString(),
           'productId': itemModel.product.id,
           'productName': itemModel.product.description,
-          'is_weighted': isWeighted == true ? "S" : "N",
-          'net_weight': isWeighted == true ? itemModel.product.netWeight : null,
+          'quantity': quantity,
           'discount': 0,
-          'quantity': isWeighted == true ? weightKg ?? 0.0 : quantity,
           'unitPrice': unitPrice,
-          'vat': itemModel.iva,
-          'internal_tax': itemModel.product.internalTax,
           'priceListId': job.priceListId,
+          'taxes': taxes.map((t) => t.toJson()).toList(),
+          'is_weighted': isWeighted ? "S" : "N",
+          'net_weight': isWeighted ? itemModel.product.netWeight : null,
+          'weight': isWeighted ? weightKg ?? 0.0 : null,
         };
       }
     }
+
+    final logItems = job.logItems.map(serializeCartLogItem).toList();
+
+    final totalTax = totalsByPercentage.entries.map((e) {
+      final percentage = e.key;
+      final amount = e.value;
+      return TaxModel(
+        id: 1,
+        percentage: double.parse(percentage.toStringAsFixed(2)),
+        amount: double.parse(amount.toStringAsFixed(2)),
+      );
+    }).toList();
 
     return InvoicePayload(
       ticketId: job.ticketId,
@@ -83,8 +120,8 @@ class InvoicePayload {
       client: serializeClient(job.client),
       paymentMethod: job.paymentMethod ?? '',
       total: job.total,
-      totalTax: job.totalTax,
-      logItems: job.logItems.map(serializeCartLogItem).toList(),
+      totalTax: totalTax,
+      logItems: logItems,
     );
   }
 }
