@@ -58,7 +58,7 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
 
     try {
       // === ENCABEZADO CENTRADO ===
-      await _selectAlignment(1); 
+      await _selectAlignment(1);
       await _setBold(true);
       await _printText("SOLUCIONES INFORMATICAS");
       await _printAndFeedLine();
@@ -75,7 +75,6 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
       await _printText(_buildSeparator('_'));
       await _printAndFeedLine();
       await _printAndFeedLine();
-
 
       // === INFORMACIÓN DE LA ORDEN (IZQUIERDA) ===
       await _selectAlignment(0);
@@ -97,25 +96,41 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
       await _printAndFeedLine();
       await _printAndFeedLine();
 
-
       // === ITEMS ===
       await _selectAlignment(0);
       for (final item in printJob.items) {
         await _printText(item.product.description);
         await _printAndFeedLine();
 
-        final precioUnit = item.product.precio?.formatToCurrency();
-        final subtotalValue =
-            (item.quantity * (item.product.precio ?? 0.0)).formatToCurrency();
-        final subtotal = subtotalValue;
-        final line = "  ${item.quantity} x $precioUnit";
+        if (item.isWeighted == true) {
+          final weightKg = (item.weightKg ?? 0.0);
+          final pricePerKg = (item.pricePerKg ?? item.product.precio ?? 0.0);
+  
 
-        // Calcular espacios dinámicamente
-        final totalSpaces = _lineWidth - line.length - subtotal.length;
-        final spacer = totalSpaces > 0 ? ' ' * totalSpaces : ' ';
+          final subtotalValue = pricePerKg.formatToCurrency();
+          final weightLabel = "$weightKg kg";
+          final priceLabel = item.product.precio?.formatToCurrency();
 
-        await _printText("$line$spacer$subtotal");
-        await _printAndFeedLine();
+          final lineLeft = "  $weightLabel x $priceLabel";
+          final totalSpacesLeft =
+              _lineWidth - lineLeft.length - subtotalValue.length;
+          final spacerLeft = totalSpacesLeft > 0 ? ' ' * totalSpacesLeft : ' ';
+          await _printText("$lineLeft$spacerLeft$subtotalValue");
+          await _printAndFeedLine();
+        } else {
+          final unitPrice = (item.pricePerKg ?? item.product.precio ?? 0.0)
+              .formatToCurrency();
+          final subtotalValue =
+              (item.quantity * (item.pricePerKg ?? item.product.precio ?? 0.0))
+                  .formatToCurrency();
+          final line = "  ${item.quantity} x $unitPrice";
+
+          final totalSpaces = _lineWidth - line.length - subtotalValue.length;
+          final spacer = totalSpaces > 0 ? ' ' * totalSpaces : ' ';
+
+          await _printText("$line$spacer$subtotalValue");
+          await _printAndFeedLine();
+        }
       }
 
       // === SEPARADOR ===

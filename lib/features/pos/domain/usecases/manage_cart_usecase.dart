@@ -2,8 +2,14 @@ import '../entities/cart_item.dart';
 import '../entities/product.dart';
 
 class ManageCartUsecase {
-  List<CartItem> addToCart(List<CartItem> currentCart, Product product,
-      [int quantity = 1]) {
+  List<CartItem> addToCart(
+    List<CartItem> currentCart,
+    Product product,
+    int quantity, {
+    bool isWeighted = false,
+    double? weightKg,
+    double? pricePerKg,
+  }) {
     final List<CartItem> newCart = List.from(currentCart);
 
     final existingItemIndex = newCart.indexWhere(
@@ -13,9 +19,19 @@ class ManageCartUsecase {
     if (existingItemIndex != -1) {
       newCart[existingItemIndex] = newCart[existingItemIndex].copyWith(
         quantity: newCart[existingItemIndex].quantity + quantity,
+        isWeighted: isWeighted ? true : (newCart[existingItemIndex].isWeighted ?? false),
+        weightKg: weightKg ?? newCart[existingItemIndex].weightKg,
+        pricePerKg: pricePerKg ?? newCart[existingItemIndex].pricePerKg,
       );
     } else {
-      newCart.add(CartItem(product: product, quantity: quantity , iva: product.vat));
+      newCart.add(CartItem(
+        product: product,
+        quantity: quantity,
+        iva: product.vat,
+        isWeighted: isWeighted,
+        weightKg: weightKg,
+        pricePerKg: pricePerKg,
+      ));
     }
 
     return newCart;

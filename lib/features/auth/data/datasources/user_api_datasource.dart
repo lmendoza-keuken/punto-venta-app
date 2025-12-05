@@ -19,13 +19,12 @@ class UserApiDataSourceImpl implements UserApiDataSource {
   Future<Map<String, dynamic>> authenticateUser(
       String userId, String password) async {
     try {
-      final url = 'http://192.168.0.16:8000/users/login';
+     
 
       final encodedPassword = _encode(password);
 
       final response = await _dio.post(
-        url,
-        // ApiConfig.loginUrl, // Necesitas agregar esta URL en ApiConfig
+        ApiConfig.loginUrl,
         data: {
           'id': userId,
           'password': encodedPassword,

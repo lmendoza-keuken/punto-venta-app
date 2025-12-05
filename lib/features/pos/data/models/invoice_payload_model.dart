@@ -3,7 +3,6 @@ import 'package:punto_venta_app/features/pos/data/models/cart_log_entry_model.da
 import 'package:punto_venta_app/features/pos/data/models/client_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
-import 'package:punto_venta_app/features/pos/domain/entities/cart_item.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/client.dart';
 
 class InvoicePayload {
@@ -57,16 +56,21 @@ class InvoicePayload {
         final itemModel = CartItemModel.fromEntity(itemLog.item);
         final unitPrice = itemModel.product.precio ?? 0.0;
         final quantity = itemModel.quantity;
+        final weightKg = itemLog.item.weightKg;
+        final isWeighted = (itemLog.item.isWeighted);
+
         return {
           'id': cartLogItem.id,
           'type': cartLogItem.type.toString(),
           'productId': itemModel.product.id,
           'productName': itemModel.product.description,
+          'is_weighted': isWeighted == true ? "S" : "N",
+          'net_weight': isWeighted == true ? itemModel.product.netWeight : null,
           'discount': 0,
-          'quantity': quantity,
+          'quantity': isWeighted == true ? weightKg ?? 0.0 : quantity,
           'unitPrice': unitPrice,
-          'iva': itemModel.iva,
-          'impuesto_interno': itemModel.product.internalTax,
+          'vat': itemModel.iva,
+          'internal_tax': itemModel.product.internalTax,
           'priceListId': job.priceListId,
         };
       }
@@ -80,7 +84,6 @@ class InvoicePayload {
       paymentMethod: job.paymentMethod ?? '',
       total: job.total,
       totalTax: job.totalTax,
-      // items: job.items.map(serializeCartItem).toList(),
       logItems: job.logItems.map(serializeCartLogItem).toList(),
     );
   }

@@ -5,7 +5,10 @@ import 'package:punto_venta_app/core/utils/utils.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_state.dart';
-import 'product_card.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/product/empty_products_widget.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/product/product_card.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_state.dart';
 
 class ProductGrid extends StatelessWidget {
   final List<Product> products;
@@ -30,58 +33,52 @@ class ProductGrid extends StatelessWidget {
     }
 
     if (products.isEmpty) {
-      //TODO:  Mover a un Widget aparte 
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.search_off,
-              size: 64,
-              color: Colors.grey.shade400,
-            ),
-            const SizedBox(height: AppDimensions.paddingM),
-            Text(
-              'No se encontraron productos',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Colors.grey.shade600,
-                  ),
-            ),
-            const SizedBox(height: AppDimensions.paddingS),
-            Text(
-              'Intenta cambiar los filtros o la búsqueda',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey.shade500,
-                  ),
-            ),
-          ],
-        ),
-      );
+      return const EmptyProducts();
     }
 
-    return BlocBuilder<UiBloc, UiState>(
-      builder: (context, state) {
-        final uiState = state as UiLoaded;
+    return BlocBuilder<CartBloc, CartState>(
+      builder: (context, cartState) {
+        return BlocBuilder<UiBloc, UiState>(
+          builder: (context, state) {
+            final uiState = state as UiLoaded;
 
-        return GridView.builder(
-          padding: const EdgeInsets.all(AppDimensions.paddingM),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            childAspectRatio: calculateAspectRatio(crossAxisCount),
-            crossAxisSpacing: calculateSpacing(crossAxisCount),
-            mainAxisSpacing: calculateSpacing(crossAxisCount),
-          ),
-          itemCount: products.length,
-          itemBuilder: (context, index) {
-            final product = products[index];
-            //TODO:  Cambiar UIBloc a un valueNotifier 
-            return ProductCard(
-              product: product,
-              isInDeleteMode: uiState.isDeleteMode,
-              isCompact: crossAxisCount > 4,
-              selectedQuantity: uiState.selectedQuantity,
-              onTap: () => onProductTap(
-                  product, uiState.selectedQuantity, uiState.isDeleteMode),
+            return GridView.builder(
+              padding: const EdgeInsets.all(AppDimensions.paddingM),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                childAspectRatio: calculateAspectRatio(crossAxisCount),
+                crossAxisSpacing: calculateSpacing(crossAxisCount),
+                mainAxisSpacing: calculateSpacing(crossAxisCount),
+              ),
+              itemCount: products.length,
+              itemBuilder: (context, index) {
+                final product = products[index];
+
+                int quantityInCart = 0;
+                if (cartState is CartLoaded) {
+                  quantityInCart = cartState.items
+                      .where((item) => item.product.id == product.id)
+                      .fold(0, (sum, item) => sum + item.quantity);
+                }
+
+                final bool canRemoveQuantity = uiState.isDeleteMode &&
+                    quantityInCart >= uiState.selectedQuantity;
+                final bool hasInsufficientQuantity = uiState.isDeleteMode &&
+                    quantityInCart > 0 &&
+                    quantityInCart < uiState.selectedQuantity;
+
+                return ProductCard(
+                  product: product,
+                  isInDeleteMode: uiState.isDeleteMode,
+                  isCompact: crossAxisCount > 4,
+                  selectedQuantity: uiState.selectedQuantity,
+                  quantityInCart: quantityInCart,
+                  canRemoveQuantity: canRemoveQuantity,
+                  hasInsufficientQuantity: hasInsufficientQuantity,
+                  onTap: () => onProductTap(
+                      product, uiState.selectedQuantity, uiState.isDeleteMode),
+                );
+              },
             );
           },
         );

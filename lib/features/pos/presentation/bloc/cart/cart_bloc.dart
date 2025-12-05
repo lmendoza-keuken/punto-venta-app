@@ -19,9 +19,19 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   void _onAddToCart(AddToCart event, Emitter<CartState> emit) {
     final currentItems = _getCurrentItems();
     final newItems = manageCartUsecase.addToCart(
-        currentItems, event.product, event.quantity);
-    final total = manageCartUsecase.calculateTotal(newItems);
+      currentItems,
+      event.product,
+      event.quantity,
+      isWeighted: event.isWeighted ?? false,
+      weightKg: event.weightKg,
+      pricePerKg: event.pricePerKg,
+    );
     final totalItems = manageCartUsecase.getTotalItems(newItems);
+
+    final totals = _calculateSubtotalAndIva(newItems);
+    final subtotal = totals['subtotal']!;
+    final totalIva = totals['totalIva']!;
+    final total = subtotal + totalIva;
 
     final currentLog = _getCurrentLog();
 
@@ -32,7 +42,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
         product: event.product,
         quantity: event.quantity,
         iva: event.product.vat,
-        isWeighted: event.isWeighted,
+        isWeighted: event.isWeighted ?? false,
         weightKg: event.weightKg,
         pricePerKg: event.pricePerKg,
       ),
@@ -46,16 +56,29 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       total: total,
       totalItems: totalItems,
       log: newLog,
+      subtotal: subtotal,
+      totalIva: totalIva,
     ));
   }
 
   void _onReplaceCart(ReplaceCart event, Emitter<CartState> emit) {
     final items = event.items;
     final log = event.log;
-    final total = manageCartUsecase.calculateTotal(items);
     final totalItems = manageCartUsecase.getTotalItems(items);
+
+    final totals = _calculateSubtotalAndIva(items);
+    final subtotal = totals['subtotal']!;
+    final totalIva = totals['totalIva']!;
+    final total = subtotal + totalIva;
+
     emit(CartLoaded(
-        items: items, total: total, totalItems: totalItems, log: log));
+      items: items,
+      total: total,
+      totalItems: totalItems,
+      log: log,
+      subtotal: subtotal,
+      totalIva: totalIva,
+    ));
   }
 
   void _onRemoveQuantityFromCart(
@@ -63,7 +86,6 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     final currentItems = _getCurrentItems();
     final newItems = manageCartUsecase.removeQuantityFromCart(
         currentItems, event.productId, event.quantity);
-    final total = manageCartUsecase.calculateTotal(newItems);
     final totalItems = manageCartUsecase.getTotalItems(newItems);
 
     final existingProduct = currentItems.firstWhere(
@@ -86,16 +108,55 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     );
     final newLog = List<CartLogEntry>.from(currentLog)..add(entry);
 
+    final totals = _calculateSubtotalAndIva(newItems);
+    final subtotal = totals['subtotal']!;
+    final totalIva = totals['totalIva']!;
+    final total = subtotal + totalIva;
+
     emit(CartLoaded(
       items: newItems,
       total: total,
       totalItems: totalItems,
       log: newLog,
+      subtotal: subtotal,
+      totalIva: totalIva,
     ));
   }
 
   void _onClearCart(ClearCart event, Emitter<CartState> emit) {
-    emit(const CartLoaded(items: [], total: 0.0, totalItems: 0, log: []));
+    emit(const CartLoaded(
+      items: [],
+      total: 0.0,
+      totalItems: 0,
+      log: [],
+      subtotal: 0.0,
+      totalIva: 0.0,
+    ));
+  }
+
+  Map<String, double> _calculateSubtotalAndIva(List<CartItem> items) {
+    double subtotal = 0;
+    double totalIva = 0;
+    for (final it in items) {
+      final precio = it.product.precio ?? 0;
+      final isWeighted = it.isWeighted ?? false;
+      final pricePerKg = it.pricePerKg ?? 0.0;
+      final cantidad = it.quantity;
+      final tasaIva = (it.iva ?? 0) / 100;
+
+      if (isWeighted) {
+        final precioTotal = pricePerKg;
+        final ivaArticulo = precioTotal * tasaIva;
+        subtotal += precioTotal;
+        totalIva += ivaArticulo;
+      } else {
+        final precioTotal = precio * cantidad;
+        final ivaArticulo = precioTotal * tasaIva;
+        subtotal += precioTotal;
+        totalIva += ivaArticulo;
+      }
+    }
+    return {'subtotal': subtotal, 'totalIva': totalIva};
   }
 
   List<CartItem> _getCurrentItems() {

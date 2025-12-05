@@ -246,6 +246,23 @@ class _TicketPreviewContent extends StatelessWidget {
                             item.product.description,
                             style: const TextStyle(fontWeight: FontWeight.w500),
                           ),
+                          if (item.isWeighted == true)
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  '  ${item.weightKg ?? '-'} kg x ${item.product.precio?.formatToCurrency() ?? '-'}',
+                                  style: TextStyle(
+                                      fontSize: 12, color: Colors.grey[600]),
+                                ),
+                                Text(
+                                  item.pricePerKg?.formatToCurrency() ?? '-',
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w500),
+                                ),
+                              ],
+                            ),
+                          if (item.isWeighted != true)
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [

@@ -18,7 +18,6 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_s
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 showConfirmDialog({
-  required double total,
   required BuildContext context,
   Client? client,
 }) {
@@ -27,8 +26,7 @@ showConfirmDialog({
     builder: (BuildContext context) {
       return BlocProvider(
         create: (context) => di.sl<PrinterBloc>(),
-        child: _ConfirmDialogContent(
-          total: total,
+        child: ConfirmDialogContent(
           client: client,
         ),
       );
@@ -36,34 +34,23 @@ showConfirmDialog({
   );
 }
 
-class _ConfirmDialogContent extends StatelessWidget {
-  final double total;
+class ConfirmDialogContent extends StatelessWidget {
   final Client? client;
 
-  const _ConfirmDialogContent({
-    required this.total,
+  const ConfirmDialogContent({
     this.client,
   });
 
   @override
   Widget build(BuildContext context) {
     final cartState = context.read<CartBloc>().state;
-    double totalIva = 0;
+    double displayTotal = 0.0;
 
     if (cartState is CartLoaded) {
-      for (var entry in cartState.log) {
-        final precio = entry.item.product.precio ?? 0;
-        final cantidad = entry.item.quantity;
-        final tasaIva = entry.item.iva / 100;
-
-        final precioTotal = precio * cantidad;
-        final ivaArticulo = precioTotal * tasaIva;
-
-        totalIva += ivaArticulo;
-      }
+      displayTotal = cartState.total;
     }
 
-    final totalConIva = total + totalIva;
+    final totalConIva = displayTotal; 
 
     return BlocListener<PrinterBloc, PrinterState>(
       listener: (context, printerState) {
@@ -145,24 +132,28 @@ class _ConfirmDialogContent extends StatelessWidget {
 
   void _confirmSale(BuildContext context) async {
     try {
-      final cartState = context.read<CartBloc>().state as CartLoaded;
+      final state = context.read<CartBloc>().state;
+      if (state is! CartLoaded) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No hay artículos en el carrito'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+          Navigator.of(context).pop();
+        }
+        return;
+      }
+
+      final cartState = state;
       final user = await di.sl<AuthLocalDataSource>().getCachedUser();
       final printerConfig =
           await di.sl<PrinterLocalDataSource>().getPrinterConfig();
       final priceList =
           await di.sl<PriceListLocalDataSource>().getCurrentPriceList();
-      double totalTax = 0;
 
-      for (var entry in cartState.log) {
-        final precio = entry.item.product.precio ?? 0;
-        final cantidad = entry.item.quantity;
-        final tasaIva = entry.item.iva / 100;
-
-        final precioTotal = precio * cantidad;
-        final ivaArticulo = precioTotal * tasaIva;
-
-        totalTax += ivaArticulo;
-      }
+      final totalTax = cartState.totalIva;
 
       final completeOrderUsecase = di.sl<CompleteOrderUsecase>();
       await completeOrderUsecase(

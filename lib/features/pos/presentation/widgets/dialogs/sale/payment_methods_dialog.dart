@@ -102,22 +102,12 @@ class _PaymentMethodsDialogState extends State<PaymentMethodsDialog> {
               const SizedBox(height: 15),
               BlocBuilder<CartBloc, CartState>(
                 builder: (context, cartState) {
-                  double totalIva = 0;
-
-                  if (cartState is CartLoaded) {
-                    for (var entry in cartState.log) {
-                      final precio = entry.item.product.precio ?? 0;
-                      final cantidad = entry.item.quantity;
-                      final tasaIva = entry.item.iva / 100;
-
-                      final precioTotal = precio * cantidad;
-                      final ivaArticulo = precioTotal * tasaIva;
-
-                      totalIva += ivaArticulo;
-                    }
+                  if (cartState is! CartLoaded) {
+                    return const SizedBox.shrink();
                   }
-
-                  final totalConIva = widget.total + totalIva;
+                  double subtotal = cartState.subtotal;
+                  double totalIva = cartState.totalIva;
+                  double totalConIva = subtotal + totalIva;
 
                   return Column(
                     children: [
@@ -126,7 +116,7 @@ class _PaymentMethodsDialogState extends State<PaymentMethodsDialog> {
                         children: [
                           Text('Subtotal:',
                               style: TextStyle(color: Colors.grey[700])),
-                          Text(widget.total.formatToCurrency(),
+                          Text(subtotal.formatToCurrency(),
                               style:
                                   const TextStyle(fontWeight: FontWeight.w600)),
                         ],
@@ -205,6 +195,6 @@ class _PaymentMethodsDialogState extends State<PaymentMethodsDialog> {
 
   void _savePaymentMethod() {
     showConfirmDialog(
-        total: widget.total, context: context, client: widget.client);
+       context: context, client: widget.client);
   }
 }

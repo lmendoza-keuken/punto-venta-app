@@ -49,8 +49,7 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
 
     try {
       final response = await _dio.get(
-        'http://192.168.0.16:8000/barcodes/',
-        // ApiConfig.barcode,
+        ApiConfig.barcodeUrl,
         options: Options(
           responseType: ResponseType.json,
         ),
@@ -86,8 +85,7 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
 
     try {
       final response = await _dio.get(
-        'http://192.168.0.16:8000/articles/',
-        // ApiConfig.productosUrl,
+        ApiConfig.productosUrl,
         queryParameters: {'limit': 500},
         options: Options(
           responseType: ResponseType.json,
@@ -136,8 +134,7 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
 
     try {
       final response = await _dio.get(
-        'http://192.168.0.16:8000/prices_list/',
-        // ApiConfig.preciosArticulosUrl,
+        ApiConfig.preciosArticulosUrl,
         queryParameters: {'limit': 3500},
         options: Options(
           responseType: ResponseType.json,
@@ -287,8 +284,7 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
 
     try {
       final response = await _dio.get(
-        'http://192.168.0.16:8000/categories/',
-        // ApiConfig.barcode,
+        ApiConfig.categoriesUrl,
         options: Options(
           responseType: ResponseType.json,
         ),

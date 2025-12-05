@@ -22,9 +22,7 @@ class InvoiceRemoteDataSourceImpl implements InvoiceRemoteDataSource {
 
   @override
   Future<bool> sendInvoice(PrintJob job) async {
-    //TODO: Reemplazar URL hardcodeada por la de ApiConfig meterla dentro de la apiConfig
-    // final url = ApiConfig.invoiceUrl;
-    final url = 'http://192.168.0.16:8000/tickets/';
+    final url = ApiConfig.invoiceUrl;
 
     if (url.isEmpty) {
       print('⚠️ [INVOICE] URL vacía, simulando envío exitoso');
