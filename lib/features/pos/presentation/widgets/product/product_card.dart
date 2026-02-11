@@ -54,7 +54,7 @@ class ProductCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       // Badge de oferta
-                      if (product.oferta)
+                      if (product.isOnSale)
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
@@ -166,7 +166,7 @@ class ProductCard extends StatelessWidget {
                                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                       fontSize: isCompact ? 16 : 14,
                                       fontWeight: FontWeight.bold,
-                                      color: product.oferta ? AppColors.warning : AppColors.primary,
+                                      color: product.isOnSale ? AppColors.warning : AppColors.primary,
                                     ),
                               ),
                             ],

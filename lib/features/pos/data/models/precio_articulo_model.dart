@@ -10,16 +10,21 @@ class PrecioArticuloModel {
   @JsonKey(name: 'list_id', fromJson: _idListaFromJson, toJson: _idListaToJson)
   final int listId;
 
+  @JsonKey(name: 'regular_price')
+  final String regularPrice; 
+
   @JsonKey(name: 'price')
   final String price;
-  @JsonKey(name: 'sale_price')
-  final String salePrice;
+
+  @JsonKey(name: 'is_on_sale')
+  final String isOnSale;
 
   const PrecioArticuloModel({
     required this.productId,
     required this.listId,
+    required this.regularPrice,
     required this.price,
-    required this.salePrice,
+    required this.isOnSale,
   });
 
   factory PrecioArticuloModel.fromJson(Map<String, dynamic> json) =>
@@ -35,7 +40,7 @@ class PrecioArticuloModel {
     }
   }
 
-  bool get isSalePrice => salePrice == "1" || salePrice == "true";
+  bool get isSalePrice => isOnSale == "1" || isOnSale == "true";
 
   static int _idListaFromJson(dynamic value) {
     if (value == null) return 0;

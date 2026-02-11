@@ -20,7 +20,7 @@ class ClientInfoBar extends StatelessWidget {
             AppStrings.selectedClient,
             style: Theme.of(context)
                 .textTheme
-                .titleMedium
+                .titleSmall
                 ?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(width: AppDimensions.paddingM),
@@ -31,14 +31,14 @@ class ClientInfoBar extends StatelessWidget {
                   final c = state.selectedClient!;
                   return Text(
                     '${c.name} ${c.document != null ? '• ${c.document}' : ''}',
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    style: Theme.of(context).textTheme.bodySmall,
                   );
                 }
                 return Text(
                   AppStrings.noClientSelected,
                   style: Theme.of(context)
                       .textTheme
-                      .bodyMedium
+                      .bodySmall
                       ?.copyWith(color: AppColors.textSecondary),
                 );
               },

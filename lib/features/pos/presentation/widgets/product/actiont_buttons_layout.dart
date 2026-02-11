@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/core/constants/app_string.dart';
-import 'package:punto_venta_app/core/widgets/custom_butom.dart';
+import 'package:punto_venta_app/core/widgets/custom_button.dart';
 
 class ActionButtonsLayout extends StatelessWidget {
   final VoidCallback onReportPressed;
@@ -42,7 +42,7 @@ class ActionButtonsLayout extends StatelessWidget {
                 backgroundColor: AppColors.reportButton,
                 icon: Icons.assessment,
                 iconColor: Colors.white,
-                height: 40,
+                height: AppDimensions.buttonHeightS,
               ),
               const SizedBox(width: AppDimensions.paddingS),
               CustomButton(
@@ -51,7 +51,7 @@ class ActionButtonsLayout extends StatelessWidget {
                 backgroundColor: AppColors.saveButton,
                 icon: Icons.save,
                 iconColor: Colors.white,
-                height: 40,
+                height: AppDimensions.buttonHeightS,
               ),
               const SizedBox(width: AppDimensions.paddingS),
               CustomButton(
@@ -60,7 +60,7 @@ class ActionButtonsLayout extends StatelessWidget {
                 backgroundColor: AppColors.resumeButton,
                 icon: Icons.summarize,
                 iconColor: Colors.white,
-                height: 40,
+                height: AppDimensions.buttonHeightS,
               ),
             ],
           ),
@@ -75,7 +75,7 @@ class ActionButtonsLayout extends StatelessWidget {
               backgroundColor: AppColors.selectClientButton,
               icon: Icons.person_search,
               iconColor: Colors.white,
-              height: 40,
+              height: AppDimensions.buttonHeightS,
             ),
             const SizedBox(width: AppDimensions.paddingS),
             CustomButton(
@@ -84,7 +84,7 @@ class ActionButtonsLayout extends StatelessWidget {
               backgroundColor: AppColors.addClientButton,
               icon: Icons.person_add,
               iconColor: Colors.white,
-              height: 40,
+              height: AppDimensions.buttonHeightS,
             ),
             const SizedBox(width: AppDimensions.paddingS),
             CustomButton(
@@ -93,7 +93,7 @@ class ActionButtonsLayout extends StatelessWidget {
               backgroundColor: AppColors.confirmButton,
               icon: Icons.payment,
               iconColor: Colors.white,
-              height: 40,
+              height: AppDimensions.buttonHeightS,
             ),
           ],
         ),
@@ -114,7 +114,7 @@ class ActionButtonsLayout extends StatelessWidget {
                 backgroundColor: AppColors.reportButton,
                 icon: Icons.assessment,
                 iconColor: Colors.white,
-                height: 36,
+                height: AppDimensions.buttonHeightS,
               ),
             ),
             const SizedBox(width: AppDimensions.paddingS),
@@ -125,7 +125,7 @@ class ActionButtonsLayout extends StatelessWidget {
                 backgroundColor: AppColors.saveButton,
                 icon: Icons.save,
                 iconColor: Colors.white,
-                height: 36,
+                height: AppDimensions.buttonHeightS,
               ),
             ),
             const SizedBox(width: AppDimensions.paddingS),
@@ -136,7 +136,7 @@ class ActionButtonsLayout extends StatelessWidget {
                 backgroundColor: AppColors.resumeButton,
                 icon: Icons.summarize,
                 iconColor: Colors.white,
-                height: 36,
+                height: AppDimensions.buttonHeightS,
               ),
             ),
           ],
@@ -153,7 +153,7 @@ class ActionButtonsLayout extends StatelessWidget {
                 backgroundColor: AppColors.selectClientButton,
                 icon: Icons.person_search,
                 iconColor: Colors.white,
-                height: 36,
+                height: AppDimensions.buttonHeightS,
               ),
             ),
             const SizedBox(width: AppDimensions.paddingS),
@@ -164,7 +164,7 @@ class ActionButtonsLayout extends StatelessWidget {
                 backgroundColor: AppColors.addClientButton,
                 icon: Icons.person_add,
                 iconColor: Colors.white,
-                height: 36,
+                height: AppDimensions.buttonHeightS,
               ),
             ),
             const SizedBox(width: AppDimensions.paddingS),
@@ -175,7 +175,7 @@ class ActionButtonsLayout extends StatelessWidget {
                 backgroundColor: AppColors.confirmButton,
                 icon: Icons.payment,
                 iconColor: Colors.white,
-                height: 36,
+                height: AppDimensions.buttonHeightS,
               ),
             ),
           ],

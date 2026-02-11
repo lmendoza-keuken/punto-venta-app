@@ -30,14 +30,14 @@ class _CartPanelState extends State<CartPanel> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: AppDimensions.cartPanelWidth,
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        border: Border(left: BorderSide(color: Colors.grey.shade200)),
+    return Card(
+      margin: const EdgeInsets.all(AppDimensions.paddingS),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppDimensions.borderRadiusL),
       ),
       child: Column(
         children: [
+          // titulo del panel
           const CartPanelHeader(),
           Expanded(
             child: BlocConsumer<CartBloc, CartState>(
@@ -63,7 +63,9 @@ class _CartPanelState extends State<CartPanel> {
                         child: Padding(
                           padding: const EdgeInsets.all(AppDimensions.paddingS),
                           child: state.log.isEmpty
+                              // si el carrito está vacío
                               ? const CartEmptyWidget()
+                              // lista de items en el carrito
                               : ListView.builder(
                                   controller: _scrollController,
                                   itemCount: state.log.length,
@@ -75,6 +77,7 @@ class _CartPanelState extends State<CartPanel> {
                         ),
                       ),
                       const Divider(height: 1),
+                      // resumen del carrito
                       CartSummary(
                         subtotal: subtotal,
                         totalIva: totalIva,
@@ -86,7 +89,7 @@ class _CartPanelState extends State<CartPanel> {
                     ],
                   );
                 }
-
+                // estado inicial o de error
                 return const CartEmptyWidget();
               },
             ),

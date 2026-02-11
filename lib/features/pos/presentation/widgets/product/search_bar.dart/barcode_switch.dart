@@ -17,8 +17,8 @@ class BarcodeSwitch extends StatelessWidget {
         final uiState = state as UiLoaded;
 
         return Container(
-          width: 56,
-          height: 56,
+          width: AppDimensions.buttonHeightm,
+          height: AppDimensions.buttonHeightm,
           decoration: BoxDecoration(
             color: uiState.isBarcodeSearchEnabled
                 ? AppColors.success

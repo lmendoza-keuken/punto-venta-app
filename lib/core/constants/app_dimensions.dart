@@ -13,8 +13,9 @@ class AppDimensions {
   static const double borderRadiusXL = 16.0;
   
   // Button Heights
-  static const double buttonHeightS = 36.0;
+  static const double buttonHeightS = 30.0;
   static const double buttonHeightM = 48.0;
+  static const double buttonHeightm = 40.0;
   static const double buttonHeightL = 56.0;
   
   // Product Card

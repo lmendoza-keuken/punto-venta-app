@@ -59,7 +59,7 @@ Future<void> showLogoutDialog(BuildContext context) async {
                     ActionCard(
                       icon: Icons.people_alt,
                       iconColor: Colors.orange,
-                      backgroundColor: Colors.orange.withOpacity(0.1),
+                      backgroundColor: Colors.orange.withValues(alpha: 0.1),
                       title: 'Cambiar usuario',
                       subtitle: 'Mantener sesión de empresa activa',
                       onTap: () {
@@ -81,7 +81,7 @@ Future<void> showLogoutDialog(BuildContext context) async {
                   ActionCard(
                     icon: Icons.exit_to_app,
                     iconColor: Colors.red,
-                    backgroundColor: Colors.red.withOpacity(0.1),
+                    backgroundColor: Colors.red.withValues(alpha: 0.1),
                     title: 'Cerrar Sesión Completa',
                     subtitle: 'Salir de la aplicación',
                     onTap: () {
@@ -145,10 +145,12 @@ class ActionCard extends StatelessWidget {
         onTap: enabled ? onTap : null,
         borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
         child: Container(
-          padding: const EdgeInsets.all(AppDimensions.paddingL),
+          padding: const EdgeInsets.all(AppDimensions.paddingS),
           decoration: BoxDecoration(
             border: Border.all(
-              color: enabled ? iconColor.withOpacity(0.3) : Colors.grey.withOpacity(0.3),
+              color: enabled
+                  ? iconColor.withValues(alpha: 0.3)
+                  : Colors.grey.withValues(alpha: 0.3),
               width: 1.5,
             ),
             borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
@@ -159,13 +161,15 @@ class ActionCard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: enabled ? backgroundColor : Colors.grey.withOpacity(0.1),
+                  color: enabled
+                      ? backgroundColor
+                      : Colors.grey.withValues(alpha: 0.1),
                   borderRadius:
                       BorderRadius.circular(AppDimensions.borderRadiusM),
                 ),
                 child: Icon(
                   icon,
-                  color:  enabled ? iconColor : Colors.grey,
+                  color: enabled ? iconColor : Colors.grey,
                   size: 24,
                 ),
               ),
@@ -178,7 +182,7 @@ class ActionCard extends StatelessWidget {
                       title,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color:  enabled ? iconColor : Colors.grey,
+                            color: enabled ? iconColor : Colors.grey,
                           ),
                     ),
                     const SizedBox(height: AppDimensions.paddingXS),
@@ -194,7 +198,9 @@ class ActionCard extends StatelessWidget {
               Icon(
                 Icons.arrow_forward_ios,
                 size: 16,
-                color:  enabled ? iconColor.withOpacity(0.5) : Colors.grey.withOpacity(0.5),
+                color: enabled
+                    ? iconColor.withValues(alpha: 0.5)
+                    : Colors.grey.withValues(alpha: 0.5),
               ),
             ],
           ),

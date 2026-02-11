@@ -43,49 +43,83 @@ class _AddClientDialogState extends State<AddClientDialog> {
       address:
           _addressCtrl.text.trim().isEmpty ? null : _addressCtrl.text.trim(),
     );
-    
+
     context.read<ClientsBloc>().add(AddClientEvent(client));
     Navigator.of(context).pop(client);
   }
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Agregar Cliente'),
-      content: SizedBox(
-        width: 420,
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CustomTextField(
-                  label: 'Nombre',
-                  controller: _nameCtrl,
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty)
-                      return 'Nombre requerido';
-                    return null;
-                  }),
-              const SizedBox(height: AppDimensions.paddingS),
-              CustomTextField(
-                  label: 'Documento (opcional)', controller: _docCtrl),
-              const SizedBox(height: AppDimensions.paddingS),
-              CustomTextField(
-                  label: 'Teléfono (opcional)', controller: _phoneCtrl),
-              const SizedBox(height: AppDimensions.paddingS),
-              CustomTextField(
-                  label: 'Dirección (opcional)', controller: _addressCtrl),
-            ],
+    return Dialog(
+      insetAnimationDuration: Duration.zero,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 40),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(20.0)),
+      ),
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        appBar: AppBar(
+          automaticallyImplyLeading: true,
+          title: const Text('Agregar Cliente'),
+          backgroundColor: Colors.white,
+          elevation: 0,
+        ),
+        body: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  CustomTextField(
+                      label: 'Nombre',
+                      controller: _nameCtrl,
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty)
+                          return 'Nombre requerido';
+                        return null;
+                      }),
+                  const SizedBox(height: AppDimensions.paddingS),
+                  CustomTextField(
+                      label: 'Documento (opcional)', controller: _docCtrl),
+                  const SizedBox(height: AppDimensions.paddingS),
+                  CustomTextField(
+                      label: 'Teléfono (opcional)', controller: _phoneCtrl),
+                  const SizedBox(height: AppDimensions.paddingS),
+                  CustomTextField(
+                      label: 'Dirección (opcional)', controller: _addressCtrl),
+                  const SizedBox(height: 32),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: AppDimensions.buttonHeightS,
+                          child: TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: const Text('Cancelar'),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: SizedBox(
+                          height: AppDimensions.buttonHeightS,
+                          child: ElevatedButton(
+                            onPressed: _save,
+                            child: const Text('Guardar'),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
-      actions: [
-        TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar')),
-        ElevatedButton(onPressed: _save, child: const Text('Guardar')),
-      ],
     );
   }
 }

@@ -27,7 +27,9 @@ class ResponsiveSearchLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
       final isCompact = constraints.maxWidth < 600;
-      final padding = EdgeInsets.all(isCompact ? AppDimensions.paddingS : AppDimensions.paddingM);
+      final padding = EdgeInsets.symmetric(
+          horizontal:
+              isCompact ? AppDimensions.paddingS : AppDimensions.paddingS);
 
       return Container(
         padding: padding,
@@ -57,7 +59,6 @@ class ResponsiveSearchLayout extends StatelessWidget {
       ],
     );
   }
-  
 
   Widget _buildCompactLayout() {
     return Column(

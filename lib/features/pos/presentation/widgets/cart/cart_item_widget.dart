@@ -67,7 +67,7 @@ class CartItemWidget extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
               ),
-              if (item.product.oferta)
+              if (item.product.isOnSale)
                 Container(
                   margin: const EdgeInsets.only(top: 2),
                   padding:
@@ -175,7 +175,7 @@ class CartItemWidget extends StatelessWidget {
                               fontWeight: FontWeight.w600,
                             ),
                       ),
-                      if (item.product.oferta) ...[
+                      if (item.product.isOnSale) ...[
                         const SizedBox(width: 4),
                         Container(
                           padding: const EdgeInsets.symmetric(

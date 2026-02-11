@@ -9,19 +9,19 @@ class CartPanelHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppDimensions.paddingM),
+      padding: const EdgeInsets.all(AppDimensions.paddingS),
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.shopping_cart, color: AppColors.primary),
+          const Icon(Icons.shopping_cart, color: AppColors.primary, size: AppDimensions.borderRadiusL,),
           const SizedBox(width: AppDimensions.paddingS),
           Text(
             AppStrings.cartSummary,
             style: Theme.of(context)
                 .textTheme
-                .titleLarge
+                .titleSmall
                 ?.copyWith(fontWeight: FontWeight.bold),
           ),
         ],

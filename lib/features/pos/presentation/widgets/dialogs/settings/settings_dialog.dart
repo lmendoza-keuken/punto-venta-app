@@ -24,47 +24,49 @@ class _SettingsDialogState extends State<SettingsDialog> {
 
         return AlertDialog(
           title: const Text('Configuración de administrador'),
-          content: SizedBox(
-            width: 420,
-            child: Column(
-              spacing: 10,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ActionCard(
-                  icon: Icons.print,
-                  iconColor: Colors.orange,
-                  backgroundColor: Colors.orange.withOpacity(0.1),
-                  title: 'Configurar impresoras',
-                  subtitle: 'Configurar Ip de impresoras de tickets',
-                  onTap: () {
-                    final navigatorContext = Navigator.of(context).context;
-                    Navigator.of(context).pop();
-                    showPrinterSettingsDialog(navigatorContext);
-                  },
-                ),
-                ActionCard(
-                  icon: Icons.attach_money,
-                  iconColor: Colors.green,
-                  backgroundColor: Colors.green.withOpacity(0.1),
-                  title: 'Lista de Precios',
-                  subtitle:
-                      'Cambiar lista de precios activa (Actual: Lista $currentList)',
-                  onTap: () {
-                    final navigatorContext = Navigator.of(context).context;
-                    Navigator.of(context).pop();
-                    showPriceListSelectorDialog(navigatorContext, currentList);
-                  },
-                ),
-                ActionCard(
-                  icon: Icons.app_registration_sharp,
-                  iconColor: Colors.blueAccent,
-                  backgroundColor: Colors.blueAccent.withOpacity(0.1),
-                  title: 'Configurar Modo de la App',
-                  subtitle: 'Configurar Modo En linea / Modo Offline',
-                  onTap: () {},
-                  enabled: false,
-                ),
-              ],
+          content: SingleChildScrollView(
+            child: SizedBox(
+              width: 420,
+              child: Column(
+                spacing: 10,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ActionCard(
+                    icon: Icons.print,
+                    iconColor: Colors.orange,
+                    backgroundColor: Colors.orange.withOpacity(0.1),
+                    title: 'Configurar impresoras',
+                    subtitle: 'Configurar Ip de impresoras de tickets',
+                    onTap: () {
+                      final navigatorContext = Navigator.of(context).context;
+                      Navigator.of(context).pop();
+                      showPrinterSettingsDialog(navigatorContext);
+                    },
+                  ),
+                  ActionCard(
+                    icon: Icons.attach_money,
+                    iconColor: Colors.green,
+                    backgroundColor: Colors.green.withOpacity(0.1),
+                    title: 'Lista de Precios',
+                    subtitle:
+                        'Cambiar lista de precios activa (Actual: Lista $currentList)',
+                    onTap: () {
+                      final navigatorContext = Navigator.of(context).context;
+                      Navigator.of(context).pop();
+                      showPriceListSelectorDialog(navigatorContext, currentList);
+                    },
+                  ),
+                  ActionCard(
+                    icon: Icons.app_registration_sharp,
+                    iconColor: Colors.blueAccent,
+                    backgroundColor: Colors.blueAccent.withOpacity(0.1),
+                    title: 'Configurar Modo de la App',
+                    subtitle: 'Configurar Modo En linea / Modo Offline',
+                    onTap: () {},
+                    enabled: false,
+                  ),
+                ],
+              ),
             ),
           ),
           actions: [

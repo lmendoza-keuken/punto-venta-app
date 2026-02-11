@@ -25,14 +25,17 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
   ) async {
     emit(ProductLoading());
     try {
+      // se trae la lista de precios actual desde el local datasource, si no existe se crea con valor 1
       int currentList = await priceListLocalDataSource.getCurrentPriceList();
       if (currentList <= 0) {
         currentList = 1;
         await priceListLocalDataSource.savePriceList(currentList);
       }
       
+      // se actualiza la lista de precios en el usecase para que los productos se traigan con los precios correctos
       await getProductsUsecase.updatePriceList(currentList);
       
+      // se traen los productos y categorías con la lista de precios actual
       final products = await getProductsUsecase();
       final categories = await getProductsUsecase.getCategories();
 

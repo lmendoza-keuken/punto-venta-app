@@ -16,8 +16,8 @@ class DeleteButton extends StatelessWidget {
         final uiState = state as UiLoaded;
 
         return Container(
-          width: 56,
-          height: 56,
+          width: AppDimensions.buttonHeightm,
+          height: AppDimensions.buttonHeightm,
           decoration: BoxDecoration(
             color: uiState.isDeleteMode ? AppColors.error : Colors.white,
             borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),

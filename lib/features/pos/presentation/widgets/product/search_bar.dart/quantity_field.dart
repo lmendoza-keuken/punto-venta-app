@@ -50,7 +50,7 @@ class _QuantityFieldState extends State<QuantityField> {
           ),
           child: Column(
             children: [
-              Container(
+              SizedBox(
                 height: 20,
                 child: const Center(
                   child: Text(

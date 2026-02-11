@@ -44,46 +44,66 @@ class ProductGridSection extends StatelessWidget {
             },
           );
         } else if (state is ProductError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(AppDimensions.paddingL),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.cloud_off,
-                    size: 64,
-                    color: Colors.amber,
-                  ),
-                  const SizedBox(height: AppDimensions.paddingM),
-                  Text(
-                    'Problema de conexión',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Colors.amber,
-                        ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: AppDimensions.paddingS),
-                  Text(
-                    state.message,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: AppDimensions.paddingL),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      context.read<ProductBloc>().add(LoadProducts());
-                    },
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Reintentar'),
-                  ),
-                ],
-              ),
-            ),
-          );
+          // Mensaje de error con opción para reintentar (falta ver un loading cuando se reintenta)
+          return ProductGridErrorMessage(errorMessage: state.message);
         }
         return const SizedBox.shrink();
       },
+    );
+  }
+}
+
+class ProductGridErrorMessage extends StatelessWidget {
+  final String errorMessage;
+  const ProductGridErrorMessage({
+    super.key,
+    required this.errorMessage,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppDimensions.paddingL),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.cloud_off,
+              size: 20,
+              color: Colors.amber,
+            ),
+            const SizedBox(height: AppDimensions.paddingM),
+            Text(
+              'Problema de conexión',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: Colors.amber,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppDimensions.paddingS),
+            Text(
+              errorMessage,
+              style: Theme.of(context).textTheme.bodySmall,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppDimensions.paddingS),
+            SizedBox(
+              height: AppDimensions.buttonHeightS,
+              child: ElevatedButton.icon(
+                style: ButtonStyle(
+                  backgroundColor: WidgetStateProperty.all(Colors.amber),
+                ),
+                onPressed: () {
+                  context.read<ProductBloc>().add(LoadProducts());
+                },
+                icon: const Icon(Icons.refresh),
+                label: const Text('Reintentar'),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

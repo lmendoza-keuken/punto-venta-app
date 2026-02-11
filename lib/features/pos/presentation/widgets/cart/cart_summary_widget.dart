@@ -3,7 +3,7 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_dimensions.dart';
 import '../../../../../core/constants/app_string.dart';
 import '../../../../../core/utils/extensions.dart';
-import '../../../../../core/widgets/custom_butom.dart';
+import '../../../../../core/widgets/custom_button.dart';
 
 class CartSummary extends StatelessWidget {
   final double subtotal;
@@ -22,7 +22,7 @@ class CartSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppDimensions.paddingM),
+      padding: const EdgeInsets.all(AppDimensions.paddingS),
       child: Column(
         children: [
           const SizedBox(height: AppDimensions.paddingS),
@@ -37,7 +37,7 @@ class CartSummary extends StatelessWidget {
                       ?.copyWith(fontWeight: FontWeight.w600)),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 5),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -46,9 +46,9 @@ class CartSummary extends StatelessWidget {
                   style: const TextStyle(fontWeight: FontWeight.w600)),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 5),
           Divider(height: 1, color: Colors.grey.shade300),
-          const SizedBox(height: 8),
+          const SizedBox(height: 5),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -59,11 +59,12 @@ class CartSummary extends StatelessWidget {
                       color: AppColors.primary, fontWeight: FontWeight.bold)),
             ],
           ),
-          const SizedBox(height: AppDimensions.paddingM),
+          const SizedBox(height: AppDimensions.paddingS),
           Row(
             children: [
               Expanded(
                 child: CustomButton(
+                  height: 30,
                   text: AppStrings.empty,
                   onPressed: onClear,
                   backgroundColor: AppColors.error,

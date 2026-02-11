@@ -24,8 +24,10 @@ class ProductModel with _$ProductModel {
     @JsonKey(name: 'suspended_for_purchase') String? suspendedForPurchase,
     @JsonKey(name: 'is_active') String? isActive,
     @JsonKey(name: 'category_description') String? categoryDescription,
-    @JsonKey(name: 'oferta') int? oferta,
-    @JsonKey(name: 'precio') double? precio,
+    // Se agregan despues con un copywith (depende de la lista de precios actual)
+    @JsonKey(name: 'regular_price') String? regularPrice, // precio anterior (solo mostrar tachado si hay oferta)
+    @JsonKey(name: 'precio') double? precio, // precio actual (siempre mostrar este)
+    @JsonKey(name: 'is_on_sale') int? isOnSale, // 1 si está en oferta, 0 si no
     @JsonKey(name: 'barcodes') List<BarcodeModel>? barcodes,
   }) = _ProductModel;
 
@@ -58,7 +60,7 @@ class ProductModel with _$ProductModel {
       isActive: isActive ?? 'S',
       categoryDescription: categoryDescription ?? '',
       precio: precioValue,
-      oferta: (oferta ?? 0) == 1,
+      isOnSale: (isOnSale ?? 0) == 1,
       barcodes: barcodes,
     );
   }
@@ -80,7 +82,7 @@ class ProductModel with _$ProductModel {
       isActive: product.isActive,
       categoryDescription: product.categoryDescription,
       precio: product.precio,
-      oferta: product.oferta ? 1 : 0,
+      isOnSale: product.isOnSale ? 1 : 0,
       barcodes: product.barcodes,
     );
   }

@@ -78,6 +78,7 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
     }
   }
 
+  // get productos sin precios ni códigos de barras
   Future<List<ProductModel>> _fetchProducts() async {
     if (_cachedProducts != null) {
       return _cachedProducts!;
@@ -97,6 +98,7 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
             ? json.decode(response.data)
             : response.data;
 
+        // se filtran los productos no suspendidos para la venta (suspendedForSale == 'N')
         _cachedProducts = jsonData
             .map((json) => ProductModel.fromJson(json as Map<String, dynamic>))
             .where((product) => product.suspendedForSale == 'N')
@@ -126,6 +128,7 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
     }
   }
 
+  // get Lista de precios de articulos
   @override
   Future<List<PrecioArticuloModel>> getPreciosArticulos() async {
     if (_cachedPrecios != null) {
@@ -175,6 +178,7 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
     }
   }
 
+  // get precios por lista de precios, se filtran los precios por el id de la lista de precios actual
   @override
   Future<Map<int, PrecioArticuloModel>> getPreciosByLista(
       int listaPrecio) async {
@@ -192,10 +196,13 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
   }
 
   @override
+  // se traen los productos y codigos de barras y precios según la lista de precios actual
   Future<List<ProductModel>> getProducts() async {
+    // se traen los productos, códigos de barras y precios (si falla la carga de precios, se traen igual pero sin precios)
     final products = await _fetchProducts();
     final barcodes = await _fetchBarcodes();
 
+    // se agrupan los códigos de barras por producto para facilitar la asignación a cada producto
     final barcodesByProduct = <int, List<BarcodeModel>>{};
     for (var barcode in barcodes) {
       if (!barcodesByProduct.containsKey(barcode.articleId)) {
@@ -204,6 +211,7 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
       barcodesByProduct[barcode.articleId]!.add(barcode);
     }
 
+    // se traen los precios según la lista de precios actual
     Map<int, PrecioArticuloModel>? precios;
     try {
       precios = await getPreciosByLista(_listaActual);
@@ -211,6 +219,7 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
       precios = null;
     }
 
+    // se asignan los códigos de barras y precios a cada producto
     return products.map((product) {
       final productBarcodes = barcodesByProduct[product.id] ?? [];
       final precio = precios?[product.id];
@@ -218,11 +227,12 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
       return product.copyWith(
         barcodes: productBarcodes,
         precio: precio?.priceAsDouble,
-        oferta: int.tryParse(precio?.salePrice ?? '0'),
+        isOnSale: int.tryParse(precio?.isOnSale ?? '0'),  // salePrice indica si está en oferta (ahora deberia ser con isOnSale )
       );
     }).toList();
   }
 
+  // se busca un producto por código de barras
   @override
   Future<ProductModel?> searchByBarcode(String barcode) async {
     final products = await getProducts();
@@ -239,6 +249,7 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
     return null;
   }
 
+  // get productos por categoría, si la categoría es "Todo" o "All" se traen todos los productos
   @override
   Future<List<ProductModel>> getProductsByCategory(String category) async {
     final products = await getProducts();
@@ -248,11 +259,13 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
     }
 
     return products
-        .where(
-            (product) => product.categoryDescription?.toLowerCase() == category.toLowerCase())
+        .where((product) =>
+            product.categoryDescription?.toLowerCase() ==
+            category.toLowerCase())
         .toList();
   }
 
+  // se busca un producto por descripción, id, categoría o código de barras que contenga la query (si la query es vacía se traen todos los productos)
   @override
   Future<List<ProductModel>> searchProducts(String query) async {
     final products = await getProducts();
@@ -264,7 +277,9 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
         .where((product) =>
             (product.description ?? "").toLowerCase().contains(lowerQuery) ||
             product.id.toString().contains(lowerQuery) ||
-            (product.categoryDescription ?? "").toLowerCase().contains(lowerQuery) ||
+            (product.categoryDescription ?? "")
+                .toLowerCase()
+                .contains(lowerQuery) ||
             _hasMatchingBarcode(product, lowerQuery))
         .toList();
   }
@@ -276,9 +291,10 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
         .any((barcode) => barcode.barcode.toString().contains(query));
   }
 
+  // get categorías, se traen todas las categorías sin importar la lista de precios
   @override
   Future<List<CategoryModel>> getCategories() async {
-   if (_cachedCategories != null) {
+    if (_cachedCategories != null) {
       return _cachedCategories!;
     }
 

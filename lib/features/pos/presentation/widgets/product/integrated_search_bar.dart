@@ -25,6 +25,10 @@ class IntegratedSearchBar extends StatelessWidget {
         border: Border(
           bottom: BorderSide(color: Colors.grey.shade200),
         ),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(AppDimensions.borderRadiusM),
+          topRight: Radius.circular(AppDimensions.borderRadiusM),
+        ),
       ),
       child: EnhancedSearchBar(
         searchController: controller,

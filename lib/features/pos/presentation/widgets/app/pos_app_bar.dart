@@ -26,12 +26,12 @@ class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: const [
-                  Text(AppStrings.keukenName),
+                  Text(AppStrings.keukenName, style: TextStyle(fontSize: 14),),
                   Text(
                     AppStrings.keukenDesc,
                     style: TextStyle(
                       color: AppColors.selectClientButton,
-                      fontSize: 14,
+                      fontSize: 10,
                     ),
                   ),
                 ],
@@ -40,16 +40,16 @@ class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
               if (constraints.maxWidth > 600) ...[
                 Text(
                   'Cajero: ${user?.name ?? "Desconocido"}',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                 ),
                 const SizedBox(width: AppDimensions.paddingS),
-                Text('|', style: Theme.of(context).textTheme.titleMedium),
+                Text('|', style: Theme.of(context).textTheme.titleSmall),
                 const SizedBox(width: AppDimensions.paddingS),
                 Text(
                   'ID: ${user?.id ?? "N/A"}',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                 ),
@@ -60,7 +60,7 @@ class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
                   if (state is ProductLoaded) {
                     return Text(
                       '# Lista: ${state.currentPriceList}',
-                      style: const TextStyle(fontSize: 16),
+                      style: const TextStyle(fontSize: 14),
                     );
                   }
                   return const SizedBox.shrink();
@@ -96,8 +96,9 @@ class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
           ),
         Visibility(
-          visible: user != null && user!.tipo == 'ADM',
+          visible: user != null && user!.tipo == 'ADMIN',
           child: IconButton(
+            iconSize: 18,
             icon: const Icon(Icons.settings),
             onPressed: () async {
               await showDialog(
@@ -111,6 +112,7 @@ class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ),
         IconButton(
+          iconSize: 18,
           icon: const Icon(Icons.logout),
           onPressed: () {
             showLogoutDialog(context);

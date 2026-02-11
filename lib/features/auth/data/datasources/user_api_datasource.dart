@@ -19,8 +19,6 @@ class UserApiDataSourceImpl implements UserApiDataSource {
   Future<Map<String, dynamic>> authenticateUser(
       String userId, String password) async {
     try {
-     
-
       final encodedPassword = _encode(password);
 
       final response = await _dio.post(

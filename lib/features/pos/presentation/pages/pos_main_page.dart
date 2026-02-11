@@ -65,183 +65,199 @@ class _PosMainPageState extends State<PosMainPage> {
         final user = authState is AuthAuthenticated ? authState.user : null;
 
         return Scaffold(
+          resizeToAvoidBottomInset: false,
           appBar: PosAppBar(user: user),
-          body: Column(
-            children: [
-              const ClientInfoBar(),
-              Expanded(
-                child: ResponsiveTwoColumn(
-                  left: CatalogCard(
-                    searchBar: IntegratedSearchBar(
-                      controller: _searchController,
-                      autofocus: false,
-                      onSearchChanged: (query) {
-                        setState(() {});
-                        context.read<ProductBloc>().add(SearchProducts(query));
-                      },
-                      onClearSearch: () {
-                        _searchController.clear();
-                        context
-                            .read<ProductBloc>()
-                            .add(const SearchProducts(''));
-                        setState(() {});
-                      },
-                    ),
-                    categoryTabs: CategoryTabsSection(
-                      onCategorySelected: (_) {},
-                      onClearSearch: () {
-                        _searchController.clear();
-                        context
-                            .read<ProductBloc>()
-                            .add(const SearchProducts(''));
-                      },
-                    ),
-                    productGrid: ProductGridSection(
-                      onProductTap: (product, quantity, isDeleteMode) {
-                        if (isDeleteMode) {
-                          final cartBloc = context.read<CartBloc>();
-                          final quantityInCart = cartBloc
-                              .getProductQuantityInCart(product.id.toString());
-
-                          if (quantityInCart >= quantity) {
-                            cartBloc.add(RemoveQuantityFromCart(
-                                product.id.toString(), quantity));
-                          } else if (quantityInCart > 0) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Solo hay $quantityInCart unidades de ${product.name} en el carrito. No se puede eliminar $quantity.',
-                                ),
-                                duration: const Duration(seconds: 2),
-                                behavior: SnackBarBehavior.floating,
-                                backgroundColor: AppColors.warning,
-                              ),
-                            );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                    '${product.name} no está en el carrito'),
-                                duration: const Duration(seconds: 1),
-                                behavior: SnackBarBehavior.floating,
-                                backgroundColor: AppColors.info,
-                              ),
-                            );
-                          }
-                        } else {
-                          if (product.precio != null) {
-                            context
-                                .read<CartBloc>()
-                                .add(AddToCart(product, quantity: quantity));
-                          }
-                        }
-                        context.read<UiBloc>().add(ResetQuantity());
-                      },
-                    ),
+          body: SafeArea(
+            child: Column(
+              children: [
+                const ClientInfoBar(),
+                Expanded(
+                  child: Row(
+                    children: [
+                      // catálogo de productos
+                      Expanded(
+                        flex: 2,
+                        child: CatalogCard(
+                          // barra de búsqueda y categorías
+                          searchBar: IntegratedSearchBar(
+                            controller: _searchController,
+                            autofocus: false,
+                            onSearchChanged: (query) {
+                              setState(() {});
+                              context.read<ProductBloc>().add(SearchProducts(query));
+                            },
+                            onClearSearch: () {
+                              _searchController.clear();
+                              context
+                                  .read<ProductBloc>()
+                                  .add(const SearchProducts(''));
+                              setState(() {});
+                            },
+                          ),
+                          categoryTabs: CategoryTabsSection(
+                            onCategorySelected: (_) {},
+                            onClearSearch: () {
+                              _searchController.clear();
+                              context
+                                  .read<ProductBloc>()
+                                  .add(const SearchProducts(''));
+                            },
+                          ),
+                          // grilla de productos
+                          productGrid: ProductGridSection(
+                            onProductTap: (product, quantity, isDeleteMode) {
+                              if (isDeleteMode) {
+                                final cartBloc = context.read<CartBloc>();
+                                final quantityInCart = cartBloc
+                                    .getProductQuantityInCart(product.id.toString());
+                
+                                if (quantityInCart >= quantity) {
+                                  cartBloc.add(RemoveQuantityFromCart(
+                                      product.id.toString(), quantity));
+                                } else if (quantityInCart > 0) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Solo hay $quantityInCart unidades de ${product.name} en el carrito. No se puede eliminar $quantity.',
+                                      ),
+                                      duration: const Duration(seconds: 2),
+                                      behavior: SnackBarBehavior.floating,
+                                      backgroundColor: AppColors.warning,
+                                    ),
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                          '${product.name} no está en el carrito'),
+                                      duration: const Duration(seconds: 1),
+                                      behavior: SnackBarBehavior.floating,
+                                      backgroundColor: AppColors.info,
+                                    ),
+                                  );
+                                }
+                              } else {
+                                if (product.precio != null) {
+                                  context
+                                      .read<CartBloc>()
+                                      .add(AddToCart(product, quantity: quantity));
+                                }
+                              }
+                              context.read<UiBloc>().add(ResetQuantity());
+                            },
+                          ),
+                        ),
+                      ),
+                      // panel de carrito
+                      Expanded(
+                        flex: 1,
+                        child: const CartPanel(),
+                      ),
+                    ],
                   ),
-                  right: const CartPanel(),
                 ),
-              ),
-              ActionButtons(
-                onReportPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => BlocProvider(
-                      create: (_) => di.sl<ReportsBloc>(),
-                      child: const ReportsDialog(),
-                    ),
-                  );
-                },
-                onSaveOrderPressed: () {
-                  final cartState = context.read<CartBloc>().state;
-                  if (cartState is CartLoaded && cartState.items.isNotEmpty) {
+                // botones de acción (barra de abajo)
+                ActionButtons(
+                  onReportPressed: () {
                     showDialog(
                       context: context,
-                      builder: (context) => SaveOrderDialog(
-                        cartItems: cartState.items,
-                        cartLogItems: cartState.log,
-                        total: cartState.total,
-                        clientName: null,
+                      builder: (context) => BlocProvider(
+                        create: (_) => di.sl<ReportsBloc>(),
+                        child: const ReportsDialog(),
                       ),
                     );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('El carrito está vacío'),
-                        behavior: SnackBarBehavior.floating,
-                      ),
+                  },
+                  onSaveOrderPressed: () {
+                    final cartState = context.read<CartBloc>().state;
+                    if (cartState is CartLoaded && cartState.items.isNotEmpty) {
+                      showDialog(
+                        context: context,
+                        builder: (context) => SaveOrderDialog(
+                          cartItems: cartState.items,
+                          cartLogItems: cartState.log,
+                          total: cartState.total,
+                          clientName: null,
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('El carrito está vacío'),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  },
+                  onResumePressed: () async {
+                    final result = await showDialog<SavedOrder>(
+                      context: context,
+                      builder: (context) => const LoadSavedOrdersDialog(),
                     );
-                  }
-                },
-                onResumePressed: () async {
-                  final result = await showDialog<SavedOrder>(
-                    context: context,
-                    builder: (context) => const LoadSavedOrdersDialog(),
-                  );
-
-                  if (result != null) {
-                    context.read<CartBloc>().add(
-                        ReplaceCart(items: result.items, log: result.logs));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                            'Pedido "${result.name}" cargado exitosamente'),
-                        backgroundColor: AppColors.success,
-                      ),
-                    );
-                  }
-                },
-                onSelectClientPressed: () async {
-                  final result = await showDialog(
-                    context: context,
-                    builder: (context) => BlocProvider.value(
-                      value: context.read<ClientsBloc>(),
-                      child: const SelectClientDialog(),
-                    ),
-                  );
-                  if (result != null) {
-                    context.read<ClientsBloc>().add(SelectClientEvent(result));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Cliente ${result.name} seleccionado'),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  }
-                },
-                onAddClientPressed: () async {
-                  final added = await showDialog(
-                    context: context,
-                    builder: (context) => BlocProvider.value(
-                      value: context.read<ClientsBloc>(),
-                      child: const AddClientDialog(),
-                    ),
-                  );
-                  if (added is Client) {
-                    context.read<ClientsBloc>().add(SelectClientEvent(added));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
+            
+                    if (result != null) {
+                      context.read<CartBloc>().add(
+                          ReplaceCart(items: result.items, log: result.logs));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
                           content: Text(
-                              'Cliente ${added.name} agregado y seleccionado')),
-                    );
-                  }
-                },
-                onConfirmPressed: () {
-                  final cartState = context.read<CartBloc>().state;
-                  if (cartState is CartLoaded && cartState.items.isNotEmpty) {
-                    showDialog(
+                              'Pedido "${result.name}" cargado exitosamente'),
+                          backgroundColor: AppColors.success,
+                        ),
+                      );
+                    }
+                  },
+                  onSelectClientPressed: () async {
+                    final result = await showDialog(
                       context: context,
-                      builder: (context) =>
-                          PaymentMethodsDialog(total: cartState.total),
+                      builder: (context) => BlocProvider.value(
+                        value: context.read<ClientsBloc>(),
+                        child: const SelectClientDialog(),
+                      ),
                     );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('El carrito está vacío')),
+                    if (result != null) {
+                      context.read<ClientsBloc>().add(SelectClientEvent(result));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Cliente ${result.name} seleccionado'),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  },
+                  onAddClientPressed: () async {
+                    final added = await showDialog(
+                      context: context,
+                      builder: (context) => BlocProvider.value(
+                        value: context.read<ClientsBloc>(),
+                        child: const AddClientDialog(),
+                      ),
                     );
-                  }
-                },
-              ),
-            ],
+                    if (added is Client) {
+                      context.read<ClientsBloc>().add(SelectClientEvent(added));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text(
+                                'Cliente ${added.name} agregado y seleccionado')),
+                      );
+                    }
+                  },
+                  onConfirmPressed: () {
+                    final cartState = context.read<CartBloc>().state;
+                    if (cartState is CartLoaded && cartState.items.isNotEmpty) {
+                      showDialog(
+                        context: context,
+                        builder: (context) =>
+                            PaymentMethodsDialog(total: cartState.total),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('El carrito está vacío')),
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
           ),
         );
       },

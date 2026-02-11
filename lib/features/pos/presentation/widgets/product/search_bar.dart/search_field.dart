@@ -29,43 +29,50 @@ class SearchField extends StatelessWidget {
       builder: (context, state) {
         final uiState = state as UiLoaded;
 
-        return TextField(
-          controller: controller,
-          autofocus: autofocus,
-          decoration: InputDecoration(
-            hintText: uiState.isBarcodeSearchEnabled
-                ? AppStrings.searchBarCodeHint
-                : AppStrings.searchHint,
-            prefixIcon: Icon(
-              uiState.isBarcodeSearchEnabled
-                  ? FontAwesomeIcons.barcode
-                  : Icons.search,
-              color: AppColors.primary,
+        return SizedBox(
+          height: AppDimensions.buttonHeightm,
+          child: TextField(
+            controller: controller,
+            autofocus: autofocus,
+            decoration: InputDecoration(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 0,
+              ),
+              hintText: uiState.isBarcodeSearchEnabled
+                  ? AppStrings.searchBarCodeHint
+                  : AppStrings.searchHint,
+              prefixIcon: Icon(
+                uiState.isBarcodeSearchEnabled
+                    ? FontAwesomeIcons.barcode
+                    : Icons.search,
+                color: AppColors.primary,
+              ),
+              suffixIcon: controller.text.isNotEmpty
+                  ? IconButton(
+                      icon:
+                          const Icon(Icons.clear, color: AppColors.textSecondary),
+                      onPressed: onClearSearch,
+                    )
+                  : null,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
+                borderSide: const BorderSide(color: AppColors.primary, width: 2),
+              ),
+              filled: true,
+              fillColor: Colors.white,
             ),
-            suffixIcon: controller.text.isNotEmpty
-                ? IconButton(
-                    icon:
-                        const Icon(Icons.clear, color: AppColors.textSecondary),
-                    onPressed: onClearSearch,
-                  )
-                : null,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
-              borderSide: const BorderSide(color: AppColors.primary, width: 2),
-            ),
-            filled: true,
-            fillColor: Colors.white,
+            onChanged: uiState.isBarcodeSearchEnabled ? null : onSearchChanged,
+            onSubmitted: (value) => onSubmitted(value),
           ),
-          onChanged: uiState.isBarcodeSearchEnabled ? null : onSearchChanged,
-          onSubmitted: (value) => onSubmitted(value),
         );
       },
     );

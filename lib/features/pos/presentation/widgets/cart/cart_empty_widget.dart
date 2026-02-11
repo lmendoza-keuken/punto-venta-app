@@ -11,18 +11,18 @@ class CartEmptyWidget extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.shopping_cart_outlined,
-              size: 64, color: Colors.grey.shade400),
-          const SizedBox(height: AppDimensions.paddingM),
+              size: 20, color: Colors.grey.shade400),
+          const SizedBox(height: AppDimensions.paddingS),
           Text('Carrito vacío',
               style: Theme.of(context)
                   .textTheme
-                  .titleMedium
+                  .titleSmall
                   ?.copyWith(color: Colors.grey.shade600)),
           const SizedBox(height: AppDimensions.paddingS),
           Text('Agrega productos para comenzar',
               style: Theme.of(context)
                   .textTheme
-                  .bodyMedium
+                  .bodySmall
                   ?.copyWith(color: Colors.grey.shade500)),
         ],
       ),

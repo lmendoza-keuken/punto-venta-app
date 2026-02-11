@@ -43,7 +43,7 @@ WeightBarcodeResult? parseWeightBarcode(String code, List<Product> products) {
   final netWeight = found.netWeight;
   final priceNetWeight = netWeight > 0 ? found.precio ?? 0.0 : 0.0;
   final calculatedUnitPrice =
-      priceNetWeight * weightKg / (netWeight > 0 ? netWeight : 1);
+      priceNetWeight * weightKg;
 
   return WeightBarcodeResult(
     product: found,

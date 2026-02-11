@@ -16,7 +16,7 @@ class CatalogCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.all(AppDimensions.paddingM),
+      margin: const EdgeInsets.all(AppDimensions.paddingS),
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppDimensions.borderRadiusL),
