@@ -50,7 +50,7 @@ class _CategoryTabsState extends State<CategoryTabs> {
           padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingS),
           child: Scrollbar(
             controller: _scrollController,
-            thumbVisibility: true,
+            thumbVisibility: false,
             child: ListView.separated(
               controller: _scrollController,
               scrollDirection: Axis.horizontal,

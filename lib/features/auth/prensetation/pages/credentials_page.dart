@@ -69,10 +69,12 @@ class _CredentialsPageState extends State<CredentialsPage> {
         final isLoading = state is AuthLoading;
 
         return Scaffold(
+         backgroundColor: AppColors.cartLightBackground,
           appBar: AppBar(
-            title: const Text('Iniciar Sesión de Cajero'),
+            backgroundColor: AppColors.cartLightBackground,
+            title: const Text('Iniciar Sesión de Cajero', style: TextStyle(color: AppColors.textSecondary),),
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
+              icon: const Icon(Icons.arrow_back, color: AppColors.textSecondary,),
               onPressed: isLoading
                   ? null
                   : () {
@@ -218,13 +220,14 @@ class _CredentialsPageState extends State<CredentialsPage> {
                         AppStrings.keukenName,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.bold,
+                              color: AppColors.darkTextPrimary
                             ),
                       ),
                       const SizedBox(height: AppDimensions.paddingXS),
                       Text(
                         AppStrings.keukenDesc,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppColors.selectClientButton,
+                              color: AppColors.darkTextSecondary,
                             ),
                         textAlign: TextAlign.center,
                       ),

@@ -63,6 +63,7 @@ class LoginPage extends StatelessWidget {
         }
       },
       child: Scaffold(
+        backgroundColor: AppColors.cartLightBackground,
         body: SafeArea(
           child: Column(
             children: [
@@ -97,14 +98,14 @@ class LoginPage extends StatelessWidget {
                     Text(
                       AppStrings.keukenName,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary),
                     ),
                     const SizedBox(height: AppDimensions.paddingXS),
                     Text(
                       AppStrings.keukenDesc,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.selectClientButton,
+                            color: AppColors.textSecondary,
                           ),
                       textAlign: TextAlign.center,
                     ),

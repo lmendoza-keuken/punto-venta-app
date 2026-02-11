@@ -20,16 +20,7 @@ class IntegratedSearchBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(AppDimensions.paddingS),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.shade200),
-        ),
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(AppDimensions.borderRadiusM),
-          topRight: Radius.circular(AppDimensions.borderRadiusM),
-        ),
-      ),
+      decoration: BoxDecoration(),
       child: EnhancedSearchBar(
         searchController: controller,
         onSearchChanged: onSearchChanged,

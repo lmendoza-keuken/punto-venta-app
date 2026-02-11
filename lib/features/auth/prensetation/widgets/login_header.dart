@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/core/constants/app_string.dart';
-import 'package:punto_venta_app/core/constants/app_colors.dart';
 
 class LoginHeader extends StatelessWidget {
   const LoginHeader({super.key});
@@ -9,34 +9,18 @@ class LoginHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppDimensions.paddingXL),
+      padding: const EdgeInsets.all(AppDimensions.paddingS),
       child: Column(
         children: [
-          Container(
+          SvgPicture.asset(
+            'assets/icons/logo.svg',
             width: 100,
             height: 100,
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.circular(AppDimensions.borderRadiusXL),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.point_of_sale,
-              size: 50,
-              color: Colors.white,
-            ),
           ),
           const SizedBox(height: AppDimensions.paddingL),
           Text(
             AppStrings.appNameComplete,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: AppColors.textPrimary,
                   fontWeight: FontWeight.bold,
                 ),
           ),

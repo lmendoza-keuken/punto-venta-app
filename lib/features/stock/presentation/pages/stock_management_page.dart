@@ -306,7 +306,7 @@ class _StockManagementViewState extends State<_StockManagementView> {
       builder: (dialogContext) => AlertDialog(
         title: const Text('Confirmar eliminación'),
         content: Text(
-            '¿Estás seguro de que deseas eliminar "${product.descripcion}"?'),
+            '¿Estás seguro de que deseas eliminar "${product.description}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),

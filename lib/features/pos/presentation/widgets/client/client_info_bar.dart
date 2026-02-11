@@ -12,16 +12,27 @@ class ClientInfoBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppDimensions.paddingM),
-      color: AppColors.background,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.paddingM,
+        vertical: AppDimensions.paddingS,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          bottom: BorderSide(
+            color: Colors.grey.shade200,
+            width: 1,
+          ),
+        ),
+      ),
       child: Row(
         children: [
           Text(
             AppStrings.selectedClient,
-            style: Theme.of(context)
-                .textTheme
-                .titleSmall
-                ?.copyWith(fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
           ),
           const SizedBox(width: AppDimensions.paddingM),
           Expanded(
@@ -31,15 +42,15 @@ class ClientInfoBar extends StatelessWidget {
                   final c = state.selectedClient!;
                   return Text(
                     '${c.name} ${c.document != null ? '• ${c.document}' : ''}',
-                    style: Theme.of(context).textTheme.bodySmall,
+                    style: const TextStyle(fontSize: 14),
                   );
                 }
                 return Text(
                   AppStrings.noClientSelected,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(color: AppColors.textSecondary),
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 14,
+                  ),
                 );
               },
             ),

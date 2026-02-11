@@ -27,12 +27,8 @@ class ResponsiveSearchLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
       final isCompact = constraints.maxWidth < 600;
-      final padding = EdgeInsets.symmetric(
-          horizontal:
-              isCompact ? AppDimensions.paddingS : AppDimensions.paddingS);
 
       return Container(
-        padding: padding,
         child: isCompact ? _buildCompactLayout() : _buildFullLayout(),
       );
     });
@@ -42,7 +38,7 @@ class ResponsiveSearchLayout extends StatelessWidget {
     return Row(
       children: [
         const QuantityField(),
-        const SizedBox(width: AppDimensions.paddingM),
+        const SizedBox(width: AppDimensions.paddingS),
         Expanded(
           child: SearchField(
             controller: searchController,
@@ -52,9 +48,9 @@ class ResponsiveSearchLayout extends StatelessWidget {
             onSubmitted: onSubmitted,
           ),
         ),
-        const SizedBox(width: AppDimensions.paddingM),
+        const SizedBox(width: AppDimensions.paddingS),
         const BarcodeSwitch(),
-        const SizedBox(width: AppDimensions.paddingM),
+        const SizedBox(width: AppDimensions.paddingS),
         const DeleteButton(),
       ],
     );
@@ -67,18 +63,20 @@ class ResponsiveSearchLayout extends StatelessWidget {
           children: [
             const QuantityField(),
             const SizedBox(width: AppDimensions.paddingS),
+            Expanded(
+              child: SearchField(
+                controller: searchController,
+                autofocus: autofocus,
+                onSearchChanged: onSearchChanged,
+                onClearSearch: onClearSearch,
+                onSubmitted: onSubmitted,
+              ),
+            ),
+            const SizedBox(width: AppDimensions.paddingS),
             const BarcodeSwitch(),
-            const Spacer(),
+            const SizedBox(width: AppDimensions.paddingS),
             const DeleteButton(),
           ],
-        ),
-        const SizedBox(height: AppDimensions.paddingS),
-        SearchField(
-          controller: searchController,
-          autofocus: autofocus,
-          onSearchChanged: onSearchChanged,
-          onClearSearch: onClearSearch,
-          onSubmitted: onSubmitted,
         ),
       ],
     );

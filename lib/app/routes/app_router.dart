@@ -1,17 +1,26 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:punto_venta_app/core/widgets/sidebar/sidebar.dart';
+import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
+import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_event.dart';
+import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_state.dart';
 import 'package:punto_venta_app/features/auth/prensetation/pages/company_selection_page.dart';
 import 'package:punto_venta_app/features/auth/prensetation/pages/credentials_page.dart';
 import 'package:punto_venta_app/features/auth/prensetation/pages/login_page.dart';
 import 'package:punto_venta_app/features/pos/presentation/pages/pos_main_page.dart';
+import 'package:punto_venta_app/features/pos/presentation/pages/reports_page.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_bloc.dart';
 import 'package:punto_venta_app/features/splash/presentation/pages/splash_page.dart';
 import 'package:punto_venta_app/features/stock/presentation/pages/stock_management_page.dart';
+import 'package:punto_venta_app/injection_container.dart' as di;
 import 'route_paths.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: RoutePaths.splash,
     routes: [
+      // Auth routes (sin sidebar)
       GoRoute(
         path: RoutePaths.splash,
         builder: (BuildContext context, GoRouterState state) {
@@ -39,18 +48,81 @@ class AppRouter {
           );
         },
       ),
-      GoRoute(
-        path: RoutePaths.pos,
-        builder: (BuildContext context, GoRouterState state) {
-          return const PosMainPage();
+      
+      // Main app routes (con sidebar)
+      ShellRoute(
+        builder: (context, state, child) {
+          return MainLayoutShell(
+            currentRoute: state.matchedLocation,
+            child: child,
+          );
         },
-      ),
-      GoRoute(
-        path: RoutePaths.stock,
-        builder: (BuildContext context, GoRouterState state) {
-          return const StockManagementPage();
-        },
+        routes: [
+          GoRoute(
+            path: RoutePaths.pos,
+            builder: (BuildContext context, GoRouterState state) {
+              return const PosMainPage();
+            },
+          ),
+          GoRoute(
+            path: RoutePaths.stock,
+            builder: (BuildContext context, GoRouterState state) {
+              return const StockManagementPage();
+            },
+          ),
+          GoRoute(
+            path: RoutePaths.reports,
+            builder: (BuildContext context, GoRouterState state) {
+              return BlocProvider(
+                create: (_) => di.sl<ReportsBloc>(),
+                child: const ReportsPage(),
+              );
+            },
+          ),
+          GoRoute(
+            path: RoutePaths.settings,
+            builder: (BuildContext context, GoRouterState state) {
+              // TODO: Crear SettingsPage
+              return const Scaffold(
+                body: Center(child: Text('Configuración - Próximamente')),
+              );
+            },
+          ),
+        ],
       ),
     ],
   );
+}
+
+/// Shell wrapper que provee el MainLayout con sidebar
+class MainLayoutShell extends StatelessWidget {
+  final String currentRoute;
+  final Widget child;
+
+  const MainLayoutShell({
+    super.key,
+    required this.currentRoute,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, authState) {
+        final user =
+            authState is AuthAuthenticated ? authState.user : null;
+        final isAdmin = user?.tipo == 'ADMIN';
+
+        return MainLayout(
+          currentRoute: currentRoute,
+          isAdmin: isAdmin,
+          onLogout: () {
+            context.read<AuthBloc>().add(LogoutEvent());
+            context.go(RoutePaths.login);
+          },
+          child: child,
+        );
+      },
+    );
+  }
 }

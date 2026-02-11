@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:punto_venta_app/app/routes/route_paths.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
@@ -67,7 +68,7 @@ class _SplashPageState extends State<SplashPage>
         }
       },
       child: Scaffold(
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors.cartLightBackground,
         body: Center(
           child: AnimatedBuilder(
             animation: _animationController,
@@ -93,10 +94,10 @@ class _SplashPageState extends State<SplashPage>
                             ),
                           ],
                         ),
-                        child: const Icon(
-                          Icons.point_of_sale,
-                          size: 60,
-                          color: AppColors.primary,
+                        child: SvgPicture.asset(
+                          'assets/icons/logo.svg',
+                          width: 100,
+                          height: 100,
                         ),
                       ),
                       const SizedBox(height: 32),
@@ -106,7 +107,7 @@ class _SplashPageState extends State<SplashPage>
                             .textTheme
                             .headlineMedium
                             ?.copyWith(
-                              color: Colors.white,
+                              color: AppColors.textPrimary,
                               fontWeight: FontWeight.bold,
                             ),
                       ),
@@ -117,7 +118,7 @@ class _SplashPageState extends State<SplashPage>
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
+                              AlwaysStoppedAnimation<Color>(AppColors.textSecondary),
                         ),
                       ),
                     ],

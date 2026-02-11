@@ -42,89 +42,91 @@ class ProductCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
         child: Container(
-          padding:
-              EdgeInsets.all(isCompact ? AppDimensions.paddingS : AppDimensions.paddingM),
+          padding: EdgeInsets.all(
+              isCompact ? AppDimensions.paddingS : AppDimensions.paddingM),
           child: Stack(
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Badges superiores
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Badge de oferta
-                      if (product.isOnSale)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: AppColors.warning,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            'OFERTA',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  fontSize: isCompact ? 7 : 8,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                          ),
-                        )
-                      else
-                        const SizedBox.shrink(),
-
-                      // Badge de cantidad en carrito
-                      if (quantityInCart > 0)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: AppColors.info,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            'En carrito: $quantityInCart',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  fontSize: isCompact ? 7 : 8,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                          ),
-                        ),
-                    ],
-                  ),
-
-                  // Imagen placeholder
+                  // Imagen placeholder con badges
                   Expanded(
                     flex: isCompact ? 1 : 2,
                     child: Container(
                       width: double.infinity,
-                      margin: EdgeInsets.symmetric(vertical: isCompact ? 2 : AppDimensions.paddingS),
+                      margin: EdgeInsets.symmetric(
+                          vertical: isCompact ? 2 : AppDimensions.paddingS),
                       decoration: BoxDecoration(
                         color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(AppDimensions.borderRadiusS),
+                        borderRadius:
+                            BorderRadius.circular(AppDimensions.borderRadiusS),
                       ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      child: Stack(
                         children: [
-                          Icon(
-                            Icons.inventory_2,
-                            color: AppColors.textHint,
-                            size: isCompact ? 20 : 30,
-                          ),
-                          if (!isCompact) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              product.description.trim(),
-                              style: const TextStyle(
-                                fontSize: 8,
-                                color: AppColors.textHint,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                          // Icono centrado
+                          Center(
+                            child: Icon(
+                              Icons.inventory_2,
+                              color: AppColors.textHint,
+                              size: isCompact ? 20 : 30,
                             ),
-                          ],
+                          ),
+                          // Badges superiores
+                          Positioned(
+                            top: 4,
+                            left: 4,
+                            right: 4,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                // Badge de oferta
+                                if (product.isOnSale)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.warning,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      'OFERTA',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            fontSize: isCompact ? 7 : 8,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                    ),
+                                  )
+                                else
+                                  const SizedBox.shrink(),
+
+                                // Badge de cantidad en carrito
+                                if (quantityInCart > 0)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.info,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      'En carrito: $quantityInCart',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            fontSize: isCompact ? 7 : 8,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -137,10 +139,11 @@ class ProductCard extends StatelessWidget {
                       // Nombre del producto
                       Text(
                         product.description.trim(),
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontSize: isCompact ? 16 : 12,
-                              fontWeight: FontWeight.w600,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontSize: isCompact ? 16 : 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
                         maxLines: isCompact ? 1 : 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -163,10 +166,15 @@ class ProductCard extends StatelessWidget {
                             children: [
                               Text(
                                 product.precio?.formatToCurrency() ?? '-',
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(
                                       fontSize: isCompact ? 16 : 14,
                                       fontWeight: FontWeight.bold,
-                                      color: product.isOnSale ? AppColors.warning : AppColors.primary,
+                                      color: product.isOnSale
+                                          ? AppColors.warning
+                                          : AppColors.primary,
                                     ),
                               ),
                             ],
@@ -191,27 +199,32 @@ class ProductCard extends StatelessWidget {
               if (isInDeleteMode)
                 Container(
                   decoration: BoxDecoration(
-                    color: getOverlayColor(canRemoveQuantity, hasInsufficientQuantity),
-                    borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
+                    color: getOverlayColor(
+                        canRemoveQuantity, hasInsufficientQuantity),
+                    borderRadius:
+                        BorderRadius.circular(AppDimensions.borderRadiusM),
                   ),
                   child: Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          getOverlayIcon(canRemoveQuantity, hasInsufficientQuantity),
-                          color: getOverlayIconColor(canRemoveQuantity, hasInsufficientQuantity),
+                          getOverlayIcon(
+                              canRemoveQuantity, hasInsufficientQuantity),
+                          color: getOverlayIconColor(
+                              canRemoveQuantity, hasInsufficientQuantity),
                           size: isCompact ? 24 : 32,
                         ),
                         if (!isCompact && hasInsufficientQuantity) ...[
                           const SizedBox(height: 4),
                           Text(
                             'Solo $quantityInCart\nen carrito',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  fontSize: 10,
-                                  color: AppColors.warning,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      fontSize: 10,
+                                      color: AppColors.warning,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                             textAlign: TextAlign.center,
                           ),
                         ],
@@ -219,11 +232,12 @@ class ProductCard extends StatelessWidget {
                           const SizedBox(height: 4),
                           Text(
                             'Quitar $selectedQuantity',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  fontSize: 10,
-                                  color: AppColors.error,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      fontSize: 10,
+                                      color: AppColors.error,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                             textAlign: TextAlign.center,
                           ),
                         ],

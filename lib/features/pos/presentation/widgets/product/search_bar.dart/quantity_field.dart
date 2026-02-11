@@ -46,7 +46,6 @@ class _QuantityFieldState extends State<QuantityField> {
           decoration: BoxDecoration(
             border: Border.all(color: Colors.grey.shade300),
             borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
-            color: Colors.white,
           ),
           child: Column(
             children: [

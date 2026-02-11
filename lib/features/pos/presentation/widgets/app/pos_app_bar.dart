@@ -11,50 +11,68 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/product/product_s
 import 'package:punto_venta_app/core/widgets/dynamic_date_time.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/settings_dialog.dart';
 
-class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
+class PosAppBar extends StatelessWidget {
   final User? user;
 
   const PosAppBar({super.key, this.user});
 
   @override
   Widget build(BuildContext context) {
-    return AppBar(
-      title: LayoutBuilder(
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.paddingM,
+        vertical: AppDimensions.paddingS,
+      ),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: Colors.grey.shade200,
+            width: 1,
+          ),
+        ),
+      ),
+      child: LayoutBuilder(
         builder: (context, constraints) {
           return Row(
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(AppStrings.keukenName, style: TextStyle(fontSize: 14),),
-                  Text(
-                    AppStrings.keukenDesc,
-                    style: TextStyle(
-                      color: AppColors.selectClientButton,
-                      fontSize: 10,
-                    ),
-                  ),
-                ],
+              // Column(
+              //   crossAxisAlignment: CrossAxisAlignment.start,
+              //   mainAxisSize: MainAxisSize.min,
+              //   children: const [
+              //     Text(
+              //       AppStrings.keukenName,
+              //       style: TextStyle(
+              //         fontSize: 16,
+              //         fontWeight: FontWeight.bold,
+              //       ),
+              //     ),
+              //     Text(
+              //       AppStrings.keukenDesc,
+              //       style: TextStyle(
+              //         color: AppColors.textSecondary,
+              //         fontSize: 10,
+              //       ),
+              //     ),
+              //   ],
+              // ),
+              Text(
+                'Cajero: ${user?.name ?? "Desconocido"}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
               ),
-              const Spacer(),
-              if (constraints.maxWidth > 600) ...[
-                Text(
-                  'Cajero: ${user?.name ?? "Desconocido"}',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+              const SizedBox(width: AppDimensions.paddingS),
+              const Text('|', style: TextStyle(fontSize: 14)),
+              const SizedBox(width: AppDimensions.paddingS),
+              Text(
+                'ID: ${user?.id ?? "N/A"}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
                 ),
-                const SizedBox(width: AppDimensions.paddingS),
-                Text('|', style: Theme.of(context).textTheme.titleSmall),
-                const SizedBox(width: AppDimensions.paddingS),
-                Text(
-                  'ID: ${user?.id ?? "N/A"}',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const SizedBox(width: AppDimensions.paddingM),
-              ],
+              ),
+              const SizedBox(width: AppDimensions.paddingM),
               BlocBuilder<ProductBloc, ProductState>(
                 builder: (context, state) {
                   if (state is ProductLoaded) {
@@ -68,61 +86,58 @@ class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
               const SizedBox(width: AppDimensions.paddingM),
               DynamicDateTime(
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontSize: constraints.maxWidth > 600 ? 14 : 12,
-                    ),
+                style: TextStyle(
+                  fontSize: constraints.maxWidth > 600 ? 14 : 12,
+                ),
               ),
+              // const SizedBox(width: AppDimensions.paddingM),
+              if (user != null)
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      user!.tipo,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ),
+
+              // if (user != null && user!.tipo == 'ADMIN')
+              //   IconButton(
+              //     iconSize: 18,
+              //     icon: const Icon(Icons.settings),
+              //     onPressed: () async {
+              //       await showDialog(
+              //         context: context,
+              //         builder: (context) => BlocProvider.value(
+              //           value: context.read<ClientsBloc>(),
+              //           child: const SettingsDialog(),
+              //         ),
+              //       );
+              //     },
+              //   ),
+
+              // ICONO DE LOGOUT
+              // IconButton(
+              //   iconSize: 18,
+              //   icon: const Icon(Icons.logout),
+              //   onPressed: () {
+              //     showLogoutDialog(context);
+              //   },
+              // ),
             ],
           );
         },
       ),
-      actions: [
-        if (user != null)
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(
-              child: Text(
-                user!.tipo,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-          ),
-        Visibility(
-          visible: user != null && user!.tipo == 'ADMIN',
-          child: IconButton(
-            iconSize: 18,
-            icon: const Icon(Icons.settings),
-            onPressed: () async {
-              await showDialog(
-                context: context,
-                builder: (context) => BlocProvider.value(
-                  value: context.read<ClientsBloc>(),
-                  child: const SettingsDialog(),
-                ),
-              );
-            },
-          ),
-        ),
-        IconButton(
-          iconSize: 18,
-          icon: const Icon(Icons.logout),
-          onPressed: () {
-            showLogoutDialog(context);
-          },
-        ),
-        const SizedBox(width: AppDimensions.paddingS),
-      ],
     );
   }
-
-  @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }

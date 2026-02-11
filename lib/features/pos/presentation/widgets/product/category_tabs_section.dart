@@ -22,7 +22,6 @@ class CategoryTabsSection extends StatelessWidget {
         if (state is ProductLoaded) {
           return Container(
             decoration: BoxDecoration(
-              color: Colors.white,
               border: Border(
                 bottom: BorderSide(color: Colors.grey.shade200),
               ),
@@ -32,7 +31,9 @@ class CategoryTabsSection extends StatelessWidget {
               selectedCategory: state.selectedCategory,
               onCategorySelected: (category) {
                 onClearSearch();
-                context.read<ProductBloc>().add(LoadProductsByCategory(category));
+                context
+                    .read<ProductBloc>()
+                    .add(LoadProductsByCategory(category));
                 onCategorySelected(category);
               },
             ),

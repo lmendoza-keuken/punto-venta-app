@@ -30,6 +30,7 @@ class SearchField extends StatelessWidget {
         final uiState = state as UiLoaded;
 
         return SizedBox(
+          width: double.infinity,
           height: AppDimensions.buttonHeightm,
           child: TextField(
             controller: controller,
@@ -68,7 +69,6 @@ class SearchField extends StatelessWidget {
                 borderSide: const BorderSide(color: AppColors.primary, width: 2),
               ),
               filled: true,
-              fillColor: Colors.white,
             ),
             onChanged: uiState.isBarcodeSearchEnabled ? null : onSearchChanged,
             onSubmitted: (value) => onSubmitted(value),

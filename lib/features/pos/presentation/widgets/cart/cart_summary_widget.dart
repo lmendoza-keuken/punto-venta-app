@@ -10,6 +10,7 @@ class CartSummary extends StatelessWidget {
   final double totalIva;
   final double totalConIva;
   final VoidCallback onClear;
+  final VoidCallback onConfirm;
 
   const CartSummary({
     super.key,
@@ -17,6 +18,7 @@ class CartSummary extends StatelessWidget {
     required this.totalIva,
     required this.totalConIva,
     required this.onClear,
+    required this.onConfirm,
   });
 
   @override
@@ -60,17 +62,21 @@ class CartSummary extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppDimensions.paddingS),
-          Row(
-            children: [
-              Expanded(
-                child: CustomButton(
-                  height: 30,
-                  text: AppStrings.empty,
-                  onPressed: onClear,
-                  backgroundColor: AppColors.error,
-                ),
-              ),
-            ],
+          CustomButton(
+            height: 30,
+            width: double.infinity,
+            text: AppStrings.empty,
+            onPressed: onClear,
+            backgroundColor: AppColors.error,
+          ),
+          const SizedBox(height: AppDimensions.paddingS),
+          // cobrar
+          CustomButton(
+            height: 30,
+            width: double.infinity,
+            text: AppStrings.confirm,
+            onPressed: onConfirm,
+            backgroundColor: AppColors.green,
           ),
         ],
       ),

@@ -1,0 +1,396 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
+import 'package:punto_venta_app/core/constants/app_colors.dart';
+import 'package:punto_venta_app/core/constants/app_dimensions.dart';
+import 'package:punto_venta_app/core/utils/extensions.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_event.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_state.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/report/ticket_preview_dialog.dart';
+import 'package:punto_venta_app/injection_container.dart' as di;
+
+class ReportsPage extends StatefulWidget {
+  const ReportsPage({super.key});
+
+  @override
+  State<ReportsPage> createState() => _ReportsPageState();
+}
+
+class _ReportsPageState extends State<ReportsPage>
+    with TickerProviderStateMixin {
+  late TabController _tabController;
+  DateTime selectedDate = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    context.read<ReportsBloc>().add(LoadDailySummary(selectedDate));
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocListener<ReportsBloc, ReportsState>(
+      listener: (context, state) {
+        if (state is TicketPrinted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: AppColors.success,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        } else if (state is ReportsError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      },
+      child: Scaffold(
+        body: Column(
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.all(AppDimensions.paddingM),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                border: Border(
+                  bottom: BorderSide(color: Colors.grey.shade200),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.assessment, color: AppColors.primary, size: 28),
+                  const SizedBox(width: AppDimensions.paddingM),
+                  Text(
+                    'Reportes y Ventas',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Tabs
+            TabBar(
+              controller: _tabController,
+              labelColor: AppColors.primary,
+              unselectedLabelColor: Colors.grey,
+              indicatorColor: AppColors.primary,
+              tabs: const [
+                Tab(
+                  icon: Icon(Icons.calendar_today),
+                  text: 'Resumen Diario',
+                ),
+                Tab(
+                  icon: Icon(Icons.history),
+                  text: 'Historial',
+                ),
+              ],
+              onTap: (index) {
+                if (index == 0) {
+                  context.read<ReportsBloc>().add(LoadDailySummary(selectedDate));
+                } else {
+                  context.read<ReportsBloc>().add(LoadAllReports());
+                }
+              },
+            ),
+
+            // Content
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildDailySummaryTab(),
+                  _buildHistoryTab(),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDailySummaryTab() {
+    return Column(
+      children: [
+        // Date picker
+        Container(
+          padding: const EdgeInsets.all(AppDimensions.paddingM),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade50,
+            border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+          ),
+          child: Row(
+            children: [
+              const Text('Fecha: '),
+              const SizedBox(width: AppDimensions.paddingS),
+              InkWell(
+                onTap: _selectDate,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppDimensions.paddingM,
+                    vertical: AppDimensions.paddingS,
+                  ),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius:
+                        BorderRadius.circular(AppDimensions.borderRadiusS),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.calendar_today,
+                          size: 16, color: AppColors.primary),
+                      const SizedBox(width: AppDimensions.paddingS),
+                      Text(DateFormat('dd/MM/yyyy').format(selectedDate)),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppDimensions.paddingM),
+              ElevatedButton(
+                onPressed: () {
+                  context.read<ReportsBloc>().add(LoadDailySummary(selectedDate));
+                },
+                child: const Text('Actualizar'),
+              ),
+            ],
+          ),
+        ),
+
+        // Summary and orders
+        Expanded(
+          child: BlocBuilder<ReportsBloc, ReportsState>(
+            builder: (context, state) {
+              if (state is ReportsLoading) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (state is ReportsLoaded) {
+                return Column(
+                  children: [
+                    if (state.summary != null)
+                      _buildSummaryCards(state.summary!),
+                    Expanded(
+                      child: _buildOrdersList(state.orders, showDate: false),
+                    ),
+                  ],
+                );
+              } else if (state is ReportsError) {
+                return _buildErrorWidget(state.message);
+              }
+              return const Center(
+                  child: Text('Selecciona una fecha para ver el reporte'));
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHistoryTab() {
+    return BlocBuilder<ReportsBloc, ReportsState>(
+      builder: (context, state) {
+        if (state is ReportsLoading) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (state is ReportsLoaded) {
+          return _buildOrdersList(state.orders, showDate: true);
+        } else if (state is ReportsError) {
+          return _buildErrorWidget(state.message);
+        }
+        return const Center(child: Text('Cargando historial...'));
+      },
+    );
+  }
+
+  Widget _buildSummaryCards(Map<String, dynamic> summary) {
+    return Container(
+      padding: const EdgeInsets.all(AppDimensions.paddingM),
+      child: Row(
+        children: [
+          Expanded(
+              child: _buildSummaryCard(
+                  'Total Ventas',
+                  (summary['total_sales'] as double).formatToCurrency(),
+                  Icons.attach_money,
+                  AppColors.success)),
+          Expanded(
+              child: _buildSummaryCard('Órdenes', '${summary['total_orders']}',
+                  Icons.receipt, AppColors.primary)),
+          Expanded(
+              child: _buildSummaryCard('Artículos', '${summary['total_items']}',
+                  Icons.inventory, AppColors.warning)),
+          Expanded(
+              child: _buildSummaryCard(
+                  'IVA Total',
+                  (summary['total_tax'] as double).formatToCurrency(),
+                  Icons.percent,
+                  AppColors.info)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryCard(
+      String title, String value, IconData icon, Color color) {
+    return Card(
+      child: Container(
+        padding: const EdgeInsets.all(AppDimensions.paddingS),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 32),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOrdersList(List<CompletedOrder> orders,
+      {required bool showDate}) {
+    if (orders.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.receipt_long, size: 64, color: Colors.grey.shade400),
+            const SizedBox(height: AppDimensions.paddingM),
+            Text(
+              'No hay órdenes completadas',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(AppDimensions.paddingM),
+      itemCount: orders.length,
+      itemBuilder: (context, index) {
+        final order = orders[index];
+        return GestureDetector(
+          onTap: () => _showTicketPreview(order),
+          child: Card(
+            margin: const EdgeInsets.only(bottom: AppDimensions.paddingS),
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                child: Text(
+                  '#${order.id}',
+                  style: const TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+              ),
+              title: Text(
+                showDate
+                    ? DateFormat('dd/MM/yyyy HH:mm').format(order.completedAt)
+                    : DateFormat('HH:mm').format(order.completedAt),
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (order.clientName != null)
+                    Text('Cliente: ${order.clientName}'),
+                  Text('${order.items.length} artículos'),
+                  Text('Pago: ${order.paymentMethod}'),
+                ],
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    order.total.formatToCurrency(),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildErrorWidget(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error, color: AppColors.error, size: 64),
+          const SizedBox(height: AppDimensions.paddingM),
+          Text(
+            'Error al cargar reportes',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: AppDimensions.paddingS),
+          Text(message),
+          const SizedBox(height: AppDimensions.paddingM),
+          ElevatedButton(
+            onPressed: () {
+              if (_tabController.index == 0) {
+                context.read<ReportsBloc>().add(LoadDailySummary(selectedDate));
+              } else {
+                context.read<ReportsBloc>().add(LoadAllReports());
+              }
+            },
+            child: const Text('Reintentar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _selectDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null && picked != selectedDate) {
+      setState(() {
+        selectedDate = picked;
+      });
+    }
+  }
+
+  void _showTicketPreview(CompletedOrder order) {
+    showDialog(
+      context: context,
+      builder: (context) => TicketPreviewDialog(order: order),
+    );
+  }
+}

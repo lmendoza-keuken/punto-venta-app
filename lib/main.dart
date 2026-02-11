@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:punto_venta_app/core/themes/theme_cubit.dart';
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_bloc.dart';
@@ -48,6 +49,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        BlocProvider(create: (_) => ThemeCubit()),
         BlocProvider(create: (_) => di.sl<SplashBloc>()),
         BlocProvider(create: (_) => di.sl<AuthBloc>()),
         BlocProvider(create: (_) => di.sl<ProductBloc>()),
