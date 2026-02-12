@@ -61,29 +61,6 @@ class _ReportsPageState extends State<ReportsPage>
       child: Scaffold(
         body: Column(
           children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.all(AppDimensions.paddingM),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                border: Border(
-                  bottom: BorderSide(color: Colors.grey.shade200),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.assessment, color: AppColors.primary, size: 28),
-                  const SizedBox(width: AppDimensions.paddingM),
-                  Text(
-                    'Reportes y Ventas',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-
             // Tabs
             TabBar(
               controller: _tabController,
@@ -92,17 +69,21 @@ class _ReportsPageState extends State<ReportsPage>
               indicatorColor: AppColors.primary,
               tabs: const [
                 Tab(
-                  icon: Icon(Icons.calendar_today),
+                  icon: Icon(Icons.calendar_today, size: 15),
                   text: 'Resumen Diario',
+                  height: 50,
                 ),
                 Tab(
-                  icon: Icon(Icons.history),
+                  icon: Icon(Icons.history, size: 15),
                   text: 'Historial',
+                  height: 50,
                 ),
               ],
               onTap: (index) {
                 if (index == 0) {
-                  context.read<ReportsBloc>().add(LoadDailySummary(selectedDate));
+                  context
+                      .read<ReportsBloc>()
+                      .add(LoadDailySummary(selectedDate));
                 } else {
                   context.read<ReportsBloc>().add(LoadAllReports());
                 }
@@ -131,10 +112,6 @@ class _ReportsPageState extends State<ReportsPage>
         // Date picker
         Container(
           padding: const EdgeInsets.all(AppDimensions.paddingM),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade50,
-            border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
-          ),
           child: Row(
             children: [
               const Text('Fecha: '),
@@ -164,7 +141,9 @@ class _ReportsPageState extends State<ReportsPage>
               const SizedBox(width: AppDimensions.paddingM),
               ElevatedButton(
                 onPressed: () {
-                  context.read<ReportsBloc>().add(LoadDailySummary(selectedDate));
+                  context
+                      .read<ReportsBloc>()
+                      .add(LoadDailySummary(selectedDate));
                 },
                 child: const Text('Actualizar'),
               ),
@@ -217,7 +196,7 @@ class _ReportsPageState extends State<ReportsPage>
 
   Widget _buildSummaryCards(Map<String, dynamic> summary) {
     return Container(
-      padding: const EdgeInsets.all(AppDimensions.paddingM),
+      padding: const EdgeInsets.symmetric(horizontal:  AppDimensions.paddingM),
       child: Row(
         children: [
           Expanded(
@@ -250,18 +229,17 @@ class _ReportsPageState extends State<ReportsPage>
         padding: const EdgeInsets.all(AppDimensions.paddingS),
         child: Column(
           children: [
-            Icon(icon, color: color, size: 32),
             const SizedBox(height: 4),
             Text(
               title,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppColors.textSecondary,
                   ),
             ),
             const SizedBox(height: 4),
             Text(
               value,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: color,
                   ),

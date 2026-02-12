@@ -227,6 +227,7 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
       return product.copyWith(
         barcodes: productBarcodes,
         precio: precio?.priceAsDouble,
+        regularPrice: precio?.regularPriceAsDouble,
         isOnSale: int.tryParse(precio?.isOnSale ?? '0'),  // salePrice indica si está en oferta (ahora deberia ser con isOnSale )
       );
     }).toList();

@@ -28,29 +28,30 @@ class CartSummary extends StatelessWidget {
       child: Column(
         children: [
           const SizedBox(height: AppDimensions.paddingS),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Subtotal:', style: Theme.of(context).textTheme.bodyMedium),
-              Text(subtotal.formatToCurrency(),
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(fontWeight: FontWeight.w600)),
-            ],
-          ),
-          const SizedBox(height: 5),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('IVA:', style: TextStyle(color: Colors.grey[700])),
-              Text(totalIva.formatToCurrency(),
-                  style: const TextStyle(fontWeight: FontWeight.w600)),
-            ],
-          ),
-          const SizedBox(height: 5),
-          Divider(height: 1, color: Colors.grey.shade300),
-          const SizedBox(height: 5),
+          // Subtotal e IVA ocultos por ahora ( deberia verse en la confirmacion ), solo mostrar el total
+          // Row(
+          //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          //   children: [
+          //     Text('Subtotal:', style: Theme.of(context).textTheme.bodyMedium),
+          //     Text(subtotal.formatToCurrency(),
+          //         style: Theme.of(context)
+          //             .textTheme
+          //             .bodyMedium
+          //             ?.copyWith(fontWeight: FontWeight.w600)),
+          //   ],
+          // ),
+          // const SizedBox(height: 5),
+          // Row(
+          //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          //   children: [
+          //     Text('IVA:', style: TextStyle(color: Colors.grey[700])),
+          //     Text(totalIva.formatToCurrency(),
+          //         style: const TextStyle(fontWeight: FontWeight.w600)),
+          //   ],
+          // ),
+          // const SizedBox(height: 5),
+          // Divider(height: 1, color: Colors.grey.shade300),
+          // const SizedBox(height: 5),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [

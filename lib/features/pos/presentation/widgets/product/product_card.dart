@@ -162,22 +162,35 @@ class ProductCard extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          Column(
-                            children: [
-                              Text(
-                                product.precio?.formatToCurrency() ?? '-',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
-                                    ?.copyWith(
-                                      fontSize: isCompact ? 16 : 14,
-                                      fontWeight: FontWeight.bold,
-                                      color: product.isOnSale
-                                          ? AppColors.warning
-                                          : AppColors.primary,
-                                    ),
-                              ),
-                            ],
+                          // Precio tachado si hay oferta
+                          if (product.isOnSale && product.regularPrice != null)
+                            Text(
+                              product.regularPrice?.formatToCurrency() ?? '-',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(
+                                    decoration: TextDecoration.lineThrough,
+                                    decorationColor: AppColors.textSecondary,
+                                    fontSize: isCompact ? 16 : 14,
+                                    fontWeight: FontWeight.bold,
+                                    fontStyle: FontStyle.italic,
+                                    color: AppColors.textSecondary,
+                                  ),
+                            ),
+                          const SizedBox(width: 8),
+                          Text(
+                            product.precio?.formatToCurrency() ?? '-',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  fontSize: isCompact ? 16 : 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: product.isOnSale
+                                      ? AppColors.warning
+                                      : AppColors.primary,
+                                ),
                           ),
                         ],
                       ),

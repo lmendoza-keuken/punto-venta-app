@@ -11,7 +11,7 @@ class PrecioArticuloModel {
   final int listId;
 
   @JsonKey(name: 'regular_price')
-  final String regularPrice; 
+  final String regularPrice;
 
   @JsonKey(name: 'price')
   final String price;
@@ -35,6 +35,14 @@ class PrecioArticuloModel {
   double get priceAsDouble {
     try {
       return double.parse(price.replaceAll(',', '.'));
+    } catch (e) {
+      return 0.0;
+    }
+  }
+
+  double get regularPriceAsDouble {
+    try {
+      return double.parse(regularPrice.replaceAll(',', '.'));
     } catch (e) {
       return 0.0;
     }

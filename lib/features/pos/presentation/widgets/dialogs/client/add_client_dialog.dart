@@ -64,60 +64,99 @@ class _AddClientDialogState extends State<AddClientDialog> {
           backgroundColor: Colors.white,
           elevation: 0,
         ),
-        body: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+        body: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: CustomTextField(
+                                  label: 'Nombre',
+                                  controller: _nameCtrl,
+                                  validator: (v) {
+                                    if (v == null || v.trim().isEmpty)
+                                      return 'Nombre requerido';
+                                    return null;
+                                  }),
+                            ),
+                            const SizedBox(width: AppDimensions.paddingM),
+                            Expanded(
+                              child: CustomTextField(
+                                  label: 'Documento (opcional)',
+                                  controller: _docCtrl),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppDimensions.paddingS),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: CustomTextField(
+                                  label: 'Teléfono (opcional)',
+                                  controller: _phoneCtrl),
+                            ),
+                            const SizedBox(width: AppDimensions.paddingM),
+                            Expanded(
+                              child: CustomTextField(
+                                  label: 'Dirección (opcional)',
+                                  controller: _addressCtrl),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(24.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border(
+                  top: BorderSide(color: Colors.grey.shade200),
+                ),
+              ),
+              child: Row(
                 children: [
-                  CustomTextField(
-                      label: 'Nombre',
-                      controller: _nameCtrl,
-                      validator: (v) {
-                        if (v == null || v.trim().isEmpty)
-                          return 'Nombre requerido';
-                        return null;
-                      }),
-                  const SizedBox(height: AppDimensions.paddingS),
-                  CustomTextField(
-                      label: 'Documento (opcional)', controller: _docCtrl),
-                  const SizedBox(height: AppDimensions.paddingS),
-                  CustomTextField(
-                      label: 'Teléfono (opcional)', controller: _phoneCtrl),
-                  const SizedBox(height: AppDimensions.paddingS),
-                  CustomTextField(
-                      label: 'Dirección (opcional)', controller: _addressCtrl),
-                  const SizedBox(height: 32),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: SizedBox(
-                          height: AppDimensions.buttonHeightS,
-                          child: TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: const Text('Cancelar'),
-                          ),
+                  Expanded(
+                    child: SizedBox(
+                      height: AppDimensions.buttonHeightS,
+                      child: ElevatedButton(
+                        style: ButtonStyle(
+                          backgroundColor:
+                              WidgetStateProperty.all(Colors.grey.shade300),
+                          foregroundColor:
+                              WidgetStateProperty.all(Colors.black87),
                         ),
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('Cancelar'),
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: SizedBox(
-                          height: AppDimensions.buttonHeightS,
-                          child: ElevatedButton(
-                            onPressed: _save,
-                            child: const Text('Guardar'),
-                          ),
-                        ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: SizedBox(
+                      height: AppDimensions.buttonHeightS,
+                      child: ElevatedButton(
+                        onPressed: _save,
+                        child: const Text('Guardar'),
                       ),
-                    ],
+                    ),
                   ),
                 ],
               ),
             ),
-          ),
+          ],
         ),
       ),
     );

@@ -25,7 +25,7 @@ class ProductModel with _$ProductModel {
     @JsonKey(name: 'is_active') String? isActive,
     @JsonKey(name: 'category_description') String? categoryDescription,
     // Se agregan despues con un copywith (depende de la lista de precios actual)
-    @JsonKey(name: 'regular_price') String? regularPrice, // precio anterior (solo mostrar tachado si hay oferta)
+    @JsonKey(name: 'regular_price') double? regularPrice, // precio anterior (solo mostrar tachado si hay oferta)
     @JsonKey(name: 'precio') double? precio, // precio actual (siempre mostrar este)
     @JsonKey(name: 'is_on_sale') int? isOnSale, // 1 si está en oferta, 0 si no
     @JsonKey(name: 'barcodes') List<BarcodeModel>? barcodes,
@@ -60,6 +60,7 @@ class ProductModel with _$ProductModel {
       isActive: isActive ?? 'S',
       categoryDescription: categoryDescription ?? '',
       precio: precioValue,
+      regularPrice: regularPrice,
       isOnSale: (isOnSale ?? 0) == 1,
       barcodes: barcodes,
     );

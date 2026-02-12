@@ -7,7 +7,17 @@ import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/dialogs/logout_dialog.dart';
 import 'package:punto_venta_app/core/themes/theme_cubit.dart';
 import 'package:punto_venta_app/core/widgets/sidebar/sidebar_item.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/client.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/saved_order.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_event.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_event.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/client/add_client_dialog.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/client/select_client_dialog.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/order/load_saved_orders_dialog.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/order/save_order_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/settings_dialog.dart';
 
 /// Sidebar navigation component inspired by modern POS designs
@@ -38,6 +48,11 @@ class AppSidebar extends StatefulWidget {
 
 class _AppSidebarState extends State<AppSidebar> {
   bool _isSettingsDialogOpen = false;
+  bool _isSaveOrderDialogOpen = false;
+  bool _isLoadSavedOrdersDialogOpen = false;
+  bool _isSelectClientDialogOpen = false;
+  bool _isAddClientDialogOpen = false;
+  bool _isLogoutDialogOpen = false;
 
   @override
   Widget build(BuildContext context) {
@@ -47,10 +62,12 @@ class _AppSidebarState extends State<AppSidebar> {
         final sidebarBg = isDark
             ? AppColors.sidebarDarkBackground
             : AppColors.sidebarLightBackground;
-        final sidebarSurface =
-            isDark ? AppColors.sidebarDarkSurface : AppColors.sidebarLightSurface;
-        final sidebarDivider =
-            isDark ? AppColors.sidebarDarkDivider : AppColors.sidebarLightDivider;
+        final sidebarSurface = isDark
+            ? AppColors.sidebarDarkSurface
+            : AppColors.sidebarLightSurface;
+        final sidebarDivider = isDark
+            ? AppColors.sidebarDarkDivider
+            : AppColors.sidebarLightDivider;
 
         return Container(
           width: 80,
@@ -71,7 +88,7 @@ class _AppSidebarState extends State<AppSidebar> {
                 isDark: isDark,
                 sidebarSurface: sidebarSurface,
                 child: SidebarItem(
-                  icon: Icons.home_rounded,
+                  icon: Icons.point_of_sale,
                   isHighlighted: widget.currentRoute == RoutePaths.pos,
                   tooltip: 'Punto de Venta',
                   onTap: () => _navigateTo(context, RoutePaths.pos),
@@ -90,47 +107,97 @@ class _AppSidebarState extends State<AppSidebar> {
                     isDark: isDark,
                     sidebarSurface: sidebarSurface,
                     child: SidebarItem(
-                      icon: Icons.history_rounded,
+                      icon: Icons.request_page_rounded,
                       isHighlighted: widget.currentRoute == RoutePaths.reports,
-                      tooltip: 'Historial',
+                      tooltip: 'Reportes',
                       onTap: widget.onHistoryPressed ??
                           () => _navigateTo(context, RoutePaths.reports),
                     ),
                   ),
-
-                  // Stock / Inventory
-                  _buildNavItem(
-                    context,
-                    isSelected: widget.currentRoute == RoutePaths.stock,
-                    isDark: isDark,
-                    sidebarSurface: sidebarSurface,
-                    child: SidebarItem(
-                      icon: Icons.inventory_2_rounded,
-                      isHighlighted: widget.currentRoute == RoutePaths.stock,
-                      tooltip: 'Inventario',
-                      onTap: () => _navigateTo(context, RoutePaths.stock),
-                    ),
+                  const SizedBox(height: 8),
+                  // Action buttons
+                  Divider(
+                    color: sidebarDivider,
+                    height: 1,
+                    indent: 16,
+                    endIndent: 16,
                   ),
 
-                  // Notifications
-                  _buildNavItem(
-                    context,
-                    isSelected: false,
-                    isDark: isDark,
-                    sidebarSurface: sidebarSurface,
-                    child: SidebarItem(
-                      icon: Icons.notifications_none_rounded,
-                      tooltip: 'Notificaciones',
-                      onTap: widget.onNotificationsPressed,
+                  if (widget.currentRoute == RoutePaths.pos) ...[
+                    const SizedBox(height: 8),
+                    // Guardar pedido
+                    _buildNavItem(
+                      context,
+                      isSelected: _isSaveOrderDialogOpen,
+                      isDark: isDark,
+                      sidebarSurface: sidebarSurface,
+                      child: SidebarItem(
+                        icon: Icons.save_outlined,
+                        isHighlighted: _isSaveOrderDialogOpen,
+                        tooltip: 'Guardar Pedido',
+                        onTap: () => _handleSaveOrder(context),
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 8),
+                    // Cargar pedido guardado
+                    _buildNavItem(
+                      context,
+                      isSelected: _isLoadSavedOrdersDialogOpen,
+                      isDark: isDark,
+                      sidebarSurface: sidebarSurface,
+                      child: SidebarItem(
+                        icon: Icons.folder_open_outlined,
+                        isHighlighted: _isLoadSavedOrdersDialogOpen,
+                        tooltip: 'Cargar Pedido',
+                        onTap: () => _handleLoadOrder(context),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    // Seleccionar cliente
+                    _buildNavItem(
+                      context,
+                      isSelected: _isSelectClientDialogOpen,
+                      isDark: isDark,
+                      sidebarSurface: sidebarSurface,
+                      child: SidebarItem(
+                        icon: Icons.person_search_outlined,
+                        isHighlighted: _isSelectClientDialogOpen,
+                        tooltip: 'Seleccionar Cliente',
+                        onTap: () => _handleSelectClient(context),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    // Agregar cliente
+                    _buildNavItem(
+                      context,
+                      isSelected: _isAddClientDialogOpen,
+                      isDark: isDark,
+                      sidebarSurface: sidebarSurface,
+                      child: SidebarItem(
+                        icon: Icons.person_add_outlined,
+                        isHighlighted: _isAddClientDialogOpen,
+                        tooltip: 'Agregar Cliente',
+                        onTap: () => _handleAddClient(context),
+                      ),
+                    ),
+                  ]
+
+                  // Stock / Inventory (todavia no esta activo pero no eliminar)
+                  // _buildNavItem(
+                  //   context,
+                  //   isSelected: widget.currentRoute == RoutePaths.stock,
+                  //   isDark: isDark,
+                  //   sidebarSurface: sidebarSurface,
+                  //   child: SidebarItem(
+                  //     icon: Icons.inventory_2_rounded,
+                  //     isHighlighted: widget.currentRoute == RoutePaths.stock,
+                  //     tooltip: 'Inventario',
+                  //     onTap: () => _navigateTo(context, RoutePaths.stock),
+                  //   ),
+                  // ),
                 ],
               ),
-
-              // Spacer para empujar el bottom section al final
               const Spacer(),
-
-              // Bottom section
               Divider(
                 color: sidebarDivider,
                 height: 1,
@@ -138,7 +205,6 @@ class _AppSidebarState extends State<AppSidebar> {
                 endIndent: 16,
               ),
               const SizedBox(height: 8),
-
               // Settings (solo si es administrador)
               if (widget.isAdmin)
                 _buildNavItem(
@@ -164,17 +230,20 @@ class _AppSidebarState extends State<AppSidebar> {
                         },
                   ),
                 ),
-
               _buildNavItem(
                 context,
-                isSelected: false,
+                isSelected: _isLogoutDialogOpen,
                 isDark: isDark,
                 sidebarSurface: sidebarSurface,
                 child: SidebarItem(
-                  icon: Icons.logout_rounded,
-                  tooltip: 'Cerrar sesión',
-                  onTap: () => showLogoutDialog(context),
-                ),
+                    icon: Icons.logout_rounded,
+                    isHighlighted: _isLogoutDialogOpen,
+                    tooltip: 'Cerrar sesión',
+                    onTap: () async {
+                      setState(() => _isLogoutDialogOpen = true);
+                      await showLogoutDialog(context);
+                      setState(() => _isLogoutDialogOpen = false);
+                    }),
               ),
 
               // Theme switch
@@ -199,20 +268,12 @@ class _AppSidebarState extends State<AppSidebar> {
   }
 
   Widget _buildThemeToggle(BuildContext context, {required bool isDark}) {
-    final iconColor =
-        isDark ? AppColors.sidebarAccent : AppColors.sidebarIconInactive;
-
     return SizedBox(
-      width: 80,
+      width: 100,
       child: Column(
         children: [
-          Icon(
-            isDark ? Icons.dark_mode : Icons.light_mode,
-            size: 18,
-            color: iconColor,
-          ),
           Transform.scale(
-            scale: 0.7,
+            scale: 0.5,
             child: Switch.adaptive(
               value: isDark,
               onChanged: (_) {
@@ -237,7 +298,7 @@ class _AppSidebarState extends State<AppSidebar> {
     required Color sidebarSurface,
   }) {
     return SizedBox(
-      height: 56,
+      height: 35,
       child: Stack(
         clipBehavior: Clip.none,
         alignment: Alignment.centerLeft,
@@ -276,5 +337,138 @@ class _AppSidebarState extends State<AppSidebar> {
     if (widget.currentRoute != route) {
       context.go(route);
     }
+  }
+
+  // Guardar pedido
+  void _handleSaveOrder(BuildContext context) async {
+    final cartState = context.read<CartBloc>().state;
+    if (cartState is CartLoaded && cartState.items.isNotEmpty) {
+      setState(() => _isSaveOrderDialogOpen = true);
+      await showDialog(
+        context: context,
+        builder: (context) => SaveOrderDialog(
+          cartItems: cartState.items,
+          cartLogItems: cartState.log,
+          total: cartState.total,
+          clientName: null,
+        ),
+      );
+      setState(() => _isSaveOrderDialogOpen = false);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('El carrito está vacío'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  // Cargar pedido guardado
+  void _handleLoadOrder(BuildContext context) async {
+    // Verificar si hay items en el carrito actual
+    final cartState = context.read<CartBloc>().state;
+    if (cartState is CartLoaded && cartState.items.isNotEmpty) {
+      // Preguntar si desea guardar el pedido actual
+
+      final shouldSave = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Pedido en curso'),
+          content: const Text(
+            '¿Desea guardar el pedido actual antes de cargar otro?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('No guardar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Guardar'),
+            ),
+          ],
+        ),
+      );
+
+      // Si el usuario eligió guardar, abrir el diálogo de guardar
+      if (shouldSave == true && mounted) {
+        await showDialog(
+          context: context,
+          builder: (context) => SaveOrderDialog(
+            cartItems: cartState.items,
+            cartLogItems: cartState.log,
+            total: cartState.total,
+            clientName: null,
+          ),
+        );
+      }
+
+      // Si el usuario canceló el diálogo, no continuar
+      if (shouldSave == null) return;
+    }
+
+    // Proceder a cargar el pedido guardado
+    setState(() => _isLoadSavedOrdersDialogOpen = true);
+    final result = await showDialog<SavedOrder>(
+      context: context,
+      builder: (context) => const LoadSavedOrdersDialog(),
+    );
+
+    if (result != null && mounted) {
+      context.read<CartBloc>().add(
+            ReplaceCart(items: result.items, log: result.logs),
+          );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Pedido "${result.name}" cargado exitosamente'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    }
+    setState(() => _isLoadSavedOrdersDialogOpen = false);
+  }
+
+  // Seleccionar cliente
+  void _handleSelectClient(BuildContext context) async {
+    setState(() => _isSelectClientDialogOpen = true);
+    final result = await showDialog(
+      context: context,
+      builder: (context) => BlocProvider.value(
+        value: context.read<ClientsBloc>(),
+        child: const SelectClientDialog(),
+      ),
+    );
+    if (result != null && mounted) {
+      context.read<ClientsBloc>().add(SelectClientEvent(result));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Cliente ${result.name} seleccionado'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+    setState(() => _isSelectClientDialogOpen = false);
+  }
+
+  // Agregar cliente nuevo
+  void _handleAddClient(BuildContext context) async {
+    setState(() => _isAddClientDialogOpen = true);
+    final added = await showDialog(
+      context: context,
+      builder: (context) => BlocProvider.value(
+        value: context.read<ClientsBloc>(),
+        child: const AddClientDialog(),
+      ),
+    );
+    if (added is Client && mounted) {
+      context.read<ClientsBloc>().add(SelectClientEvent(added));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Cliente ${added.name} agregado y seleccionado'),
+        ),
+      );
+    }
+    setState(() => _isAddClientDialogOpen = false);
   }
 }
