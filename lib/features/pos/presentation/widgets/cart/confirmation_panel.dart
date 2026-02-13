@@ -44,7 +44,9 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
           children: [
             // Header del panel de confirmación
             Container(
-              padding: const EdgeInsets.symmetric(horizontal:  AppDimensions.paddingM, vertical: AppDimensions.paddingXS),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: AppDimensions.paddingM,
+                  vertical: AppDimensions.paddingXS),
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(color: Colors.grey.shade200),
@@ -139,23 +141,25 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                       ],
                     ),
 
-                    const SizedBox(height: 24),
-                    const Divider(height: 1),
-                    const SizedBox(height: 24),
+                    // const SizedBox(height: 24),
+                    // const Divider(height: 1),
+                    // const SizedBox(height: 24),
 
-                    // Resumen de totales
-                    Text(
-                      'Resumen',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    const SizedBox(height: 16),
+                    // Detalle de totales (IVA, subtotal)
 
-                    _buildTotalRow('Subtotal:', state.subtotal),
-                    const SizedBox(height: 8),
-                    _buildTotalRow('IVA:', state.totalIva),
-                    const SizedBox(height: 12),
+                    // Text(
+                    //   'Resumen',
+                    //   style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    //         fontWeight: FontWeight.bold,
+                    //       ),
+                    // ),
+                    // const SizedBox(height: 16),
+
+                    // _buildTotalRow('Subtotal:', state.subtotal),
+                    // const SizedBox(height: 8),
+                    // _buildTotalRow('IVA:', state.totalIva),
+                    // const SizedBox(height: 12),
+
                     const Divider(),
                     const SizedBox(height: 12),
                     _buildTotalRow(
@@ -200,7 +204,8 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
             // Botones de acción
             Container(
               padding: const EdgeInsets.symmetric(
-                  horizontal: AppDimensions.paddingL, vertical: AppDimensions.paddingS),
+                  horizontal: AppDimensions.paddingL,
+                  vertical: AppDimensions.paddingS),
               decoration: BoxDecoration(
                 border: Border(
                   top: BorderSide(color: Colors.grey.shade200),
@@ -339,6 +344,8 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
           await di.sl<PrinterLocalDataSource>().getPrinterConfig();
       final priceList =
           await di.sl<PriceListLocalDataSource>().getCurrentPriceList();
+      final localDs = di.sl<AuthLocalDataSource>();
+      final enterprise = await localDs.getCachedEnterprise();
 
       final totalTax = cartState.totalIva;
 
@@ -364,6 +371,9 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
         cashierId: int.tryParse(user?.id ?? ''),
         timestamp: DateTime.now(),
         ticketId: DateTime.now().millisecondsSinceEpoch.toString(),
+        enterprise: enterprise,
+        showSubtotalAndTax: false, // deberia ir por cliente dependiendo de la condicion del cliente. por el momento mockeado 
+        showPricesWithTax: true,
       );
 
       final sendInvoice = di.sl<SendInvoiceUseCase>();

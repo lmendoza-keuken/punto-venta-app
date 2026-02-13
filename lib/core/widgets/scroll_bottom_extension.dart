@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 extension ScrollControllerExtensions on ScrollController {
   void scrollToBottom({
-    Duration duration = const Duration(milliseconds: 300),
+    Duration duration = const Duration(milliseconds: 400),
     Curve curve = Curves.easeOut,
   }) {
     WidgetsBinding.instance.addPostFrameCallback((_) {

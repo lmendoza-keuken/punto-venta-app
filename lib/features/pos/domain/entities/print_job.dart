@@ -1,3 +1,4 @@
+import 'package:punto_venta_app/features/auth/data/models/enterprise_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_item.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/client.dart';
@@ -15,6 +16,9 @@ class PrintJob {
   final int? cashierId;
   final DateTime timestamp;
   final String ticketId;
+  final EnterpriseModel? enterprise;
+  final bool showSubtotalAndTax;
+  final bool showPricesWithTax;
 
   const PrintJob({
     required this.items,
@@ -29,5 +33,8 @@ class PrintJob {
     this.cashierId,
     required this.timestamp,
     required this.ticketId,
+    this.showSubtotalAndTax = true,
+    this.showPricesWithTax = false,
+    this.enterprise,
   });
 }

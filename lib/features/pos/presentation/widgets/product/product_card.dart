@@ -165,7 +165,10 @@ class ProductCard extends StatelessWidget {
                           // Precio tachado si hay oferta
                           if (product.isOnSale && product.regularPrice != null)
                             Text(
-                              product.regularPrice?.formatToCurrency() ?? '-',
+                              (((product.regularPrice ?? 0) *
+                                          (product.vat / 100) +
+                                      (product.regularPrice ?? 0)))
+                                  .formatToCurrency(),
                               style: Theme.of(context)
                                   .textTheme
                                   .titleMedium
@@ -180,7 +183,9 @@ class ProductCard extends StatelessWidget {
                             ),
                           const SizedBox(width: 8),
                           Text(
-                            product.precio?.formatToCurrency() ?? '-',
+                            (((product.precio ?? 0) * (product.vat / 100)) +
+                                    (product.precio ?? 0))
+                                .formatToCurrency(),
                             style: Theme.of(context)
                                 .textTheme
                                 .titleMedium

@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:convert';
-import 'package:punto_venta_app/core/utils/extensions.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/printer_config.dart';
+import 'package:punto_venta_app/features/pos/presentation/utils/ticket_template_builder.dart';
 
 abstract class PrinterSocketDatasource {
   Future<bool> connect(PrinterConfig config);
@@ -57,132 +57,16 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
     if (!_isConnected || _socket == null) return false;
 
     try {
-      // === ENCABEZADO CENTRADO ===
-      await _selectAlignment(1);
-      await _setBold(true);
-      await _printText("SOLUCIONES INFORMATICAS");
-      await _printAndFeedLine();
-      await _printText("KEUKEN, S.A.");
-      await _printAndFeedLine();
-      await _setBold(false);
-      await _printText("Sistema de Punto de Venta");
-      await _printAndFeedLine();
-      await _printText("Tel: (555) 123-4567");
-      await _printAndFeedLine();
-      await _printAndFeedLine();
+      // Generar los comandos del ticket usando el template
+      final templateBuilder = TicketTemplateBuilder(
+        printJob: printJob,
+      );
+      final commands = templateBuilder.build();
 
-      // Separador dinámico
-      await _printText(_buildSeparator('_'));
-      await _printAndFeedLine();
-      await _printAndFeedLine();
-
-      // === INFORMACIÓN DE LA ORDEN (IZQUIERDA) ===
-      await _selectAlignment(0);
-      await _printText("Orden: ${printJob.ticketId}");
-      await _printAndFeedLine();
-      await _printText("Fecha: ${_formatDate(printJob.timestamp)}");
-      await _printAndFeedLine();
-      await _printText("Hora: ${_formatTime(printJob.timestamp)}");
-      await _printAndFeedLine();
-      await _printText("Cajero: ${printJob.cashierName}");
-      await _printAndFeedLine();
-
-      if (printJob.clientName != null && printJob.clientName!.isNotEmpty) {
-        await _printText("Cliente: ${printJob.clientName}");
-        await _printAndFeedLine();
+      // Ejecutar cada comando
+      for (final command in commands) {
+        await _executeCommand(command);
       }
-
-      await _printText(_buildSeparator('_'));
-      await _printAndFeedLine();
-      await _printAndFeedLine();
-
-      // === ITEMS ===
-      await _selectAlignment(0);
-      for (final item in printJob.items) {
-        await _printText(item.product.description);
-        await _printAndFeedLine();
-
-        if (item.isWeighted == true) {
-          final weightKg = (item.weightKg ?? 0.0);
-          final pricePerKg = (item.pricePerKg ?? item.product.precio ?? 0.0);
-  
-
-          final subtotalValue = pricePerKg.formatToCurrency();
-          final weightLabel = "$weightKg kg";
-          final priceLabel = item.product.precio?.formatToCurrency();
-
-          final lineLeft = "  $weightLabel x $priceLabel";
-          final totalSpacesLeft =
-              _lineWidth - lineLeft.length - subtotalValue.length;
-          final spacerLeft = totalSpacesLeft > 0 ? ' ' * totalSpacesLeft : ' ';
-          await _printText("$lineLeft$spacerLeft$subtotalValue");
-          await _printAndFeedLine();
-        } else {
-          final unitPrice = (item.pricePerKg ?? item.product.precio ?? 0.0)
-              .formatToCurrency();
-          final subtotalValue =
-              (item.quantity * (item.pricePerKg ?? item.product.precio ?? 0.0))
-                  .formatToCurrency();
-          final line = "  ${item.quantity} x $unitPrice";
-
-          final totalSpaces = _lineWidth - line.length - subtotalValue.length;
-          final spacer = totalSpaces > 0 ? ' ' * totalSpaces : ' ';
-
-          await _printText("$line$spacer$subtotalValue");
-          await _printAndFeedLine();
-        }
-      }
-
-      // === SEPARADOR ===
-      await _printText(_buildSeparator('-'));
-      await _printAndFeedLine();
-
-      // === TOTALES ===
-      final subtotalAmount =
-          (printJob.total - printJob.totalTax).formatToCurrency();
-      final taxAmount = printJob.totalTax.formatToCurrency();
-      final totalAmount = printJob.total.formatToCurrency();
-
-      await _printLineWithValue("Subtotal:", subtotalAmount);
-      await _printLineWithValue("IVA:", taxAmount);
-      await _printText(_buildSeparator('_'));
-      await _printAndFeedLine();
-
-      // Total en negrita
-      await _printAndFeedLine();
-      await _setBold(true);
-      await _setDoubleHeight(true);
-      await _printLineWithValue("TOTAL:", totalAmount);
-      await _setDoubleHeight(false);
-      await _setBold(false);
-      await _printText(_buildSeparator('_'));
-      await _printAndFeedLine();
-
-      // === INFORMACIÓN ADICIONAL ===
-      await _printAndFeedLine();
-      await _printText(
-          "Metodo de pago: ${printJob.paymentMethod ?? 'Efectivo'}");
-      await _printAndFeedLine();
-      final totalItems =
-          printJob.items.fold(0, (sum, item) => sum + item.quantity);
-      await _printText("Total de articulos: $totalItems");
-      await _printAndFeedLine();
-      await _printAndFeedLine();
-
-      // === CÓDIGO DE BARRAS ===
-      await _selectAlignment(1);
-      await _printBarcode(69, printJob.ticketId);
-      await _printAndFeedLine();
-      await _printAndFeedLine();
-
-      // === PIE DE PÁGINA ===
-      await _printText("Gracias por su compra!");
-      await _printAndFeedLine();
-      await _printAndFeedLine();
-      await _printAndFeedLine();
-
-      // Cortar papel
-      await _selectCutPaperModeAndCutPaper(66, 1);
 
       return true;
     } catch (e) {
@@ -191,25 +75,49 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
     }
   }
 
-  // === MÉTODOS AUXILIARES ===
-
-  String _buildSeparator(String char) {
-    return char * _lineWidth;
+  /// Ejecuta un comando individual del ticket
+  Future<void> _executeCommand(TicketCommand command) async {
+    switch (command.type) {
+      case TicketCommandType.text:
+        await _printText(command.value as String);
+        break;
+      case TicketCommandType.feedLine:
+        await _printAndFeedLine();
+        break;
+      case TicketCommandType.alignment:
+        final align = command.value as TicketAlignment;
+        await _selectAlignment(align == TicketAlignment.left
+            ? 0
+            : align == TicketAlignment.center
+                ? 1
+                : 2);
+        break;
+      case TicketCommandType.bold:
+        await _setBold(command.value as bool);
+        break;
+      case TicketCommandType.doubleHeight:
+        await _setDoubleHeight(command.value as bool);
+        break;
+      case TicketCommandType.barcode:
+        await _printBarcode(69, command.value as String);
+        break;
+      case TicketCommandType.cutPaper:
+        await _selectCutPaperModeAndCutPaper(66, 1);
+        break;
+      case TicketCommandType.lineWithValue:
+        final data = command.value as Map<String, String>;
+        await _printLineWithValue(data['label']!, data['value']!);
+        break;
+    }
   }
+
+  // === MÉTODOS AUXILIARES ===
 
   Future<void> _printLineWithValue(String label, String value) async {
     final totalSpaces = _lineWidth - label.length - value.length;
     final spacer = totalSpaces > 0 ? ' ' * totalSpaces : ' ';
     await _printText("$label$spacer$value");
     await _printAndFeedLine();
-  }
-
-  String _formatDate(DateTime date) {
-    return "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}";
-  }
-
-  String _formatTime(DateTime date) {
-    return "${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}:${date.second.toString().padLeft(2, '0')}";
   }
 
   Future<bool> _initPrinter() async {

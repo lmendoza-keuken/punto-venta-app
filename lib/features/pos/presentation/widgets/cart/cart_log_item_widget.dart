@@ -55,7 +55,7 @@ class CartLogItemWidget extends StatelessWidget {
                             fontWeight: FontWeight.bold),
                       ),
                       Text(
-                        '  •  ${entry.item.product.precio?.formatToCurrency() ?? '-'}  •  ${entry.timestamp.hour.toString().padLeft(2, '0')}:${entry.timestamp.minute.toString().padLeft(2, '0')}',
+                        '  •  ${(((entry.item.product.precio ?? 0) * (entry.item.product.vat / 100)) + (entry.item.product.precio ?? 0)).formatToCurrency()}  •  ${entry.timestamp.hour.toString().padLeft(2, '0')}:${entry.timestamp.minute.toString().padLeft(2, '0')}',
                         style: Theme.of(context)
                             .textTheme
                             .bodySmall
@@ -67,7 +67,7 @@ class CartLogItemWidget extends StatelessWidget {
               ),
             ),
             Text(
-              '$sign ${(entry.item.isWeighted ?? false) ? ((entry.item.pricePerKg ?? 0.0)).formatToCurrency() : ((entry.item.product.precio ?? 0.0) * entry.item.quantity).formatToCurrency()}',
+              '$sign ${(entry.item.isWeighted ?? false) ? ((entry.item.pricePerKg ?? 0.0)).formatToCurrency() : ((((entry.item.product.precio ?? 0.0) * (entry.item.product.vat / 100)) + (entry.item.product.precio ?? 0.0)) * entry.item.quantity).formatToCurrency()}',
               style: Theme.of(context)
                   .textTheme
                   .bodyMedium

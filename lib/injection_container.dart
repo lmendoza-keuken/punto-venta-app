@@ -11,6 +11,7 @@ import 'package:punto_venta_app/features/auth/domain/usecases/authenticate_user_
 import 'package:punto_venta_app/features/auth/domain/usecases/change_chashier_usecase.dart';
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/client_local_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/client_remote_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/completed_orders_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/invoice_remote_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/price_list_local_datasource.dart';
@@ -164,7 +165,10 @@ Future<void> init() async {
     () => CompletedOrdersRepositoryImpl(localDataSource: sl()),
   );
   sl.registerLazySingleton<ClientRepository>(
-    () => ClientRepositoryImpl(localDataSource: sl()),
+    () => ClientRepositoryImpl(
+      localDataSource: sl(),
+      remoteDataSource: sl(),
+    ),
   );
   sl.registerLazySingleton<InvoiceRepository>(
     () => InvoiceRepositoryImpl(remote: sl()),
@@ -221,6 +225,8 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<ClientLocalDataSource>(
       () => ClientLocalDataSourceImpl(sharedPreferences: sl()));
+  sl.registerLazySingleton<ClientRemoteDataSource>(
+      () => ClientRemoteDataSourceImpl(dio: sl()));
   sl.registerLazySingleton<InvoiceRemoteDataSource>(
     () => InvoiceRemoteDataSourceImpl(dio: sl()),
   );

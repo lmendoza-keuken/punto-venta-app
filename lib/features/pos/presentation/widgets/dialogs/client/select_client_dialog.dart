@@ -32,7 +32,6 @@ class _SelectClientDialogState extends State<SelectClientDialog> {
           const SizedBox(width: AppDimensions.paddingS),
           Text('Seleccionar Cliente',
               style: Theme.of(context).textTheme.titleLarge),
-         
         ],
       ),
       content: SizedBox(
@@ -92,7 +91,42 @@ class _SelectClientDialogState extends State<SelectClientDialog> {
                     );
                   }
                   if (state is ClientsError) {
-                    return Center(child: Text('Error: ${state.message}'));
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            color: AppColors.error,
+                            size: 48,
+                          ),
+                          const SizedBox(height: AppDimensions.paddingM),
+                          Text(
+                            'Error al cargar clientes',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: AppDimensions.paddingS),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppDimensions.paddingL,
+                            ),
+                            child: Text(
+                              state.message,
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ),
+                          const SizedBox(height: AppDimensions.paddingL),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              context.read<ClientsBloc>().add(LoadClients());
+                            },
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Reintentar'),
+                          ),
+                        ],
+                      ),
+                    );
                   }
                   return const SizedBox.shrink();
                 },

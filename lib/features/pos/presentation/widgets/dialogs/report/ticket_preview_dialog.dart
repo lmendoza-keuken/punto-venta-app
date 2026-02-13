@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/core/utils/extensions.dart';
+import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
@@ -29,13 +30,65 @@ class TicketPreviewDialog extends StatelessWidget {
   }
 }
 
-class _TicketPreviewContent extends StatelessWidget {
+class _TicketPreviewContent extends StatefulWidget {
   final CompletedOrder order;
 
   const _TicketPreviewContent({required this.order});
 
   @override
+  State<_TicketPreviewContent> createState() => _TicketPreviewContentState();
+}
+
+class _TicketPreviewContentState extends State<_TicketPreviewContent> {
+  PrintJob? _printJob;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializePrintJob();
+  }
+
+  Future<void> _initializePrintJob() async {
+    final localDs = di.sl<AuthLocalDataSource>();
+    final enterprise = await localDs.getCachedEnterprise();
+
+    final printJob = PrintJob(
+      items: widget.order.items,
+      logItems: widget.order.logs,
+      total: widget.order.total,
+      clientName: widget.order.clientName,
+      totalTax: widget.order.totalTax,
+      paymentMethod: widget.order.paymentMethod,
+      cashierName: widget.order.cashierName,
+      timestamp: widget.order.completedAt,
+      ticketId: widget.order.id,
+      enterprise: enterprise,
+      showSubtotalAndTax:
+          false, // deberia ir por cliente dependiendo de la condicion del cliente. por el momento mockeado
+      showPricesWithTax: true,
+    );
+
+    if (mounted) {
+      setState(() {
+        _printJob = printJob;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_printJob == null) {
+      return const Dialog(
+        child: SizedBox(
+          width: 450,
+          height: 200,
+          child: Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+      );
+    }
+
     return BlocListener<PrinterBloc, PrinterState>(
       listener: (context, state) {
         if (state is PrinterSuccess) {
@@ -75,7 +128,7 @@ class _TicketPreviewContent extends StatelessWidget {
                     const Icon(Icons.receipt, color: AppColors.primary),
                     const SizedBox(width: AppDimensions.paddingS),
                     Text(
-                      'Ticket - ${order.orderNumber}',
+                      'Ticket - ${widget.order.orderNumber}',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -149,24 +202,14 @@ class _TicketPreviewContent extends StatelessWidget {
   }
 
   void _handlePrint(BuildContext context) async {
+    if (_printJob == null) return;
+
     final printerConfig =
         await di.sl<PrinterLocalDataSource>().getPrinterConfig();
 
-    final printJob = PrintJob(
-      items: order.items,
-      logItems: order.logs,
-      total: order.total,
-      clientName: order.clientName,
-      totalTax: order.totalTax,
-      paymentMethod: order.paymentMethod,
-      cashierName: order.cashierName,
-      timestamp: order.completedAt,
-      ticketId: order.id,
-    );
-
     // Disparar evento de impresión
     context.read<PrinterBloc>().add(PrintTicket(
-          printJob: printJob,
+          printJob: _printJob!,
           config: printerConfig,
         ));
   }
@@ -187,22 +230,16 @@ class _TicketPreviewContent extends StatelessWidget {
             Center(
               child: Column(
                 children: [
-                  const Text(
-                    'SOLUCIONES INFORMATICAS',
-                    style: TextStyle(
+                  Text(
+                    _printJob!.enterprise?.name ?? '',
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const Text(
-                    'KEUKEN, S.A.',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+
                   const Text('Sistema de Punto de Venta'),
-                  const Text('Tel: (555) 123-4567'),
+                  // const Text('Tel: (555) 123-4567'),
                   const SizedBox(height: 16),
                   Container(
                     height: 1,
@@ -214,19 +251,20 @@ class _TicketPreviewContent extends StatelessWidget {
             ),
 
             // Información de la orden
-            Text('Orden: ${order.orderNumber}'),
+            Text('Orden: ${widget.order.orderNumber}'),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                    'Fecha: ${DateFormat('dd/MM/yyyy').format(order.completedAt)}'),
+                    'Fecha: ${DateFormat('dd/MM/yyyy').format(widget.order.completedAt)}'),
                 Text(
-                    'Hora: ${DateFormat('HH:mm:ss').format(order.completedAt)}'),
+                    'Hora: ${DateFormat('HH:mm:ss').format(widget.order.completedAt)}'),
               ],
             ),
-            Text('Cajero: ${order.cashierName}'),
-            if (order.clientName != null && order.clientName!.isNotEmpty)
-              Text('Cliente: ${order.clientName}'),
+            Text('Cajero: ${widget.order.cashierName}'),
+            if (widget.order.clientName != null &&
+                widget.order.clientName!.isNotEmpty)
+              Text('Cliente: ${widget.order.clientName}'),
 
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 12),
@@ -236,52 +274,56 @@ class _TicketPreviewContent extends StatelessWidget {
             ),
 
             // Items
-            ...order.items
-                .map((item) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+            ...widget.order.items.map((item) {
+              final basePrice = item.pricePerKg ?? item.product.precio ?? 0.0;
+              final displayPrice = _printJob!.showPricesWithTax
+                  ? _calculatePriceWithTax(basePrice, item.product.vat)
+                  : basePrice;
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.product.description,
+                      style: const TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                    if (item.isWeighted == true)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            item.product.description,
-                            style: const TextStyle(fontWeight: FontWeight.w500),
+                            '  ${item.weightKg ?? '-'} kg x ${displayPrice.formatToCurrency()}',
+                            style: TextStyle(
+                                fontSize: 12, color: Colors.grey[600]),
                           ),
-                          if (item.isWeighted == true)
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  '  ${item.weightKg ?? '-'} kg x ${item.product.precio?.formatToCurrency() ?? '-'}',
-                                  style: TextStyle(
-                                      fontSize: 12, color: Colors.grey[600]),
-                                ),
-                                Text(
-                                  item.pricePerKg?.formatToCurrency() ?? '-',
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.w500),
-                                ),
-                              ],
-                            ),
-                          if (item.isWeighted != true)
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '  ${item.quantity} x ${item.product.precio?.formatToCurrency() ?? '-'}',
-                                style: TextStyle(
-                                    fontSize: 12, color: Colors.grey[600]),
-                              ),
-                              Text(
-                                item.totalPrice.formatToCurrency(),
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w500),
-                              ),
-                            ],
+                          Text(
+                            ((item.weightKg ?? 0.0) * displayPrice)
+                                .formatToCurrency(),
+                            style: const TextStyle(fontWeight: FontWeight.w500),
                           ),
                         ],
                       ),
-                    ))
-                .toList(),
+                    if (item.isWeighted != true)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '  ${item.quantity} x ${displayPrice.formatToCurrency()}',
+                            style: TextStyle(
+                                fontSize: 12, color: Colors.grey[600]),
+                          ),
+                          Text(
+                            (item.quantity * displayPrice).formatToCurrency(),
+                            style: const TextStyle(fontWeight: FontWeight.w500),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              );
+            }).toList(),
 
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 8),
@@ -291,27 +333,30 @@ class _TicketPreviewContent extends StatelessWidget {
             ),
 
             // Totales
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Subtotal:'),
-                Text((order.total - order.totalTax).formatToCurrency()),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('IVA:'),
-                Text(order.totalTax.formatToCurrency()),
-              ],
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: Divider(
-                color: Colors.black,
-                thickness: 2,
+            if (_printJob!.showSubtotalAndTax) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Subtotal:'),
+                  Text((widget.order.total - widget.order.totalTax)
+                      .formatToCurrency()),
+                ],
               ),
-            ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('IVA:'),
+                  Text(widget.order.totalTax.formatToCurrency()),
+                ],
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Divider(
+                  color: Colors.black,
+                  thickness: 2,
+                ),
+              ),
+            ],
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -320,7 +365,7 @@ class _TicketPreviewContent extends StatelessWidget {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  order.total.formatToCurrency(),
+                  widget.order.total.formatToCurrency(),
                   style: const TextStyle(
                       fontSize: 18, fontWeight: FontWeight.bold),
                 ),
@@ -338,8 +383,8 @@ class _TicketPreviewContent extends StatelessWidget {
             const SizedBox(height: 8),
 
             // Información adicional
-            Text('Método de pago: ${order.paymentMethod}'),
-            Text('Total de artículos: ${order.totalItems}'),
+            Text('Método de pago: ${widget.order.paymentMethod}'),
+            Text('Total de artículos: ${widget.order.totalItems}'),
 
             const SizedBox(height: 16),
             const Center(
@@ -352,5 +397,10 @@ class _TicketPreviewContent extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  double _calculatePriceWithTax(double price, double? taxPercentage) {
+    final tax = (taxPercentage ?? 0.0) / 100;
+    return price * (1 + tax);
   }
 }

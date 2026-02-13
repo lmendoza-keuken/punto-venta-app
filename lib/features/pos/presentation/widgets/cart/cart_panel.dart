@@ -68,7 +68,11 @@ class _CartPanelState extends State<CartPanel> {
                             if (state is CartLoaded && !isBarcodeMode) {
                               if (state.log.length != _lastLogLength) {
                                 _lastLogLength = state.log.length;
-                                _scrollController.scrollToBottom();
+                                WidgetsBinding.instance.addPostFrameCallback((_) {
+                                  if (_scrollController.hasClients) {
+                                    _scrollController.scrollToBottom();
+                                  }
+                                });
                               }
                             } else {
                               _lastLogLength = 0;
@@ -76,6 +80,13 @@ class _CartPanelState extends State<CartPanel> {
                           },
                           builder: (context, state) {
                             if (state is CartLoaded) {
+                              if (!isBarcodeMode && state.log.isNotEmpty) {
+                                WidgetsBinding.instance.addPostFrameCallback((_) {
+                                  if (_scrollController.hasClients) {
+                                    _scrollController.scrollToBottom();
+                                  }
+                                });
+                              }
                               double subtotal = state.subtotal;
                               double totalIva = state.totalIva;
                               double totalConIva = subtotal + totalIva;

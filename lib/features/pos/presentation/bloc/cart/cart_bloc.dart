@@ -26,6 +26,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       weightKg: event.weightKg,
       pricePerKg: event.pricePerKg,
     );
+    
     final totalItems = manageCartUsecase.getTotalItems(newItems);
 
     final totals = _calculateSubtotalAndIva(newItems);
@@ -142,7 +143,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       final isWeighted = it.isWeighted ?? false;
       final pricePerKg = it.pricePerKg ?? 0.0;
       final cantidad = it.quantity;
-      final tasaIva = (it.iva ?? 0) / 100;
+      final tasaIva = (it.iva) / 100;
 
       if (isWeighted) {
         final precioTotal = pricePerKg;

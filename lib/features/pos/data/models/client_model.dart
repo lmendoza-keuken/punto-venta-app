@@ -39,6 +39,7 @@ class ClientModel {
     );
   }
 
+  // Para datos locales (SharedPreferences)
   factory ClientModel.fromJson(Map<String, dynamic> json) {
     return ClientModel(
       id: json['id'] as String,
@@ -47,6 +48,30 @@ class ClientModel {
       phone: json['phone'] as String?,
       email: json['email'] as String?,
       address: json['address'] as String?,
+    );
+  }
+
+  // Para datos del backend
+  factory ClientModel.fromBackendJson(Map<String, dynamic> json) {
+    final String document;
+    final cuit = json['cuit'] as String? ?? '';
+    final dni = json['dni'] as String? ?? '';
+    
+    if (cuit.isNotEmpty) {
+      document = cuit;
+    } else if (dni.isNotEmpty) {
+      document = dni;
+    } else {
+      document = '';
+    }
+
+    return ClientModel(
+      id: json['id'].toString(), 
+      name: json['business_name'] as String? ?? '',
+      document: document.isNotEmpty ? document : null,
+      address: json['address'] as String?,
+      phone: null, 
+      email: null, 
     );
   }
 

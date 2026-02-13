@@ -237,6 +237,8 @@ Future<void> showPrinterSettingsDialog(BuildContext context) async {
                           cashierName: 'Ticket Prueba',
                           timestamp: DateTime.now(),
                           ticketId: 'TEST-${DateTime.now().millisecondsSinceEpoch}',
+                          showSubtotalAndTax: true,
+                          showPricesWithTax: false,
                         );
 
                         context.read<PrinterBloc>().add(

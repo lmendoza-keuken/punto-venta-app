@@ -177,6 +177,8 @@ class ConfirmDialogContent extends StatelessWidget {
         cashierId: int.tryParse(user?.id ?? ''),
         timestamp: DateTime.now(),
         ticketId: DateTime.now().millisecondsSinceEpoch.toString(),
+        showSubtotalAndTax: true,
+        showPricesWithTax: false,
       );
 
       final sendInvoice = di.sl<SendInvoiceUseCase>();

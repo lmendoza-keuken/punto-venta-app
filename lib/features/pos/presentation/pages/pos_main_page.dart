@@ -189,7 +189,11 @@ class _PosMainPageState extends State<PosMainPage> {
         if (state is CartLoaded) {
           if (state.log.length != _lastLogLength) {
             _lastLogLength = state.log.length;
-            _catalogLogScrollController.scrollToBottom();
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (_catalogLogScrollController.hasClients) {
+                _catalogLogScrollController.scrollToBottom();
+              }
+            });
           }
         } else {
           _lastLogLength = 0;
@@ -197,6 +201,12 @@ class _PosMainPageState extends State<PosMainPage> {
       },
       builder: (context, state) {
         if (state is CartLoaded) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (_catalogLogScrollController.hasClients && state.log.isNotEmpty) {
+              _catalogLogScrollController.scrollToBottom();
+            }
+          });
+
           if (state.log.isEmpty) {
             return Center(
               child: Column(
