@@ -14,10 +14,14 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_event.d
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_state.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/payment_methods_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/payment_methods_event.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/payment_methods_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/cart/cash_payment_widget.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/cart/payment_option_widget.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 class ConfirmationPanel extends StatefulWidget {
@@ -91,59 +95,120 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                           ),
                     ),
                     const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(AppDimensions.paddingM),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppColors.primary.withOpacity(0.3),
-                        ),
-                      ),
-                      child: Row(
-                        children: const [
-                          Icon(Icons.info_outline,
-                              size: 20, color: AppColors.primary),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'Por el momento solo está habilitado el pago en efectivo.',
-                              style: TextStyle(
-                                fontSize: 14,
+                    BlocBuilder<PaymentMethodsBloc, PaymentMethodsState>(
+                      builder: (context, pmState) {
+                        if (pmState is PaymentMethodsLoading) {
+                          return const Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+
+                        if (pmState is PaymentMethodsError) {
+                          return Container(
+                            padding:
+                                const EdgeInsets.all(AppDimensions.paddingM),
+                            decoration: BoxDecoration(
+                              color: AppColors.error.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: AppColors.error.withOpacity(0.3),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      spacing: AppDimensions.paddingS,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Opciones de pago
-                        _buildPaymentOption(
-                          icon: Icons.attach_money,
-                          iconColor: AppColors.success,
-                          title: 'Efectivo',
-                          subtitle: 'Opción habilitada',
-                          enabled: true,
-                        ),
-                        _buildPaymentOption(
-                          icon: Icons.credit_card,
-                          iconColor: Colors.grey,
-                          title: 'Tarjeta',
-                          subtitle: 'No disponible',
-                          enabled: false,
-                        ),
-                        _buildPaymentOption(
-                          icon: Icons.phone_iphone,
-                          iconColor: Colors.grey,
-                          title: 'MercadoPago / QR',
-                          subtitle: 'No disponible',
-                          enabled: false,
-                        ),
-                      ],
+                            child: Row(
+                              children: [
+                                Icon(Icons.error_outline,
+                                    size: 20, color: AppColors.error),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    'Error al cargar métodos de pago: ${pmState.message}',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        if (pmState is PaymentMethodsLoaded) {
+                          final paymentMethods = pmState.paymentMethods;
+
+                          // Filtrar solo el método de efectivo (por ahora)
+                          final cashPayment = paymentMethods
+                              .where((pm) =>
+                                  pm.description.toLowerCase().contains('efectivo') ||
+                                  pm.shortDescription
+                                      .toLowerCase()
+                                      .contains('efectivo'))
+                              .firstOrNull;
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (paymentMethods.isEmpty)
+                                Container(
+                                  padding: const EdgeInsets.all(
+                                      AppDimensions.paddingM),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.warning.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: AppColors.warning
+                                          .withOpacity(0.3),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.warning,
+                                          size: 20,
+                                          color: AppColors.warning),
+                                      const SizedBox(width: 12),
+                                      const Expanded(
+                                        child: Text(
+                                          'No hay métodos de pago disponibles',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              else
+                                Wrap(
+                                  spacing: AppDimensions.paddingM,
+                                  runSpacing: AppDimensions.paddingM,
+                                  children: [
+                                    if (cashPayment != null)
+                                      SizedBox(
+                                        width: 120,
+                                        child: PaymentOptionWidget(
+                                          paymentMethod: cashPayment,
+                                          isSelected:
+                                              pmState.selectedPaymentMethod
+                                                      ?.id ==
+                                                  cashPayment.id,
+                                          isEnabled: true,
+                                          onTap: () {
+                                            context
+                                                .read<PaymentMethodsBloc>()
+                                                .add(SelectPaymentMethodEvent(
+                                                    cashPayment));
+                                          },
+                                          icon: Icons.attach_money,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                            ],
+                          );
+                        }
+
+                        return const SizedBox.shrink();
+                      },
                     ),
 
                     const SizedBox(height: 24),
@@ -276,37 +341,6 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
     );
   }
 
-  Widget _buildPaymentOption({
-    required IconData icon,
-    required Color iconColor,
-    required String title,
-    required String subtitle,
-    required bool enabled,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(AppDimensions.paddingS),
-      decoration: BoxDecoration(
-        color: enabled
-            ? AppColors.success.withOpacity(0.05)
-            : Colors.grey.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: enabled
-              ? AppColors.success.withOpacity(0.3)
-              : Colors.grey.withOpacity(0.2),
-        ),
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: iconColor.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Icon(icon, color: iconColor, size: 20),
-      ),
-    );
-  }
-
   Future<void> _confirmSale(BuildContext context, CartLoaded cartState) async {
     setState(() {
       _isProcessingSale = true;
@@ -330,6 +364,15 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
       final clientsState = context.read<ClientsBloc>().state;
       final selectedClient =
           clientsState is ClientsLoaded ? clientsState.selectedClient : null;
+
+      // Obtener método de pago seleccionado del PaymentMethodsBloc
+      final paymentMethodsState = context.read<PaymentMethodsBloc>().state;
+      final selectedPaymentMethod =
+          paymentMethodsState is PaymentMethodsLoaded
+              ? paymentMethodsState.selectedPaymentMethod
+              : null;
+      final paymentMethodDescription =
+          selectedPaymentMethod?.shortDescription ?? 'Efectivo';
 
       bool showSubtotalAndTax = false;
       bool showPricesWithTax = true;
@@ -365,7 +408,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
         client: selectedClient,
         priceListId: priceList,
         totalTax: totalTax,
-        paymentMethod: 'Efectivo',
+        paymentMethod: paymentMethodDescription,
         cashierName: user?.name ?? 'Desconocido',
         cashierId: int.tryParse(user?.id ?? ''),
         timestamp: DateTime.now(),

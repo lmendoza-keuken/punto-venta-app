@@ -16,6 +16,7 @@ import 'package:punto_venta_app/features/pos/data/datasources/completed_orders_l
 import 'package:punto_venta_app/features/pos/data/datasources/invoice_remote_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/app_config_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/app_config_remote_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/payment_method_remote_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/price_list_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/printer_socket_datasource.dart';
@@ -25,10 +26,12 @@ import 'package:punto_venta_app/features/pos/data/repositories/client_repository
 import 'package:punto_venta_app/features/pos/data/repositories/completed_orders_repository_impl.dart';
 import 'package:punto_venta_app/features/pos/data/repositories/invoice_repository_impl.dart';
 import 'package:punto_venta_app/features/pos/data/repositories/app_config_repository_impl.dart';
+import 'package:punto_venta_app/features/pos/data/repositories/payment_method_repository_impl.dart';
 import 'package:punto_venta_app/features/pos/data/repositories/printer_repository_impl.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/client_repository.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/completed_orders_repository.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/app_config_repository.dart';
+import 'package:punto_venta_app/features/pos/domain/repositories/payment_method_repository.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/printer_repository.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/product_repository.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/saved_orders_repository.dart';
@@ -36,6 +39,7 @@ import 'package:punto_venta_app/features/pos/domain/usecases/add_client_usecase.
 import 'package:punto_venta_app/features/pos/domain/usecases/complete_order_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/delete_client_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_app_config_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/fetch_payment_methods_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_clients_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_app_config_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_reports_usecase.dart';
@@ -44,6 +48,7 @@ import 'package:punto_venta_app/features/pos/domain/usecases/print_ticket_usecas
 import 'package:punto_venta_app/features/pos/domain/usecases/send_invoice_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/update_app_config_usecase.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/payment_methods_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_bloc.dart';
 import 'package:punto_venta_app/features/stock/data/datasources/stock_local_datasource.dart';
@@ -145,6 +150,7 @@ Future<void> init() async {
   sl.registerFactory(() => ReportsBloc(getReportsUsecase: sl()));
   sl.registerFactory(
       () => ClientsBloc(getClients: sl(), addClient: sl(), deleteClient: sl()));
+  sl.registerFactory(() => PaymentMethodsBloc(fetchPaymentMethods: sl()));
   // sl.registerFactory(() => PrinterBloc(printTicketUsecase: sl()));
 
   // Use cases
@@ -161,6 +167,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetAppConfigUsecase(sl()));
   sl.registerLazySingleton(() => FetchAppConfigUsecase(sl()));
   sl.registerLazySingleton(() => UpdateAppConfigUsecase(sl()));
+  sl.registerLazySingleton(() => FetchPaymentMethodsUsecase(sl()));
 
   // sl.registerLazySingleton(() => PrintTicketUsecase(sl()));
 
@@ -188,6 +195,9 @@ Future<void> init() async {
       localDataSource: sl(),
       remoteDataSource: sl(),
     ),
+  );
+  sl.registerLazySingleton<PaymentMethodRepository>(
+    () => PaymentMethodRepositoryImpl(remoteDataSource: sl()),
   );
 
   // ===== PRINTER =====
@@ -254,6 +264,9 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<PriceListLocalDataSource>(
     () => PriceListLocalDataSourceImpl(sharedPreferences: sl()),
+  );
+  sl.registerLazySingleton<PaymentMethodRemoteDatasource>(
+    () => PaymentMethodRemoteDatasourceImpl(dio: sl()),
   );
 
   //! Features - Stock

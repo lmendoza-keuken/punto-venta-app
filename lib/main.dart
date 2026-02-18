@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/themes/theme_cubit.dart';
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/payment_methods_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_bloc.dart';
 import 'package:punto_venta_app/firebase_options.dart';
@@ -59,6 +60,7 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_) => di.sl<ReportsBloc>()),
         BlocProvider(create: (_) => di.sl<ClientsBloc>()),
         BlocProvider(create: (_) => di.sl<PrinterBloc>()),
+        BlocProvider(create: (_) => di.sl<PaymentMethodsBloc>()),
       ],
       child: const PosApp(),
     );
