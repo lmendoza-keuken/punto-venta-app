@@ -50,18 +50,25 @@ class _AddClientDialogState extends State<AddClientDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+
     return Dialog(
       insetAnimationDuration: Duration.zero,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 40),
+      insetPadding: EdgeInsets.only(
+        left: 40,
+        right: 40,
+        top: 40,
+        bottom:
+            keyboardHeight > 0 ? 20 : 40, 
+      ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.all(Radius.circular(20.0)),
       ),
       child: Scaffold(
-        resizeToAvoidBottomInset: false,
+        resizeToAvoidBottomInset: true,
         appBar: AppBar(
           automaticallyImplyLeading: true,
           title: const Text('Agregar Cliente'),
-          backgroundColor: Colors.white,
           elevation: 0,
         ),
         body: Column(
@@ -120,12 +127,6 @@ class _AddClientDialogState extends State<AddClientDialog> {
             ),
             Container(
               padding: const EdgeInsets.all(24.0),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border(
-                  top: BorderSide(color: Colors.grey.shade200),
-                ),
-              ),
               child: Row(
                 children: [
                   Expanded(

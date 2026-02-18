@@ -55,6 +55,10 @@ class _SaveOrderDialogState extends State<SaveOrderDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    final availableHeight = screenHeight - keyboardHeight - 200;
+
     return BlocListener<SavedOrdersBloc, SavedOrdersState>(
       listener: (context, state) {
         if (state is OrderSaved) {
@@ -86,76 +90,79 @@ class _SaveOrderDialogState extends State<SaveOrderDialog> {
         ),
         content: SizedBox(
           width: 400,
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Información del pedido
-                Container(
-                  padding: const EdgeInsets.all(AppDimensions.paddingM),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    borderRadius:
-                        BorderRadius.circular(AppDimensions.borderRadiusM),
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Artículos:',
-                              style: Theme.of(context).textTheme.titleMedium),
-                          Text('${widget.cartItems.length}',
+          height: availableHeight.clamp(250.0, 400.0),
+          child: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Información del pedido
+                  Container(
+                    padding: const EdgeInsets.all(AppDimensions.paddingM),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      borderRadius:
+                          BorderRadius.circular(AppDimensions.borderRadiusM),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Artículos:',
+                                style: Theme.of(context).textTheme.titleMedium),
+                            Text('${widget.cartItems.length}',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Total:',
+                                style: Theme.of(context).textTheme.titleMedium),
+                            Text(
+                              widget.total.formatToCurrency(),
                               style: Theme.of(context)
                                   .textTheme
                                   .titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Total:',
-                              style: Theme.of(context).textTheme.titleMedium),
-                          Text(
-                            widget.total.formatToCurrency(),
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.primary,
-                                ),
-                          ),
-                        ],
-                      ),
-                    ],
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.primary,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppDimensions.paddingM),
+                  const SizedBox(height: AppDimensions.paddingM),
 
-                // Nombre del pedido
-                CustomTextField(
-                  label: 'Nombre del pedido *',
-                  controller: _nameController,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'El nombre del pedido es requerido';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: AppDimensions.paddingM),
+                  // Nombre del pedido
+                  CustomTextField(
+                    label: 'Nombre del pedido *',
+                    controller: _nameController,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'El nombre del pedido es requerido';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: AppDimensions.paddingM),
 
-                // Cliente (opcional)
-                CustomTextField(
-                  label: 'Cliente (opcional)',
-                  controller: _clientController,
-                  hint: 'Nombre del cliente',
-                ),
-              ],
+                  // Cliente (opcional)
+                  CustomTextField(
+                    label: 'Cliente (opcional)',
+                    controller: _clientController,
+                    hint: 'Nombre del cliente',
+                  ),
+                ],
+              ),
             ),
           ),
         ),

@@ -7,6 +7,8 @@ import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_event.dart';
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_state.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_event.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 Future<void> showLogoutDialog(BuildContext context) async {
@@ -64,6 +66,7 @@ Future<void> showLogoutDialog(BuildContext context) async {
                       subtitle: 'Mantener sesión de empresa activa',
                       onTap: () {
                         Navigator.of(dialogContext).pop();
+                        context.read<CartBloc>().add(ClearCart());
                         context.read<AuthBloc>().add(ChangeCashierRequested());
 
                         context.go(
@@ -84,7 +87,11 @@ Future<void> showLogoutDialog(BuildContext context) async {
                     backgroundColor: Colors.red.withValues(alpha: 0.1),
                     title: 'Cerrar Sesión Completa',
                     subtitle: 'Salir de la aplicación',
-                    onTap: () {
+                    onTap: () async {
+                      await localDataSource.logout();
+                      await localDataSource.clearEnterprise();
+                      await localDataSource.clearEmail();
+                      context.read<CartBloc>().add(ClearCart());
                       context.read<AuthBloc>().add(LogoutRequested());
                       Navigator.of(dialogContext).pop();
                       context.go(RoutePaths.login);
