@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_state.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/fetch_app_config_usecase.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_state.dart';
@@ -19,6 +20,7 @@ import 'package:punto_venta_app/features/pos/presentation/widgets/catalog/catalo
 import 'package:punto_venta_app/features/pos/presentation/widgets/product/integrated_search_bar.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/product/category_tabs_section.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/product/product_grid_section.dart';
+import 'package:punto_venta_app/injection_container.dart' as di;
 
 class PosMainPage extends StatefulWidget {
   const PosMainPage({super.key});
@@ -39,6 +41,17 @@ class _PosMainPageState extends State<PosMainPage> {
 
     if (context.read<CartBloc>().state is! CartLoaded) {
       context.read<CartBloc>().add(ClearCart());
+    }
+
+    _fetchAppConfig();
+  }
+
+  Future<void> _fetchAppConfig() async {
+    try {
+      final fetchAppConfigUsecase = di.sl<FetchAppConfigUsecase>();
+      await fetchAppConfigUsecase();
+    } catch (e) {
+      print('⚠️ No se pudo obtener configuración de sucursal: $e');
     }
   }
 
@@ -202,7 +215,8 @@ class _PosMainPageState extends State<PosMainPage> {
       builder: (context, state) {
         if (state is CartLoaded) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (_catalogLogScrollController.hasClients && state.log.isNotEmpty) {
+            if (_catalogLogScrollController.hasClients &&
+                state.log.isNotEmpty) {
               _catalogLogScrollController.scrollToBottom();
             }
           });

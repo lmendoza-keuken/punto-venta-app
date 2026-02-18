@@ -9,7 +9,7 @@ class ClientsBloc extends Bloc<ClientsEvent, ClientsState> {
   final GetClientsUsecase getClients;
   final AddClientUsecase addClient;
   final DeleteClientUsecase deleteClient;
- 
+
   ClientsBloc({
     required this.getClients,
     required this.addClient,
@@ -23,10 +23,18 @@ class ClientsBloc extends Bloc<ClientsEvent, ClientsState> {
 
   Future<void> _onLoadClients(
       LoadClients event, Emitter<ClientsState> emit) async {
+    // Preservar el cliente seleccionado actual
+    final currentState = state;
+    final currentSelectedClient =
+        currentState is ClientsLoaded ? currentState.selectedClient : null;
+
     emit(ClientsLoading());
     try {
       final clients = await getClients();
-      emit(ClientsLoaded(clients: clients));
+      emit(ClientsLoaded(
+        clients: clients,
+        selectedClient: currentSelectedClient,
+      ));
     } catch (e) {
       emit(ClientsError(e.toString()));
     }
@@ -48,7 +56,17 @@ class ClientsBloc extends Bloc<ClientsEvent, ClientsState> {
     try {
       await deleteClient.call(event.clientId);
       final clients = await getClients();
-      emit(ClientsLoaded(clients: clients));
+
+      // Si el cliente eliminado era el seleccionado, deseleccionar
+      final currentState = state;
+      final currentSelectedClient =
+          currentState is ClientsLoaded ? currentState.selectedClient : null;
+
+      final selectedClient = currentSelectedClient?.id == event.clientId
+          ? null
+          : currentSelectedClient;
+
+      emit(ClientsLoaded(clients: clients, selectedClient: selectedClient));
     } catch (e) {
       emit(ClientsError(e.toString()));
     }

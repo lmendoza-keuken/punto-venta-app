@@ -36,9 +36,135 @@ class _SelectClientDialogState extends State<SelectClientDialog> {
       ),
       content: SizedBox(
         width: 600,
-        height: 480,
+        height: 540,
         child: Column(
           children: [
+            // Cliente actualmente seleccionado
+            BlocBuilder<ClientsBloc, ClientsState>(
+              builder: (context, state) {
+                final selectedClient =
+                    state is ClientsLoaded ? state.selectedClient : null;
+
+                return Container(
+                  padding: const EdgeInsets.all(AppDimensions.paddingM),
+                  margin: const EdgeInsets.only(bottom: AppDimensions.paddingM),
+                  decoration: BoxDecoration(
+                    color: selectedClient == null
+                        ? AppColors.warning.withOpacity(0.1)
+                        : AppColors.success.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: selectedClient == null
+                          ? AppColors.warning.withOpacity(0.3)
+                          : AppColors.success.withOpacity(0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        selectedClient == null
+                            ? Icons.person_off
+                            : Icons.person,
+                        color: selectedClient == null
+                            ? AppColors.warning
+                            : AppColors.success,
+                        size: 32,
+                      ),
+                      const SizedBox(width: AppDimensions.paddingM),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Cliente Actual',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelSmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                            const SizedBox(height: 4),
+                            if (selectedClient != null) ...[
+                              Text(
+                                selectedClient.name,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
+                              if (selectedClient.document != null)
+                                Text(
+                                  selectedClient.document!,
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                            ] else ...[
+                              Row(
+                                children: [
+                                  Text(
+                                    'Sin cliente seleccionado',
+                                    style:
+                                        Theme.of(context).textTheme.bodyMedium,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.warning,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: const Text(
+                                      'CONSUMIDOR FINAL',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      if (selectedClient != null)
+                        IconButton(
+                          icon: const Icon(Icons.clear, color: AppColors.error),
+                          tooltip: 'Deseleccionar cliente',
+                          onPressed: () {
+                            context.read<ClientsBloc>().add(
+                                  const SelectClientEvent(null),
+                                );
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                    'Cliente deseleccionado - Consumidor Final'),
+                                backgroundColor: AppColors.warning,
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          },
+                        ),
+                    ],
+                  ),
+                );
+              },
+            ),
+            const Divider(),
+            const SizedBox(height: AppDimensions.paddingS),
+            Text(
+              'Lista de Clientes',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: AppDimensions.paddingS),
             Expanded(
               child: BlocBuilder<ClientsBloc, ClientsState>(
                 builder: (context, state) {

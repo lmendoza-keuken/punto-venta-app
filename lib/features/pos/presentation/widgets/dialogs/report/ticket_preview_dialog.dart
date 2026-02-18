@@ -63,9 +63,8 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
       timestamp: widget.order.completedAt,
       ticketId: widget.order.id,
       enterprise: enterprise,
-      showSubtotalAndTax:
-          false, // deberia ir por cliente dependiendo de la condicion del cliente. por el momento mockeado
-      showPricesWithTax: true,
+      showSubtotalAndTax: widget.order.showSubtotalAndTax,
+      showPricesWithTax: widget.order.showPricesWithTax,
     );
 
     if (mounted) {

@@ -8,10 +8,13 @@ import 'package:punto_venta_app/features/pos/data/datasources/price_list_local_d
 import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/complete_order_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/get_pdv_config_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/send_invoice_usecase.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_state.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_state.dart';
@@ -349,21 +352,44 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
 
       final totalTax = cartState.totalIva;
 
+      final pdvConfigUsecase = di.sl<GetAppConfigUsecase>();
+      final pdvConfig = await pdvConfigUsecase();
+
+      // Obtener cliente seleccionado del ClientsBloc
+      final clientsState = context.read<ClientsBloc>().state;
+      final selectedClient =
+          clientsState is ClientsLoaded ? clientsState.selectedClient : null;
+
+      bool showSubtotalAndTax = false;
+      bool showPricesWithTax = true;
+
+      if (pdvConfig != null) {
+        if (pdvConfig.showSubtotalAndTax && selectedClient != null) {
+          showSubtotalAndTax = true;
+        } else {
+          showSubtotalAndTax = false;
+        }
+
+        showPricesWithTax = pdvConfig.showPricesWithTax;
+      }
+
       final completeOrderUsecase = di.sl<CompleteOrderUsecase>();
       await completeOrderUsecase(
         items: cartState.items,
         logItems: cartState.log,
         total: cartState.total,
-        clientName: null,
+        clientName: selectedClient?.name,
         cashierName: user?.name ?? 'Desconocido',
+        showSubtotalAndTax: showSubtotalAndTax,
+        showPricesWithTax: showPricesWithTax,
       );
 
       final printJob = PrintJob(
         items: cartState.items,
         logItems: cartState.log,
         total: cartState.total,
-        clientName: null,
-        client: null,
+        clientName: selectedClient?.name,
+        client: selectedClient,
         priceListId: priceList,
         totalTax: totalTax,
         paymentMethod: 'Efectivo',
@@ -372,8 +398,8 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
         timestamp: DateTime.now(),
         ticketId: DateTime.now().millisecondsSinceEpoch.toString(),
         enterprise: enterprise,
-        showSubtotalAndTax: false, // deberia ir por cliente dependiendo de la condicion del cliente. por el momento mockeado 
-        showPricesWithTax: true,
+        showSubtotalAndTax: showSubtotalAndTax,
+        showPricesWithTax: showPricesWithTax,
       );
 
       final sendInvoice = di.sl<SendInvoiceUseCase>();

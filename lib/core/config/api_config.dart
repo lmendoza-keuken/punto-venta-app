@@ -9,6 +9,7 @@ class ApiConfig {
   static String get categoriesUrl => '$_baseUrl/categories/';
   static String get invoiceUrl => '$_baseUrl/tickets/';
   static String get pdvUrl => '$_baseUrl/pdv/';
+  static String get appConfigUrl => '$_baseUrl/app-config/';  
 
   static void updateCompanyConfig(String companyId, String? baseUrl) {
     _companyId = companyId;
@@ -17,6 +18,7 @@ class ApiConfig {
       _baseUrl = baseUrl;
     } else {
       _baseUrl =
+          // 'http://orders0.epekuen.com.ar/produccion/$companyId/test/puntoVenta';
           'http://192.168.0.9:8000';
     }
   }

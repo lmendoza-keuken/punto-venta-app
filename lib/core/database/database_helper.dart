@@ -19,7 +19,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -53,12 +53,49 @@ class DatabaseHelper {
     ''');
 
     // Índices
-    await db.execute('CREATE INDEX idx_stock_movements_product ON stock_movements(productCodigo)');
-    await db.execute('CREATE INDEX idx_stock_movements_date ON stock_movements(createdAt)');
+    await db.execute(
+        'CREATE INDEX idx_stock_movements_product ON stock_movements(productCodigo)');
+    await db.execute(
+        'CREATE INDEX idx_stock_movements_date ON stock_movements(createdAt)');
+
+    // Tabla de configuración de PDV
+    await db.execute('''
+      CREATE TABLE pdv_config (
+        id TEXT PRIMARY KEY,
+        showSubtotalAndTax INTEGER NOT NULL DEFAULT 0,
+        showPricesWithTax INTEGER NOT NULL DEFAULT 1,
+        lastUpdated TEXT NOT NULL
+      )
+    ''');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // Agregar migraciones aquí cuando sea necesario
+    // Migración de versión 1 a 2: agregar tabla pdv_config
+    if (oldVersion < 2) {
+      await db.execute('''
+        CREATE TABLE pdv_config (
+          id TEXT PRIMARY KEY,
+          pdvId TEXT NOT NULL,
+          showSubtotalAndTax INTEGER NOT NULL DEFAULT 0,
+          showPricesWithTax INTEGER NOT NULL DEFAULT 1,
+          lastUpdated TEXT NOT NULL
+        )
+      ''');
+    }
+
+    // Migración de versión 2 a 3: eliminar columna pdvId de pdv_config
+    if (oldVersion < 3) {
+      // SQLite no permite eliminar columnas directamente, necesitamos recrear la tabla
+      await db.execute('DROP TABLE IF EXISTS pdv_config');
+      await db.execute('''
+        CREATE TABLE pdv_config (
+          id TEXT PRIMARY KEY,
+          showSubtotalAndTax INTEGER NOT NULL DEFAULT 0,
+          showPricesWithTax INTEGER NOT NULL DEFAULT 1,
+          lastUpdated TEXT NOT NULL
+        )
+      ''');
+    }
   }
 
   Future<void> close() async {
@@ -70,5 +107,6 @@ class DatabaseHelper {
     final db = await database;
     await db.delete('stock_movements');
     await db.delete('product_stock');
+    await db.delete('pdv_config');
   }
 }

@@ -14,6 +14,8 @@ class CompletedOrder extends Equatable {
   final String paymentMethod;
   final double totalTax;
   final int totalItems;
+  final bool showSubtotalAndTax;
+  final bool showPricesWithTax;
 
   const CompletedOrder({
     required this.id,
@@ -27,6 +29,8 @@ class CompletedOrder extends Equatable {
     this.paymentMethod = 'Efectivo',
     required this.totalTax,
     required this.totalItems,
+    this.showSubtotalAndTax = false,
+    this.showPricesWithTax = true,
   });
 
   CompletedOrder copyWith({
@@ -41,6 +45,8 @@ class CompletedOrder extends Equatable {
     String? paymentMethod,
     double? totalTax,
     int? totalItems,
+    bool? showSubtotalAndTax,
+    bool? showPricesWithTax,
   }) {
     return CompletedOrder(
       id: id ?? this.id,
@@ -54,6 +60,8 @@ class CompletedOrder extends Equatable {
       paymentMethod: paymentMethod ?? this.paymentMethod,
       totalTax: totalTax ?? this.totalTax,
       totalItems: totalItems ?? this.totalItems,
+      showSubtotalAndTax: showSubtotalAndTax ?? this.showSubtotalAndTax,
+      showPricesWithTax: showPricesWithTax ?? this.showPricesWithTax,
     );
   }
 
@@ -69,6 +77,8 @@ class CompletedOrder extends Equatable {
         cashierName,
         paymentMethod,
         totalTax,
-        totalItems
+        totalItems,
+        showSubtotalAndTax,
+        showPricesWithTax,
       ];
 }
