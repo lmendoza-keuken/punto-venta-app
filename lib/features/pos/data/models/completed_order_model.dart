@@ -29,6 +29,10 @@ class CompletedOrderModel {
   final bool showSubtotalAndTax;
   @JsonKey(name: 'show_prices_with_tax')
   final bool showPricesWithTax;
+  @JsonKey(name: 'received_amount')
+  final double? receivedAmount;
+  @JsonKey(name: 'change')
+  final double? change;
 
   const CompletedOrderModel({
     required this.id,
@@ -44,6 +48,8 @@ class CompletedOrderModel {
     required this.totalItems,
     this.showSubtotalAndTax = false,
     this.showPricesWithTax = true,
+    this.receivedAmount,
+    this.change,
   });
 
   factory CompletedOrderModel.fromJson(Map<String, dynamic> json) =>
@@ -66,6 +72,8 @@ class CompletedOrderModel {
       totalItems: totalItems,
       showSubtotalAndTax: showSubtotalAndTax,
       showPricesWithTax: showPricesWithTax,
+      change: change,
+      receivedAmount: receivedAmount,
     );
   }
 
@@ -84,6 +92,8 @@ class CompletedOrderModel {
       totalItems: order.totalItems,
       showSubtotalAndTax: order.showSubtotalAndTax,
       showPricesWithTax: order.showPricesWithTax,
+      change: order.change,
+      receivedAmount: order.receivedAmount,
     );
   }
 }

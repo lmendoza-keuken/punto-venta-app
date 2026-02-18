@@ -18,6 +18,8 @@ class CompleteOrderUsecase {
     String paymentMethod = 'Efectivo',
     bool showSubtotalAndTax = false,
     bool showPricesWithTax = true,
+    double? receivedAmount,
+    double? change,
   }) async {
     if (items.isEmpty) {
       throw Exception('No se puede completar una orden vacía');
@@ -53,6 +55,8 @@ class CompleteOrderUsecase {
       totalItems: totalItems,
       showSubtotalAndTax: showSubtotalAndTax,
       showPricesWithTax: showPricesWithTax,
+      receivedAmount: receivedAmount,
+      change: change,
     );
 
     await repository.saveCompletedOrder(order);

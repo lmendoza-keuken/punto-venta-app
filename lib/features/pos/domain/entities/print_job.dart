@@ -19,6 +19,8 @@ class PrintJob {
   final EnterpriseModel? enterprise;
   final bool showSubtotalAndTax;
   final bool showPricesWithTax;
+  final double? receivedAmount;
+  final double? change;
 
   const PrintJob({
     required this.items,
@@ -36,5 +38,7 @@ class PrintJob {
     this.showSubtotalAndTax = true,
     this.showPricesWithTax = false,
     this.enterprise,
+    this.receivedAmount,
+    this.change,
   });
 }

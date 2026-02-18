@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
-import 'package:punto_venta_app/core/utils/extensions.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/price_list_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
@@ -18,6 +17,7 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_s
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_state.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/cart/cash_payment_widget.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 class ConfirmationPanel extends StatefulWidget {
@@ -34,6 +34,8 @@ class ConfirmationPanel extends StatefulWidget {
 
 class _ConfirmationPanelState extends State<ConfirmationPanel> {
   bool _isProcessingSale = false;
+  double? _receivedAmount;
+  double? _change;
 
   @override
   Widget build(BuildContext context) {
@@ -144,31 +146,23 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                       ],
                     ),
 
-                    // const SizedBox(height: 24),
-                    // const Divider(height: 1),
-                    // const SizedBox(height: 24),
+                    const SizedBox(height: 24),
+                    const Divider(height: 1),
+                    const SizedBox(height: 24),
 
-                    // Detalle de totales (IVA, subtotal)
-
-                    // Text(
-                    //   'Resumen',
-                    //   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    //         fontWeight: FontWeight.bold,
-                    //       ),
-                    // ),
-                    // const SizedBox(height: 16),
-
-                    // _buildTotalRow('Subtotal:', state.subtotal),
-                    // const SizedBox(height: 8),
-                    // _buildTotalRow('IVA:', state.totalIva),
-                    // const SizedBox(height: 12),
-
-                    const Divider(),
-                    const SizedBox(height: 12),
-                    _buildTotalRow(
-                      'Total a cobrar:',
-                      state.subtotal + state.totalIva,
-                      isTotal: true,
+                    CashPaymentWidget(
+                      key: ValueKey(state.subtotal + state.totalIva),
+                      totalAmount: state.subtotal + state.totalIva,
+                      onAmountChanged: (amount) {
+                        setState(() {
+                          _receivedAmount = amount;
+                        });
+                      },
+                      onChangeCalculated: (change) {
+                        setState(() {
+                          _change = change;
+                        });
+                      },
                     ),
 
                     if (_isProcessingSale) ...[
@@ -313,29 +307,6 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
     );
   }
 
-  Widget _buildTotalRow(String label, double amount, {bool isTotal = false}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: isTotal ? FontWeight.bold : FontWeight.w500,
-                fontSize: isTotal ? 20 : 16,
-              ),
-        ),
-        Text(
-          amount.formatToCurrency(),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                fontSize: isTotal ? 24 : 16,
-                color: isTotal ? AppColors.primary : null,
-              ),
-        ),
-      ],
-    );
-  }
-
   Future<void> _confirmSale(BuildContext context, CartLoaded cartState) async {
     setState(() {
       _isProcessingSale = true;
@@ -382,6 +353,8 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
         cashierName: user?.name ?? 'Desconocido',
         showSubtotalAndTax: showSubtotalAndTax,
         showPricesWithTax: showPricesWithTax,
+        receivedAmount: _receivedAmount,
+        change: _change,
       );
 
       final printJob = PrintJob(
@@ -400,6 +373,8 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
         enterprise: enterprise,
         showSubtotalAndTax: showSubtotalAndTax,
         showPricesWithTax: showPricesWithTax,
+        receivedAmount: _receivedAmount,
+        change: _change,
       );
 
       final sendInvoice = di.sl<SendInvoiceUseCase>();

@@ -65,6 +65,8 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
       enterprise: enterprise,
       showSubtotalAndTax: widget.order.showSubtotalAndTax,
       showPricesWithTax: widget.order.showPricesWithTax,
+      change: widget.order.change,
+      receivedAmount: widget.order.receivedAmount,
     );
 
     if (mounted) {
@@ -238,6 +240,7 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                   ),
 
                   const Text('Sistema de Punto de Venta'),
+                  const Text('comprobante no valido como factura'),
                   // const Text('Tel: (555) 123-4567'),
                   const SizedBox(height: 16),
                   Container(
@@ -356,6 +359,25 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                 ),
               ),
             ],
+            if (widget.order.receivedAmount != null) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Recibido:'),
+                  Text(widget.order.receivedAmount!.formatToCurrency()),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Cambio:'),
+                  Text(widget.order.change != null
+                      ? widget.order.change!.formatToCurrency()
+                      : '-'),
+                ],
+              ),
+            ],
+
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

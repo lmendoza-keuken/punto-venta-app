@@ -46,6 +46,8 @@ class TicketTemplateBuilder {
       TicketCommand.feedLine(),
       TicketCommand.bold(false),
       TicketCommand.text("Sistema de Punto de Venta"),
+      TicketCommand.feedLine(),
+      TicketCommand.text("Comprobante no valido como factura"),
       // TicketCommand.feedLine(),
       // TicketCommand.text("Tel: (555) 123-4567"),
       TicketCommand.feedLine(),
@@ -151,6 +153,15 @@ class TicketTemplateBuilder {
       commands.add(TicketCommand.lineWithValue("IVA:", taxAmount));
       commands.add(TicketCommand.text(_buildSeparator('_')));
       commands.add(TicketCommand.feedLine());
+    }
+
+    if (printJob.receivedAmount != null && printJob.change != null) {
+      final receivedAmount = printJob.receivedAmount!.formatToCurrency();
+      final changeAmount = printJob.change!.formatToCurrency();
+
+      commands.add(TicketCommand.feedLine());
+      commands.add(TicketCommand.lineWithValue("Recibido:", receivedAmount));
+      commands.add(TicketCommand.lineWithValue("Cambio:", changeAmount));
     }
 
     // Total siempre se muestra

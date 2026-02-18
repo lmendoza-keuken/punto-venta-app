@@ -67,7 +67,7 @@ class InvoicePayload {
             ? (itemModel.pricePerKg ?? unitPrice)
             : unitPrice * quantity;
 
-        final double taxPercentage = (itemModel.iva ?? 0) + 0.0;
+        final double taxPercentage = (itemModel.iva) + 0.0;
         final double taxAmount = taxableBase * (taxPercentage / 100.0);
 
         final List<TaxModel> taxes = [
