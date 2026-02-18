@@ -250,7 +250,7 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
             ),
 
             // Información de la orden
-            Text('Orden: ${widget.order.orderNumber}'),
+            Text('Orden: ${widget.order.id}'),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

@@ -2,14 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
-import 'package:punto_venta_app/core/constants/app_string.dart';
-import 'package:punto_venta_app/core/dialogs/logout_dialog.dart';
 import 'package:punto_venta_app/features/auth/domain/entities/user.dart';
-import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product/product_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product/product_state.dart';
 import 'package:punto_venta_app/core/widgets/dynamic_date_time.dart';
-import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/settings_dialog.dart';
 
 class PosAppBar extends StatelessWidget {
   final User? user;
@@ -102,7 +98,7 @@ class PosAppBar extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      user!.tipo,
+                      user!.roleCode,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 12,

@@ -8,6 +8,7 @@ import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_state.dart'
 import 'package:punto_venta_app/features/auth/prensetation/pages/company_selection_page.dart';
 import 'package:punto_venta_app/features/auth/prensetation/pages/credentials_page.dart';
 import 'package:punto_venta_app/features/auth/prensetation/pages/login_page.dart';
+import 'package:punto_venta_app/features/auth/domain/entities/user.dart';
 import 'package:punto_venta_app/features/pos/presentation/pages/pos_main_page.dart';
 import 'package:punto_venta_app/features/pos/presentation/pages/reports_page.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_bloc.dart';
@@ -48,7 +49,7 @@ class AppRouter {
           );
         },
       ),
-      
+
       // Main app routes (con sidebar)
       ShellRoute(
         builder: (context, state, child) {
@@ -109,9 +110,8 @@ class MainLayoutShell extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, authState) {
-        final user =
-            authState is AuthAuthenticated ? authState.user : null;
-        final isAdmin = user?.tipo == 'ADMIN';
+        final user = authState is AuthAuthenticated ? authState.user : null;
+        final isAdmin = user?.role == UserRole.admin;
 
         return MainLayout(
           currentRoute: currentRoute,

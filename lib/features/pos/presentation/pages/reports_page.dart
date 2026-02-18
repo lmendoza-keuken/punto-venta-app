@@ -9,7 +9,6 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_b
 import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/report/ticket_preview_dialog.dart';
-import 'package:punto_venta_app/injection_container.dart' as di;
 
 class ReportsPage extends StatefulWidget {
   const ReportsPage({super.key});
@@ -196,7 +195,7 @@ class _ReportsPageState extends State<ReportsPage>
 
   Widget _buildSummaryCards(Map<String, dynamic> summary) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal:  AppDimensions.paddingM),
+      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingM),
       child: Row(
         children: [
           Expanded(
@@ -280,18 +279,10 @@ class _ReportsPageState extends State<ReportsPage>
           child: Card(
             margin: const EdgeInsets.only(bottom: AppDimensions.paddingS),
             child: ListTile(
-              leading: CircleAvatar(
-                backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                child: Text(
-                  '#${order.id}',
-                  style: const TextStyle(
-                      fontSize: 12, fontWeight: FontWeight.bold),
-                ),
-              ),
               title: Text(
                 showDate
-                    ? DateFormat('dd/MM/yyyy HH:mm').format(order.completedAt)
-                    : DateFormat('HH:mm').format(order.completedAt),
+                    ? "#${order.id} | ${DateFormat('dd/MM/yyyy HH:mm').format(order.completedAt)}"
+                    : "#${order.id} | ${DateFormat('HH:mm').format(order.completedAt)}",
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               subtitle: Column(
