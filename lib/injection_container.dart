@@ -14,8 +14,8 @@ import 'package:punto_venta_app/features/pos/data/datasources/client_local_datas
 import 'package:punto_venta_app/features/pos/data/datasources/client_remote_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/completed_orders_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/invoice_remote_datasource.dart';
-import 'package:punto_venta_app/features/pos/data/datasources/app_config_local_datasource.dart';
-import 'package:punto_venta_app/features/pos/data/datasources/app_config_remote_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/ticket_config_local_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/ticket_config_remote_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/payment_method_remote_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/price_list_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
@@ -25,12 +25,12 @@ import 'package:punto_venta_app/features/pos/data/datasources/saved_orders_local
 import 'package:punto_venta_app/features/pos/data/repositories/client_repository_impl.dart';
 import 'package:punto_venta_app/features/pos/data/repositories/completed_orders_repository_impl.dart';
 import 'package:punto_venta_app/features/pos/data/repositories/invoice_repository_impl.dart';
-import 'package:punto_venta_app/features/pos/data/repositories/app_config_repository_impl.dart';
+import 'package:punto_venta_app/features/pos/data/repositories/ticket_config_repository_impl.dart';
 import 'package:punto_venta_app/features/pos/data/repositories/payment_method_repository_impl.dart';
 import 'package:punto_venta_app/features/pos/data/repositories/printer_repository_impl.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/client_repository.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/completed_orders_repository.dart';
-import 'package:punto_venta_app/features/pos/domain/repositories/app_config_repository.dart';
+import 'package:punto_venta_app/features/pos/domain/repositories/ticket_config_repository.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/payment_method_repository.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/printer_repository.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/product_repository.dart';
@@ -38,15 +38,15 @@ import 'package:punto_venta_app/features/pos/domain/repositories/saved_orders_re
 import 'package:punto_venta_app/features/pos/domain/usecases/add_client_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/complete_order_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/delete_client_usecase.dart';
-import 'package:punto_venta_app/features/pos/domain/usecases/fetch_app_config_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/fetch_ticket_config_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_payment_methods_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_clients_usecase.dart';
-import 'package:punto_venta_app/features/pos/domain/usecases/get_app_config_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/get_ticket_config_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_reports_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/load_ordes_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/print_ticket_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/send_invoice_usecase.dart';
-import 'package:punto_venta_app/features/pos/domain/usecases/update_app_config_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/update_ticket_config_usecase.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/payment_methods_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_bloc.dart';
@@ -164,9 +164,9 @@ Future<void> init() async {
   sl.registerLazySingleton(() => AddClientUsecase(sl()));
   sl.registerLazySingleton(() => DeleteClientUsecase(sl()));
   sl.registerLazySingleton(() => SendInvoiceUseCase(sl()));
-  sl.registerLazySingleton(() => GetAppConfigUsecase(sl()));
-  sl.registerLazySingleton(() => FetchAppConfigUsecase(sl()));
-  sl.registerLazySingleton(() => UpdateAppConfigUsecase(sl()));
+  sl.registerLazySingleton(() => GetTicketConfigUsecase(sl()));
+  sl.registerLazySingleton(() => FetchTicketConfigUsecase(sl()));
+  sl.registerLazySingleton(() => UpdateTicketConfigUsecase(sl()));
   sl.registerLazySingleton(() => FetchPaymentMethodsUsecase(sl()));
 
   // sl.registerLazySingleton(() => PrintTicketUsecase(sl()));
@@ -190,8 +190,8 @@ Future<void> init() async {
   sl.registerLazySingleton<InvoiceRepository>(
     () => InvoiceRepositoryImpl(remote: sl()),
   );
-  sl.registerLazySingleton<AppConfigRepository>(
-    () => AppConfigRepositoryImpl(
+  sl.registerLazySingleton<TicketConfigRepository>(
+    () => TicketConfigRepositoryImpl(
       localDataSource: sl(),
       remoteDataSource: sl(),
     ),
@@ -256,10 +256,10 @@ Future<void> init() async {
   sl.registerLazySingleton<InvoiceRemoteDataSource>(
     () => InvoiceRemoteDataSourceImpl(dio: sl()),
   );
-  sl.registerLazySingleton<AppConfigLocalDataSource>(
+  sl.registerLazySingleton<TicketConfigLocalDataSource>(
     () => AppConfigLocalDataSourceImpl(dbHelper: sl()),
   );
-  sl.registerLazySingleton<AppConfigRemoteDataSource>(
+  sl.registerLazySingleton<TicketConfigRemoteDataSource>(
     () => AppConfigRemoteDataSourceImpl(dio: sl()),
   );
   sl.registerLazySingleton<PriceListLocalDataSource>(

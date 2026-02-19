@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_state.dart';
-import 'package:punto_venta_app/features/pos/domain/usecases/fetch_app_config_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/fetch_ticket_config_usecase.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_state.dart';
@@ -51,7 +51,7 @@ class _PosMainPageState extends State<PosMainPage> {
 
   Future<void> _fetchAppConfig() async {
     try {
-      final fetchAppConfigUsecase = di.sl<FetchAppConfigUsecase>();
+      final fetchAppConfigUsecase = di.sl<FetchTicketConfigUsecase>();
       await fetchAppConfigUsecase();
     } catch (e) {
       print('⚠️ No se pudo obtener configuración de sucursal: $e');

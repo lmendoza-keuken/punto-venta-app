@@ -1,21 +1,21 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:punto_venta_app/core/database/database_helper.dart';
-import 'package:punto_venta_app/features/pos/data/models/app_config_model.dart';
+import 'package:punto_venta_app/features/pos/data/models/ticket_config_model.dart';
 
-abstract class AppConfigLocalDataSource {
-  Future<AppConfigModel?> getAppConfig();
-  Future<void> saveAppConfig(AppConfigModel config);
-  Future<void> deleteAppConfig();
+abstract class TicketConfigLocalDataSource {
+  Future<TicketConfigModel?> getTicketConfig();
+  Future<void> saveTicketConfig(TicketConfigModel config);
+  Future<void> deleteTicketConfig();
 }
 
-class AppConfigLocalDataSourceImpl implements AppConfigLocalDataSource {
+class AppConfigLocalDataSourceImpl implements TicketConfigLocalDataSource {
   final DatabaseHelper dbHelper;
   static const String _tableName = 'pdv_config';
 
   AppConfigLocalDataSourceImpl({required this.dbHelper});
 
   @override
-  Future<AppConfigModel?> getAppConfig() async {
+  Future<TicketConfigModel?> getTicketConfig() async {
     try {
       final db = await dbHelper.database;
       final results = await db.query(
@@ -28,14 +28,14 @@ class AppConfigLocalDataSourceImpl implements AppConfigLocalDataSource {
         return null;
       }
 
-      return AppConfigModel.fromMap(results.first);
+      return TicketConfigModel.fromMap(results.first);
     } catch (e) {
       throw Exception('Error al obtener configuración de tickets: $e');
     }
   }
 
   @override
-  Future<void> saveAppConfig(AppConfigModel config) async {
+  Future<void> saveTicketConfig(TicketConfigModel config) async {
     try {
       final db = await dbHelper.database;
 
@@ -52,7 +52,7 @@ class AppConfigLocalDataSourceImpl implements AppConfigLocalDataSource {
   }
 
   @override
-  Future<void> deleteAppConfig() async {
+  Future<void> deleteTicketConfig() async {
     try {
       final db = await dbHelper.database;
       await db.delete(_tableName);

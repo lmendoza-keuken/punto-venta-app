@@ -1,20 +1,20 @@
-import 'package:punto_venta_app/features/pos/domain/entities/app_config.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/ticket_config.dart';
 
-class AppConfigModel {
+class TicketConfigModel {
   final String id;
   final bool showSubtotalAndTax;
   final bool showPricesWithTax;
   final DateTime lastUpdated;
 
-  const AppConfigModel({
+  const TicketConfigModel({
     required this.id,
     required this.showSubtotalAndTax,
     required this.showPricesWithTax,
     required this.lastUpdated,
   });
 
-  factory AppConfigModel.fromJson(Map<String, dynamic> json) {
-    return AppConfigModel(
+  factory TicketConfigModel.fromJson(Map<String, dynamic> json) {
+    return TicketConfigModel(
       id: json['id']?.toString() ?? '',
       showSubtotalAndTax:
           json['show_subtotal_and_tax'] ?? json['showSubtotalAndTax'] ?? false,
@@ -39,8 +39,8 @@ class AppConfigModel {
     return map;
   }
 
-  factory AppConfigModel.fromEntity(AppConfig entity) {
-    return AppConfigModel(
+  factory TicketConfigModel.fromEntity(TicketConfig entity) {
+    return TicketConfigModel(
       id: entity.id,
       showSubtotalAndTax: entity.showSubtotalAndTax,
       showPricesWithTax: entity.showPricesWithTax,
@@ -48,8 +48,8 @@ class AppConfigModel {
     );
   }
 
-  AppConfig toEntity() {
-    return AppConfig(
+  TicketConfig toEntity() {
+    return TicketConfig(
       id: id,
       showSubtotalAndTax: showSubtotalAndTax,
       showPricesWithTax: showPricesWithTax,
@@ -68,8 +68,8 @@ class AppConfigModel {
     return map;
   }
 
-  factory AppConfigModel.fromMap(Map<String, dynamic> map) {
-    return AppConfigModel(
+  factory TicketConfigModel.fromMap(Map<String, dynamic> map) {
+    return TicketConfigModel(
       id: map['id']?.toString() ?? '',
       showSubtotalAndTax: map['showSubtotalAndTax'] == 1,
       showPricesWithTax: map['showPricesWithTax'] == 1,

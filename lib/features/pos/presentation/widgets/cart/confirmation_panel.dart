@@ -7,7 +7,7 @@ import 'package:punto_venta_app/features/pos/data/datasources/price_list_local_d
 import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/complete_order_usecase.dart';
-import 'package:punto_venta_app/features/pos/domain/usecases/get_app_config_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/get_ticket_config_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/send_invoice_usecase.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_event.dart';
@@ -357,7 +357,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
 
       final totalTax = cartState.totalIva;
 
-      final appConfigUsecase = di.sl<GetAppConfigUsecase>();
+      final appConfigUsecase = di.sl<GetTicketConfigUsecase>();
       final appConfig = await appConfigUsecase();
 
       // Obtener cliente seleccionado del ClientsBloc

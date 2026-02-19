@@ -1,31 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
-import 'package:punto_venta_app/features/pos/domain/entities/app_config.dart';
-import 'package:punto_venta_app/features/pos/domain/usecases/get_app_config_usecase.dart';
-import 'package:punto_venta_app/features/pos/domain/usecases/update_app_config_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/ticket_config.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/get_ticket_config_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/update_ticket_config_usecase.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
-void showPdvSettingsDialog(BuildContext context) {
+void showTicketSettingsDialog(BuildContext context) {
   showDialog(
     context: context,
-    builder: (context) => const PdvSettingsDialog(),
+    builder: (context) => const TicketSettingsDialog(),
   );
 }
 
-class PdvSettingsDialog extends StatefulWidget {
-  const PdvSettingsDialog({super.key});
+class TicketSettingsDialog extends StatefulWidget {
+  const TicketSettingsDialog({super.key});
 
   @override
-  State<PdvSettingsDialog> createState() => _PdvSettingsDialogState();
+  State<TicketSettingsDialog> createState() => _TicketSettingsDialogState();
 }
 
-class _PdvSettingsDialogState extends State<PdvSettingsDialog> {
-  final getPdvConfigUsecase = di.sl<GetAppConfigUsecase>();
-  final updatePdvConfigUsecase = di.sl<UpdateAppConfigUsecase>();
+class _TicketSettingsDialogState extends State<TicketSettingsDialog> {
+  final getTicketConfigUsecase = di.sl<GetTicketConfigUsecase>();
+  final updateTicketConfigUsecase = di.sl<UpdateTicketConfigUsecase>();
 
   bool _isLoading = true;
   bool _isSaving = false;
-  AppConfig? _config;
+  TicketConfig? _config;
   bool _showSubtotalAndTax = false;
   bool _showPricesWithTax = true;
 
@@ -37,7 +37,7 @@ class _PdvSettingsDialogState extends State<PdvSettingsDialog> {
 
   Future<void> _loadConfig() async {
     try {
-      final config = await getPdvConfigUsecase();
+      final config = await getTicketConfigUsecase();
       if (mounted) {
         setState(() {
           _config = config;
@@ -67,10 +67,10 @@ class _PdvSettingsDialogState extends State<PdvSettingsDialog> {
     });
 
     try {
-      final AppConfig configToSave;
+      final TicketConfig configToSave;
 
       if (_config == null) {
-        configToSave = AppConfig(
+        configToSave = TicketConfig(
           id: DateTime.now().millisecondsSinceEpoch.toString(),
           showSubtotalAndTax: _showSubtotalAndTax,
           showPricesWithTax: _showPricesWithTax,
@@ -84,7 +84,7 @@ class _PdvSettingsDialogState extends State<PdvSettingsDialog> {
         );
       }
 
-      await updatePdvConfigUsecase(configToSave);
+      await updateTicketConfigUsecase(configToSave);
 
       if (mounted) {
         Navigator.of(context).pop();
@@ -113,7 +113,7 @@ class _PdvSettingsDialogState extends State<PdvSettingsDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Configuración de Punto de Venta'),
+      title: const Text('Configuración de Tickets'),
       content: _isLoading
           ? const SizedBox(
               width: 300,

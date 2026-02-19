@@ -2,15 +2,15 @@ import 'package:dio/dio.dart';
 import 'package:punto_venta_app/core/config/api_config.dart';
 import 'package:punto_venta_app/core/network/dio_client.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
-import 'package:punto_venta_app/features/pos/data/models/app_config_model.dart';
+import 'package:punto_venta_app/features/pos/data/models/ticket_config_model.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
-abstract class AppConfigRemoteDataSource {
-  Future<AppConfigModel> fetchAppConfig();
-  Future<AppConfigModel> updateAppConfig(AppConfigModel config);
+abstract class TicketConfigRemoteDataSource {
+  Future<TicketConfigModel> fetchAppConfig();
+  Future<TicketConfigModel> updateAppConfig(TicketConfigModel config);
 }
 
-class AppConfigRemoteDataSourceImpl implements AppConfigRemoteDataSource {
+class AppConfigRemoteDataSourceImpl implements TicketConfigRemoteDataSource {
   final Dio _dio;
   final Duration timeout;
 
@@ -20,7 +20,7 @@ class AppConfigRemoteDataSourceImpl implements AppConfigRemoteDataSource {
   }) : _dio = dio ?? DioClient.instance;
 
   @override
-  Future<AppConfigModel> fetchAppConfig() async {
+  Future<TicketConfigModel> fetchAppConfig() async {
     final url = ApiConfig.appConfigUrl;
 
     final localDs = di.sl<AuthLocalDataSource>();
@@ -44,7 +44,7 @@ class AppConfigRemoteDataSourceImpl implements AppConfigRemoteDataSource {
       );
 
       if (response.statusCode == 200) {
-        return AppConfigModel.fromJson(response.data);
+        return TicketConfigModel.fromJson(response.data);
       } else {
         throw Exception('Error al obtener configuración: ${response.statusCode}');
       }
@@ -67,7 +67,7 @@ class AppConfigRemoteDataSourceImpl implements AppConfigRemoteDataSource {
   }
 
   @override
-  Future<AppConfigModel> updateAppConfig(AppConfigModel config) async {
+  Future<TicketConfigModel> updateAppConfig(TicketConfigModel config) async {
     final url = ApiConfig.appConfigUrl;
 
     final localDs = di.sl<AuthLocalDataSource>();
@@ -92,7 +92,7 @@ class AppConfigRemoteDataSourceImpl implements AppConfigRemoteDataSource {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return AppConfigModel.fromJson(response.data);
+        return TicketConfigModel.fromJson(response.data);
       } else {
         throw Exception('Error al actualizar configuración: ${response.statusCode}');
       }
