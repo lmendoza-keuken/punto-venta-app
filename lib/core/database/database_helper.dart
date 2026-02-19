@@ -19,7 +19,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -58,9 +58,9 @@ class DatabaseHelper {
     await db.execute(
         'CREATE INDEX idx_stock_movements_date ON stock_movements(createdAt)');
 
-    // Tabla de configuración de PDV
+    // Tabla de configuración de tickets
     await db.execute('''
-      CREATE TABLE pdv_config (
+      CREATE TABLE ticket_config (
         id TEXT PRIMARY KEY,
         showSubtotalAndTax INTEGER NOT NULL DEFAULT 0,
         showPricesWithTax INTEGER NOT NULL DEFAULT 1,
@@ -70,12 +70,11 @@ class DatabaseHelper {
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // Migración de versión 1 a 2: agregar tabla pdv_config
+    // Migración de versión 1 a 2: agregar tabla ticket_config
     if (oldVersion < 2) {
       await db.execute('''
-        CREATE TABLE pdv_config (
+        CREATE TABLE ticket_config (
           id TEXT PRIMARY KEY,
-          pdvId TEXT NOT NULL,
           showSubtotalAndTax INTEGER NOT NULL DEFAULT 0,
           showPricesWithTax INTEGER NOT NULL DEFAULT 1,
           lastUpdated TEXT NOT NULL
@@ -83,18 +82,28 @@ class DatabaseHelper {
       ''');
     }
 
-    // Migración de versión 2 a 3: eliminar columna pdvId de pdv_config
+    // Migración de versión 2 a 3: eliminar tabla pdv_config antigua si existe
     if (oldVersion < 3) {
-      // SQLite no permite eliminar columnas directamente, necesitamos recrear la tabla
       await db.execute('DROP TABLE IF EXISTS pdv_config');
-      await db.execute('''
-        CREATE TABLE pdv_config (
-          id TEXT PRIMARY KEY,
-          showSubtotalAndTax INTEGER NOT NULL DEFAULT 0,
-          showPricesWithTax INTEGER NOT NULL DEFAULT 1,
-          lastUpdated TEXT NOT NULL
-        )
-      ''');
+    }
+
+    // Migración de versión 3 a 4: asegurar que ticket_config existe
+    if (oldVersion < 4) {
+      // Verificar si la tabla existe antes de crearla
+      final tables = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='ticket_config'",
+      );
+
+      if (tables.isEmpty) {
+        await db.execute('''
+          CREATE TABLE ticket_config (
+            id TEXT PRIMARY KEY,
+            showSubtotalAndTax INTEGER NOT NULL DEFAULT 0,
+            showPricesWithTax INTEGER NOT NULL DEFAULT 1,
+            lastUpdated TEXT NOT NULL
+          )
+        ''');
+      }
     }
   }
 
@@ -107,6 +116,6 @@ class DatabaseHelper {
     final db = await database;
     await db.delete('stock_movements');
     await db.delete('product_stock');
-    await db.delete('pdv_config');
+    await db.delete('ticket_config');
   }
 }

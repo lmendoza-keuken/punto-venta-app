@@ -10,18 +10,18 @@ abstract class TicketConfigRemoteDataSource {
   Future<TicketConfigModel> updateAppConfig(TicketConfigModel config);
 }
 
-class AppConfigRemoteDataSourceImpl implements TicketConfigRemoteDataSource {
+class TicketConfigRemoteDataSourceImpl implements TicketConfigRemoteDataSource {
   final Dio _dio;
   final Duration timeout;
 
-  AppConfigRemoteDataSourceImpl({
+  TicketConfigRemoteDataSourceImpl({
     Dio? dio,
     this.timeout = const Duration(seconds: 10),
   }) : _dio = dio ?? DioClient.instance;
 
   @override
   Future<TicketConfigModel> fetchAppConfig() async {
-    final url = ApiConfig.appConfigUrl;
+    final url = ApiConfig.ticketConfigUrl;
 
     final localDs = di.sl<AuthLocalDataSource>();
     final token = await localDs.getToken();
@@ -68,7 +68,7 @@ class AppConfigRemoteDataSourceImpl implements TicketConfigRemoteDataSource {
 
   @override
   Future<TicketConfigModel> updateAppConfig(TicketConfigModel config) async {
-    final url = ApiConfig.appConfigUrl;
+    final url = ApiConfig.ticketConfigUrl;
 
     final localDs = di.sl<AuthLocalDataSource>();
     final token = await localDs.getToken();

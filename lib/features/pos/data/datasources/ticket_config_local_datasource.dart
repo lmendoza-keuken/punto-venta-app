@@ -8,11 +8,11 @@ abstract class TicketConfigLocalDataSource {
   Future<void> deleteTicketConfig();
 }
 
-class AppConfigLocalDataSourceImpl implements TicketConfigLocalDataSource {
+class TicketConfigLocalDataSourceImpl implements TicketConfigLocalDataSource {
   final DatabaseHelper dbHelper;
-  static const String _tableName = 'pdv_config';
+  static const String _tableName = 'ticket_config';
 
-  AppConfigLocalDataSourceImpl({required this.dbHelper});
+  TicketConfigLocalDataSourceImpl({required this.dbHelper});
 
   @override
   Future<TicketConfigModel?> getTicketConfig() async {

@@ -257,10 +257,10 @@ Future<void> init() async {
     () => InvoiceRemoteDataSourceImpl(dio: sl()),
   );
   sl.registerLazySingleton<TicketConfigLocalDataSource>(
-    () => AppConfigLocalDataSourceImpl(dbHelper: sl()),
+    () => TicketConfigLocalDataSourceImpl(dbHelper: sl()),
   );
   sl.registerLazySingleton<TicketConfigRemoteDataSource>(
-    () => AppConfigRemoteDataSourceImpl(dio: sl()),
+    () => TicketConfigRemoteDataSourceImpl(dio: sl()),
   );
   sl.registerLazySingleton<PriceListLocalDataSource>(
     () => PriceListLocalDataSourceImpl(sharedPreferences: sl()),
