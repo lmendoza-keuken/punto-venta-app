@@ -44,6 +44,7 @@ class FirestoreUserDataSourceImpl implements FirestoreUserDataSource {
   }) : _firestore = firestore ?? FirebaseFirestore.instance;
 
   @override
+  // validar primero campo enabled y ahi si es true traer el resto de los datos, sino no traer nada
   Future<List<Company>> getCompaniesByEmail(String email) async {
     try {
       final enterprisesSnapshot = await _firestore

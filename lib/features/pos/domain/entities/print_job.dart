@@ -2,6 +2,7 @@ import 'package:punto_venta_app/features/auth/data/models/enterprise_model.dart'
 import 'package:punto_venta_app/features/pos/domain/entities/cart_item.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/client.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/payment_method.dart';
 
 class PrintJob {
   final List<CartItem> items;
@@ -11,7 +12,7 @@ class PrintJob {
   final String? clientName;
   final Client? client;
   final int? priceListId;
-  final String? paymentMethod;
+  final PaymentMethod? paymentMethod;
   final String? cashierName;
   final int? cashierId;
   final DateTime timestamp;
@@ -21,6 +22,7 @@ class PrintJob {
   final bool showPricesWithTax;
   final double? receivedAmount;
   final double? change;
+  final String branchNumber;
 
   const PrintJob({
     required this.items,
@@ -40,5 +42,6 @@ class PrintJob {
     this.enterprise,
     this.receivedAmount,
     this.change,
+    required this.branchNumber,
   });
 }

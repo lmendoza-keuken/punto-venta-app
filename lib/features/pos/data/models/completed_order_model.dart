@@ -1,6 +1,7 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:punto_venta_app/features/pos/data/models/cart_log_entry_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/payment_method.dart';
 import 'cart_item_model.dart';
 
 part 'completed_order_model.g.dart';
@@ -19,8 +20,12 @@ class CompletedOrderModel {
   final String? clientName;
   @JsonKey(name: 'cashier_name')
   final String cashierName;
-  @JsonKey(name: 'payment_method')
-  final String paymentMethod;
+  @JsonKey(
+    name: 'payment_method',
+    fromJson: _paymentMethodFromJson,
+    toJson: _paymentMethodToJson,
+  )
+  final PaymentMethod? paymentMethod;
   @JsonKey(name: 'total_tax')
   final double totalTax;
   @JsonKey(name: 'total_items')
@@ -43,7 +48,7 @@ class CompletedOrderModel {
     required this.completedAt,
     this.clientName,
     required this.cashierName,
-    required this.paymentMethod,
+    this.paymentMethod,
     required this.totalTax,
     required this.totalItems,
     this.showSubtotalAndTax = false,
@@ -96,4 +101,24 @@ class CompletedOrderModel {
       receivedAmount: order.receivedAmount,
     );
   }
+}
+
+PaymentMethod? _paymentMethodFromJson(Map<String, dynamic>? json) {
+  if (json == null) return null;
+  return PaymentMethod(
+    id: json['id'] as int,
+    description: json['description'] as String,
+    shortDescription: json['short_description'] as String,
+    deleteAt: json['delete_at'] as String,
+  );
+}
+
+Map<String, dynamic>? _paymentMethodToJson(PaymentMethod? paymentMethod) {
+  if (paymentMethod == null) return null;
+  return {
+    'id': paymentMethod.id,
+    'description': paymentMethod.description,
+    'short_description': paymentMethod.shortDescription,
+    'delete_at': paymentMethod.deleteAt,
+  };
 }

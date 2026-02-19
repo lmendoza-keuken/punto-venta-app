@@ -48,18 +48,18 @@ class SearchProcessor {
           found = weightResult.product;
           calculatedUnitPrice = weightResult.calculatedUnitPrice;
         } else {
-           for (var product in prodState.products) {
-             if (product.barcodes != null) {
-               for (var barcode in product.barcodes!) {
-                 if (barcode.barcode.toString() == code) {
-                   found = product;
-                   matchedBarcode = barcode;
-                   break;
-                 }
-               }
-               if (found != null) break;
-             }
-           }
+          for (var product in prodState.products) {
+            if (product.barcodes != null) {
+              for (var barcode in product.barcodes!) {
+                if (barcode.barcode.toString() == code) {
+                  found = product;
+                  matchedBarcode = barcode;
+                  break;
+                }
+              }
+              if (found != null) break;
+            }
+          }
         }
       } else {
         try {
@@ -114,10 +114,9 @@ class SearchProcessor {
       }
     }
 
-     if (weightKg != null) {
+    if (weightKg != null) {
       finalQuantity = 1;
     }
-    
 
     final cartBloc = context.read<CartBloc>();
     if (isDeleteMode) {
@@ -130,7 +129,8 @@ class SearchProcessor {
           pricePerKg: calculatedUnitPrice,
         ));
       } else {
-        cartBloc.add(RemoveQuantityFromCart(found.id.toString(), finalQuantity));
+        cartBloc
+            .add(RemoveQuantityFromCart(found.id.toString(), finalQuantity));
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

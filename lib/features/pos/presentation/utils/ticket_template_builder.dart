@@ -185,7 +185,7 @@ class TicketTemplateBuilder {
     return [
       TicketCommand.feedLine(),
       TicketCommand.text(
-          "Metodo de pago: ${printJob.paymentMethod ?? 'Efectivo'}"),
+          "Metodo de pago: ${printJob.paymentMethod?.shortDescription ?? 'Efectivo'}"),
       TicketCommand.feedLine(),
       TicketCommand.text("Total de articulos: $totalItems"),
       TicketCommand.feedLine(),

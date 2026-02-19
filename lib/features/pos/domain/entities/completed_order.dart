@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/payment_method.dart';
 import 'cart_item.dart';
 
 class CompletedOrder extends Equatable {
@@ -11,7 +12,7 @@ class CompletedOrder extends Equatable {
   final DateTime completedAt;
   final String? clientName;
   final String cashierName;
-  final String paymentMethod;
+  final PaymentMethod? paymentMethod;
   final double totalTax;
   final int totalItems;
   final bool showSubtotalAndTax;
@@ -28,7 +29,7 @@ class CompletedOrder extends Equatable {
     required this.completedAt,
     this.clientName,
     required this.cashierName,
-    this.paymentMethod = 'Efectivo',
+    required this.paymentMethod,
     required this.totalTax,
     required this.totalItems,
     this.showSubtotalAndTax = false,
@@ -46,7 +47,7 @@ class CompletedOrder extends Equatable {
     DateTime? completedAt,
     String? clientName,
     String? cashierName,
-    String? paymentMethod,
+    PaymentMethod? paymentMethod,
     double? totalTax,
     int? totalItems,
     bool? showSubtotalAndTax,

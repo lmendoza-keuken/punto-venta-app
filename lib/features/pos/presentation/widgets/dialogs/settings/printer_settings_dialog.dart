@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/payment_method.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/printer_config.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_bloc.dart';
@@ -25,7 +26,7 @@ Future<void> showPrinterSettingsDialog(BuildContext context) async {
     context: context,
     builder: (ctx) {
       final formKey = GlobalKey<FormState>();
-      
+
       return BlocConsumer<PrinterBloc, PrinterState>(
         listener: (context, state) {
           if (state is PrinterSuccess) {
@@ -47,7 +48,7 @@ Future<void> showPrinterSettingsDialog(BuildContext context) async {
         builder: (context, printerState) {
           final isLoading = printerState is PrinterPrinting;
           final hasError = printerState is PrinterError;
-          
+
           return AlertDialog(
             title: const Text('Configuración de Impresora'),
             content: SingleChildScrollView(
@@ -68,7 +69,8 @@ Future<void> showPrinterSettingsDialog(BuildContext context) async {
                         ),
                         child: const Row(
                           children: [
-                            Icon(Icons.info_outline, size: 20, color: Colors.blue),
+                            Icon(Icons.info_outline,
+                                size: 20, color: Colors.blue),
                             SizedBox(width: 8),
                             Expanded(
                               child: Text(
@@ -80,12 +82,13 @@ Future<void> showPrinterSettingsDialog(BuildContext context) async {
                         ),
                       ),
                       const SizedBox(height: AppDimensions.paddingM),
-                      
+
                       // Banner de estado (si está imprimiendo)
                       if (isLoading)
                         Container(
                           padding: const EdgeInsets.all(12),
-                          margin: const EdgeInsets.only(bottom: AppDimensions.paddingM),
+                          margin: const EdgeInsets.only(
+                              bottom: AppDimensions.paddingM),
                           decoration: BoxDecoration(
                             color: Colors.orange.shade50,
                             borderRadius: BorderRadius.circular(8),
@@ -96,24 +99,28 @@ Future<void> showPrinterSettingsDialog(BuildContext context) async {
                               SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
                               ),
                               SizedBox(width: 12),
                               Expanded(
                                 child: Text(
                                   'Conectando con la impresora...',
-                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                                  style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                      
+
                       // Banner de error (si hay error)
                       if (hasError)
                         Container(
                           padding: const EdgeInsets.all(12),
-                          margin: const EdgeInsets.only(bottom: AppDimensions.paddingM),
+                          margin: const EdgeInsets.only(
+                              bottom: AppDimensions.paddingM),
                           decoration: BoxDecoration(
                             color: Colors.red.shade50,
                             borderRadius: BorderRadius.circular(8),
@@ -124,7 +131,8 @@ Future<void> showPrinterSettingsDialog(BuildContext context) async {
                             children: [
                               Row(
                                 children: [
-                                  Icon(Icons.error_outline, size: 20, color: Colors.red.shade700),
+                                  Icon(Icons.error_outline,
+                                      size: 20, color: Colors.red.shade700),
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
@@ -159,7 +167,7 @@ Future<void> showPrinterSettingsDialog(BuildContext context) async {
                             ],
                           ),
                         ),
-                      
+
                       TextFormField(
                         controller: ipController,
                         enabled: !isLoading,
@@ -177,7 +185,7 @@ Future<void> showPrinterSettingsDialog(BuildContext context) async {
                         },
                       ),
                       const SizedBox(height: AppDimensions.paddingM),
-                      
+
                       TextFormField(
                         controller: timeoutController,
                         enabled: !isLoading,
@@ -190,7 +198,8 @@ Future<void> showPrinterSettingsDialog(BuildContext context) async {
                           helperText: 'Tiempo de espera para la conexión',
                         ),
                         validator: (v) {
-                          if (v == null || v.isEmpty) return 'Ingresa el timeout';
+                          if (v == null || v.isEmpty)
+                            return 'Ingresa el timeout';
                           final timeout = int.tryParse(v);
                           if (timeout == null || timeout < 1000) {
                             return 'Timeout debe ser mayor a 1000ms';
@@ -224,9 +233,11 @@ Future<void> showPrinterSettingsDialog(BuildContext context) async {
 
                         final currentConfig = PrinterConfig(
                           ip: ipController.text.trim(),
-                          port: int.tryParse(portController.text.trim()) ?? config.port,
-                          timeout: int.tryParse(timeoutController.text.trim()) ??
-                              config.timeout,
+                          port: int.tryParse(portController.text.trim()) ??
+                              config.port,
+                          timeout:
+                              int.tryParse(timeoutController.text.trim()) ??
+                                  config.timeout,
                         );
 
                         final testJob = PrintJob(
@@ -235,12 +246,18 @@ Future<void> showPrinterSettingsDialog(BuildContext context) async {
                           total: 0.0,
                           totalTax: 0.0,
                           clientName: 'Cliente de prueba',
-                          paymentMethod: 'Efectivo',
+                          paymentMethod: PaymentMethod(
+                              id: 1,
+                              description: "Efectivo",
+                              shortDescription: 'Efectivo',
+                              deleteAt: ""),
                           cashierName: 'Ticket Prueba',
                           timestamp: DateTime.now(),
-                          ticketId: 'TEST-${DateTime.now().millisecondsSinceEpoch}',
+                          ticketId:
+                              'TEST-${DateTime.now().millisecondsSinceEpoch}',
                           showSubtotalAndTax: true,
                           showPricesWithTax: false,
+                          branchNumber: 'Sucursal Prueba',
                         );
 
                         context.read<PrinterBloc>().add(
@@ -262,18 +279,18 @@ Future<void> showPrinterSettingsDialog(BuildContext context) async {
                     ? null
                     : () async {
                         if (!formKey.currentState!.validate()) return;
-                        
+
                         final newConfig = PrinterConfig(
                           ip: ipController.text.trim(),
                           port: int.parse(portController.text.trim()),
                           timeout: int.parse(timeoutController.text.trim()),
                         );
-                        
+
                         await ds.savePrinterConfig(newConfig);
-                        
+
                         if (!ctx.mounted) return;
                         Navigator.of(ctx).pop();
-                        
+
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Row(

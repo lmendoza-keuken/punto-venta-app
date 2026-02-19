@@ -1,4 +1,5 @@
 import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/payment_method.dart';
 
 import '../entities/completed_order.dart';
 import '../entities/cart_item.dart';
@@ -15,7 +16,7 @@ class CompleteOrderUsecase {
     required double total,
     String? clientName,
     required String cashierName,
-    String paymentMethod = 'Efectivo',
+    PaymentMethod? paymentMethod,
     bool showSubtotalAndTax = false,
     bool showPricesWithTax = true,
     double? receivedAmount,

@@ -1,198 +1,247 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
-import 'package:punto_venta_app/features/pos/domain/entities/ticket_config.dart';
-import 'package:punto_venta_app/features/pos/domain/usecases/get_ticket_config_usecase.dart';
-import 'package:punto_venta_app/features/pos/domain/usecases/update_ticket_config_usecase.dart';
+import 'package:punto_venta_app/core/constants/app_dimensions.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/pdv_config.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/pdv_config/pdv_config_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/pdv_config/pdv_config_event.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/pdv_config/pdv_config_state.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
-void showTicketSettingsDialog(BuildContext context) {
-  showDialog(
+Future<({int pdvId, int sucursalId})?> showPdvSettingsDialog(
+    BuildContext context) async {
+  return await showDialog<({int pdvId, int sucursalId})>(
     context: context,
-    builder: (context) => const TicketSettingsDialog(),
+    builder: (ctx) => BlocProvider(
+      create: (_) => di.sl<PdvConfigBloc>()..add(FetchPdvConfigEvent()),
+      child: const _PdvSettingsDialogContent(),
+    ),
   );
 }
 
-class TicketSettingsDialog extends StatefulWidget {
-  const TicketSettingsDialog({super.key});
+class _PdvSettingsDialogContent extends StatefulWidget {
+  const _PdvSettingsDialogContent();
 
   @override
-  State<TicketSettingsDialog> createState() => _TicketSettingsDialogState();
+  State<_PdvSettingsDialogContent> createState() =>
+      _PdvSettingsDialogContentState();
 }
 
-class _TicketSettingsDialogState extends State<TicketSettingsDialog> {
-  final getTicketConfigUsecase = di.sl<GetTicketConfigUsecase>();
-  final updateTicketConfigUsecase = di.sl<UpdateTicketConfigUsecase>();
-
-  bool _isLoading = true;
-  bool _isSaving = false;
-  TicketConfig? _config;
-  bool _showSubtotalAndTax = false;
-  bool _showPricesWithTax = true;
+class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
+  final formKey = GlobalKey<FormState>();
+  late TextEditingController pdvIdController;
+  late TextEditingController sucursalIdController;
+  late TextEditingController numeroSucursalController;
 
   @override
   void initState() {
     super.initState();
-    _loadConfig();
+    pdvIdController = TextEditingController();
+    sucursalIdController = TextEditingController();
+    numeroSucursalController = TextEditingController();
   }
 
-  Future<void> _loadConfig() async {
-    try {
-      final config = await getTicketConfigUsecase();
-      if (mounted) {
-        setState(() {
-          _config = config;
-          _showSubtotalAndTax = config?.showSubtotalAndTax ?? false;
-          _showPricesWithTax = config?.showPricesWithTax ?? true;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al cargar configuración: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    }
+  @override
+  void dispose() {
+    pdvIdController.dispose();
+    sucursalIdController.dispose();
+    numeroSucursalController.dispose();
+    super.dispose();
   }
 
-  Future<void> _saveConfig() async {
-    setState(() {
-      _isSaving = true;
-    });
-
-    try {
-      final TicketConfig configToSave;
-
-      if (_config == null) {
-        configToSave = TicketConfig(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          showSubtotalAndTax: _showSubtotalAndTax,
-          showPricesWithTax: _showPricesWithTax,
-          lastUpdated: DateTime.now(),
-        );
-      } else {
-        configToSave = _config!.copyWith(
-          showSubtotalAndTax: _showSubtotalAndTax,
-          showPricesWithTax: _showPricesWithTax,
-          lastUpdated: DateTime.now(),
-        );
-      }
-
-      await updateTicketConfigUsecase(configToSave);
-
-      if (mounted) {
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Configuración actualizada correctamente'),
-            backgroundColor: AppColors.success,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isSaving = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al guardar configuración: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    }
+  void _updateControllersFromConfig(PdvConfig config) {
+    pdvIdController.text = config.pdvId.toString();
+    sucursalIdController.text = config.sucursalId.toString();
+    numeroSucursalController.text = config.branchNumber ?? "";
   }
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Configuración de Tickets'),
-      content: _isLoading
-          ? const SizedBox(
-              width: 300,
-              height: 200,
-              child: Center(child: CircularProgressIndicator()),
-            )
-          : SizedBox(
-              width: 450,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+    return BlocConsumer<PdvConfigBloc, PdvConfigState>(
+      listener: (context, state) {
+        if (state is PdvConfigLoaded) {
+          _updateControllersFromConfig(state.config);
+        } else if (state is PdvConfigSaved) {
+          Navigator.of(context).pop(
+            (pdvId: state.config.pdvId, sucursalId: state.config.sucursalId),
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
                 children: [
-                  const SizedBox(height: 16),
-                  SwitchListTile(
-                    title: const Text('Mostrar Subtotal e IVA'),
-                    subtitle: const Text(
-                      'Muestra el desglose en los tickets. '
-                      'Si está desactivado, no se mostrará sin importar el cliente.',
-                    ),
-                    value: _showSubtotalAndTax,
-                    onChanged: (value) {
-                      setState(() {
-                        _showSubtotalAndTax = value;
-                      });
-                    },
-                  ),
-                  const Divider(),
-                  SwitchListTile(
-                    title: const Text('Mostrar Precios con IVA'),
-                    subtitle: const Text(
-                      'Muestra los precios de los productos con IVA incluido en los tickets.',
-                    ),
-                    value: _showPricesWithTax,
-                    onChanged: (value) {
-                      setState(() {
-                        _showPricesWithTax = value;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.blue.shade200),
-                    ),
-                    child: const Row(
-                      children: [
-                        Icon(Icons.info_outline, color: Colors.blue),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Estas configuraciones se aplicarán a todos los tickets generados desde este punto.',
-                            style: TextStyle(fontSize: 12),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  Icon(Icons.check_circle, color: Colors.white),
+                  SizedBox(width: 8),
+                  Text('Configuración del PDV guardada'),
                 ],
               ),
+              backgroundColor: AppColors.success,
+              behavior: SnackBarBehavior.floating,
             ),
-      actions: [
-        TextButton(
-          onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
-          child: const Text('Cancelar'),
-        ),
-        ElevatedButton(
-          onPressed: _isSaving || _isLoading ? null : _saveConfig,
-          child: _isSaving
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text('Guardar'),
-        ),
-      ],
+          );
+        } else if (state is PdvConfigError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(state.message)),
+                ],
+              ),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      },
+      builder: (context, state) {
+        final isLoading = state is PdvConfigLoading;
+
+        return AlertDialog(
+          title: const Text('Configuración del PDV'),
+          content: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: SizedBox(
+                width: 420,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Banner de información
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.blue.shade200),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.info_outline,
+                              size: 20, color: Colors.blue),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              isLoading
+                                  ? 'Cargando configuración...'
+                                  : 'Configura los datos de tu punto de venta',
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppDimensions.paddingM),
+
+                    if (isLoading)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(32.0),
+                          child: CircularProgressIndicator(),
+                        ),
+                      )
+                    else ...[
+                      // Campo: PDV ID
+                      TextFormField(
+                        controller: pdvIdController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'PDV ID',
+                          hintText: '1',
+                          prefixIcon: Icon(Icons.store),
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (v) {
+                          if (v == null || v.isEmpty) {
+                            return 'Ingresa el PDV ID';
+                          }
+                          if (int.tryParse(v) == null) {
+                            return 'Debe ser un número';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: AppDimensions.paddingM),
+                      // Campo: Sucursal ID
+                      TextFormField(
+                        controller: sucursalIdController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'Sucursal ID',
+                          hintText: '1',
+                          prefixIcon: Icon(Icons.location_on),
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (v) {
+                          if (v == null || v.isEmpty) {
+                            return 'Ingresa la Sucursal ID';
+                          }
+                          if (int.tryParse(v) == null) {
+                            return 'Debe ser un número';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: AppDimensions.paddingM),
+                      // Campo: Número de Sucursal
+                      TextFormField(
+                        controller: numeroSucursalController,
+                        decoration: const InputDecoration(
+                          labelText: 'Número de Sucursal',
+                          hintText: 'Sucursal Centro',
+                          prefixIcon: Icon(Icons.tag),
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (v) {
+                          if (v == null || v.isEmpty) {
+                            return 'Ingresa el número de sucursal';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(null),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.save),
+              label: const Text('Guardar'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: isLoading
+                  ? null
+                  : () {
+                      if (!formKey.currentState!.validate()) return;
+
+                      final pdvId = int.parse(pdvIdController.text.trim());
+                      final sucursalId =
+                          int.parse(sucursalIdController.text.trim());
+                      final numeroSucursal =
+                          numeroSucursalController.text.trim();
+
+                      final newConfig = PdvConfig(
+                        pdvId: pdvId,
+                        sucursalId: sucursalId,
+                        branchNumber: numeroSucursal,
+                      );
+
+                      context
+                          .read<PdvConfigBloc>()
+                          .add(SavePdvConfigEvent(newConfig));
+                    },
+            ),
+          ],
+        );
+      },
     );
   }
 }

@@ -5,6 +5,7 @@ import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/core/utils/extensions.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/pdv_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
@@ -51,6 +52,8 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
   Future<void> _initializePrintJob() async {
     final localDs = di.sl<AuthLocalDataSource>();
     final enterprise = await localDs.getCachedEnterprise();
+    final config = await di.sl<PdvLocalDataSource>().getPdvConfig();
+            final branchNumber = config?.branchNumber;
 
     final printJob = PrintJob(
       items: widget.order.items,
@@ -67,6 +70,7 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
       showPricesWithTax: widget.order.showPricesWithTax,
       change: widget.order.change,
       receivedAmount: widget.order.receivedAmount,
+      branchNumber: branchNumber ?? '',
     );
 
     if (mounted) {

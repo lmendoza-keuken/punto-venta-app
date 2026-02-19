@@ -11,7 +11,7 @@ class InvoicePayload {
   final String timestamp;
   final int? cashier;
   final Map<String, dynamic>? client;
-  final String paymentMethod;
+  final int paymentMethod;
   final double total;
   final List<TaxModel> totalTax;
   final List<Map<String, dynamic>> logItems;
@@ -32,6 +32,7 @@ class InvoicePayload {
         'timestamp': timestamp,
         'cashier': cashier,
         'client': client,
+        // cambiar al id
         'paymentMethod': paymentMethod,
         'total': total,
         'totalTax': totalTax.map((t) => t.toJson()).toList(),
@@ -39,7 +40,6 @@ class InvoicePayload {
       };
 
   factory InvoicePayload.fromPrintJob(PrintJob job) {
-
     Map<String, dynamic>? serializeClient(Client? c) {
       if (c == null) return null;
       final model = ClientModel.fromEntity(c);
@@ -57,6 +57,7 @@ class InvoicePayload {
 
         final unitPrice = itemModel.product.precio ?? 0.0;
         final quantity = itemModel.quantity;
+        //
         final weightKg = itemLog.item.weightKg;
         final isWeighted = (itemLog.item.isWeighted == true);
 
@@ -115,7 +116,7 @@ class InvoicePayload {
       timestamp: job.timestamp.toIso8601String(),
       cashier: job.cashierId,
       client: serializeClient(job.client),
-      paymentMethod: job.paymentMethod ?? '',
+      paymentMethod: job.paymentMethod?.id ?? 0,
       total: job.total,
       totalTax: totalTax,
       logItems: logItems,

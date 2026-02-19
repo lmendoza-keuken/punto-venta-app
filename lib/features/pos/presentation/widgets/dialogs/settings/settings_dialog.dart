@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:punto_venta_app/core/dialogs/logout_dialog.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/price_list_local_datasource.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/pdv_settings_dialog.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/printer_settings_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/price_list_selector_dialog.dart';
-import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/pdv_settings_dialog.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/ticket_settings_dialog.dart';
 
 class SettingsDialog extends StatefulWidget {
   const SettingsDialog({super.key});
@@ -54,7 +55,8 @@ class _SettingsDialogState extends State<SettingsDialog> {
                     onTap: () {
                       final navigatorContext = Navigator.of(context).context;
                       Navigator.of(context).pop();
-                      showPriceListSelectorDialog(navigatorContext, currentList);
+                      showPriceListSelectorDialog(
+                          navigatorContext, currentList);
                     },
                   ),
                   ActionCard(
@@ -62,7 +64,20 @@ class _SettingsDialogState extends State<SettingsDialog> {
                     iconColor: Colors.purple,
                     backgroundColor: Colors.purple.withOpacity(0.1),
                     title: 'Configuración de Tickets',
-                    subtitle: 'Configurar visualización de subtotal, IVA y precios',
+                    subtitle:
+                        'Configurar visualización de subtotal, IVA y precios',
+                    onTap: () {
+                      final navigatorContext = Navigator.of(context).context;
+                      Navigator.of(context).pop();
+                      showTicketSettingsDialog(navigatorContext);
+                    },
+                  ),
+                  ActionCard(
+                    icon: Icons.point_of_sale,
+                    iconColor: Colors.teal,
+                    backgroundColor: Colors.teal.withOpacity(0.1),
+                    title: 'Configurar PDV',
+                    subtitle: 'Configurar datos del punto de venta',
                     onTap: () {
                       final navigatorContext = Navigator.of(context).context;
                       Navigator.of(context).pop();

@@ -9,8 +9,10 @@ class ApiConfig {
   static String get categoriesUrl => '$_baseUrl/categories/';
   static String get invoiceUrl => '$_baseUrl/tickets/';
   static String get pdvUrl => '$_baseUrl/pdv/';
-  static String get appConfigUrl => '$_baseUrl/app_config/'; 
-  static String get paymentMethodsUrl => '$_baseUrl/payment_methods/'; 
+  static String get ticketConfigUrl => '$_baseUrl/ticket_config/'; 
+  static String get paymentMethodsUrl => '$_baseUrl/payment_methods/';
+  static String get configPdvUrl => '$_baseUrl/config-pdv/';
+
 
   static void updateCompanyConfig(String companyId, String? baseUrl) {
     _companyId = companyId;
@@ -19,6 +21,7 @@ class ApiConfig {
       _baseUrl = baseUrl;
     } else {
       _baseUrl =
+      // enterprisesLicense/ base url 
           // 'http://orders0.epekuen.com.ar/produccion/$companyId/test/puntoVenta';
           'http://192.168.0.9:8000';
     }

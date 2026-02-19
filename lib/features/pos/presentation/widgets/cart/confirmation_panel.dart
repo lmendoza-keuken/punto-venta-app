@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/pdv_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/price_list_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
@@ -139,7 +140,9 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                           // Filtrar solo el método de efectivo (por ahora)
                           final cashPayment = paymentMethods
                               .where((pm) =>
-                                  pm.description.toLowerCase().contains('efectivo') ||
+                                  pm.description
+                                      .toLowerCase()
+                                      .contains('efectivo') ||
                                   pm.shortDescription
                                       .toLowerCase()
                                       .contains('efectivo'))
@@ -156,15 +159,13 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                                     color: AppColors.warning.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                      color: AppColors.warning
-                                          .withOpacity(0.3),
+                                      color: AppColors.warning.withOpacity(0.3),
                                     ),
                                   ),
                                   child: Row(
                                     children: [
                                       Icon(Icons.warning,
-                                          size: 20,
-                                          color: AppColors.warning),
+                                          size: 20, color: AppColors.warning),
                                       const SizedBox(width: 12),
                                       const Expanded(
                                         child: Text(
@@ -187,10 +188,9 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                                         width: 120,
                                         child: PaymentOptionWidget(
                                           paymentMethod: cashPayment,
-                                          isSelected:
-                                              pmState.selectedPaymentMethod
-                                                      ?.id ==
-                                                  cashPayment.id,
+                                          isSelected: pmState
+                                                  .selectedPaymentMethod?.id ==
+                                              cashPayment.id,
                                           isEnabled: true,
                                           onTap: () {
                                             context
@@ -367,12 +367,40 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
 
       // Obtener método de pago seleccionado del PaymentMethodsBloc
       final paymentMethodsState = context.read<PaymentMethodsBloc>().state;
-      final selectedPaymentMethod =
-          paymentMethodsState is PaymentMethodsLoaded
-              ? paymentMethodsState.selectedPaymentMethod
-              : null;
-      final paymentMethodDescription =
-          selectedPaymentMethod?.shortDescription ?? 'Efectivo';
+      final selectedPaymentMethod = paymentMethodsState is PaymentMethodsLoaded
+          ? paymentMethodsState.selectedPaymentMethod
+          : null;
+      final config = await di.sl<PdvLocalDataSource>().getPdvConfig();
+      // Numero de sucursal para incluir en el ticket
+      final branchNumber = config?.branchNumber;
+
+      // Bloquear cobro si no hay número de sucursal configurado
+      if (branchNumber == null || branchNumber.trim().isEmpty) {
+        if (mounted) {
+          setState(() {
+            _isProcessingSale = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded, color: Colors.white),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Configure el número de sucursal antes de realizar cobros.',
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.orange,
+              behavior: SnackBarBehavior.floating,
+              duration: Duration(seconds: 5),
+            ),
+          );
+        }
+        return;
+      }
 
       bool showSubtotalAndTax = false;
       bool showPricesWithTax = true;
@@ -393,6 +421,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
         logItems: cartState.log,
         total: cartState.total,
         clientName: selectedClient?.name,
+        paymentMethod: selectedPaymentMethod,
         cashierName: user?.name ?? 'Desconocido',
         showSubtotalAndTax: showSubtotalAndTax,
         showPricesWithTax: showPricesWithTax,
@@ -408,7 +437,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
         client: selectedClient,
         priceListId: priceList,
         totalTax: totalTax,
-        paymentMethod: paymentMethodDescription,
+        paymentMethod: selectedPaymentMethod,
         cashierName: user?.name ?? 'Desconocido',
         cashierId: int.tryParse(user?.id ?? ''),
         timestamp: DateTime.now(),
@@ -418,6 +447,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
         showPricesWithTax: showPricesWithTax,
         receivedAmount: _receivedAmount,
         change: _change,
+        branchNumber: branchNumber ?? '',
       );
 
       final sendInvoice = di.sl<SendInvoiceUseCase>();
