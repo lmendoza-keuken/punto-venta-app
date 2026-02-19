@@ -50,154 +50,156 @@ Future<void> showPrinterSettingsDialog(BuildContext context) async {
           
           return AlertDialog(
             title: const Text('Configuración de Impresora'),
-            content: Form(
-              key: formKey,
-              child: SizedBox(
-                width: 420,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Banner de información
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.blue.shade200),
-                      ),
-                      child: const Row(
-                        children: [
-                          Icon(Icons.info_outline, size: 20, color: Colors.blue),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Configura la IP de tu impresora térmica',
-                              style: TextStyle(fontSize: 13),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: AppDimensions.paddingM),
-                    
-                    // Banner de estado (si está imprimiendo)
-                    if (isLoading)
+            content: SingleChildScrollView(
+              child: Form(
+                key: formKey,
+                child: SizedBox(
+                  width: 420,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Banner de información
                       Container(
                         padding: const EdgeInsets.all(12),
-                        margin: const EdgeInsets.only(bottom: AppDimensions.paddingM),
                         decoration: BoxDecoration(
-                          color: Colors.orange.shade50,
+                          color: Colors.blue.shade50,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.orange.shade200),
+                          border: Border.all(color: Colors.blue.shade200),
                         ),
                         child: const Row(
                           children: [
-                            SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                            SizedBox(width: 12),
+                            Icon(Icons.info_outline, size: 20, color: Colors.blue),
+                            SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'Conectando con la impresora...',
-                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                                'Configura la IP de tu impresora térmica',
+                                style: TextStyle(fontSize: 13),
                               ),
                             ),
                           ],
                         ),
                       ),
-                    
-                    // Banner de error (si hay error)
-                    if (hasError)
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        margin: const EdgeInsets.only(bottom: AppDimensions.paddingM),
-                        decoration: BoxDecoration(
-                          color: Colors.red.shade50,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.red.shade200),
+                      const SizedBox(height: AppDimensions.paddingM),
+                      
+                      // Banner de estado (si está imprimiendo)
+                      if (isLoading)
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          margin: const EdgeInsets.only(bottom: AppDimensions.paddingM),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.orange.shade200),
+                          ),
+                          child: const Row(
+                            children: [
+                              SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  'Conectando con la impresora...',
+                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(Icons.error_outline, size: 20, color: Colors.red.shade700),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    'Error de conexión',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.red.shade700,
+                      
+                      // Banner de error (si hay error)
+                      if (hasError)
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          margin: const EdgeInsets.only(bottom: AppDimensions.paddingM),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.red.shade200),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(Icons.error_outline, size: 20, color: Colors.red.shade700),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'Error de conexión',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.red.shade700,
+                                      ),
                                     ),
                                   ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                (printerState as PrinterError).message,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.red.shade700,
                                 ),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              (printerState as PrinterError).message,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.red.shade700,
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '• Verifica que la impresora esté encendida\n'
-                              '• Confirma que la IP sea correcta\n'
-                              '• Asegúrate de estar en la misma red',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.red.shade600,
+                              const SizedBox(height: 8),
+                              Text(
+                                '• Verifica que la impresora esté encendida\n'
+                                '• Confirma que la IP sea correcta\n'
+                                '• Asegúrate de estar en la misma red',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.red.shade600,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
+                      
+                      TextFormField(
+                        controller: ipController,
+                        enabled: !isLoading,
+                        decoration: const InputDecoration(
+                          labelText: 'IP de la impresora',
+                          hintText: '192.168.1.100',
+                          prefixIcon: Icon(Icons.router),
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'Ingresa la IP';
+                          final ipRegex = RegExp(r'^(\d{1,3}\.){3}\d{1,3}$');
+                          if (!ipRegex.hasMatch(v)) return 'IP inválida';
+                          return null;
+                        },
                       ),
-                    
-                    TextFormField(
-                      controller: ipController,
-                      enabled: !isLoading,
-                      decoration: const InputDecoration(
-                        labelText: 'IP de la impresora',
-                        hintText: '192.168.1.100',
-                        prefixIcon: Icon(Icons.router),
-                        border: OutlineInputBorder(),
+                      const SizedBox(height: AppDimensions.paddingM),
+                      
+                      TextFormField(
+                        controller: timeoutController,
+                        enabled: !isLoading,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'Timeout (ms)',
+                          hintText: '5000',
+                          prefixIcon: Icon(Icons.timer),
+                          border: OutlineInputBorder(),
+                          helperText: 'Tiempo de espera para la conexión',
+                        ),
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'Ingresa el timeout';
+                          final timeout = int.tryParse(v);
+                          if (timeout == null || timeout < 1000) {
+                            return 'Timeout debe ser mayor a 1000ms';
+                          }
+                          return null;
+                        },
                       ),
-                      validator: (v) {
-                        if (v == null || v.isEmpty) return 'Ingresa la IP';
-                        final ipRegex = RegExp(r'^(\d{1,3}\.){3}\d{1,3}$');
-                        if (!ipRegex.hasMatch(v)) return 'IP inválida';
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: AppDimensions.paddingM),
-                    
-                    TextFormField(
-                      controller: timeoutController,
-                      enabled: !isLoading,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Timeout (ms)',
-                        hintText: '5000',
-                        prefixIcon: Icon(Icons.timer),
-                        border: OutlineInputBorder(),
-                        helperText: 'Tiempo de espera para la conexión',
-                      ),
-                      validator: (v) {
-                        if (v == null || v.isEmpty) return 'Ingresa el timeout';
-                        final timeout = int.tryParse(v);
-                        if (timeout == null || timeout < 1000) {
-                          return 'Timeout debe ser mayor a 1000ms';
-                        }
-                        return null;
-                      },
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

@@ -444,6 +444,7 @@ class _AppSidebarState extends State<AppSidebar> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Cliente ${result.name} seleccionado'),
+          backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
         ),
       );

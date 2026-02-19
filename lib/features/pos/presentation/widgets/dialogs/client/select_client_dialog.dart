@@ -33,12 +33,9 @@ class _SelectClientDialogState extends State<SelectClientDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
-    final availableHeight =
-        screenHeight - keyboardHeight - 120; 
-
     return AlertDialog(
+      insetPadding:
+          const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
       title: Row(
         children: [
           const Icon(Icons.person_search, color: AppColors.primary),
@@ -47,10 +44,22 @@ class _SelectClientDialogState extends State<SelectClientDialog> {
               style: Theme.of(context).textTheme.titleLarge),
         ],
       ),
-      content: SizedBox(
-        width: 600,
-        height: availableHeight.clamp(300.0, 540.0), 
-        child: SingleChildScrollView(
+      actions: [
+        // Botones de acción
+        TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancelar')),
+        const Spacer(),
+        ElevatedButton(
+          onPressed: _selected != null
+              ? () => Navigator.of(context).pop(_selected)
+              : null,
+          child: const Text('Seleccionar'),
+        ),
+      ],
+      content: SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 500),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -209,160 +218,137 @@ class _SelectClientDialogState extends State<SelectClientDialog> {
                 },
               ),
               const SizedBox(height: AppDimensions.paddingS),
-              // Lista de clientes con scroll independiente
-              SizedBox(
-                height: 300, // Altura fija para la lista
-                child: BlocBuilder<ClientsBloc, ClientsState>(
-                  builder: (context, state) {
-                    if (state is ClientsLoading) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (state is ClientsLoaded) {
-                      final allClients = state.clients;
+              // Lista de clientes con scroll global
+              BlocBuilder<ClientsBloc, ClientsState>(
+                builder: (context, state) {
+                  if (state is ClientsLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (state is ClientsLoaded) {
+                    final allClients = state.clients;
 
-                      // Filtrar clientes según la búsqueda
-                      final clients = allClients.where((client) {
-                        if (_searchQuery.isEmpty) return true;
-                        final name = client.name.toLowerCase();
-                        final document = client.document?.toLowerCase() ?? '';
-                        return name.contains(_searchQuery) ||
-                            document.contains(_searchQuery);
-                      }).toList();
+                    // Filtrar clientes según la búsqueda
+                    final clients = allClients.where((client) {
+                      if (_searchQuery.isEmpty) return true;
+                      final name = client.name.toLowerCase();
+                      final document = client.document?.toLowerCase() ?? '';
+                      return name.contains(_searchQuery) ||
+                          document.contains(_searchQuery);
+                    }).toList();
 
-                      if (allClients.isEmpty) {
-                        return const Center(
-                            child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.person,
-                                color: AppColors.addClientButton),
-                            Text('No hay clientes guardados'),
-                          ],
-                        ));
-                      }
-
-                      if (clients.isEmpty) {
-                        return Center(
+                    if (allClients.isEmpty) {
+                      return const Center(
                           child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.search_off,
-                                size: 48,
-                                color: Colors.grey.shade400,
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'No se encontraron clientes',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Intenta con otro término de búsqueda',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey.shade500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-
-                      return ListView.builder(
-                        padding: const EdgeInsets.all(AppDimensions.paddingM),
-                        itemCount: clients.length,
-                        itemBuilder: (context, index) {
-                          final c = clients[index];
-                          final isSelected = _selected?.id == c.id;
-                          return Card(
-                            color: isSelected
-                                ? AppColors.primary.withOpacity(0.08)
-                                : null,
-                            child: ListTile(
-                              title: Text(c.name),
-                              subtitle: Text(
-                                  '${c.document ?? ''}${c.phone != null ? ' • ${c.phone}' : ''}'),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.delete,
-                                        color: AppColors.error),
-                                    onPressed: () => _confirmDelete(c),
-                                  ),
-                                ],
-                              ),
-                              onTap: () {
-                                setState(() => _selected = c);
-                              },
-                            ),
-                          );
-                        },
-                      );
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.person,
+                              color: AppColors.addClientButton),
+                          Text('No hay clientes guardados'),
+                        ],
+                      ));
                     }
-                    if (state is ClientsError) {
+
+                    if (clients.isEmpty) {
                       return Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(
-                              Icons.error_outline,
-                              color: AppColors.error,
+                            Icon(
+                              Icons.search_off,
                               size: 48,
+                              color: Colors.grey.shade400,
                             ),
-                            const SizedBox(height: AppDimensions.paddingM),
+                            const SizedBox(height: 16),
                             Text(
-                              'Error al cargar clientes',
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                            const SizedBox(height: AppDimensions.paddingS),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppDimensions.paddingL,
-                              ),
-                              child: Text(
-                                state.message,
-                                textAlign: TextAlign.center,
-                                style: Theme.of(context).textTheme.bodySmall,
+                              'No se encontraron clientes',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey.shade600,
                               ),
                             ),
-                            const SizedBox(height: AppDimensions.paddingL),
-                            ElevatedButton.icon(
-                              onPressed: () {
-                                context.read<ClientsBloc>().add(LoadClients());
-                              },
-                              icon: const Icon(Icons.refresh),
-                              label: const Text('Reintentar'),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Intenta con otro término de búsqueda',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey.shade500,
+                              ),
                             ),
                           ],
                         ),
                       );
                     }
-                    return const SizedBox.shrink();
-                  },
-                ),
-              ),
-              // Botones de acción
-              Padding(
-                padding: const EdgeInsets.only(top: AppDimensions.paddingM),
-                child: Row(
-                  children: [
-                    TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('Cancelar')),
-                    const Spacer(),
-                    ElevatedButton(
-                      onPressed: _selected != null
-                          ? () => Navigator.of(context).pop(_selected)
-                          : null,
-                      child: const Text('Seleccionar'),
-                    ),
-                  ],
-                ),
+
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: clients.map((c) {
+                        final isSelected = _selected?.id == c.id;
+                        return Card(
+                          color: isSelected
+                              ? AppColors.primary.withOpacity(0.08)
+                              : null,
+                          child: ListTile(
+                            title: Text(c.name),
+                            subtitle: Text(
+                                '${c.document ?? ''}${c.phone != null ? ' • ${c.phone}' : ''}'),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.delete,
+                                      color: AppColors.error),
+                                  onPressed: () => _confirmDelete(c),
+                                ),
+                              ],
+                            ),
+                            onTap: () {
+                              setState(() => _selected = c);
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  }
+                  if (state is ClientsError) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            color: AppColors.error,
+                            size: 48,
+                          ),
+                          const SizedBox(height: AppDimensions.paddingM),
+                          Text(
+                            'Error al cargar clientes',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: AppDimensions.paddingS),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppDimensions.paddingL,
+                            ),
+                            child: Text(
+                              state.message,
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ),
+                          const SizedBox(height: AppDimensions.paddingL),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              context.read<ClientsBloc>().add(LoadClients());
+                            },
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Reintentar'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
               ),
             ],
           ),

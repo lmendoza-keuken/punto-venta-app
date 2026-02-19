@@ -39,14 +39,11 @@ class InvoicePayload {
       };
 
   factory InvoicePayload.fromPrintJob(PrintJob job) {
+
     Map<String, dynamic>? serializeClient(Client? c) {
       if (c == null) return null;
-      try {
-        return (c as dynamic).toJson() as Map<String, dynamic>;
-      } catch (_) {
-        final model = ClientModel.fromEntity(c);
-        return model.toJson();
-      }
+      final model = ClientModel.fromEntity(c);
+      return model.toJson();
     }
 
     final Map<double, double> totalsByPercentage = {};

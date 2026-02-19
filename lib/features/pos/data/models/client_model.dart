@@ -75,12 +75,15 @@ class ClientModel {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'document': document,
-        'phone': phone,
-        'email': email,
-        'address': address,
-      };
+  Map<String, dynamic> toJson() {
+    final json = {
+      'id': id,
+      'name': name,
+    };
+    if (document != null) json['document'] = document!;
+    if (phone != null) json['phone'] = phone!;
+    if (email != null) json['email'] = email!;
+    if (address != null) json['address'] = address!;
+    return json;
+  }
 }
