@@ -212,23 +212,33 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
     }
 
     // se traen los precios según la lista de precios actual
-    Map<int, PrecioArticuloModel>? precios;
+    Map<int, PrecioArticuloModel>? prices;
     try {
-      precios = await getPreciosByLista(_listaActual);
+      prices = await getPreciosByLista(_listaActual);
     } catch (e) {
-      precios = null;
+      prices = null;
     }
 
     // se asignan los códigos de barras y precios a cada producto
     return products.map((product) {
       final productBarcodes = barcodesByProduct[product.id] ?? [];
-      final precio = precios?[product.id];
+      final price = prices?[product.id];
+      final fractional = product.fractional ?? 1;
+
+      // precio y precio regular con la cantidad fracional
+      final productPrice = price?.priceAsDouble == null
+          ? null
+          : price!.priceAsDouble * fractional;
+      final productRegularPrice = price?.regularPriceAsDouble == null
+          ? null
+          : price!.regularPriceAsDouble * fractional;
 
       return product.copyWith(
         barcodes: productBarcodes,
-        precio: precio?.priceAsDouble,
-        regularPrice: precio?.regularPriceAsDouble,
-        isOnSale: int.tryParse(precio?.isOnSale ?? '0'),  // salePrice indica si está en oferta (ahora deberia ser con isOnSale )
+        price: productPrice,
+        regularPrice: productRegularPrice,
+        isOnSale: int.tryParse(price?.isOnSale ??
+            '0'), // salePrice indica si está en oferta (ahora deberia ser con isOnSale )
       );
     }).toList();
   }

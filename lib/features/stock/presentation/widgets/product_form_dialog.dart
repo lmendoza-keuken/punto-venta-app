@@ -37,7 +37,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
     if (isEditing) {
       _codigoController.text = widget.product!.id.toString();
       _descripcionController.text = widget.product!.description;
-      _precioController.text = widget.product!.precio.toString();
+      _precioController.text = widget.product!.price.toString();
       _stockController.text = widget.product!.stock.toString();
       _categoriaController.text = widget.product!.categoryDescription;
     }

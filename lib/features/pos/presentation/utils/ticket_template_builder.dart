@@ -94,7 +94,7 @@ class TicketTemplateBuilder {
 
       if (item.isWeighted == true) {
         final weightKg = (item.weightKg ?? 0.0);
-        final pricePerKg = (item.pricePerKg ?? item.product.precio ?? 0.0);
+        final pricePerKg = (item.pricePerKg ?? item.product.price ?? 0.0);
 
         // Calcular precio con o sin IVA según configuración
         final displayPrice = printJob.showPricesWithTax
@@ -115,7 +115,7 @@ class TicketTemplateBuilder {
         commands.add(TicketCommand.text("$lineLeft$spacerLeft$subtotalValue"));
         commands.add(TicketCommand.feedLine());
       } else {
-        final basePrice = (item.pricePerKg ?? item.product.precio ?? 0.0);
+        final basePrice = (item.pricePerKg ?? item.product.price ?? 0.0);
 
         // Calcular precio con o sin IVA según configuración
         final displayPrice = printJob.showPricesWithTax

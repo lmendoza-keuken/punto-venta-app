@@ -281,7 +281,7 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
 
             // Items
             ...widget.order.items.map((item) {
-              final basePrice = item.pricePerKg ?? item.product.precio ?? 0.0;
+              final basePrice = item.pricePerKg ?? item.product.price ?? 0.0;
               final displayPrice = _printJob!.showPricesWithTax
                   ? _calculatePriceWithTax(basePrice, item.product.vat)
                   : basePrice;

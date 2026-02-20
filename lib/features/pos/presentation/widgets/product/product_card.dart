@@ -183,8 +183,8 @@ class ProductCard extends StatelessWidget {
                             ),
                           const SizedBox(width: 8),
                           Text(
-                            (((product.precio ?? 0) * (product.vat / 100)) +
-                                    (product.precio ?? 0))
+                            (((product.price ?? 0) * (product.vat / 100)) +
+                                    (product.price ?? 0))
                                 .formatToCurrency(),
                             style: Theme.of(context)
                                 .textTheme

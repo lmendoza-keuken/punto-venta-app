@@ -55,7 +55,7 @@ class InvoicePayload {
         final cartLogItem = CartLogEntryModel.fromEntity(itemLog);
         final itemModel = CartItemModel.fromEntity(itemLog.item);
 
-        final unitPrice = itemModel.product.precio ?? 0.0;
+        final unitPrice = itemModel.product.price ?? 0.0;
         final quantity = itemModel.quantity;
         //
         final weightKg = itemLog.item.weightKg;

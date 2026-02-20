@@ -18,7 +18,7 @@ class CartItem extends Equatable {
     this.pricePerKg,
   });
 
-  double get totalPrice => (product.precio ?? 0.0) * quantity;
+  double get totalPrice => (product.price ?? 0.0) * quantity;
 
   CartItem copyWith({
     Product? product,

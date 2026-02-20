@@ -164,8 +164,8 @@ class PrinterWebDatasourceImpl implements PrinterWebDatasource {
       commands.add(LF);
       
       // Formatear precios
-      final precioUnit = item.product.precio?.formatToCurrency();
-      final subtotalValue = (item.quantity * (item.product.precio ?? 0.0)).formatToCurrency();
+      final precioUnit = item.product.price?.formatToCurrency();
+      final subtotalValue = (item.quantity * (item.product.price ?? 0.0)).formatToCurrency();
       final subtotal = subtotalValue;
       
       // Cantidad x Precio

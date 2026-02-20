@@ -61,7 +61,7 @@ class CartItemWidget extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                item.product.precio?.formatToCurrency() ?? '-',
+                item.product.price?.formatToCurrency() ?? '-',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w600,
@@ -169,7 +169,7 @@ class CartItemWidget extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        item.product.precio?.formatToCurrency() ?? '-',
+                        item.product.price?.formatToCurrency() ?? '-',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: AppColors.primary,
                               fontWeight: FontWeight.w600,

@@ -166,7 +166,7 @@ class _PosMainPageState extends State<PosMainPage> {
                                           );
                                         }
                                       } else {
-                                        if (product.precio != null) {
+                                        if (product.price != null) {
                                           context.read<CartBloc>().add(
                                               AddToCart(product,
                                                   quantity: quantity));

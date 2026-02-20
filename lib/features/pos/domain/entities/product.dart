@@ -17,7 +17,7 @@ class Product extends Equatable {
   final String isActive;
   final String categoryDescription;
   
-  final double? precio; // precio actual (siempre mostrar este)
+  final double? price; // precio actual (siempre mostrar este)
   final double? regularPrice; // precio anterior (solo mostrar tachado si hay oferta)
   final bool isOnSale; // true si está en oferta, false si no
   final List<BarcodeModel>? barcodes;
@@ -37,7 +37,7 @@ class Product extends Equatable {
     required this.suspendedForPurchase,
     required this.isActive,
     required this.categoryDescription,
-    this.precio,
+    this.price,
     this.regularPrice,
     required this.isOnSale,
     this.barcodes,
@@ -65,7 +65,7 @@ class Product extends Equatable {
         suspendedForPurchase,
         isActive,
         categoryDescription,
-        precio,
+        price,
         regularPrice,
         isOnSale,
         barcodes,

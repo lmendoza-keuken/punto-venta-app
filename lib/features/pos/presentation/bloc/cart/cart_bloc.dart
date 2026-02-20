@@ -139,7 +139,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     double subtotal = 0;
     double totalIva = 0;
     for (final it in items) {
-      final precio = it.product.precio ?? 0;
+      final precio = it.product.price ?? 0;
       final isWeighted = it.isWeighted ?? false;
       final pricePerKg = it.pricePerKg ?? 0.0;
       final cantidad = it.quantity;

@@ -26,7 +26,7 @@ class ProductModel with _$ProductModel {
     @JsonKey(name: 'category_description') String? categoryDescription,
     // Se agregan despues con un copywith (depende de la lista de precios actual)
     @JsonKey(name: 'regular_price') double? regularPrice, // precio anterior (solo mostrar tachado si hay oferta)
-    @JsonKey(name: 'precio') double? precio, // precio actual (siempre mostrar este)
+    @JsonKey(name: 'price') double? price, // precio actual (siempre mostrar este)
     @JsonKey(name: 'is_on_sale') int? isOnSale, // 1 si está en oferta, 0 si no
     @JsonKey(name: 'barcodes') List<BarcodeModel>? barcodes,
   }) = _ProductModel;
@@ -35,13 +35,13 @@ class ProductModel with _$ProductModel {
       _$ProductModelFromJson(json);
 
   Product toEntity() {
-    double? precioValue;
+    double? priceValue;
     try {
-      if (precio != null && precio != '-') {
-        precioValue = precio;
+      if (price != null && price != '-') {
+        priceValue = price;
       }
     } catch (e) {
-      precioValue = null;
+      priceValue = null;
     }
 
     return Product(
@@ -59,7 +59,7 @@ class ProductModel with _$ProductModel {
       suspendedForPurchase: suspendedForPurchase ?? 'N',
       isActive: isActive ?? 'S',
       categoryDescription: categoryDescription ?? '',
-      precio: precioValue,
+      price: priceValue,
       regularPrice: regularPrice,
       isOnSale: (isOnSale ?? 0) == 1,
       barcodes: barcodes,
@@ -82,7 +82,7 @@ class ProductModel with _$ProductModel {
       suspendedForPurchase: product.suspendedForPurchase,
       isActive: product.isActive,
       categoryDescription: product.categoryDescription,
-      precio: product.precio,
+      price: product.price,
       isOnSale: product.isOnSale ? 1 : 0,
       barcodes: product.barcodes,
     );
