@@ -7,7 +7,7 @@ import 'package:punto_venta_app/injection_container.dart' as di;
 
 abstract class PdvRemoteDataSource {
   Future<Map<String, dynamic>> fetchPdvConfig();
-  Future<Map<String, dynamic>> updatePdvConfig();
+  Future<PdvConfig> updatePdvConfig(PdvConfig config);
 }
 
 class PdvRemoteDataSourceImpl implements PdvRemoteDataSource {

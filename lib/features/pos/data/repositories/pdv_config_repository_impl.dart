@@ -30,6 +30,10 @@ class PdvConfigRepositoryImpl implements PdvConfigRepository {
 
       return config;
     } catch (e) {
+      final localConfig = await localDataSource.getPdvConfig();
+      if (localConfig != null) {
+        return localConfig;
+      }
       throw Exception('Error al obtener configuración del PDV: $e');
     }
   }

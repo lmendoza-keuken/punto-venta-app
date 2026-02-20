@@ -67,16 +67,19 @@ class AuthRepositoryImpl implements AuthRepository {
       orElse: () => throw Exception('Empresa no encontrada'),
     );
 
+    // Obtener PdvBaseUrl desde enterprisesLicense
+    final pdvBaseUrl = await firestoreUserDataSource.getPdvBaseUrl(selectedCompany.id);
+
     ApiConfig.updateCompanyConfig(
       "99999999",
       // selectedCompany.id.toString(),
-      selectedCompany.baseUrl,
+      pdvBaseUrl ?? selectedCompany.baseUrl,
     );
 
     final enterpriseModel = EnterpriseModel(
       id: selectedCompany.id,
       name: selectedCompany.name,
-      baseUrl: selectedCompany.baseUrl,
+      baseUrl: pdvBaseUrl ?? selectedCompany.baseUrl,
       listPriceId: selectedCompany.listPriceId,
     );
 

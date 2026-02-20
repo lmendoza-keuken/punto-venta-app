@@ -13,7 +13,9 @@ class Company {
     this.listPriceId,
   });
 
-  factory Company.fromFirestore(Map<String, dynamic> data,) {
+  factory Company.fromFirestore(
+    Map<String, dynamic> data,
+  ) {
     return Company(
       id: data['id'] ?? '',
       name: data['name'] ?? '',
@@ -34,6 +36,7 @@ class Company {
 
 abstract class FirestoreUserDataSource {
   Future<List<Company>> getCompaniesByEmail(String email);
+  Future<String?> getPdvBaseUrl(int enterpriseId);
 }
 
 class FirestoreUserDataSourceImpl implements FirestoreUserDataSource {
@@ -44,12 +47,28 @@ class FirestoreUserDataSourceImpl implements FirestoreUserDataSource {
   }) : _firestore = firestore ?? FirebaseFirestore.instance;
 
   @override
-  // validar primero campo enabled y ahi si es true traer el resto de los datos, sino no traer nada
   Future<List<Company>> getCompaniesByEmail(String email) async {
     try {
+      // validar si el usuario está habilitado
+      final userDoc =
+          await _firestore.collection('usersEmail').doc(email).get();
+
+      if (!userDoc.exists) {
+        return [];
+      }
+
+      final userData = userDoc.data();
+      final isEnabled = userData?['enabled'] ?? false;
+
+      if (!isEnabled) {
+        throw Exception(
+            'Usuario no habilitado. Por favor contacta al administrador.');
+      }
+
+      // Si está habilitado, obtener las empresas
       final enterprisesSnapshot = await _firestore
           .collection('usersEmail')
-          .doc(email) 
+          .doc(email)
           .collection('enterprises')
           .get();
 
@@ -62,6 +81,25 @@ class FirestoreUserDataSourceImpl implements FirestoreUserDataSource {
       }).toList();
     } catch (e) {
       throw Exception('Error al obtener empresas desde Firestore: $e');
+    }
+  }
+
+  @override
+  Future<String?> getPdvBaseUrl(int enterpriseId) async {
+    try {
+      final licenseDoc = await _firestore
+          .collection('enterprisesLicense')
+          .doc(enterpriseId.toString())
+          .get();
+
+      if (!licenseDoc.exists) {
+        return null;
+      }
+
+      final data = licenseDoc.data();
+      return data?['PdvBaseUrl']?.toString();
+    } catch (e) {
+      throw Exception('Error al obtener PdvBaseUrl desde Firestore: $e');
     }
   }
 }
