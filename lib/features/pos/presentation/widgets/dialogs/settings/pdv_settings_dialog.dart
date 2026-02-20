@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
@@ -155,8 +156,12 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                           if (v == null || v.isEmpty) {
                             return 'Ingresa el PDV ID';
                           }
-                          if (int.tryParse(v) == null) {
+                          final parsedValue = int.tryParse(v);
+                          if (parsedValue == null) {
                             return 'Debe ser un número';
+                          }
+                          if (parsedValue <= 0) {
+                            return 'Debe ser mayor a 0';
                           }
                           return null;
                         },
@@ -176,8 +181,12 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                           if (v == null || v.isEmpty) {
                             return 'Ingresa la Sucursal ID';
                           }
-                          if (int.tryParse(v) == null) {
+                          final parsedValue = int.tryParse(v);
+                          if (parsedValue == null) {
                             return 'Debe ser un número';
+                          }
+                          if (parsedValue <= 0) {
+                            return 'Debe ser mayor a 0';
                           }
                           return null;
                         },
@@ -192,6 +201,9 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                           prefixIcon: Icon(Icons.tag),
                           border: OutlineInputBorder(),
                         ),
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(4),
+                        ],
                         validator: (v) {
                           if (v == null || v.isEmpty) {
                             return 'Ingresa el número de sucursal';

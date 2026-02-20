@@ -1,6 +1,6 @@
 List<MockedTaxeModel> mockedTaxesList = [
   MockedTaxeModel(id: 1, description: 'IVA', percentage: 21.0),
-  MockedTaxeModel(id: 2, description: 'EXENTO', percentage: 0.0),
+  MockedTaxeModel(id: 2, description: 'IVA', percentage: 10.5),
   MockedTaxeModel(id: 3, description: 'REDUCIDO', percentage: 10.0),
 ];
 
