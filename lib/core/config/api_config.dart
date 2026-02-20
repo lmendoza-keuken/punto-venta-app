@@ -11,7 +11,7 @@ class ApiConfig {
   static String get pdvUrl => '$_baseUrl/pdv/';
   static String get ticketConfigUrl => '$_baseUrl/ticket_config/'; 
   static String get paymentMethodsUrl => '$_baseUrl/payment_methods/';
-  static String get configPdvUrl => '$_baseUrl/config-pdv/';
+  static String get configPdvUrl => '$_baseUrl/configuration/';
 
 
   static void updateCompanyConfig(String companyId, String? baseUrl) {

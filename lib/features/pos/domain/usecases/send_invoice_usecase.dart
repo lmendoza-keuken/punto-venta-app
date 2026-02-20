@@ -8,5 +8,5 @@ class SendInvoiceUseCase {
 
   Future<bool> call(PrintJob job) async {
     return await repository.sendInvoice(job);
-  }
+  } 
 }

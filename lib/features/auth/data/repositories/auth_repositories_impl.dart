@@ -103,31 +103,27 @@ class AuthRepositoryImpl implements AuthRepository {
     String userId,
     String password,
   ) async {
-    try {
-      final authData =
-          await userApiDataSource.authenticateUser(userId, password);
+    final authData =
+        await userApiDataSource.authenticateUser(userId, password);
 
-      final token = authData['token'] as String;
-      final userData = authData['user'] as Map<String, dynamic>;
+    final token = authData['token'] as String;
+    final userData = authData['user'] as Map<String, dynamic>;
 
-      final user = User(
-        id: userData['id']?.toString() ?? '',
-        name: userData['name']?.toString() ?? '',
-        password: userData['password']?.toString() ?? '',
-        tipo: userData['role']?.toString() ?? '',
-        isActive: userData['is_active'] ?? true, 
-        phoneNumber: userData['phone_number']?.toString() ?? '',    
-      );
+    final user = User(
+      id: userData['id']?.toString() ?? '',
+      name: userData['name']?.toString() ?? '',
+      password: userData['password']?.toString() ?? '',
+      tipo: userData['role']?.toString() ?? '',
+      isActive: userData['is_active'] ?? true, 
+      phoneNumber: userData['phone_number']?.toString() ?? '',    
+    );
 
-      final userModel = UserModel.fromEntity(user);
+    final userModel = UserModel.fromEntity(user);
 
-      await localDataSource.cacheUser(userModel);
-      await localDataSource.cacheToken(token);
+    await localDataSource.cacheUser(userModel);
+    await localDataSource.cacheToken(token);
 
-      return user;
-    } catch (e) {
-      throw Exception('Error al autenticar usuario: $e');
-    }
+    return user;
   }
 
   @override

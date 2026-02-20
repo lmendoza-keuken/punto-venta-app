@@ -2,12 +2,13 @@ import 'package:dio/dio.dart';
 import 'package:punto_venta_app/core/config/api_config.dart';
 import 'package:punto_venta_app/core/network/dio_client.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
+import 'package:punto_venta_app/features/pos/data/models/pdv_config_response_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/pdv_config.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 abstract class PdvRemoteDataSource {
-  Future<Map<String, dynamic>> fetchPdvConfig();
-  Future<PdvConfig> updatePdvConfig(PdvConfig config);
+  Future<PdvConfigResponseModel> fetchPdvConfig();
+  Future<PdvConfigResponseModel> updatePdvConfig(PdvConfig config);
 }
 
 class PdvRemoteDataSourceImpl implements PdvRemoteDataSource {
@@ -20,7 +21,7 @@ class PdvRemoteDataSourceImpl implements PdvRemoteDataSource {
   }) : _dio = dio ?? DioClient.instance;
 
   @override
-  Future<Map<String, dynamic>> fetchPdvConfig() async {
+  Future<PdvConfigResponseModel> fetchPdvConfig() async {
     final url = ApiConfig.configPdvUrl;
 
     if (url.isEmpty) {
@@ -49,7 +50,7 @@ class PdvRemoteDataSourceImpl implements PdvRemoteDataSource {
       );
 
       if (response.statusCode == 200) {
-        return response.data as Map<String, dynamic>;
+        return PdvConfigResponseModel.fromJson(response.data as Map<String, dynamic>);
       } else {
         throw Exception(
             'Error al obtener configuración del PDV: ${response.statusCode}');
@@ -71,7 +72,7 @@ class PdvRemoteDataSourceImpl implements PdvRemoteDataSource {
   }
 
   @override
-  Future<PdvConfig> updatePdvConfig(PdvConfig config) async {
+  Future<PdvConfigResponseModel> updatePdvConfig(PdvConfig config) async {
     final url = ApiConfig.configPdvUrl;
 
     if (url.isEmpty) {
@@ -88,7 +89,7 @@ class PdvRemoteDataSourceImpl implements PdvRemoteDataSource {
     try {
       final response = await _dio.put(
         url,
-        data: config.toJson(),
+        data: config.toUpdateJson(),
         options: Options(
           headers: {
             'Content-Type': 'application/json; charset=utf-8',
@@ -100,7 +101,7 @@ class PdvRemoteDataSourceImpl implements PdvRemoteDataSource {
       );
 
       if (response.statusCode == 200) {
-        return PdvConfig.fromJson(response.data as Map<String, dynamic>);
+        return PdvConfigResponseModel.fromJson(response.data as Map<String, dynamic>);
       } else {
         throw Exception(
             'Error al obtener configuración del PDV: ${response.statusCode}');

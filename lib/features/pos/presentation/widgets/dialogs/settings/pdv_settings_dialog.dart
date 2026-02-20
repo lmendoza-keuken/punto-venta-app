@@ -30,29 +30,29 @@ class _PdvSettingsDialogContent extends StatefulWidget {
 class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
   final formKey = GlobalKey<FormState>();
   late TextEditingController pdvIdController;
-  late TextEditingController sucursalIdController;
-  late TextEditingController numeroSucursalController;
+  late TextEditingController branchIdController;
+  late TextEditingController branchNumberController;
 
   @override
   void initState() {
     super.initState();
     pdvIdController = TextEditingController();
-    sucursalIdController = TextEditingController();
-    numeroSucursalController = TextEditingController();
+    branchIdController = TextEditingController();
+    branchNumberController = TextEditingController();
   }
 
   @override
   void dispose() {
     pdvIdController.dispose();
-    sucursalIdController.dispose();
-    numeroSucursalController.dispose();
+    branchIdController.dispose();
+    branchNumberController.dispose();
     super.dispose();
   }
 
   void _updateControllersFromConfig(PdvConfig config) {
     pdvIdController.text = config.pdvId.toString();
-    sucursalIdController.text = config.sucursalId.toString();
-    numeroSucursalController.text = config.branchNumber ?? "";
+    branchIdController.text = config.branchId.toString();
+    branchNumberController.text = config.branchNumber ?? "";
   }
 
   @override
@@ -63,7 +63,7 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
           _updateControllersFromConfig(state.config);
         } else if (state is PdvConfigSaved) {
           Navigator.of(context).pop(
-            (pdvId: state.config.pdvId, sucursalId: state.config.sucursalId),
+            (pdvId: state.config.pdvId, sucursalId: state.config.branchId),
           );
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -164,7 +164,7 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                       const SizedBox(height: AppDimensions.paddingM),
                       // Campo: Sucursal ID
                       TextFormField(
-                        controller: sucursalIdController,
+                        controller: branchIdController,
                         keyboardType: TextInputType.number,
                         decoration: const InputDecoration(
                           labelText: 'Sucursal ID',
@@ -185,7 +185,7 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                       const SizedBox(height: AppDimensions.paddingM),
                       // Campo: Número de Sucursal
                       TextFormField(
-                        controller: numeroSucursalController,
+                        controller: branchNumberController,
                         decoration: const InputDecoration(
                           labelText: 'Número de Sucursal',
                           hintText: 'Sucursal Centro',
@@ -223,15 +223,14 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                       if (!formKey.currentState!.validate()) return;
 
                       final pdvId = int.parse(pdvIdController.text.trim());
-                      final sucursalId =
-                          int.parse(sucursalIdController.text.trim());
-                      final numeroSucursal =
-                          numeroSucursalController.text.trim();
+                      final branchId =
+                          int.parse(branchIdController.text.trim());
+                      final branchNumber = branchNumberController.text.trim();
 
                       final newConfig = PdvConfig(
                         pdvId: pdvId,
-                        sucursalId: sucursalId,
-                        branchNumber: numeroSucursal,
+                        branchId: branchId,
+                        branchNumber: branchNumber,
                       );
 
                       context

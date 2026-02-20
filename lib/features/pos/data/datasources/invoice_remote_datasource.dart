@@ -43,7 +43,6 @@ class InvoiceRemoteDataSourceImpl implements InvoiceRemoteDataSource {
         url,
         data: payload,
         options: Options(
-          
           headers: {
             'Content-Type': 'application/json; charset=utf-8',
             'Authorization': 'Bearer $token',

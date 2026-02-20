@@ -60,6 +60,13 @@ class UserApiDataSourceImpl implements UserApiDataSource {
       } else if (e.response != null) {
         throw Exception(
             'Error del servidor: ${e.response?.statusCode} - ${e.response?.data}');
+      } else if ((e.message?.contains('No route to host') ?? false) ||
+          (e.error?.toString().contains('No route to host') ?? false)) {
+        throw Exception(
+            'No se puede conectar al servidor. Verifica que la dirección IP sea correcta y que el servidor esté disponible.');
+      } else if (e.type == DioExceptionType.unknown) {
+        throw Exception(
+            'Error de red. Verifica que el servidor esté disponible y que tengas conexión a internet.');
       } else {
         throw Exception('Error de conexión: ${e.message}');
       }

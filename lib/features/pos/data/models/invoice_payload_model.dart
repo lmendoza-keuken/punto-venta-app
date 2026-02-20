@@ -15,6 +15,7 @@ class InvoicePayload {
   final double total;
   final List<TaxModel> totalTax;
   final List<Map<String, dynamic>> logItems;
+  final String branchNumber;
 
   InvoicePayload({
     required this.ticketId,
@@ -25,6 +26,7 @@ class InvoicePayload {
     required this.total,
     required this.totalTax,
     required this.logItems,
+    required this.branchNumber,
   });
 
   Map<String, dynamic> toJson() => {
@@ -37,6 +39,7 @@ class InvoicePayload {
         'total': total,
         'totalTax': totalTax.map((t) => t.toJson()).toList(),
         'items': logItems,
+        'branch_number': branchNumber,
       };
 
   factory InvoicePayload.fromPrintJob(PrintJob job) {
@@ -120,6 +123,7 @@ class InvoicePayload {
       total: job.total,
       totalTax: totalTax,
       logItems: logItems,
+      branchNumber: job.branchNumber,
     );
   }
 }

@@ -447,7 +447,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
         showPricesWithTax: showPricesWithTax,
         receivedAmount: _receivedAmount,
         change: _change,
-        branchNumber: branchNumber ?? '',
+        branchNumber: branchNumber,
       );
 
       final sendInvoice = di.sl<SendInvoiceUseCase>();

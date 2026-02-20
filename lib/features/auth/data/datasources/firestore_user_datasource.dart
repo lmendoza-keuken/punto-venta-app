@@ -97,7 +97,7 @@ class FirestoreUserDataSourceImpl implements FirestoreUserDataSource {
       }
 
       final data = licenseDoc.data();
-      return data?['PdvBaseUrl']?.toString();
+      return data?['pointOfSaleUrl']?.toString();
     } catch (e) {
       throw Exception('Error al obtener PdvBaseUrl desde Firestore: $e');
     }

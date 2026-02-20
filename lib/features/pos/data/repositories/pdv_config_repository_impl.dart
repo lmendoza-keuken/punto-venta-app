@@ -18,8 +18,8 @@ class PdvConfigRepositoryImpl implements PdvConfigRepository {
       final data = await remoteDataSource.fetchPdvConfig();
       
       final config = PdvConfig(
-        pdvId: data['pdv_id'] as int,
-        sucursalId: data['sucursal_id'] as int,
+        pdvId: data.deliveryLocationId,
+        branchId: data.branchId,
       );
 
       // Obtener el numeroSucursal local si existe
@@ -46,5 +46,6 @@ class PdvConfigRepositoryImpl implements PdvConfigRepository {
   @override
   Future<void> savePdvConfig(PdvConfig config) async {
     await localDataSource.savePdvConfig(config);
+    await remoteDataSource.updatePdvConfig(config);
   }
 }

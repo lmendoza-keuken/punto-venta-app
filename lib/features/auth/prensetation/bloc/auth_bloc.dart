@@ -30,6 +30,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<ChangeCashierRequested>(_onChangeCashierRequested);
   }
 
+  String _extractErrorMessage(dynamic error) {
+    String message = error.toString();
+    while (message.startsWith('Exception: ')) {
+      message = message.replaceFirst('Exception: ', '');
+    }
+    return message;
+  }
+
   Future<void> _onLoginWithGoogleRequested(
     LoginWithGoogleRequested event,
     Emitter<AuthState> emit,
@@ -65,7 +73,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       //     autoSelected: result['autoSelected'],
       //   ));
     } catch (e) {
-      emit(AuthError(message: e.toString()));
+      final errorMessage = _extractErrorMessage(e);
+      emit(AuthError(message: errorMessage));
     }
   }
 
@@ -83,7 +92,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         companyName: result['companyName'],
       ));
     } catch (e) {
-      emit(AuthError(message: e.toString()));
+      final errorMessage = _extractErrorMessage(e);
+      emit(AuthError(message: errorMessage));
     }
   }
 
@@ -100,7 +110,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       emit(AuthAuthenticated(user: user));
     } catch (e) {
-      emit(AuthError(message: e.toString()));
+      final errorMessage = _extractErrorMessage(e);
+      emit(AuthError(message: errorMessage));
     }
   }
 
@@ -113,7 +124,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await logoutUsecase();
       emit(AuthUnauthenticated());
     } catch (e) {
-      emit(AuthError(message: e.toString()));
+      final errorMessage = _extractErrorMessage(e);
+      emit(AuthError(message: errorMessage));
     }
   }
 
@@ -124,7 +136,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       await changeCashierUseCase();
     } catch (e) {
-      emit(AuthError(message: e.toString()));
+      final errorMessage = _extractErrorMessage(e);
+      emit(AuthError(message: errorMessage));
     }
   }
 
@@ -137,7 +150,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await logoutUsecase();
       emit(AuthUnauthenticated());
     } catch (e) {
-      emit(AuthError(message: e.toString()));
+      final errorMessage = _extractErrorMessage(e);
+      emit(AuthError(message: errorMessage));
     }
   }
 

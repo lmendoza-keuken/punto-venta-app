@@ -1,35 +1,40 @@
 class PdvConfig {
   final int? pdvId;
-  final int? sucursalId;
+  final int? branchId;
   final String? branchNumber;
 
   const PdvConfig({
     this.pdvId,
-    this.sucursalId,
+    this.branchId,
     this.branchNumber,
   });
 
   PdvConfig copyWith({
     int? pdvId,
-    int? sucursalId,
+    int? branchId,
     String? branchNumber,
   }) {
     return PdvConfig(
       pdvId: pdvId ?? this.pdvId,
-      sucursalId: sucursalId ?? this.sucursalId,
+      branchId: branchId ?? this.branchId,
       branchNumber: branchNumber ?? this.branchNumber,
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'pdvId': pdvId,
-        'sucursalId': sucursalId,
-        'branchNumber': branchNumber,
+        'delivery_location_id': pdvId,
+        'branch_id': branchId,
+        'branch_number': branchNumber,
+      };
+
+  Map<String, dynamic> toUpdateJson() => {
+        'delivery_location_id': pdvId,
+        'branch_id': branchId,
       };
 
   factory PdvConfig.fromJson(Map<String, dynamic> json) => PdvConfig(
-        pdvId: json['pdvId'] as int,
-        sucursalId: json['sucursalId'] as int,
-        branchNumber: json['branchNumber'] as String,
+        pdvId: json['delivery_location_id'] as int,
+        branchId: json['branch_id'] as int,
+        branchNumber: json['branch_number'] as String,
       );
 }

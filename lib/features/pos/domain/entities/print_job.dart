@@ -22,7 +22,7 @@ class PrintJob {
   final bool showPricesWithTax;
   final double? receivedAmount;
   final double? change;
-  final String branchNumber;
+  final String branchNumber; 
 
   const PrintJob({
     required this.items,
