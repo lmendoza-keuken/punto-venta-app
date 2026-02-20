@@ -219,7 +219,7 @@ class PrinterWebDatasourceImpl implements PrinterWebDatasource {
     commands.addAll([GS, 0x48, 0x02]);
     commands.addAll([GS, 0x77, 0x03]); 
     commands.addAll([GS, 0x68, 0xA2]); 
-    final ticketIdBytes = utf8.encode(printJob.ticketId);
+    final ticketIdBytes = utf8.encode(printJob.ticketId ?? "");
     commands.addAll([GS, 0x6B, 69, ticketIdBytes.length]);
     commands.addAll(ticketIdBytes);
     commands.add(LF);

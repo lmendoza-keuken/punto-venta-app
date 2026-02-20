@@ -6,7 +6,7 @@ class SendInvoiceUseCase {
 
   SendInvoiceUseCase(this.repository);
 
-  Future<bool> call(PrintJob job) async {
+  Future<String> call(PrintJob job) async {
     return await repository.sendInvoice(job);
   } 
 }

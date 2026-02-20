@@ -8,7 +8,7 @@ import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/client.dart';
 
 class InvoicePayload {
-  final String ticketId;
+  final String? ticketId;
   final String timestamp;
   final int? cashier;
   final Map<String, dynamic>? client;
@@ -19,7 +19,7 @@ class InvoicePayload {
   final String branchNumber;
 
   InvoicePayload({
-    required this.ticketId,
+    this.ticketId,
     required this.timestamp,
     this.cashier,
     required this.client,
@@ -31,11 +31,10 @@ class InvoicePayload {
   });
 
   Map<String, dynamic> toJson() => {
-        'ticketId': ticketId,
+        if (ticketId != null) 'ticketId': ticketId,
         'timestamp': timestamp,
         'cashier': cashier,
         'client': client,
-        // cambiar al id
         'paymentMethod': paymentMethod,
         'total': total,
         'totalTax': totalTax.map((t) => t.toJson()).toList(),

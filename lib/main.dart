@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/themes/theme_cubit.dart';
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/checkout/checkout_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/payment_methods_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/pdv_config/pdv_config_bloc.dart';
@@ -63,6 +64,7 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_) => di.sl<PrinterBloc>()),
         BlocProvider(create: (_) => di.sl<PaymentMethodsBloc>()),
         BlocProvider(create: (_) => di.sl<PdvConfigBloc>()),
+        BlocProvider(create: (_) => di.sl<CheckoutBloc>()),
       ],
       child: const PosApp(),
     );

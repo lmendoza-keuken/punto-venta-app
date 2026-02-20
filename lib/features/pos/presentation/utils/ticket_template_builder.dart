@@ -196,7 +196,7 @@ class TicketTemplateBuilder {
   List<TicketCommand> _buildBarcode() {
     return [
       TicketCommand.alignment(TicketAlignment.center),
-      TicketCommand.barcode(printJob.ticketId),
+      TicketCommand.barcode(printJob.ticketId ?? ''),
       TicketCommand.feedLine(),
       TicketCommand.feedLine(),
     ];

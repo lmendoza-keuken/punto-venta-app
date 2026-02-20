@@ -2,17 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
-import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
-import 'package:punto_venta_app/features/pos/data/datasources/pdv_local_datasource.dart';
-import 'package:punto_venta_app/features/pos/data/datasources/price_list_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
-import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
-import 'package:punto_venta_app/features/pos/domain/usecases/complete_order_usecase.dart';
-import 'package:punto_venta_app/features/pos/domain/usecases/get_ticket_config_usecase.dart';
-import 'package:punto_venta_app/features/pos/domain/usecases/send_invoice_usecase.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_state.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/checkout/checkout_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/checkout/checkout_event.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/checkout/checkout_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/payment_methods_bloc.dart';
@@ -38,36 +34,84 @@ class ConfirmationPanel extends StatefulWidget {
 }
 
 class _ConfirmationPanelState extends State<ConfirmationPanel> {
-  bool _isProcessingSale = false;
   double? _receivedAmount;
   double? _change;
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<CartBloc, CartState>(
-      builder: (context, state) {
-        if (state is! CartLoaded) {
-          return const SizedBox.shrink();
-        }
+    return BlocListener<CheckoutBloc, CheckoutState>(
+      listener: (context, checkoutState) async {
+        if (checkoutState is CheckoutSuccess) {
+          // Imprimir el ticket si el estado es success
+          final printerConfig =
+              await di.sl<PrinterLocalDataSource>().getPrinterConfig();
+          final printerBloc = di.sl<PrinterBloc>();
+          
+          printerBloc.add(PrintTicket(
+            printJob: checkoutState.printJob,
+            config: printerConfig,
+          ));
 
-        return Column(
-          children: [
-            // Header del panel de confirmación
-            Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: AppDimensions.paddingM,
-                  vertical: AppDimensions.paddingXS),
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(color: Colors.grey.shade200),
-                ),
+          await printerBloc.stream.firstWhere(
+            (state) => state is PrinterSuccess || state is PrinterError,
+          );
+
+          
+
+          if (mounted) {
+            context.read<CartBloc>().add(ClearCart());
+            context.read<CheckoutBloc>().add(const ResetCheckout());
+            widget.onClose();
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Venta procesada exitosamente'),
+                backgroundColor: AppColors.success,
               ),
-              child: Row(
+            );
+          }
+
+          printerBloc.close();
+        } else if (checkoutState is CheckoutError) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(checkoutState.message),
+                backgroundColor: AppColors.error,
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          }
+        }
+      },
+      child: BlocBuilder<CartBloc, CartState>(
+        builder: (context, state) {
+          if (state is! CartLoaded) {
+            return const SizedBox.shrink();
+          }
+
+          return BlocBuilder<CheckoutBloc, CheckoutState>(
+            builder: (context, checkoutState) {
+              final isProcessing = checkoutState is CheckoutProcessing;
+
+              return Column(
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_forward),
-                    onPressed: _isProcessingSale ? null : widget.onClose,
-                  ),
+                  // Header del panel de confirmación
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: AppDimensions.paddingM,
+                        vertical: AppDimensions.paddingXS),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(color: Colors.grey.shade200),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_forward),
+                          onPressed: isProcessing ? null : widget.onClose,
+                        ),
                   const SizedBox(width: AppDimensions.paddingS),
                   Expanded(
                     child: Text(
@@ -230,7 +274,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                       },
                     ),
 
-                    if (_isProcessingSale) ...[
+                    if (isProcessing) ...[
                       const SizedBox(height: 24),
                       Container(
                         padding: const EdgeInsets.all(AppDimensions.paddingM),
@@ -263,270 +307,112 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
               ),
             ),
 
-            // Botones de acción
-            Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: AppDimensions.paddingL,
-                  vertical: AppDimensions.paddingS),
-              decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(color: Colors.grey.shade200),
-                ),
-              ),
-              child: Row(
-                spacing: AppDimensions.paddingM,
-                children: [
-                  Expanded(
-                    flex: 1,
-                    child: SizedBox(
-                      height: AppDimensions.buttonHeightS,
-                      child: ElevatedButton(
-                        onPressed: _isProcessingSale
-                            ? null
-                            : () => _confirmSale(context, state),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.success,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: _isProcessingSale
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white),
-                                ),
-                              )
-                            : const Text(
-                                'Confirmar',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                  // Botones de acción
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: AppDimensions.paddingL,
+                        vertical: AppDimensions.paddingS),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        top: BorderSide(color: Colors.grey.shade200),
                       ),
                     ),
-                  ),
-                  Expanded(
-                    flex: 1,
-                    child: SizedBox(
-                      height: AppDimensions.buttonHeightS,
-                      child: ElevatedButton(
-                        onPressed: _isProcessingSale ? null : widget.onClose,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.error,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                    child: Row(
+                      spacing: AppDimensions.paddingM,
+                      children: [
+                        Expanded(
+                          flex: 1,
+                          child: SizedBox(
+                            height: AppDimensions.buttonHeightS,
+                            child: ElevatedButton(
+                              onPressed: isProcessing
+                                  ? null
+                                  : () => _confirmSale(context, state),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.success,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: isProcessing
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                                Colors.white),
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Confirmar',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                            ),
                           ),
                         ),
-                        child: const Text(
-                          'Cancelar',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
+                        Expanded(
+                          flex: 1,
+                          child: SizedBox(
+                            height: AppDimensions.buttonHeightS,
+                            child: ElevatedButton(
+                              onPressed: isProcessing ? null : widget.onClose,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.error,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text(
+                                'Cancelar',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ],
-              ),
-            ),
-          ],
-        );
-      },
+              );
+            },
+          );
+        },
+      ),
     );
   }
 
-  Future<void> _confirmSale(BuildContext context, CartLoaded cartState) async {
-    setState(() {
-      _isProcessingSale = true;
-    });
+  void _confirmSale(BuildContext context, CartLoaded cartState) {
+    // Obtener cliente seleccionado
+    final clientsState = context.read<ClientsBloc>().state;
+    final selectedClient =
+        clientsState is ClientsLoaded ? clientsState.selectedClient : null;
 
-    try {
-      final user = await di.sl<AuthLocalDataSource>().getCachedUser();
-      final printerConfig =
-          await di.sl<PrinterLocalDataSource>().getPrinterConfig();
-      final priceList =
-          await di.sl<PriceListLocalDataSource>().getCurrentPriceList();
-      final localDs = di.sl<AuthLocalDataSource>();
-      final enterprise = await localDs.getCachedEnterprise();
+    // Obtener método de pago seleccionado
+    final paymentMethodsState = context.read<PaymentMethodsBloc>().state;
+    final selectedPaymentMethod = paymentMethodsState is PaymentMethodsLoaded
+        ? paymentMethodsState.selectedPaymentMethod
+        : null;
 
-      final totalTax = cartState.totalIva;
-
-      final appConfigUsecase = di.sl<GetTicketConfigUsecase>();
-      final appConfig = await appConfigUsecase();
-
-      // Obtener cliente seleccionado del ClientsBloc
-      final clientsState = context.read<ClientsBloc>().state;
-      final selectedClient =
-          clientsState is ClientsLoaded ? clientsState.selectedClient : null;
-
-      // Obtener método de pago seleccionado del PaymentMethodsBloc
-      final paymentMethodsState = context.read<PaymentMethodsBloc>().state;
-      final selectedPaymentMethod = paymentMethodsState is PaymentMethodsLoaded
-          ? paymentMethodsState.selectedPaymentMethod
-          : null;
-      final config = await di.sl<PdvLocalDataSource>().getPdvConfig();
-      // Numero de sucursal para incluir en el ticket
-      final branchNumber = config?.branchNumber;
-
-      // Bloquear cobro si no hay número de sucursal configurado
-      if (branchNumber == null || branchNumber.trim().isEmpty) {
-        if (mounted) {
-          setState(() {
-            _isProcessingSale = false;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Row(
-                children: [
-                  Icon(Icons.warning_amber_rounded, color: Colors.white),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Configure el número de sucursal antes de realizar cobros.',
-                    ),
-                  ),
-                ],
-              ),
-              backgroundColor: Colors.orange,
-              behavior: SnackBarBehavior.floating,
-              duration: Duration(seconds: 5),
-            ),
-          );
-        }
-        return;
-      }
-
-      bool showSubtotalAndTax = false;
-      bool showPricesWithTax = true;
-
-      if (appConfig != null) {
-        if (appConfig.showSubtotalAndTax && selectedClient != null) {
-          showSubtotalAndTax = true;
-        } else {
-          showSubtotalAndTax = false;
-        }
-
-        showPricesWithTax = appConfig.showPricesWithTax;
-      }
-
-      final completeOrderUsecase = di.sl<CompleteOrderUsecase>();
-      await completeOrderUsecase(
-        items: cartState.items,
-        logItems: cartState.log,
-        total: cartState.total,
-        clientName: selectedClient?.name,
-        paymentMethod: selectedPaymentMethod,
-        cashierName: user?.name ?? 'Desconocido',
-        showSubtotalAndTax: showSubtotalAndTax,
-        showPricesWithTax: showPricesWithTax,
-        receivedAmount: _receivedAmount,
-        change: _change,
-      );
-
-      final printJob = PrintJob(
-        items: cartState.items,
-        logItems: cartState.log,
-        total: cartState.total,
-        clientName: selectedClient?.name,
-        client: selectedClient,
-        priceListId: priceList,
-        totalTax: totalTax,
-        paymentMethod: selectedPaymentMethod,
-        cashierName: user?.name ?? 'Desconocido',
-        cashierId: int.tryParse(user?.id ?? ''),
-        timestamp: DateTime.now(),
-        ticketId: DateTime.now().millisecondsSinceEpoch.toString(),
-        enterprise: enterprise,
-        showSubtotalAndTax: showSubtotalAndTax,
-        showPricesWithTax: showPricesWithTax,
-        receivedAmount: _receivedAmount,
-        change: _change,
-        branchNumber: branchNumber,
-      );
-
-      final sendInvoice = di.sl<SendInvoiceUseCase>();
-      bool invoiceSent = false;
-
-      try {
-        invoiceSent = await sendInvoice(printJob);
-      } catch (e) {
-        if (mounted) {
-          setState(() {
-            _isProcessingSale = false;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: No se pudo enviar la factura - $e'),
-              backgroundColor: AppColors.error,
-              duration: const Duration(seconds: 4),
-            ),
-          );
-        }
-        return;
-      }
-
-      if (!invoiceSent) {
-        if (mounted) {
-          setState(() {
-            _isProcessingSale = false;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Error: La factura no se pudo enviar'),
-              backgroundColor: AppColors.error,
-            ),
-          );
-        }
-        return;
-      }
-
-      if (mounted) {
-        // Crear e inicializar el PrinterBloc
-        final printerBloc = di.sl<PrinterBloc>();
-        printerBloc.add(PrintTicket(
-          printJob: printJob,
-          config: printerConfig,
-        ));
-
-        await printerBloc.stream.firstWhere(
-          (state) => state is PrinterSuccess || state is PrinterError,
-        );
-
-        context.read<CartBloc>().add(ClearCart());
-
-        widget.onClose();
-
-        setState(() {
-          _isProcessingSale = false;
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Venta procesada exitosamente'),
-            backgroundColor: AppColors.success,
+    // Disparar evento de procesamiento
+    context.read<CheckoutBloc>().add(
+          ProcessSale(
+            items: cartState.items,
+            logItems: cartState.log,
+            total: cartState.total,
+            totalIva: cartState.totalIva,
+            client: selectedClient,
+            paymentMethod: selectedPaymentMethod,
+            receivedAmount: _receivedAmount,
+            change: _change,
           ),
         );
-
-        printerBloc.close();
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isProcessingSale = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al procesar venta: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    }
   }
 }
