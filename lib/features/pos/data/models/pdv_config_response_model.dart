@@ -18,9 +18,11 @@ class PdvConfigResponseModel with _$PdvConfigResponseModel {
     @JsonKey(name: 'cuit') String? cuit,
     @JsonKey(name: 'sale_condition_id') String? saleConditionId,
     @JsonKey(name: 'type') String? type,
-    @JsonKey(name: 'number') String? number,
+    @JsonKey(name: 'dni') String? dni,
+    @JsonKey(name: 'vat_category_id') int? vatCategoryId,
+    @JsonKey(name: 'shipment_id') int? shipmentId,
+    @JsonKey(name: 'date') String? date,
     @JsonKey(name: 'id') int? id,
-    
   }) = _PdvConfigResponseModel;
 
   factory PdvConfigResponseModel.fromJson(Map<String, dynamic> json) =>

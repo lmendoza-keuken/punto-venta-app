@@ -7,6 +7,7 @@ class SidebarItem extends StatelessWidget {
   final VoidCallback? onTap;
   final String? tooltip;
   final bool isHighlighted;
+  final bool? isDisabled;
 
   const SidebarItem({
     super.key,
@@ -15,6 +16,7 @@ class SidebarItem extends StatelessWidget {
     this.onTap,
     this.tooltip,
     this.isHighlighted = false,
+    this.isDisabled = false,
   });
 
   @override
@@ -34,7 +36,11 @@ class SidebarItem extends StatelessWidget {
           : null,
       child: Icon(
         icon,
-        color: isHighlighted ? Colors.white : color,
+        color: isDisabled == true
+            ? AppColors.sidebarIconDisabled
+            : isHighlighted
+                ? Colors.white
+                : color,
         size: 24,
       ),
     );
@@ -47,7 +53,7 @@ class SidebarItem extends StatelessWidget {
     }
 
     return InkWell(
-      onTap: onTap,
+      onTap: isDisabled == true ? null : onTap,
       borderRadius: BorderRadius.circular(12),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),

@@ -160,11 +160,11 @@ class _AppSidebarState extends State<AppSidebar> {
                       isDark: isDark,
                       sidebarSurface: sidebarSurface,
                       child: SidebarItem(
+                        isDisabled: true, // Deshabilitado temporalmente
                         icon: Icons.person_search_outlined,
                         isHighlighted: _isSelectClientDialogOpen,
                         tooltip: 'Seleccionar Cliente',
-                        onTap: (){},
-                        // onTap: () => _handleSelectClient(context),
+                        onTap: () => _handleSelectClient(context),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -175,11 +175,11 @@ class _AppSidebarState extends State<AppSidebar> {
                       isDark: isDark,
                       sidebarSurface: sidebarSurface,
                       child: SidebarItem(
+                        isDisabled: true, // Deshabilitado temporalmente
                         icon: Icons.person_add_outlined,
                         isHighlighted: _isAddClientDialogOpen,
                         tooltip: 'Agregar Cliente',
-                        onTap: (){},
-                        // onTap: () => _handleAddClient(context),
+                        onTap: () => _handleAddClient(context),
                       ),
                     ),
                   ]

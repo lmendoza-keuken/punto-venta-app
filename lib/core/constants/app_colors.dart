@@ -34,6 +34,7 @@ class AppColors {
   static const Color sidebarAccent = Color(0xFFEA7C69);
   static const Color sidebarIconActive = Color(0xFFEA7C69);
   static const Color sidebarIconInactive = Color(0xFF6B7280);
+  static const Color sidebarIconDisabled = Color.fromARGB(255, 167, 167, 168);
   static const Color sidebarDivider = Color(0xFF393C49);
   static const Color sidebarDarkDivider = Color(0xFF3A3F55);
   static const Color sidebarSwitchTrack = Color(0xFF373847);
