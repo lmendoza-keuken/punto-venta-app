@@ -1,3 +1,4 @@
+import 'package:punto_venta_app/core/mocked_taxes_list.dart';
 import 'package:punto_venta_app/features/pos/data/models/cart_item_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/cart_log_entry_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/client_model.dart';
@@ -63,6 +64,7 @@ class InvoicePayload {
         //
         final weightKg = itemLog.item.weightKg;
         final isWeighted = (itemLog.item.isWeighted == true);
+        final taxesList = mockedTaxesList;
 
         final double taxableBase = isWeighted
             ? (itemModel.pricePerKg ?? unitPrice)
@@ -73,7 +75,7 @@ class InvoicePayload {
 
         final List<TaxModel> taxes = [
           TaxModel(
-            id: 1,
+            id: taxesList.firstWhere((t) => t.percentage == taxPercentage).id,
             percentage: taxPercentage,
             amount: double.parse(taxAmount.toStringAsFixed(2)),
           ),
@@ -108,7 +110,7 @@ class InvoicePayload {
       final percentage = e.key;
       final amount = e.value;
       return TaxModel(
-        id: 1,
+        id: mockedTaxesList.firstWhere((t) => t.percentage == percentage).id,
         percentage: double.parse(percentage.toStringAsFixed(2)),
         amount: double.parse(amount.toStringAsFixed(2)),
       );

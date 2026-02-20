@@ -19,40 +19,57 @@ class CompletedOrdersLocalDataSourceImpl
 
   @override
   Future<List<CompletedOrderModel>> getCompletedOrders() async {
-    final jsonString = sharedPreferences.getString(completedOrdersKey);
-    if (jsonString != null) {
-      final List<dynamic> jsonList = json.decode(jsonString);
-      return jsonList
-          .map((json) => CompletedOrderModel.fromJson(json))
-          .toList();
+    try {
+      final jsonString = sharedPreferences.getString(completedOrdersKey);
+      if (jsonString == null || jsonString.isEmpty) {
+        return [];
+      }
+      
+      final decoded = json.decode(jsonString);
+      if (decoded is List) {
+        return (decoded)
+            .whereType<Map<String, dynamic>>()
+            .map((json) => CompletedOrderModel.fromJson(json))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      return [];
     }
-    return [];
   }
 
   @override
   Future<void> saveCompletedOrder(CompletedOrderModel order) async {
-    final orders = await getCompletedOrders();
-    orders.add(order);
+    try {
+      final orders = await getCompletedOrders();
+      orders.add(order);
 
-    final jsonString = json.encode(orders.map((o) => o.toJson()).toList());
-    await sharedPreferences.setString(completedOrdersKey, jsonString);
+      final jsonString = json.encode(orders.map((o) => o.toJson()).toList());
+      await sharedPreferences.setString(completedOrdersKey, jsonString);
+    } catch (e) {
+      throw Exception('Error al guardar orden: $e');
+    }
   }
 
   @override
   Future<List<CompletedOrderModel>> getOrdersByDateRange(
       DateTime startDate, DateTime endDate) async {
-    final orders = await getCompletedOrders();
-    return orders.where((order) {
-      return order.completedAt
-              .isAfter(startDate.subtract(const Duration(days: 1))) &&
-          order.completedAt.isBefore(endDate.add(const Duration(days: 1)));
-    }).toList();
+    try {
+      final orders = await getCompletedOrders();
+      return orders.where((order) {
+        return order.completedAt
+                .isAfter(startDate.subtract(const Duration(days: 1))) &&
+            order.completedAt.isBefore(endDate.add(const Duration(days: 1)));
+      }).toList();
+    } catch (e) {
+      return [];
+    }
   }
 
   @override
   Future<CompletedOrderModel?> getOrderById(String orderId) async {
-    final orders = await getCompletedOrders();
     try {
+      final orders = await getCompletedOrders();
       return orders.firstWhere((order) => order.id == orderId);
     } catch (e) {
       return null;

@@ -291,7 +291,7 @@ class _ReportsPageState extends State<ReportsPage>
                   if (order.clientName != null)
                     Text('Cliente: ${order.clientName}'),
                   Text('${order.items.length} artículos'),
-                  Text('Pago: ${order.paymentMethod}'),
+                  Text('Pago: ${order.paymentMethod?.shortDescription.toLowerCase()}'),
                 ],
               ),
               trailing: Row(

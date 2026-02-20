@@ -69,7 +69,6 @@ class PaymentOptionWidget extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                      color: isEnabled ? Colors.black : Colors.grey,
                     ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,

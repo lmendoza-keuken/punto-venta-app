@@ -408,7 +408,7 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
             const SizedBox(height: 8),
 
             // Información adicional
-            Text('Método de pago: ${widget.order.paymentMethod}'),
+            Text('Método de pago: ${widget.order.paymentMethod?.shortDescription.toLowerCase()}'),
             Text('Total de artículos: ${widget.order.totalItems}'),
 
             const SizedBox(height: 16),
