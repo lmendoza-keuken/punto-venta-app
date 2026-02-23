@@ -9,6 +9,10 @@ abstract class ReportsEvent extends Equatable {
 
 class LoadAllReports extends ReportsEvent {}
 
+class LoadMoreReports extends ReportsEvent {
+  const LoadMoreReports();
+}
+
 class LoadReportsByDateRange extends ReportsEvent {
   final DateTime startDate;
   final DateTime endDate;

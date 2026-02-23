@@ -6,9 +6,9 @@ import 'package:punto_venta_app/features/auth/data/datasources/auth_local_dataso
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 abstract class CompletedOrdersRemoteDataSource {
-  Future<List<InvoicePayload>> getAllOrders();
+  Future<List<InvoicePayload>> getAllOrders({int skip = 0, int limit = 10});
   Future<List<InvoicePayload>> getOrdersByDateRange(
-      DateTime startDate, {DateTime? endDate});
+      DateTime startDate, {DateTime? endDate, int skip = 0, int limit = 10});
   Future<InvoicePayload?> getOrderById(String orderId);
 }
 
@@ -23,7 +23,7 @@ class CompletedOrdersRemoteDataSourceImpl
   }) : _dio = dio ?? DioClient.instance;
 
   @override
-  Future<List<InvoicePayload>> getAllOrders() async {
+  Future<List<InvoicePayload>> getAllOrders({int skip = 0, int limit = 10}) async {
     final url = ApiConfig.invoiceUrl;
 
     if (url.isEmpty || ApiConfig.invoiceUrl.isEmpty) {
@@ -41,6 +41,10 @@ class CompletedOrdersRemoteDataSourceImpl
     try {
       final response = await _dio.get(
         url,
+        queryParameters: {
+          'skip': skip,
+          'limit': limit,
+        },
         options: Options(
           headers: {
             'Content-Type': 'application/json; charset=utf-8',
@@ -87,7 +91,7 @@ class CompletedOrdersRemoteDataSourceImpl
 
   @override
   Future<List<InvoicePayload>> getOrdersByDateRange(
-      DateTime startDate, {DateTime? endDate}) async {
+      DateTime startDate, {DateTime? endDate, int skip = 0, int limit = 10}) async {
     final url = ApiConfig.invoiceUrl;
 
     if (url.isEmpty || ApiConfig.invoiceUrl.isEmpty) {
@@ -104,6 +108,8 @@ class CompletedOrdersRemoteDataSourceImpl
 
     final queryParams = <String, dynamic>{
       'start_date': _formatDateYYYYMMDD(startDate),
+      'skip': skip,
+      'limit': limit,
     };
     if (endDate != null) {
       queryParams['end_date'] = _formatDateYYYYMMDD(endDate);

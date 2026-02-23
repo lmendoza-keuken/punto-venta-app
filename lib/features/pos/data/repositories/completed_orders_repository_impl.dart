@@ -85,13 +85,13 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
 
   // Remote methods
   @override
-  Future<List<CompletedOrder>> getCompletedOrdersFromRemote() async {
+  Future<List<CompletedOrder>> getCompletedOrdersFromRemote({int skip = 0, int limit = 10}) async {
     if (remoteDataSource == null) {
       throw Exception('Remote data source not available');
     }
 
     try {
-      final invoicePayloads = await remoteDataSource!.getAllOrders();
+      final invoicePayloads = await remoteDataSource!.getAllOrders(skip: skip, limit: limit);
       return invoicePayloads
           .map((payload) => _convertInvoicePayloadToCompletedOrder(payload))
           .toList();
@@ -102,14 +102,14 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
 
   @override
   Future<List<CompletedOrder>> getOrdersByDateRangeFromRemote(
-      DateTime startDate, {DateTime? endDate}) async {
+      DateTime startDate, {DateTime? endDate, int skip = 0, int limit = 10}) async {
     if (remoteDataSource == null) {
       throw Exception('Remote data source not available');
     }
 
     try {
       final invoicePayloads =
-          await remoteDataSource!.getOrdersByDateRange(startDate, endDate: endDate);
+          await remoteDataSource!.getOrdersByDateRange(startDate, endDate: endDate, skip: skip, limit: limit);
       final orders = invoicePayloads
           .map((payload) => _convertInvoicePayloadToCompletedOrder(payload))
           .toList();

@@ -15,11 +15,32 @@ class ReportsLoading extends ReportsState {}
 class ReportsLoaded extends ReportsState {
   final List<CompletedOrder> orders;
   final Map<String, dynamic>? summary;
+  final bool hasMoreData;
+  final bool isLoadingMore;
 
-  const ReportsLoaded(this.orders, {this.summary});
+  const ReportsLoaded(
+    this.orders, {
+    this.summary,
+    this.hasMoreData = true,
+    this.isLoadingMore = false,
+  });
+
+  ReportsLoaded copyWith({
+    List<CompletedOrder>? orders,
+    Map<String, dynamic>? summary,
+    bool? hasMoreData,
+    bool? isLoadingMore,
+  }) {
+    return ReportsLoaded(
+      orders ?? this.orders,
+      summary: summary ?? this.summary,
+      hasMoreData: hasMoreData ?? this.hasMoreData,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+    );
+  }
 
   @override
-  List<Object> get props => [orders, summary ?? {}];
+  List<Object> get props => [orders, summary ?? {}, hasMoreData, isLoadingMore];
 }
 
 class ReportsError extends ReportsState {

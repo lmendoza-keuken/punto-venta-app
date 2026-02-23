@@ -23,13 +23,25 @@ class _ReportsPageState extends State<ReportsPage>
   DateTime selectedDate = DateTime.now();
   DateTime? selectedEndDate;
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(_handleTabChange);
+    _scrollController.addListener(_onScroll);
     context.read<ReportsBloc>().add(LoadDailySummary(selectedDate));
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent * 0.9) {
+      // Cargar más cuando llegue al 90% del scroll
+      final state = context.read<ReportsBloc>().state;
+      if (state is ReportsLoaded && !state.isLoadingMore && state.hasMoreData) {
+        context.read<ReportsBloc>().add(const LoadMoreReports());
+      }
+    }
   }
 
   void _handleTabChange() {
@@ -39,6 +51,11 @@ class _ReportsPageState extends State<ReportsPage>
   }
 
   void _onTabChanged(int index) {
+    // Resetear posición del scroll al cambiar de tab
+    if (_scrollController.hasClients) {
+      _scrollController.jumpTo(0);
+    }
+    
     if (index == 0) {
       // Mantener el rango de fechas al volver a resumen diario
       if (selectedEndDate != null) {
@@ -63,6 +80,7 @@ class _ReportsPageState extends State<ReportsPage>
     _tabController.removeListener(_handleTabChange);
     _tabController.dispose();
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -384,45 +402,62 @@ class _ReportsPageState extends State<ReportsPage>
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(AppDimensions.paddingM),
-      itemCount: orders.length,
-      itemBuilder: (context, index) {
-        final order = orders[index];
-        return GestureDetector(
-          onTap: () => _showTicketPreview(order),
-          child: Card(
-            margin: const EdgeInsets.only(bottom: AppDimensions.paddingS),
-            child: ListTile(
-              title: Text(
-                showDate
-                    ? "#${order.id} | ${DateFormat('dd/MM/yyyy HH:mm').format(order.completedAt)}"
-                    : "#${order.orderNumber} | ${DateFormat('HH:mm').format(order.completedAt)}",
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (order.clientName != null)
-                    Text('Cliente: ${order.clientName}'),
-                  Text('${order.items.length} artículos'),
-                  Text('Pago: ${order.paymentMethod?.shortDescription.toLowerCase()}'),
-                ],
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    order.total.formatToCurrency(),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
+    return BlocBuilder<ReportsBloc, ReportsState>(
+      builder: (context, state) {
+        final isLoadingMore = state is ReportsLoaded && state.isLoadingMore;
+        
+        return ListView.builder(
+          controller: _scrollController,
+          padding: const EdgeInsets.all(AppDimensions.paddingM),
+          itemCount: orders.length + (isLoadingMore ? 1 : 0),
+          itemBuilder: (context, index) {
+            // Mostrar indicador de carga al final
+            if (index == orders.length) {
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(AppDimensions.paddingM),
+                  child: CircularProgressIndicator(),
+                ),
+              );
+            }
+            
+            final order = orders[index];
+            return GestureDetector(
+              onTap: () => _showTicketPreview(order),
+              child: Card(
+                margin: const EdgeInsets.only(bottom: AppDimensions.paddingS),
+                child: ListTile(
+                  title: Text(
+                    showDate
+                        ? "#${order.id} | ${DateFormat('dd/MM/yyyy HH:mm').format(order.completedAt)}"
+                        : "#${order.orderNumber} | ${DateFormat('HH:mm').format(order.completedAt)}",
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                ],
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (order.clientName != null)
+                        Text('Cliente: ${order.clientName}'),
+                      Text('${order.items.length} artículos'),
+                      Text('Pago: ${order.paymentMethod?.shortDescription.toLowerCase()}'),
+                    ],
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        order.total.formatToCurrency(),
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );
