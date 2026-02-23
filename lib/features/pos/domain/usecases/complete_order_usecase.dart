@@ -27,6 +27,8 @@ class CompleteOrderUsecase {
     }
 
     final now = DateTime.now();
+    
+    // GENERA NUMERO DE ORDEN ()
     final orderNumber = _generateOrderNumber(now);
     final totalItems = items.fold(0, (sum, item) => sum + item.quantity);
 
@@ -43,7 +45,9 @@ class CompleteOrderUsecase {
     }
 
     final order = CompletedOrder(
+      // deberia ser el id del ticket.
       id: now.millisecondsSinceEpoch.toString(),
+
       orderNumber: orderNumber,
       items: items,
       logs: logItems,

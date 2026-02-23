@@ -13,6 +13,7 @@ import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/client_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/client_remote_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/completed_orders_local_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/completed_orders_remote_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/invoice_remote_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/ticket_config_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/ticket_config_remote_datasource.dart';
@@ -206,7 +207,10 @@ Future<void> init() async {
     () => SavedOrdersRepositoryImpl(localDataSource: sl()),
   );
   sl.registerLazySingleton<CompletedOrdersRepository>(
-    () => CompletedOrdersRepositoryImpl(localDataSource: sl()),
+    () => CompletedOrdersRepositoryImpl(
+      localDataSource: sl(),
+      remoteDataSource: sl(),
+    ),
   );
   sl.registerLazySingleton<ClientRepository>(
     () => ClientRepositoryImpl(
@@ -281,6 +285,9 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<CompletedOrdersLocalDataSource>(
     () => CompletedOrdersLocalDataSourceImpl(sharedPreferences: sl()),
+  );
+  sl.registerLazySingleton<CompletedOrdersRemoteDataSource>(
+    () => CompletedOrdersRemoteDataSourceImpl(dio: sl()),
   );
   sl.registerLazySingleton<ClientLocalDataSource>(
       () => ClientLocalDataSourceImpl(sharedPreferences: sl()));

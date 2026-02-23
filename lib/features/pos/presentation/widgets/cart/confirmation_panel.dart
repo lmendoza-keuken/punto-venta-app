@@ -46,7 +46,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
           final printerConfig =
               await di.sl<PrinterLocalDataSource>().getPrinterConfig();
           final printerBloc = di.sl<PrinterBloc>();
-          
+
           printerBloc.add(PrintTicket(
             printJob: checkoutState.printJob,
             config: printerConfig,
@@ -56,8 +56,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
             (state) => state is PrinterSuccess || state is PrinterError,
           );
 
-          
-
+          // Limpiar el carrito y cerrar el panel de confirmación
           if (mounted) {
             context.read<CartBloc>().add(ClearCart());
             context.read<CheckoutBloc>().add(const ResetCheckout());
@@ -112,200 +111,214 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                           icon: const Icon(Icons.arrow_forward),
                           onPressed: isProcessing ? null : widget.onClose,
                         ),
-                  const SizedBox(width: AppDimensions.paddingS),
-                  Expanded(
-                    child: Text(
-                      'Confirmar Pago',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
+                        const SizedBox(width: AppDimensions.paddingS),
+                        Expanded(
+                          child: Text(
+                            'Confirmar Pago',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                           ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
 
-            // Contenido del panel de confirmación
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppDimensions.paddingL),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Métodos de pago
-                    Text(
-                      'Métodos de Pago',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    const SizedBox(height: 16),
-                    BlocBuilder<PaymentMethodsBloc, PaymentMethodsState>(
-                      builder: (context, pmState) {
-                        if (pmState is PaymentMethodsLoading) {
-                          return const Padding(
-                            padding: EdgeInsets.all(16.0),
-                            child: CircularProgressIndicator(),
-                          );
-                        }
-
-                        if (pmState is PaymentMethodsError) {
-                          return Container(
-                            padding:
-                                const EdgeInsets.all(AppDimensions.paddingM),
-                            decoration: BoxDecoration(
-                              color: AppColors.error.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: AppColors.error.withOpacity(0.3),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(Icons.error_outline,
-                                    size: 20, color: AppColors.error),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    'Error al cargar métodos de pago: ${pmState.message}',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                    ),
-                                  ),
+                  // Contenido del panel de confirmación
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(AppDimensions.paddingL),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Métodos de Pago',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
                                 ),
-                              ],
-                            ),
-                          );
-                        }
+                          ),
+                          const SizedBox(height: 16),
+                          BlocBuilder<PaymentMethodsBloc, PaymentMethodsState>(
+                            builder: (context, pmState) {
+                              if (pmState is PaymentMethodsLoading) {
+                                return const Padding(
+                                  padding: EdgeInsets.all(16.0),
+                                  child: CircularProgressIndicator(),
+                                );
+                              }
 
-                        if (pmState is PaymentMethodsLoaded) {
-                          final paymentMethods = pmState.paymentMethods;
-
-                          // Filtrar solo el método de efectivo (por ahora)
-                          final cashPayment = paymentMethods
-                              .where((pm) =>
-                                  pm.description
-                                      .toLowerCase()
-                                      .contains('efectivo') ||
-                                  pm.shortDescription
-                                      .toLowerCase()
-                                      .contains('efectivo'))
-                              .firstOrNull;
-
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (paymentMethods.isEmpty)
-                                Container(
+                              if (pmState is PaymentMethodsError) {
+                                return Container(
                                   padding: const EdgeInsets.all(
                                       AppDimensions.paddingM),
                                   decoration: BoxDecoration(
-                                    color: AppColors.warning.withOpacity(0.1),
+                                    color: AppColors.error.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                      color: AppColors.warning.withOpacity(0.3),
+                                      color: AppColors.error.withOpacity(0.3),
                                     ),
                                   ),
                                   child: Row(
                                     children: [
-                                      Icon(Icons.warning,
-                                          size: 20, color: AppColors.warning),
+                                      Icon(Icons.error_outline,
+                                          size: 20, color: AppColors.error),
                                       const SizedBox(width: 12),
-                                      const Expanded(
+                                      Expanded(
                                         child: Text(
-                                          'No hay métodos de pago disponibles',
-                                          style: TextStyle(
+                                          'Error al cargar métodos de pago: ${pmState.message}',
+                                          style: const TextStyle(
                                             fontSize: 14,
                                           ),
                                         ),
                                       ),
                                     ],
                                   ),
-                                )
-                              else
-                                Wrap(
-                                  spacing: AppDimensions.paddingM,
-                                  runSpacing: AppDimensions.paddingM,
+                                );
+                              }
+
+                              if (pmState is PaymentMethodsLoaded) {
+                                final paymentMethods = pmState.paymentMethods;
+
+                                // Filtrar solo el método de efectivo (por ahora)
+                                final cashPayment = paymentMethods
+                                    .where((pm) =>
+                                        pm.description
+                                            .toLowerCase()
+                                            .contains('efectivo') ||
+                                        pm.shortDescription
+                                            .toLowerCase()
+                                            .contains('efectivo'))
+                                    .firstOrNull;
+
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    if (cashPayment != null)
-                                      SizedBox(
-                                        width: 120,
-                                        child: PaymentOptionWidget(
-                                          paymentMethod: cashPayment,
-                                          isSelected: pmState
-                                                  .selectedPaymentMethod?.id ==
-                                              cashPayment.id,
-                                          isEnabled: true,
-                                          onTap: () {
-                                            context
-                                                .read<PaymentMethodsBloc>()
-                                                .add(SelectPaymentMethodEvent(
-                                                    cashPayment));
-                                          },
-                                          icon: Icons.attach_money,
+                                    if (paymentMethods.isEmpty)
+                                      Container(
+                                        padding: const EdgeInsets.all(
+                                            AppDimensions.paddingM),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.warning
+                                              .withOpacity(0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          border: Border.all(
+                                            color: AppColors.warning
+                                                .withOpacity(0.3),
+                                          ),
                                         ),
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.warning,
+                                                size: 20,
+                                                color: AppColors.warning),
+                                            const SizedBox(width: 12),
+                                            const Expanded(
+                                              child: Text(
+                                                'No hay métodos de pago disponibles',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                    else
+                                      Wrap(
+                                        spacing: AppDimensions.paddingM,
+                                        runSpacing: AppDimensions.paddingM,
+                                        children: [
+                                          if (cashPayment != null)
+                                            SizedBox(
+                                              width: 120,
+                                              child: PaymentOptionWidget(
+                                                paymentMethod: cashPayment,
+                                                isSelected: pmState
+                                                        .selectedPaymentMethod
+                                                        ?.id ==
+                                                    cashPayment.id,
+                                                isEnabled: true,
+                                                onTap: () {
+                                                  context
+                                                      .read<
+                                                          PaymentMethodsBloc>()
+                                                      .add(
+                                                          SelectPaymentMethodEvent(
+                                                              cashPayment));
+                                                },
+                                                icon: Icons.attach_money,
+                                              ),
+                                            ),
+                                        ],
                                       ),
                                   ],
-                                ),
-                            ],
-                          );
-                        }
+                                );
+                              }
 
-                        return const SizedBox.shrink();
-                      },
-                    ),
+                              return const SizedBox.shrink();
+                            },
+                          ),
 
-                    const SizedBox(height: 24),
-                    const Divider(height: 1),
-                    const SizedBox(height: 24),
+                          const SizedBox(height: 24),
+                          const Divider(height: 1),
+                          const SizedBox(height: 24),
 
-                    CashPaymentWidget(
-                      key: ValueKey(state.subtotal + state.totalIva),
-                      totalAmount: state.subtotal + state.totalIva,
-                      onAmountChanged: (amount) {
-                        setState(() {
-                          _receivedAmount = amount;
-                        });
-                      },
-                      onChangeCalculated: (change) {
-                        setState(() {
-                          _change = change;
-                        });
-                      },
-                    ),
+                          CashPaymentWidget(
+                            key: ValueKey(state.subtotal + state.totalIva),
+                            totalAmount: state.subtotal + state.totalIva,
+                            onAmountChanged: (amount) {
+                              setState(() {
+                                _receivedAmount = amount;
+                              });
+                            },
+                            onChangeCalculated: (change) {
+                              setState(() {
+                                _change = change;
+                              });
+                            },
+                          ),
 
-                    if (isProcessing) ...[
-                      const SizedBox(height: 24),
-                      Container(
-                        padding: const EdgeInsets.all(AppDimensions.paddingM),
-                        decoration: BoxDecoration(
-                          color: AppColors.info.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                            SizedBox(width: 12),
-                            Text(
-                              'Procesando venta...',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500,
+                          if (isProcessing) ...[
+                            const SizedBox(height: 24),
+                            Container(
+                              padding:
+                                  const EdgeInsets.all(AppDimensions.paddingM),
+                              decoration: BoxDecoration(
+                                color: AppColors.info.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2),
+                                  ),
+                                  SizedBox(width: 12),
+                                  Text(
+                                    'Procesando venta...',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
-                        ),
+                        ],
                       ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
+                    ),
+                  ),
 
                   // Botones de acción
                   Container(
@@ -389,6 +402,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
     );
   }
 
+  // Función para confirmar la venta
   void _confirmSale(BuildContext context, CartLoaded cartState) {
     // Obtener cliente seleccionado
     final clientsState = context.read<ClientsBloc>().state;
@@ -406,6 +420,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
           ProcessSale(
             items: cartState.items,
             logItems: cartState.log,
+            // total y totalIva
             total: cartState.total,
             totalIva: cartState.totalIva,
             client: selectedClient,

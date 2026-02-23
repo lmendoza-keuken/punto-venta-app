@@ -15,6 +15,7 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_s
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 class TicketPreviewDialog extends StatelessWidget {
+
   final CompletedOrder order;
 
   const TicketPreviewDialog({
@@ -49,6 +50,7 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
     _initializePrintJob();
   }
 
+  // Construir el PrintJob a partir de la orden completada
   Future<void> _initializePrintJob() async {
     final localDs = di.sl<AuthLocalDataSource>();
     final enterprise = await localDs.getCachedEnterprise();
@@ -72,6 +74,8 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
       receivedAmount: widget.order.receivedAmount,
       branchNumber: branchNumber ?? '',
     );
+
+    
 
     if (mounted) {
       setState(() {

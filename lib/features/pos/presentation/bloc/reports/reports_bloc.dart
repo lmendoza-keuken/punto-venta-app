@@ -20,8 +20,16 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
   ) async {
     emit(ReportsLoading());
     try {
-      final orders = await getReportsUsecase.getAllCompletedOrders();
-      emit(ReportsLoaded(orders));
+      // Se hace llamado a back si falla se usa local
+      try {
+        final orders =
+            await getReportsUsecase.getAllCompletedOrdersFromRemote();
+        emit(ReportsLoaded(orders));
+      } catch (remoteError) {
+        print('Error fetching from remote, using local data: $remoteError');
+        final orders = await getReportsUsecase.getAllCompletedOrders();
+        emit(ReportsLoaded(orders));
+      }
     } catch (e) {
       emit(ReportsError(e.toString()));
     }
@@ -33,9 +41,18 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
   ) async {
     emit(ReportsLoading());
     try {
-      final orders = await getReportsUsecase.getOrdersByDateRange(
-          event.startDate, event.endDate);
-      emit(ReportsLoaded(orders));
+      // Se hace llamado a back si falla se usa local
+      try {
+        final orders = await getReportsUsecase.getOrdersByDateRangeFromRemote(
+            event.startDate,
+            endDate: event.endDate);
+        emit(ReportsLoaded(orders));
+      } catch (remoteError) {
+        print('Error fetching from remote, using local data: $remoteError');
+        final orders = await getReportsUsecase.getOrdersByDateRange(
+            event.startDate, event.endDate);
+        emit(ReportsLoaded(orders));
+      }
     } catch (e) {
       emit(ReportsError(e.toString()));
     }
@@ -47,9 +64,17 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
   ) async {
     emit(ReportsLoading());
     try {
-      final summary = await getReportsUsecase.getDailySummary(event.date);
-      final orders = summary['orders'] as List<CompletedOrder>;
-      emit(ReportsLoaded(orders, summary: summary));
+      try {
+        final summary =
+            await getReportsUsecase.getDailySummaryFromRemote(event.date);
+        final orders = summary['orders'] as List<CompletedOrder>;
+        emit(ReportsLoaded(orders, summary: summary));
+      } catch (remoteError) {
+        print('Error fetching from remote, using local data: $remoteError');
+        final summary = await getReportsUsecase.getDailySummary(event.date);
+        final orders = summary['orders'] as List<CompletedOrder>;
+        emit(ReportsLoaded(orders, summary: summary));
+      }
     } catch (e) {
       emit(ReportsError(e.toString()));
     }
@@ -62,7 +87,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     try {
       // Simular impresión de ticket
       await Future.delayed(const Duration(seconds: 1));
-      emit(const TicketPrinted('Ticket reimimpreso exitosamente'));
+      emit(const TicketPrinted('Ticket reimpreso exitosamente'));
 
       // Volver al estado anterior si había órdenes cargadas
       if (state is ReportsLoaded) {

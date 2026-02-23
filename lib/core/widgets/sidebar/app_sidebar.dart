@@ -360,6 +360,7 @@ class _AppSidebarState extends State<AppSidebar> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('El carrito está vacío'),
+          backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -425,6 +426,7 @@ class _AppSidebarState extends State<AppSidebar> {
         SnackBar(
           content: Text('Pedido "${result.name}" cargado exitosamente'),
           backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
         ),
       );
     }
@@ -469,6 +471,8 @@ class _AppSidebarState extends State<AppSidebar> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Cliente ${added.name} agregado y seleccionado'),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
         ),
       );
     }

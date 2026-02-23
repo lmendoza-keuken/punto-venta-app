@@ -21,19 +21,52 @@ class _ReportsPageState extends State<ReportsPage>
     with TickerProviderStateMixin {
   late TabController _tabController;
   DateTime selectedDate = DateTime.now();
+  DateTime? selectedEndDate;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(_handleTabChange);
     context.read<ReportsBloc>().add(LoadDailySummary(selectedDate));
+  }
+
+  void _handleTabChange() {
+    if (!_tabController.indexIsChanging) {
+      _onTabChanged(_tabController.index);
+    }
+  }
+
+  void _onTabChanged(int index) {
+    if (index == 0) {
+      // Mantener el rango de fechas al volver a resumen diario
+      if (selectedEndDate != null) {
+        context.read<ReportsBloc>().add(
+              LoadReportsByDateRange(selectedDate, selectedEndDate!),
+            );
+      } else {
+        context
+            .read<ReportsBloc>()
+            .add(LoadDailySummary(selectedDate));
+      }
+    } else {
+      // Limpiar buscador y cargar todos los tickets
+      _searchController.clear();
+      setState(() {});
+      context.read<ReportsBloc>().add(LoadAllReports());
+    }
   }
 
   @override
   void dispose() {
+    _tabController.removeListener(_handleTabChange);
     _tabController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -78,15 +111,7 @@ class _ReportsPageState extends State<ReportsPage>
                   height: 50,
                 ),
               ],
-              onTap: (index) {
-                if (index == 0) {
-                  context
-                      .read<ReportsBloc>()
-                      .add(LoadDailySummary(selectedDate));
-                } else {
-                  context.read<ReportsBloc>().add(LoadAllReports());
-                }
-              },
+              onTap: _onTabChanged,
             ),
 
             // Content
@@ -111,40 +136,90 @@ class _ReportsPageState extends State<ReportsPage>
         // Date picker
         Container(
           padding: const EdgeInsets.all(AppDimensions.paddingM),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Fecha: '),
-              const SizedBox(width: AppDimensions.paddingS),
-              InkWell(
-                onTap: _selectDate,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppDimensions.paddingM,
-                    vertical: AppDimensions.paddingS,
+              Row(
+                children: [
+                  const Text('Fecha inicio: '),
+                  const SizedBox(width: AppDimensions.paddingS),
+                  InkWell(
+                    onTap: _selectDate,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppDimensions.paddingM,
+                        vertical: AppDimensions.paddingS,
+                      ),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius:
+                            BorderRadius.circular(AppDimensions.borderRadiusS),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.calendar_today,
+                              size: 16, color: AppColors.primary),
+                          const SizedBox(width: AppDimensions.paddingS),
+                          Text(DateFormat('dd/MM/yyyy').format(selectedDate)),
+                        ],
+                      ),
+                    ),
                   ),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius:
-                        BorderRadius.circular(AppDimensions.borderRadiusS),
+                  const SizedBox(width: AppDimensions.paddingM),
+                  const Text('Fecha fin (opcional): '),
+                  const SizedBox(width: AppDimensions.paddingS),
+                  InkWell(
+                    onTap: _selectEndDate,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppDimensions.paddingM,
+                        vertical: AppDimensions.paddingS,
+                      ),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius:
+                            BorderRadius.circular(AppDimensions.borderRadiusS),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.calendar_today,
+                              size: 16, color: AppColors.primary),
+                          const SizedBox(width: AppDimensions.paddingS),
+                          Text(selectedEndDate != null
+                              ? DateFormat('dd/MM/yyyy').format(selectedEndDate!)
+                              : 'Sin seleccionar'),
+                        ],
+                      ),
+                    ),
                   ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.calendar_today,
-                          size: 16, color: AppColors.primary),
-                      const SizedBox(width: AppDimensions.paddingS),
-                      Text(DateFormat('dd/MM/yyyy').format(selectedDate)),
-                    ],
+                  if (selectedEndDate != null) ...[
+                    const SizedBox(width: AppDimensions.paddingS),
+                    IconButton(
+                      icon: const Icon(Icons.clear, size: 20),
+                      onPressed: () {
+                        setState(() {
+                          selectedEndDate = null;
+                        });
+                      },
+                      tooltip: 'Limpiar fecha fin',
+                    ),
+                  ],
+                  const SizedBox(width: AppDimensions.paddingM),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (selectedEndDate != null) {
+                        context.read<ReportsBloc>().add(
+                              LoadReportsByDateRange(selectedDate, selectedEndDate!),
+                            );
+                      } else {
+                        context
+                            .read<ReportsBloc>()
+                            .add(LoadDailySummary(selectedDate));
+                      }
+                    },
+                    child: const Text('Actualizar'),
                   ),
-                ),
-              ),
-              const SizedBox(width: AppDimensions.paddingM),
-              ElevatedButton(
-                onPressed: () {
-                  context
-                      .read<ReportsBloc>()
-                      .add(LoadDailySummary(selectedDate));
-                },
-                child: const Text('Actualizar'),
+                ],
               ),
             ],
           ),
@@ -162,7 +237,7 @@ class _ReportsPageState extends State<ReportsPage>
                     if (state.summary != null)
                       _buildSummaryCards(state.summary!),
                     Expanded(
-                      child: _buildOrdersList(state.orders, showDate: false),
+                      child: _buildOrdersList(state.orders, showDate: selectedEndDate != null),
                     ),
                   ],
                 );
@@ -179,17 +254,57 @@ class _ReportsPageState extends State<ReportsPage>
   }
 
   Widget _buildHistoryTab() {
-    return BlocBuilder<ReportsBloc, ReportsState>(
-      builder: (context, state) {
-        if (state is ReportsLoading) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (state is ReportsLoaded) {
-          return _buildOrdersList(state.orders, showDate: true);
-        } else if (state is ReportsError) {
-          return _buildErrorWidget(state.message);
-        }
-        return const Center(child: Text('Cargando historial...'));
-      },
+    return Column(
+      children: [
+        // Buscador
+        Container(
+          padding: const EdgeInsets.all(AppDimensions.paddingM),
+          child: TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: 'Buscar por ID de ticket...',
+              prefixIcon: const Icon(Icons.search),
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        _searchController.clear();
+                        setState(() {});
+                      },
+                    )
+                  : null,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppDimensions.borderRadiusS),
+              ),
+            ),
+            onChanged: (value) {
+              setState(() {});
+            },
+          ),
+        ),
+        // Lista de órdenes
+        Expanded(
+          child: BlocBuilder<ReportsBloc, ReportsState>(
+            builder: (context, state) {
+              if (state is ReportsLoading) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (state is ReportsLoaded) {
+                final filteredOrders = _searchController.text.isEmpty
+                    ? state.orders
+                    : state.orders
+                        .where((order) => order.id
+                            .toLowerCase()
+                            .contains(_searchController.text.toLowerCase()))
+                        .toList();
+                return _buildOrdersList(filteredOrders, showDate: true);
+              } else if (state is ReportsError) {
+                return _buildErrorWidget(state.message);
+              }
+              return const Center(child: Text('Cargando historial...'));
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -282,7 +397,7 @@ class _ReportsPageState extends State<ReportsPage>
               title: Text(
                 showDate
                     ? "#${order.id} | ${DateFormat('dd/MM/yyyy HH:mm').format(order.completedAt)}"
-                    : "#${order.id} | ${DateFormat('HH:mm').format(order.completedAt)}",
+                    : "#${order.orderNumber} | ${DateFormat('HH:mm').format(order.completedAt)}",
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               subtitle: Column(
@@ -330,7 +445,13 @@ class _ReportsPageState extends State<ReportsPage>
           ElevatedButton(
             onPressed: () {
               if (_tabController.index == 0) {
-                context.read<ReportsBloc>().add(LoadDailySummary(selectedDate));
+                if (selectedEndDate != null) {
+                  context.read<ReportsBloc>().add(
+                        LoadReportsByDateRange(selectedDate, selectedEndDate!),
+                      );
+                } else {
+                  context.read<ReportsBloc>().add(LoadDailySummary(selectedDate));
+                }
               } else {
                 context.read<ReportsBloc>().add(LoadAllReports());
               }
@@ -352,6 +473,20 @@ class _ReportsPageState extends State<ReportsPage>
     if (picked != null && picked != selectedDate) {
       setState(() {
         selectedDate = picked;
+      });
+    }
+  }
+
+  void _selectEndDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: selectedEndDate ?? selectedDate,
+      firstDate: selectedDate,
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        selectedEndDate = picked;
       });
     }
   }

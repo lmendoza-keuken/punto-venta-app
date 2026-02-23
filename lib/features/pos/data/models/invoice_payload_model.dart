@@ -42,6 +42,24 @@ class InvoicePayload {
         'branch_number': branchNumber,
       };
 
+  factory InvoicePayload.fromJson(Map<String, dynamic> json) {
+    return InvoicePayload(
+      ticketId: json['ticketId']?.toString(),
+      timestamp: json['timestamp'] as String,
+      cashier: json['cashier'] as int?,
+      client: json['client'] as Map<String, dynamic>?,
+      paymentMethod: json['paymentMethod'] as int,
+      total: (json['total'] as num).toDouble(),
+      totalTax: (json['totalTax'] as List)
+          .map((t) => TaxModel.fromJson(t as Map<String, dynamic>))
+          .toList(),
+      logItems: (json['items'] as List)
+          .map((item) => item as Map<String, dynamic>)
+          .toList(),
+      branchNumber: json['branch_number']?.toString() ?? '',
+    );
+  }
+
   factory InvoicePayload.fromPrintJob(PrintJob job) {
     Map<String, dynamic>? serializeClient(Client? c) {
       if (c == null) return null;
