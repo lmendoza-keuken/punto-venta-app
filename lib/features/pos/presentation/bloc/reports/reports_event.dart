@@ -32,11 +32,11 @@ class LoadDailySummary extends ReportsEvent {
   List<Object> get props => [date];
 }
 
-class PrintTicket extends ReportsEvent {
-  final String orderId;
+class GenerateCreditNote extends ReportsEvent {
+  final String ticketId;
 
-  const PrintTicket(this.orderId);
+  const GenerateCreditNote(this.ticketId);
 
   @override
-  List<Object> get props => [orderId];
+  List<Object> get props => [ticketId];
 }

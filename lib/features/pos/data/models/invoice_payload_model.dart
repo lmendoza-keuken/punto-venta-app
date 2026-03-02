@@ -17,6 +17,9 @@ class InvoicePayload {
   final List<TaxModel> totalTax;
   final List<Map<String, dynamic>> logItems;
   final String branchNumber;
+  final int branchId;
+  final int? externalId;
+  final String? typeCode;
 
   InvoicePayload({
     this.ticketId,
@@ -28,6 +31,9 @@ class InvoicePayload {
     required this.totalTax,
     required this.logItems,
     required this.branchNumber,
+    required this.branchId,
+    this.externalId,
+    this.typeCode,
   });
 
   Map<String, dynamic> toJson() => {
@@ -37,9 +43,10 @@ class InvoicePayload {
         'client': client,
         'paymentMethod': paymentMethod,
         'total': total,
+        'branch_number': branchNumber,
+        'branch_id': branchId, 
         'totalTax': totalTax.map((t) => t.toJson()).toList(),
         'items': logItems,
-        'branch_number': branchNumber,
       };
 
   factory InvoicePayload.fromJson(Map<String, dynamic> json) {
@@ -57,6 +64,9 @@ class InvoicePayload {
           .map((item) => item as Map<String, dynamic>)
           .toList(),
       branchNumber: json['branch_number']?.toString() ?? '',
+      branchId: json['branch_id'] as int? ?? 0,
+      externalId: json['external_id'] as int?,
+      typeCode: json['type_code'] as String?,
     );
   }
 
@@ -143,6 +153,7 @@ class InvoicePayload {
       totalTax: totalTax,
       logItems: logItems,
       branchNumber: job.branchNumber,
+      branchId: job.branchId ?? 0,
     );
   }
 }

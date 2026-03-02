@@ -46,6 +46,7 @@ import 'package:punto_venta_app/features/pos/domain/usecases/delete_client_useca
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_ticket_config_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_pdv_config_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_payment_methods_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/generate_credit_note_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_clients_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_ticket_config_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_reports_usecase.dart';
@@ -161,7 +162,7 @@ Future<void> init() async {
         saveOrderUsecase: sl(),
         loadSavedOrdersUsecase: sl(),
       ));
-  sl.registerFactory(() => ReportsBloc(getReportsUsecase: sl()));
+  sl.registerFactory(() => ReportsBloc(getReportsUsecase: sl(), generateCreditNoteUsecase: sl()));
   sl.registerFactory(
       () => ClientsBloc(getClients: sl(), addClient: sl(), deleteClient: sl()));
   sl.registerFactory(() => PaymentMethodsBloc(fetchPaymentMethods: sl()));
@@ -196,6 +197,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => UpdateTicketConfigUsecase(sl()));
   sl.registerLazySingleton(() => FetchPaymentMethodsUsecase(sl()));
   sl.registerLazySingleton(() => FetchPdvConfigUsecase(sl()));
+  sl.registerLazySingleton(() => GenerateCreditNoteUsecase(sl()));
 
   // sl.registerLazySingleton(() => PrintTicketUsecase(sl()));
 

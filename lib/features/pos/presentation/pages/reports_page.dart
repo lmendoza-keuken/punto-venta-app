@@ -4,10 +4,13 @@ import 'package:intl/intl.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/core/utils/extensions.dart';
+import 'package:punto_venta_app/features/pos/data/models/ticket_models/ticket_response_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_state.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/report/date_range_picker.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/report/summary_row.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/report/ticket_preview_dialog.dart';
 
 class ReportsPage extends StatefulWidget {
@@ -35,7 +38,8 @@ class _ReportsPageState extends State<ReportsPage>
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent * 0.9) {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent * 0.9) {
       // Cargar más cuando llegue al 90% del scroll
       final state = context.read<ReportsBloc>().state;
       if (state is ReportsLoaded && !state.isLoadingMore && state.hasMoreData) {
@@ -55,7 +59,7 @@ class _ReportsPageState extends State<ReportsPage>
     if (_scrollController.hasClients) {
       _scrollController.jumpTo(0);
     }
-    
+
     if (index == 0) {
       // Mantener el rango de fechas al volver a resumen diario
       if (selectedEndDate != null) {
@@ -63,9 +67,7 @@ class _ReportsPageState extends State<ReportsPage>
               LoadReportsByDateRange(selectedDate, selectedEndDate!),
             );
       } else {
-        context
-            .read<ReportsBloc>()
-            .add(LoadDailySummary(selectedDate));
+        context.read<ReportsBloc>().add(LoadDailySummary(selectedDate));
       }
     } else {
       // Limpiar buscador y cargar todos los tickets
@@ -83,8 +85,6 @@ class _ReportsPageState extends State<ReportsPage>
     _scrollController.dispose();
     super.dispose();
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -152,95 +152,28 @@ class _ReportsPageState extends State<ReportsPage>
     return Column(
       children: [
         // Date picker
-        Container(
-          padding: const EdgeInsets.all(AppDimensions.paddingM),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Text('Fecha inicio: '),
-                  const SizedBox(width: AppDimensions.paddingS),
-                  InkWell(
-                    onTap: _selectDate,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppDimensions.paddingM,
-                        vertical: AppDimensions.paddingS,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade300),
-                        borderRadius:
-                            BorderRadius.circular(AppDimensions.borderRadiusS),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.calendar_today,
-                              size: 16, color: AppColors.primary),
-                          const SizedBox(width: AppDimensions.paddingS),
-                          Text(DateFormat('dd/MM/yyyy').format(selectedDate)),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppDimensions.paddingM),
-                  const Text('Fecha fin (opcional): '),
-                  const SizedBox(width: AppDimensions.paddingS),
-                  InkWell(
-                    onTap: _selectEndDate,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppDimensions.paddingM,
-                        vertical: AppDimensions.paddingS,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade300),
-                        borderRadius:
-                            BorderRadius.circular(AppDimensions.borderRadiusS),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.calendar_today,
-                              size: 16, color: AppColors.primary),
-                          const SizedBox(width: AppDimensions.paddingS),
-                          Text(selectedEndDate != null
-                              ? DateFormat('dd/MM/yyyy').format(selectedEndDate!)
-                              : 'Sin seleccionar'),
-                        ],
-                      ),
-                    ),
-                  ),
-                  if (selectedEndDate != null) ...[
-                    const SizedBox(width: AppDimensions.paddingS),
-                    IconButton(
-                      icon: const Icon(Icons.clear, size: 20),
-                      onPressed: () {
-                        setState(() {
-                          selectedEndDate = null;
-                        });
-                      },
-                      tooltip: 'Limpiar fecha fin',
-                    ),
-                  ],
-                  const SizedBox(width: AppDimensions.paddingM),
-                  ElevatedButton(
-                    onPressed: () {
-                      if (selectedEndDate != null) {
-                        context.read<ReportsBloc>().add(
-                              LoadReportsByDateRange(selectedDate, selectedEndDate!),
-                            );
-                      } else {
-                        context
-                            .read<ReportsBloc>()
-                            .add(LoadDailySummary(selectedDate));
-                      }
-                    },
-                    child: const Text('Actualizar'),
-                  ),
-                ],
-              ),
-            ],
-          ),
+        DateRangePicker(
+          selectedDate: selectedDate,
+          selectedEndDate: selectedEndDate,
+          onStartDateChanged: (date) {
+            setState(() {
+              selectedDate = date;
+            });
+          },
+          onEndDateChanged: (date) {
+            setState(() {
+              selectedEndDate = date;
+            });
+          },
+          onUpdate: () {
+            if (selectedEndDate != null) {
+              context.read<ReportsBloc>().add(
+                    LoadReportsByDateRange(selectedDate, selectedEndDate!),
+                  );
+            } else {
+              context.read<ReportsBloc>().add(LoadDailySummary(selectedDate));
+            }
+          },
         ),
 
         // Summary and orders
@@ -253,9 +186,10 @@ class _ReportsPageState extends State<ReportsPage>
                 return Column(
                   children: [
                     if (state.summary != null)
-                      _buildSummaryCards(state.summary!),
+                      SummaryRow(summary: state.summary!),
                     Expanded(
-                      child: _buildOrdersList(state.orders, showDate: selectedEndDate != null),
+                      child: _buildOrdersList(state.tickets,
+                          showDate: selectedEndDate != null),
                     ),
                   ],
                 );
@@ -292,7 +226,8 @@ class _ReportsPageState extends State<ReportsPage>
                     )
                   : null,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppDimensions.borderRadiusS),
+                borderRadius:
+                    BorderRadius.circular(AppDimensions.borderRadiusS),
               ),
             ),
             onChanged: (value) {
@@ -307,14 +242,14 @@ class _ReportsPageState extends State<ReportsPage>
               if (state is ReportsLoading) {
                 return const Center(child: CircularProgressIndicator());
               } else if (state is ReportsLoaded) {
-                final filteredOrders = _searchController.text.isEmpty
-                    ? state.orders
-                    : state.orders
-                        .where((order) => order.id
+                final filteredTickets = _searchController.text.isEmpty
+                    ? state.tickets
+                    : state.tickets
+                        .where((ticket) => (ticket.ticketId ?? '')
                             .toLowerCase()
                             .contains(_searchController.text.toLowerCase()))
                         .toList();
-                return _buildOrdersList(filteredOrders, showDate: true);
+                return _buildOrdersList(filteredTickets, showDate: true);
               } else if (state is ReportsError) {
                 return _buildErrorWidget(state.message);
               }
@@ -326,65 +261,9 @@ class _ReportsPageState extends State<ReportsPage>
     );
   }
 
-  Widget _buildSummaryCards(Map<String, dynamic> summary) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingM),
-      child: Row(
-        children: [
-          Expanded(
-              child: _buildSummaryCard(
-                  'Total Ventas',
-                  (summary['total_sales'] as double).formatToCurrency(),
-                  Icons.attach_money,
-                  AppColors.success)),
-          Expanded(
-              child: _buildSummaryCard('Órdenes', '${summary['total_orders']}',
-                  Icons.receipt, AppColors.primary)),
-          Expanded(
-              child: _buildSummaryCard('Artículos', '${summary['total_items']}',
-                  Icons.inventory, AppColors.warning)),
-          Expanded(
-              child: _buildSummaryCard(
-                  'IVA Total',
-                  (summary['total_tax'] as double).formatToCurrency(),
-                  Icons.percent,
-                  AppColors.info)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSummaryCard(
-      String title, String value, IconData icon, Color color) {
-    return Card(
-      child: Container(
-        padding: const EdgeInsets.all(AppDimensions.paddingS),
-        child: Column(
-          children: [
-            const SizedBox(height: 4),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildOrdersList(List<CompletedOrder> orders,
+  Widget _buildOrdersList(List<TicketResponseModel> tickets,
       {required bool showDate}) {
-    if (orders.isEmpty) {
+    if (tickets.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -405,14 +284,14 @@ class _ReportsPageState extends State<ReportsPage>
     return BlocBuilder<ReportsBloc, ReportsState>(
       builder: (context, state) {
         final isLoadingMore = state is ReportsLoaded && state.isLoadingMore;
-        
+
         return ListView.builder(
           controller: _scrollController,
           padding: const EdgeInsets.all(AppDimensions.paddingM),
-          itemCount: orders.length + (isLoadingMore ? 1 : 0),
+          itemCount: tickets.length + (isLoadingMore ? 1 : 0),
           itemBuilder: (context, index) {
             // Mostrar indicador de carga al final
-            if (index == orders.length) {
+            if (index == tickets.length) {
               return const Center(
                 child: Padding(
                   padding: EdgeInsets.all(AppDimensions.paddingM),
@@ -420,37 +299,39 @@ class _ReportsPageState extends State<ReportsPage>
                 ),
               );
             }
-            
-            final order = orders[index];
+
+            final ticket = tickets[index];
             return GestureDetector(
-              onTap: () => _showTicketPreview(order),
+              onTap: () => _showTicketPreview(ticket),
               child: Card(
                 margin: const EdgeInsets.only(bottom: AppDimensions.paddingS),
                 child: ListTile(
                   title: Text(
                     showDate
-                        ? "#${order.id} | ${DateFormat('dd/MM/yyyy HH:mm').format(order.completedAt)}"
-                        : "#${order.orderNumber} | ${DateFormat('HH:mm').format(order.completedAt)}",
+                        ? "#${ticket.ticketId} | ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.parse(ticket.timestamp.toString()))}"
+                        : "#${ticket.ticketId} | ${DateFormat('HH:mm').format(DateTime.parse(ticket.timestamp.toString()))}",
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (order.clientName != null)
-                        Text('Cliente: ${order.clientName}'),
-                      Text('${order.items.length} artículos'),
-                      Text('Pago: ${order.paymentMethod?.shortDescription.toLowerCase()}'),
+                      if (ticket.client != null)
+                        Text('Cliente: ${ticket.client}'),
+                      Text('${ticket.items?.length ?? 0} artículos'),
+                      // TODO: CAMBIAR PARA USAR EL METODO DE PAGO NO EL ID
+                      Text('Pago: ${ticket.paymentMethod}'),
                     ],
                   ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        order.total.formatToCurrency(),
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
+                        (ticket.total ?? 0).formatToCurrency(),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
+                                ),
                       ),
                     ],
                   ),
@@ -485,7 +366,9 @@ class _ReportsPageState extends State<ReportsPage>
                         LoadReportsByDateRange(selectedDate, selectedEndDate!),
                       );
                 } else {
-                  context.read<ReportsBloc>().add(LoadDailySummary(selectedDate));
+                  context
+                      .read<ReportsBloc>()
+                      .add(LoadDailySummary(selectedDate));
                 }
               } else {
                 context.read<ReportsBloc>().add(LoadAllReports());
@@ -498,38 +381,10 @@ class _ReportsPageState extends State<ReportsPage>
     );
   }
 
-  void _selectDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: selectedDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null && picked != selectedDate) {
-      setState(() {
-        selectedDate = picked;
-      });
-    }
-  }
-
-  void _selectEndDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: selectedEndDate ?? selectedDate,
-      firstDate: selectedDate,
-      lastDate: DateTime.now(),
-    );
-    if (picked != null) {
-      setState(() {
-        selectedEndDate = picked;
-      });
-    }
-  }
-
-  void _showTicketPreview(CompletedOrder order) {
+  void _showTicketPreview(TicketResponseModel ticket) {
     showDialog(
       context: context,
-      builder: (context) => TicketPreviewDialog(order: order),
+      builder: (context) => TicketPreviewDialog(ticket: ticket),
     );
   }
 }

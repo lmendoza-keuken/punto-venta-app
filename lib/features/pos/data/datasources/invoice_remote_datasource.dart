@@ -19,6 +19,31 @@ class InvoiceRemoteDataSourceImpl implements InvoiceRemoteDataSource {
     this.timeout = const Duration(seconds: 15),
   }) : _dio = dio ?? DioClient.instance;
 
+  String _parseBackendErrorMessage(dynamic data) {
+    if (data == null) {
+      return 'Error al enviar factura';
+    }
+
+    if (data is Map<String, dynamic>) {
+      final detail = data['detail'];
+      final message = data['message'];
+      final error = data['error'];
+
+      if (detail is String && detail.trim().isNotEmpty) return detail.trim();
+      if (message is String && message.trim().isNotEmpty) {
+        return message.trim();
+      }
+      if (error is String && error.trim().isNotEmpty) return error.trim();
+    }
+
+    final raw = data.toString().trim();
+    if (raw.isEmpty) {
+      return 'Error al enviar factura';
+    }
+
+    return raw;
+  }
+
   @override
   Future<String> sendInvoice(PrintJob job) async {
     final url = ApiConfig.invoiceUrl;
@@ -75,8 +100,9 @@ class InvoiceRemoteDataSourceImpl implements InvoiceRemoteDataSource {
         throw Exception(
             'Error de conexión. Verifica la red y que el servidor esté disponible');
       } else if (e.response != null) {
+        final backendMessage = _parseBackendErrorMessage(e.response?.data);
         throw Exception(
-            'Error al enviar factura: ${e.response?.statusCode} - ${e.response?.data}');
+            'Error al enviar factura: $backendMessage');
       } else {
         throw Exception('Error de conexión al enviar factura: ${e.message}');
       }

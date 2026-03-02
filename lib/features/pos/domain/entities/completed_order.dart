@@ -19,6 +19,7 @@ class CompletedOrder extends Equatable {
   final bool showPricesWithTax;
   final double? receivedAmount;
   final double? change;
+  final String? typeCode;
 
   const CompletedOrder({
     required this.id,
@@ -36,6 +37,7 @@ class CompletedOrder extends Equatable {
     this.showPricesWithTax = true,
     this.receivedAmount,
     this.change,
+    this.typeCode,
   });
 
   CompletedOrder copyWith({
@@ -54,6 +56,7 @@ class CompletedOrder extends Equatable {
     bool? showPricesWithTax,
     double? receivedAmount,
     double? change,
+    String? typeCode,
   }) {
     return CompletedOrder(
       id: id ?? this.id,
@@ -71,6 +74,7 @@ class CompletedOrder extends Equatable {
       showPricesWithTax: showPricesWithTax ?? this.showPricesWithTax,
       receivedAmount: receivedAmount ?? this.receivedAmount,
       change: change ?? this.change,
+      typeCode: typeCode ?? this.typeCode,
     );
   }
 
@@ -91,5 +95,6 @@ class CompletedOrder extends Equatable {
         showPricesWithTax,
         receivedAmount,
         change,
+        typeCode,
       ];
 }

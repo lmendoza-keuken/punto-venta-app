@@ -3,6 +3,7 @@ import 'package:punto_venta_app/features/pos/data/datasources/completed_orders_r
 import 'package:punto_venta_app/features/pos/data/models/completed_order_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/invoice_payload_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/product_model.dart';
+import 'package:punto_venta_app/features/pos/data/models/ticket_models/ticket_response_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_item.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
@@ -21,7 +22,6 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
   @override
   Future<List<CompletedOrder>> getCompletedOrders() async {
     try {
-      
       final orderModels = await localDataSource.getCompletedOrders();
       final orders = orderModels.map((model) => model.toEntity()).toList();
       orders.sort((a, b) => b.completedAt.compareTo(a.completedAt));
@@ -83,38 +83,48 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
     }
   }
 
-  // Remote methods
+  // Remote methods  // TODO: cambiar el payload (al modelo de TicketResponseModel)
   @override
-  Future<List<CompletedOrder>> getCompletedOrdersFromRemote({int skip = 0, int limit = 10}) async {
+  Future<List<TicketResponseModel>> getCompletedOrdersFromRemote(
+      {int skip = 0, int limit = 10}) async {
     if (remoteDataSource == null) {
       throw Exception('Remote data source not available');
     }
 
     try {
-      final invoicePayloads = await remoteDataSource!.getAllOrders(skip: skip, limit: limit);
-      return invoicePayloads
-          .map((payload) => _convertInvoicePayloadToCompletedOrder(payload))
-          .toList();
+      final tickets =
+          await remoteDataSource!.getAllTickets(skip: skip, limit: limit);
+      return tickets
+          ;
     } catch (e) {
       throw Exception('Error al obtener órdenes desde el servidor: $e');
     }
   }
 
   @override
-  Future<List<CompletedOrder>> getOrdersByDateRangeFromRemote(
-      DateTime startDate, {DateTime? endDate, int skip = 0, int limit = 10}) async {
+  Future<List<TicketResponseModel>> getOrdersByDateRangeFromRemote(
+      DateTime startDate,
+      {DateTime? endDate,
+      int skip = 0,
+      int limit = 10}) async {
     if (remoteDataSource == null) {
       throw Exception('Remote data source not available');
     }
 
     try {
-      final invoicePayloads =
-          await remoteDataSource!.getOrdersByDateRange(startDate, endDate: endDate, skip: skip, limit: limit);
-      final orders = invoicePayloads
-          .map((payload) => _convertInvoicePayloadToCompletedOrder(payload))
-          .toList();
-      orders.sort((a, b) => b.completedAt.compareTo(a.completedAt));
-      return orders;
+      final invoicePayloads = await remoteDataSource!.getTicketsByDateRange(
+          startDate,
+          endDate: endDate,
+          skip: skip,
+          limit: limit);
+
+      // final orders = invoicePayloads
+      //     .map((payload) => _convertInvoicePayloadToCompletedOrder(payload))
+      //     .toList();
+
+      // Ordenar por fecha de completado descendente
+      invoicePayloads.sort((a, b) => b.timestamp!.compareTo(a.timestamp!));
+      return invoicePayloads;
     } catch (e) {
       throw Exception(
           'Error al obtener órdenes por rango de fechas desde el servidor: $e');
@@ -128,7 +138,7 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
     }
 
     try {
-      final payload = await remoteDataSource!.getOrderById(orderId);
+      final payload = await remoteDataSource!.getTicketById(orderId);
       if (payload == null) return null;
       return _convertInvoicePayloadToCompletedOrder(payload);
     } catch (e) {
@@ -138,22 +148,25 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
 
   // Helper method to convert InvoicePayload to CompletedOrder
   CompletedOrder _convertInvoicePayloadToCompletedOrder(
-      InvoicePayload payload) {
+      TicketResponseModel ticket) {
+
     // Convert log items to CartItems
-    final List<CartItem> items = payload.logItems.map((itemJson) {
+    final List<CartItem> items = ticket.items!.map((item) {
       // Create a CartItemModel from the JSON
-      final productId = itemJson['productId'] as int;
-      final productName = itemJson['productName'] as String;
-      final quantity = itemJson['quantity'] as int;
-      final unitPrice = (itemJson['unitPrice'] as num).toDouble();
-      final isWeighted = itemJson['is_weighted'] == 'S';
-      final weightKg = isWeighted ? (itemJson['weight'] as num?)?.toDouble() : null;
-      final netWeight = isWeighted ? (itemJson['net_weight'] as num?)?.toDouble() : null;
-      
+      final productId = item.productId as int;
+      final productName = item.productName as String;
+      final quantity = item.quantity as int;
+      final unitPrice = (item.unitPrice as num).toDouble();
+      final isWeighted = item.isWeighted == 'S';
+      final weightKg =
+          isWeighted ? (item.weight as num?)?.toDouble() : null;
+      final netWeight =
+          isWeighted ? (item.netWeight as num?)?.toDouble() : null;
+
       // Extract tax percentage from taxes array
       double taxPercentage = 0.0;
-      if (itemJson['taxes'] != null && (itemJson['taxes'] as List).isNotEmpty) {
-        final firstTax = (itemJson['taxes'] as List)[0];
+      if (item.taxes != null && (item.taxes as List).isNotEmpty) {
+        final firstTax = (item.taxes as List)[0];
         taxPercentage = (firstTax['percentage'] as num?)?.toDouble() ?? 0.0;
       }
 
@@ -189,18 +202,20 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
     }).toList();
 
     // Convert log items to CartLogEntry
-    final List<CartLogEntry> logs = payload.logItems.map((itemJson) {
-      final productId = itemJson['productId'] as int;
-      final productName = itemJson['productName'] as String;
-      final quantity = itemJson['quantity'] as int;
-      final unitPrice = (itemJson['unitPrice'] as num).toDouble();
-      final isWeighted = itemJson['is_weighted'] == 'S';
-      final weightKg = isWeighted ? (itemJson['weight'] as num?)?.toDouble() : null;
-      final netWeight = isWeighted ? (itemJson['net_weight'] as num?)?.toDouble() : null;
-      
+    final List<CartLogEntry> logs = ticket.items!.map((item) {
+      final productId = item.productId as int;
+      final productName = item.productName as String;
+      final quantity = item.quantity as int;
+      final unitPrice = (item.unitPrice as num).toDouble();
+      final isWeighted = item.isWeighted == 'S';
+      final weightKg =
+          isWeighted ? (item.weight as num?)?.toDouble() : null;
+      final netWeight =
+          isWeighted ? (item.netWeight as num?)?.toDouble() : null;
+
       double taxPercentage = 0.0;
-      if (itemJson['taxes'] != null && (itemJson['taxes'] as List).isNotEmpty) {
-        final firstTax = (itemJson['taxes'] as List)[0];
+      if (item.taxes != null && (item.taxes as List).isNotEmpty) {
+        final firstTax = (item.taxes as List)[0];
         taxPercentage = (firstTax['percentage'] as num?)?.toDouble() ?? 0.0;
       }
 
@@ -232,8 +247,8 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
       );
 
       return CartLogEntry(
-        id: itemJson['id'] as String,
-        timestamp: DateTime.parse(payload.timestamp),
+        id: item.id as String,
+        timestamp: DateTime.parse(ticket.timestamp ?? ""),
         item: cartItem,
         type: CartActionType.add, // Default to add
       );
@@ -241,28 +256,28 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
 
     // Calculate total tax
     final totalTax =
-        payload.totalTax.fold(0.0, (sum, tax) => sum + (tax.amount ?? 0.0));
+        ticket.totalTax?.fold(0.0, (sum, tax) => sum + (tax.amount ?? 0.0));
 
     // Calculate total items
     final totalItems = items.fold(0, (sum, item) => sum + item.quantity);
 
     // Parse payment method
     PaymentMethod? paymentMethod;
-    if (payload.paymentMethod == 1) {
+    if (ticket.paymentMethod == 1) {
       paymentMethod = const PaymentMethod(
         id: 1,
         description: 'Efectivo',
         shortDescription: 'Efectivo',
         deleteAt: '',
       );
-    } else if (payload.paymentMethod == 2) {
+    } else if (ticket.paymentMethod == 2) {
       paymentMethod = const PaymentMethod(
         id: 2,
         description: 'Tarjeta',
         shortDescription: 'Tarjeta',
         deleteAt: '',
       );
-    } else if (payload.paymentMethod == 3) {
+    } else if (ticket.paymentMethod == 3) {
       paymentMethod = const PaymentMethod(
         id: 3,
         description: 'Transferencia',
@@ -272,23 +287,41 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
     }
 
     // Generate order number from ticketId or timestamp
-    final orderNumber = payload.ticketId ?? 
-        'ORD-${DateTime.parse(payload.timestamp).millisecondsSinceEpoch}';
+    final orderNumber = ticket.ticketId ??
+        'ORD-${DateTime.parse(ticket.timestamp ?? "").millisecondsSinceEpoch}';
 
     return CompletedOrder(
-      id: payload.ticketId ?? DateTime.parse(payload.timestamp).millisecondsSinceEpoch.toString(),
+      id: ticket.ticketId ??
+          DateTime.parse(ticket.timestamp ?? "").millisecondsSinceEpoch.toString(),
       orderNumber: orderNumber,
       items: items,
       logs: logs,
-      total: payload.total,
-      completedAt: DateTime.parse(payload.timestamp),
-      clientName: payload.client?['name'] as String?,
-      cashierName: 'Cajero ${payload.cashier ?? ""}',
+      total: ticket.total ?? 0.0,
+      completedAt: DateTime.parse(ticket.timestamp ?? ""),
+      clientName: ticket.client ?? 'Consumidor Final',
+      cashierName: 'Cajero ${ticket.cashier ?? ""}',
       paymentMethod: paymentMethod,
-      totalTax: totalTax,
+      totalTax: totalTax ?? 0.0,
       totalItems: totalItems,
       showSubtotalAndTax: false,
       showPricesWithTax: true,
+      typeCode: ticket.typeCode,
     );
+  }
+
+  // Metodo para convertir un ticket (VE, venta) a (NC, nota de crédito)
+  @override
+  Future<CompletedOrder?> convertToCreditNote(String ticketId) async {
+    if (remoteDataSource == null) {
+      throw Exception('Remote data source not available');
+    }
+
+    try {
+      final payload = await remoteDataSource!.convertToCreditNote(ticketId);
+      if (payload == null) return null;
+      return _convertInvoicePayloadToCompletedOrder(payload);
+    } catch (e) {
+      throw Exception('Error al convertir a nota de crédito: $e');
+    }
   }
 }

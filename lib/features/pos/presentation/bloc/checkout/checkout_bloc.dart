@@ -96,6 +96,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         receivedAmount: event.receivedAmount,
         change: event.change,
         branchNumber: branchNumber,
+        branchId: config?.branchId,
       );
 
       // Enviar factura y obtener ticketId
@@ -103,6 +104,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
 
       // PrintJob final con el ticketId
       final finalPrintJob = PrintJob(
+        ticketId: ticketId,
         items: event.items,
         logItems: event.logItems,
         total: event.total,
@@ -114,13 +116,13 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         cashierName: user?.name ?? 'Desconocido',
         cashierId: int.tryParse(user?.id ?? ''),
         timestamp: tempPrintJob.timestamp,
-        ticketId: ticketId,
         enterprise: enterprise,
         showSubtotalAndTax: showSubtotalAndTax,
         showPricesWithTax: showPricesWithTax,
         receivedAmount: event.receivedAmount,
         change: event.change,
         branchNumber: branchNumber,
+        branchId: config?.branchId,
       );
 
       emit(CheckoutSuccess(printJob: finalPrintJob));

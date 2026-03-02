@@ -1,3 +1,4 @@
+import 'package:punto_venta_app/features/pos/data/models/ticket_models/ticket_response_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
 
 abstract class CompletedOrdersRepository {
@@ -10,8 +11,9 @@ abstract class CompletedOrdersRepository {
   Future<double> getTotalSalesByDate(DateTime date);
   
   // Remote methods
-  Future<List<CompletedOrder>> getCompletedOrdersFromRemote({int skip = 0, int limit = 10});
-  Future<List<CompletedOrder>> getOrdersByDateRangeFromRemote(
+  Future<List<TicketResponseModel>> getCompletedOrdersFromRemote({int skip = 0, int limit = 10});
+  Future<List<TicketResponseModel>> getOrdersByDateRangeFromRemote(
       DateTime startDate, {DateTime? endDate, int skip = 0, int limit = 10});
   Future<CompletedOrder?> getOrderByIdFromRemote(String orderId);
+  Future<CompletedOrder?> convertToCreditNote(String ticketId);
 }

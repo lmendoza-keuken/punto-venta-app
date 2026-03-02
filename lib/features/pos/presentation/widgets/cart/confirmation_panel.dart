@@ -19,6 +19,7 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_e
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/cart/cash_payment_widget.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/cart/payment_option_widget.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/common/error_dialog.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 class ConfirmationPanel extends StatefulWidget {
@@ -73,12 +74,17 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
           printerBloc.close();
         } else if (checkoutState is CheckoutError) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(checkoutState.message),
-                backgroundColor: AppColors.error,
-                duration: const Duration(seconds: 4),
-              ),
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (BuildContext dialogContext) {
+                return ErrorDialog(
+                  message: checkoutState.message,
+                  onAccept: () {
+                    context.read<CheckoutBloc>().add(const ResetCheckout());
+                  },
+                );
+              },
             );
           }
         }

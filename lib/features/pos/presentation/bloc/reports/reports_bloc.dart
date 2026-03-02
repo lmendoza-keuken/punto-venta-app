@@ -1,12 +1,15 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:punto_venta_app/features/pos/data/models/ticket_models/ticket_response_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/generate_credit_note_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_reports_usecase.dart';
 import 'reports_event.dart';
 import 'reports_state.dart';
 
 class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
   final GetReportsUsecase getReportsUsecase;
-  
+  final GenerateCreditNoteUsecase generateCreditNoteUsecase;
+
   // Paginación
   int _currentPage = 1;
   final int _pageSize = 10;
@@ -14,12 +17,15 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
   DateTime? _currentEndDate;
   bool _isAllReportsMode = false;
 
-  ReportsBloc({required this.getReportsUsecase}) : super(ReportsInitial()) {
+  ReportsBloc(
+      {required this.getReportsUsecase,
+      required this.generateCreditNoteUsecase})
+      : super(ReportsInitial()) {
     on<LoadAllReports>(_onLoadAllReports);
     on<LoadMoreReports>(_onLoadMoreReports);
     on<LoadReportsByDateRange>(_onLoadReportsByDateRange);
     on<LoadDailySummary>(_onLoadDailySummary);
-    on<PrintTicket>(_onPrintTicket);
+    on<GenerateCreditNote>(_convertToCreditNote);
   }
 
   Future<void> _onLoadAllReports(
@@ -31,18 +37,20 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     _isAllReportsMode = true;
     _currentStartDate = null;
     _currentEndDate = null;
-    
+
     try {
       // Se hace llamado a back si falla se usa local
       try {
         final skip = (_currentPage - 1) * _pageSize;
-        final orders =
-            await getReportsUsecase.getAllCompletedOrdersFromRemote(skip: skip, limit: _pageSize);
+        final orders = await getReportsUsecase.getAllCompletedOrdersFromRemote(
+            skip: skip, limit: _pageSize);
         emit(ReportsLoaded(orders, hasMoreData: orders.length >= _pageSize));
       } catch (remoteError) {
-        print('Error fetching from remote, using local data: $remoteError');
-        final orders = await getReportsUsecase.getAllCompletedOrders();
-        emit(ReportsLoaded(orders, hasMoreData: false));
+        // TODO: CAMBIAR PARA USAR EL MISMO MODELO TicketResponseModel
+
+        // print('Error fetching from remote, using local data: $remoteError');
+        // final orders = await getReportsUsecase.getAllCompletedOrders();
+        // emit(ReportsLoaded(orders, hasMoreData: false));
       }
     } catch (e) {
       emit(ReportsError(e.toString()));
@@ -54,8 +62,8 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     Emitter<ReportsState> emit,
   ) async {
     final currentState = state;
-    if (currentState is! ReportsLoaded || 
-        currentState.isLoadingMore || 
+    if (currentState is! ReportsLoaded ||
+        currentState.isLoadingMore ||
         !currentState.hasMoreData) {
       return;
     }
@@ -64,12 +72,12 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     _currentPage++;
 
     try {
-      List<CompletedOrder> newOrders;
+      List<TicketResponseModel> newOrders;
       final skip = (_currentPage - 1) * _pageSize;
-      
+
       if (_isAllReportsMode) {
         newOrders = await getReportsUsecase.getAllCompletedOrdersFromRemote(
-          skip: skip, 
+          skip: skip,
           limit: _pageSize,
         );
       } else if (_currentStartDate != null) {
@@ -80,13 +88,13 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
           limit: _pageSize,
         );
       } else {
-        // No hay contexto de búsqueda, no hacer nada
         emit(currentState.copyWith(isLoadingMore: false));
         return;
       }
 
-      final updatedOrders = List<CompletedOrder>.from(currentState.orders)..addAll(newOrders);
-      
+      final updatedOrders = List<TicketResponseModel>.from(currentState.tickets)
+        ..addAll(newOrders);
+
       emit(ReportsLoaded(
         updatedOrders,
         summary: currentState.summary,
@@ -95,7 +103,6 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
       ));
     } catch (e) {
       print('Error loading more reports: $e');
-      // En caso de error, mantener el estado actual pero quitar el loading
       emit(currentState.copyWith(isLoadingMore: false, hasMoreData: false));
     }
   }
@@ -109,9 +116,8 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     _isAllReportsMode = false;
     _currentStartDate = event.startDate;
     _currentEndDate = event.endDate;
-    
+
     try {
-      // Se hace llamado a back si falla se usa local
       try {
         final skip = (_currentPage - 1) * _pageSize;
         final orders = await getReportsUsecase.getOrdersByDateRangeFromRemote(
@@ -121,10 +127,12 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
             limit: _pageSize);
         emit(ReportsLoaded(orders, hasMoreData: orders.length >= _pageSize));
       } catch (remoteError) {
-        print('Error fetching from remote, using local data: $remoteError');
-        final orders = await getReportsUsecase.getOrdersByDateRange(
-            event.startDate, event.endDate);
-        emit(ReportsLoaded(orders, hasMoreData: false));
+        // TODO: CAMBIAR PARA USAR EL MISMO MODELO TicketResponseModel
+
+        // print('Error fetching from remote, using local data: $remoteError');
+        // final orders = await getReportsUsecase.getOrdersByDateRange(
+        //     event.startDate, event.endDate);
+        // emit(ReportsLoaded(orders, hasMoreData: false));
       }
     } catch (e) {
       emit(ReportsError(e.toString()));
@@ -138,48 +146,67 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     emit(ReportsLoading());
     _currentPage = 1;
     _isAllReportsMode = false;
-    _currentStartDate = DateTime(event.date.year, event.date.month, event.date.day);
+    _currentStartDate =
+        DateTime(event.date.year, event.date.month, event.date.day);
     _currentEndDate = null;
-    
+
     try {
       try {
         final skip = (_currentPage - 1) * _pageSize;
-        final summary =
-            await getReportsUsecase.getDailySummaryFromRemote(event.date, skip: skip, limit: _pageSize);
-        final orders = summary['orders'] as List<CompletedOrder>;
-        emit(ReportsLoaded(orders, summary: summary, hasMoreData: orders.length >= _pageSize));
+
+        final summary = await getReportsUsecase.getDailySummaryFromRemote(
+            event.date,
+            skip: skip,
+            limit: _pageSize);
+
+        final orders = summary['orders'] as List<TicketResponseModel>;
+
+        emit(ReportsLoaded(orders,
+            summary: summary, hasMoreData: orders.length >= _pageSize));
       } catch (remoteError) {
-        print('Error fetching from remote, using local data: $remoteError');
-        final summary = await getReportsUsecase.getDailySummary(event.date);
-        final orders = summary['orders'] as List<CompletedOrder>;
-        emit(ReportsLoaded(orders, summary: summary, hasMoreData: false));
+        // TODO: CAMBIAR PARA USAR EL MISMO MODELO TicketResponseModel
+
+        // print('Error fetching from remote, using local data: $remoteError');
+        // final summary = await getReportsUsecase.getDailySummary(event.date);
+        // final orders = summary['orders'] as List<CompletedOrder>;
+        // emit(ReportsLoaded(orders, summary: summary, hasMoreData: false));
       }
     } catch (e) {
       emit(ReportsError(e.toString()));
     }
   }
 
-  Future<void> _onPrintTicket(
-    PrintTicket event,
-    Emitter<ReportsState> emit,
-  ) async {
-    try {
-      // Simular impresión de ticket
-      await Future.delayed(const Duration(seconds: 1));
-      emit(const TicketPrinted('Ticket reimpreso exitosamente'));
+  // Metodo para pasar un ticket (VE, venta) a (NC, nota de crédito)
+  Future<void> _convertToCreditNote(
+      GenerateCreditNote event, Emitter<ReportsState> emit) async {
+    final currentState = state;
 
-      // Volver al estado anterior si había órdenes cargadas
-      if (state is ReportsLoaded) {
-        final currentState = state as ReportsLoaded;
-        emit(ReportsLoaded(
-          currentState.orders, 
-          summary: currentState.summary,
-          hasMoreData: currentState.hasMoreData,
-          isLoadingMore: currentState.isLoadingMore,
-        ));
+    try {
+      await generateCreditNoteUsecase(event.ticketId);
+
+      emit(CreditNoteGenerated(
+        ticketId: event.ticketId,
+        message:
+            'Se creó una nota de crédito vinculada al ticket ${event.ticketId}.',
+      ));
+
+      if (currentState is ReportsLoaded) {
+        emit(currentState);
       }
     } catch (e) {
-      emit(ReportsError('Error al imprimir ticket: $e'));
+      String message = e.toString();
+      while (message.startsWith('Exception: ')) {
+        message = message.replaceFirst('Exception: ', '');
+      }
+
+      emit(CreditNoteGenerationError(
+        ticketId: event.ticketId,
+        message: 'Error al convertir a nota de crédito: $message',
+      ));
+
+      if (currentState is ReportsLoaded) {
+        emit(currentState);
+      }
     }
   }
 }

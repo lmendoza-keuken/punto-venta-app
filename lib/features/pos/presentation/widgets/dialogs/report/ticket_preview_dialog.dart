@@ -7,35 +7,38 @@ import 'package:punto_venta_app/core/utils/extensions.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/pdv_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/models/ticket_models/ticket_response_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_state.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_event.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_state.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 class TicketPreviewDialog extends StatelessWidget {
-
-  final CompletedOrder order;
+  final TicketResponseModel ticket;
 
   const TicketPreviewDialog({
     super.key,
-    required this.order,
+    required this.ticket,
   });
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => di.sl<PrinterBloc>(),
-      child: _TicketPreviewContent(order: order),
+      child: _TicketPreviewContent(ticket: ticket),
     );
   }
 }
 
 class _TicketPreviewContent extends StatefulWidget {
-  final CompletedOrder order;
+  final TicketResponseModel ticket;
 
-  const _TicketPreviewContent({required this.order});
+  const _TicketPreviewContent({required this.ticket});
 
   @override
   State<_TicketPreviewContent> createState() => _TicketPreviewContentState();
@@ -55,33 +58,33 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
     final localDs = di.sl<AuthLocalDataSource>();
     final enterprise = await localDs.getCachedEnterprise();
     final config = await di.sl<PdvLocalDataSource>().getPdvConfig();
-            final branchNumber = config?.branchNumber;
+    final branchNumber = config?.branchNumber;
 
-    final printJob = PrintJob(
-      items: widget.order.items,
-      logItems: widget.order.logs,
-      total: widget.order.total,
-      clientName: widget.order.clientName,
-      totalTax: widget.order.totalTax,
-      paymentMethod: widget.order.paymentMethod,
-      cashierName: widget.order.cashierName,
-      timestamp: widget.order.completedAt,
-      ticketId: widget.order.id,
-      enterprise: enterprise,
-      showSubtotalAndTax: widget.order.showSubtotalAndTax,
-      showPricesWithTax: widget.order.showPricesWithTax,
-      change: widget.order.change,
-      receivedAmount: widget.order.receivedAmount,
-      branchNumber: branchNumber ?? '',
-    );
+    // TODO: MANEJO PARA EL PRINTJOB DESDE TicketResponseModel
 
-    
+    // final printJob = PrintJob(
+    //   items: widget.ticket.items,
+    //   logItems: widget.ticket.logs,
+    //   total: widget.ticket.total,
+    //   clientName: widget.ticket.clientName,
+    //   totalTax: widget.ticket.totalTax,
+    //   paymentMethod: widget.ticket.paymentMethod,
+    //   cashierName: widget.ticket.cashierName,
+    //   timestamp: widget.ticket.completedAt,
+    //   ticketId: widget.ticket.id,
+    //   enterprise: enterprise,
+    //   showSubtotalAndTax: widget.ticket.showSubtotalAndTax,
+    //   showPricesWithTax: widget.ticket.showPricesWithTax,
+    //   change: widget.ticket.change,
+    //   receivedAmount: widget.ticket.receivedAmount,
+    //   branchNumber: branchNumber ?? '',
+    // );
 
-    if (mounted) {
-      setState(() {
-        _printJob = printJob;
-      });
-    }
+    // if (mounted) {
+    //   setState(() {
+    //     _printJob = printJob;
+    //   });
+    // }
   }
 
   @override
@@ -98,26 +101,54 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
       );
     }
 
-    return BlocListener<PrinterBloc, PrinterState>(
-      listener: (context, state) {
-        if (state is PrinterSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppColors.success,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        } else if (state is PrinterError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppColors.error,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-      },
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<PrinterBloc, PrinterState>(
+          listener: (context, state) {
+            if (state is PrinterSuccess) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: AppColors.success,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            } else if (state is PrinterError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: AppColors.error,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
+          },
+        ),
+        BlocListener<ReportsBloc, ReportsState>(
+          listener: (context, state) {
+            if (state is CreditNoteGenerated &&
+                state.ticketId == widget.ticket.ticketId) {
+              Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: AppColors.success,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            } else if (state is CreditNoteGenerationError &&
+                state.ticketId == widget.ticket.ticketId) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: AppColors.error,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
+          },
+        ),
+      ],
       child: Dialog(
         child: Container(
           width: 450,
@@ -137,7 +168,7 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                     const Icon(Icons.receipt, color: AppColors.primary),
                     const SizedBox(width: AppDimensions.paddingS),
                     Text(
-                      'Ticket - ${widget.order.orderNumber}',
+                      'Ticket - ${widget.ticket.ticketId}',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -177,6 +208,28 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                               ? null
                               : () => Navigator.of(context).pop(),
                           child: const Text('Cerrar'),
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: isLoading
+                              ? null
+                              : () => _handleConvertToCreditNote(context),
+                          icon: isLoading
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white),
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.receipt,
+                                  color: Colors.white,
+                                ),
+                          label: Text(isLoading
+                              ? 'Convirtiendo...'
+                              : 'Pasar a nota de crédito'),
                         ),
                         ElevatedButton.icon(
                           onPressed:
@@ -223,6 +276,12 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
         ));
   }
 
+  void _handleConvertToCreditNote(BuildContext context) {
+    context
+        .read<ReportsBloc>()
+        .add(GenerateCreditNote(widget.ticket.ticketId ?? ""));
+  }
+
   Widget _buildTicketContent(BuildContext context) {
     return SingleChildScrollView(
       child: Container(
@@ -261,20 +320,19 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
             ),
 
             // Información de la orden
-            Text('Orden: ${widget.order.id}'),
+            Text('Orden: ${widget.ticket.ticketId}'),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                    'Fecha: ${DateFormat('dd/MM/yyyy').format(widget.order.completedAt)}'),
+                    'Fecha: ${DateFormat('dd/MM/yyyy').format(widget.ticket.timestamp as DateTime)}'),
                 Text(
-                    'Hora: ${DateFormat('HH:mm:ss').format(widget.order.completedAt)}'),
+                    'Hora: ${DateFormat('HH:mm:ss').format(widget.ticket.timestamp as DateTime)}'),
               ],
             ),
-            Text('Cajero: ${widget.order.cashierName}'),
-            if (widget.order.clientName != null &&
-                widget.order.clientName!.isNotEmpty)
-              Text('Cliente: ${widget.order.clientName}'),
+            Text('Cajero: ${widget.ticket.cashier}'),
+            if (widget.ticket.client != null)
+              Text('Cliente: ${widget.ticket.client}'),
 
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 12),
@@ -284,10 +342,12 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
             ),
 
             // Items
-            ...widget.order.items.map((item) {
-              final basePrice = item.pricePerKg ?? item.product.price ?? 0.0;
+            ...widget.ticket.items!.map((item) {
+              //TODO: PRECIO BASE REVISAR EL PRECIO POR KG DEL PRODUCTO
+              // final basePrice = item.pricePerKg ?? item.unitPrice ?? 0.0;
+              final basePrice =  item.unitPrice ?? 0.0;
               final displayPrice = _printJob!.showPricesWithTax
-                  ? _calculatePriceWithTax(basePrice, item.product.vat)
+                  ? _calculatePriceWithTax(basePrice, item.taxes?.first.percentage ?? 0.0)
                   : basePrice;
 
               return Padding(
@@ -296,23 +356,24 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      item.product.description,
+                      item.productName ?? '',
                       style: const TextStyle(fontWeight: FontWeight.w500),
                     ),
                     if (item.isWeighted == true)
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            '  ${item.weightKg ?? '-'} kg x ${displayPrice.formatToCurrency()}',
-                            style: TextStyle(
-                                fontSize: 12, color: Colors.grey[600]),
-                          ),
-                          Text(
-                            ((item.weightKg ?? 0.0) * displayPrice)
-                                .formatToCurrency(),
-                            style: const TextStyle(fontWeight: FontWeight.w500),
-                          ),
+                          //TODO: REVISAR PARA PRODUCTOS PESADOS
+                          // Text(
+                          //   '  ${item.weightKg ?? '-'} kg x ${displayPrice.formatToCurrency()}',
+                          //   style: TextStyle(
+                          //       fontSize: 12, color: Colors.grey[600]),
+                          // ),
+                          // Text(
+                          //   ((item.weightKg ?? 0.0) * displayPrice)
+                          //       .formatToCurrency(),
+                          //   style: const TextStyle(fontWeight: FontWeight.w500),
+                          // ),
                         ],
                       ),
                     if (item.isWeighted != true)
@@ -325,7 +386,7 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                                 fontSize: 12, color: Colors.grey[600]),
                           ),
                           Text(
-                            (item.quantity * displayPrice).formatToCurrency(),
+                            ((item.quantity ?? 0) * displayPrice).formatToCurrency(),
                             style: const TextStyle(fontWeight: FontWeight.w500),
                           ),
                         ],
@@ -348,7 +409,11 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text('Subtotal:'),
-                  Text((widget.order.total - widget.order.totalTax)
+                  Text((widget.ticket.total! -
+                          (widget.ticket.totalTax ?? []).fold(
+                              0.0,
+                              (previousValue, element) =>
+                                  previousValue + (element.amount ?? 0.0)))
                       .formatToCurrency()),
                 ],
               ),
@@ -356,7 +421,12 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text('IVA:'),
-                  Text(widget.order.totalTax.formatToCurrency()),
+                  Text((widget.ticket.totalTax ?? [])
+                      .fold(
+                          0.0,
+                          (previousValue, element) =>
+                              previousValue + (element.amount ?? 0.0))
+                      .formatToCurrency()),
                 ],
               ),
               const Padding(
@@ -367,24 +437,25 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                 ),
               ),
             ],
-            if (widget.order.receivedAmount != null) ...[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Recibido:'),
-                  Text(widget.order.receivedAmount!.formatToCurrency()),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Cambio:'),
-                  Text(widget.order.change != null
-                      ? widget.order.change!.formatToCurrency()
-                      : '-'),
-                ],
-              ),
-            ],
+            // TODO: REVISAR SI EN EL TICKET ENVIO EL RECIBIDO Y EL CAMBIO PARA MOSTRARLO ACA O NO
+            // if (widget.ticket.receivedAmount != null) ...[
+            //   Row(
+            //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            //     children: [
+            //       const Text('Recibido:'),
+            //       Text(widget.ticket.receivedAmount!.formatToCurrency()),
+            //     ],
+            //   ),
+            //   Row(
+            //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            //     children: [
+            //       const Text('Cambio:'),
+            //       Text(widget.ticket.change != null
+            //           ? widget.ticket.change!.formatToCurrency()
+            //           : '-'),
+            //     ],
+            //   ),
+            // ],
 
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -394,7 +465,7 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  widget.order.total.formatToCurrency(),
+                  widget.ticket.total?.formatToCurrency() ?? '-',
                   style: const TextStyle(
                       fontSize: 18, fontWeight: FontWeight.bold),
                 ),
@@ -412,8 +483,9 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
             const SizedBox(height: 8),
 
             // Información adicional
-            Text('Método de pago: ${widget.order.paymentMethod?.shortDescription.toLowerCase()}'),
-            Text('Total de artículos: ${widget.order.totalItems}'),
+            Text(
+                'Método de pago: ${widget.ticket.paymentMethod ?? 'Desconocido'}'),
+            Text('Total de artículos: ${widget.ticket.items?.fold(0, (previousValue, element) => previousValue + (element.quantity ?? 0)) ?? 0}'),
 
             const SizedBox(height: 16),
             const Center(

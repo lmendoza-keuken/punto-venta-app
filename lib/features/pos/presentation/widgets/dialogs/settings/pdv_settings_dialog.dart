@@ -147,14 +147,14 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                         controller: pdvIdController,
                         keyboardType: TextInputType.number,
                         decoration: const InputDecoration(
-                          labelText: 'PDV ID',
+                          labelText: 'ID del PDV',
                           hintText: '1',
                           prefixIcon: Icon(Icons.store),
                           border: OutlineInputBorder(),
                         ),
                         validator: (v) {
                           if (v == null || v.isEmpty) {
-                            return 'Ingresa el PDV ID';
+                            return 'Ingresa el ID del PDV';
                           }
                           final parsedValue = int.tryParse(v);
                           if (parsedValue == null) {
@@ -172,14 +172,14 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                         controller: branchIdController,
                         keyboardType: TextInputType.number,
                         decoration: const InputDecoration(
-                          labelText: 'Sucursal ID',
+                          labelText: 'ID de Sucursal',
                           hintText: '1',
                           prefixIcon: Icon(Icons.location_on),
                           border: OutlineInputBorder(),
                         ),
                         validator: (v) {
                           if (v == null || v.isEmpty) {
-                            return 'Ingresa la Sucursal ID';
+                            return 'Ingresa el ID de Sucursal';
                           }
                           final parsedValue = int.tryParse(v);
                           if (parsedValue == null) {
@@ -222,9 +222,7 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
               onPressed: () => Navigator.of(context).pop(null),
               child: const Text('Cancelar'),
             ),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.save),
-              label: const Text('Guardar'),
+            ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
@@ -249,6 +247,7 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                           .read<PdvConfigBloc>()
                           .add(SavePdvConfigEvent(newConfig));
                     },
+              child: const Text('Guardar'),
             ),
           ],
         );
