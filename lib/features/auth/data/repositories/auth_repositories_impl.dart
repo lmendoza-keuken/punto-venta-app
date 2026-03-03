@@ -58,6 +58,31 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Map<String, dynamic>> loginWithEmail(String email) async {
+    if (email.isEmpty) {
+      throw Exception('El email no puede estar vacío');
+    }
+
+    try {
+      final companies =
+          await firestoreUserDataSource.getCompaniesByEmail(email);
+
+      if (companies.isEmpty) {
+        throw Exception(
+            'No hay empresas vinculadas a este correo. Por favor contacta al administrador.');
+      }
+
+      return {
+        'email': email,
+        'companies': companies.map((c) => c.toMap()).toList(),
+        'autoSelected': companies.length == 1,
+      };
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
   Future<Map<String, dynamic>> selectCompany(
       String email, int companyId) async {
     final companies = await firestoreUserDataSource.getCompaniesByEmail(email);

@@ -83,6 +83,7 @@ import 'package:uuid/uuid.dart';
 import 'features/splash/presentation/bloc/splash_bloc.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/auth/domain/usecases/login_with_google_usecase.dart';
+import 'features/auth/domain/usecases/login_with_email_usecase.dart';
 import 'features/auth/domain/usecases/select_company_usecase.dart';
 import 'features/auth/domain/usecases/logout_usecase.dart';
 import 'features/pos/data/repositories/product_repository_impl.dart';
@@ -105,6 +106,7 @@ Future<void> init() async {
   // Bloc
   sl.registerFactory(() => AuthBloc(
         loginWithGoogleUsecase: sl(),
+        loginWithEmailUsecase: sl(),
         selectCompanyUsecase: sl(),
         authenticateUserUseCase: sl(),
         logoutUsecase: sl(),
@@ -113,6 +115,7 @@ Future<void> init() async {
 
   // Use cases
   sl.registerLazySingleton(() => LoginWithGoogleUsecase(sl()));
+  sl.registerLazySingleton(() => LoginWithEmailUsecase(sl()));
   sl.registerLazySingleton(() => SelectCompanyUseCase(sl()));
   sl.registerLazySingleton(() => AuthenticateUserUseCase(sl()));
   sl.registerLazySingleton(() => LogoutUsecase(sl()));

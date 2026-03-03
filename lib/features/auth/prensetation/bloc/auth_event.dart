@@ -22,6 +22,15 @@ class LoginRequested extends AuthEvent {
 
 class LoginWithGoogleRequested extends AuthEvent {}
 
+class LoginWithEmailRequested extends AuthEvent {
+  final String email;
+
+  const LoginWithEmailRequested({required this.email});
+
+  @override
+  List<Object> get props => [email];
+}
+
 class CompanySelected extends AuthEvent {
   final String email;
   final int companyId;

@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/features/auth/domain/usecases/authenticate_user_usecase.dart';
 import 'package:punto_venta_app/features/auth/domain/usecases/change_chashier_usecase.dart';
 import 'package:punto_venta_app/features/auth/domain/usecases/login_with_google_usecase.dart';
+import 'package:punto_venta_app/features/auth/domain/usecases/login_with_email_usecase.dart';
 import 'package:punto_venta_app/features/auth/domain/usecases/select_company_usecase.dart';
 import 'package:punto_venta_app/features/auth/domain/usecases/logout_usecase.dart';
 import 'auth_event.dart';
@@ -9,6 +10,7 @@ import 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LoginWithGoogleUsecase loginWithGoogleUsecase;
+  final LoginWithEmailUsecase loginWithEmailUsecase;
   final AuthenticateUserUseCase authenticateUserUseCase;
   final SelectCompanyUseCase selectCompanyUsecase;
   final LogoutUsecase logoutUsecase;
@@ -16,12 +18,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   AuthBloc({
     required this.loginWithGoogleUsecase,
+    required this.loginWithEmailUsecase,
     required this.authenticateUserUseCase,
     required this.selectCompanyUsecase,
     required this.logoutUsecase,
     required this.changeCashierUseCase,
   }) : super(AuthInitial()) {
     on<LoginWithGoogleRequested>(_onLoginWithGoogleRequested);
+    on<LoginWithEmailRequested>(_onLoginWithEmailRequested);
     on<CompanySelected>(_onCompanySelected);
     on<LogoutRequested>(_onLogoutRequested);
     on<LogoutEvent>(_onLogoutEvent);
@@ -72,6 +76,39 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       //     companies: List<Map<String, dynamic>>.from(result['companies']),
       //     autoSelected: result['autoSelected'],
       //   ));
+    } catch (e) {
+      final errorMessage = _extractErrorMessage(e);
+      emit(AuthError(message: errorMessage));
+    }
+  }
+
+  Future<void> _onLoginWithEmailRequested(
+    LoginWithEmailRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    try {
+      final result = await loginWithEmailUsecase(event.email);
+
+      if (result['autoSelected'] == true) {
+        final company = result['companies'][0];
+        final selectResult = await selectCompanyUsecase(
+          result['email'],
+          company['id'],
+        );
+
+        emit(AuthCompanySelected(
+          email: selectResult['email'],
+          companyId: selectResult['companyId'],
+          companyName: selectResult['companyName'],
+        ));
+      } else {
+        emit(AuthCompanySelectionRequired(
+          email: result['email'],
+          companies: List<Map<String, dynamic>>.from(result['companies']),
+          autoSelected: result['autoSelected'],
+        ));
+      }
     } catch (e) {
       final errorMessage = _extractErrorMessage(e);
       emit(AuthError(message: errorMessage));
