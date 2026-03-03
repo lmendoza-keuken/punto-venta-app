@@ -245,7 +245,7 @@ class _ReportsPageState extends State<ReportsPage>
                 final filteredTickets = _searchController.text.isEmpty
                     ? state.tickets
                     : state.tickets
-                        .where((ticket) => (ticket.ticketId ?? '')
+                        .where((ticket) => (ticket.id)
                             .toLowerCase()
                             .contains(_searchController.text.toLowerCase()))
                         .toList();
@@ -261,7 +261,7 @@ class _ReportsPageState extends State<ReportsPage>
     );
   }
 
-  Widget _buildOrdersList(List<TicketResponseModel> tickets,
+  Widget _buildOrdersList(List<CompletedOrder> tickets,
       {required bool showDate}) {
     if (tickets.isEmpty) {
       return Center(
@@ -301,6 +301,7 @@ class _ReportsPageState extends State<ReportsPage>
             }
 
             final ticket = tickets[index];
+            // card del ticket
             return GestureDetector(
               onTap: () => _showTicketPreview(ticket),
               child: Card(
@@ -308,25 +309,25 @@ class _ReportsPageState extends State<ReportsPage>
                 child: ListTile(
                   title: Text(
                     showDate
-                        ? "#${ticket.ticketId} | ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.parse(ticket.timestamp.toString()))}"
-                        : "#${ticket.ticketId} | ${DateFormat('HH:mm').format(DateTime.parse(ticket.timestamp.toString()))}",
+                        ? "#${ticket.id} | ${DateFormat('dd/MM/yyyy HH:mm').format(ticket.completedAt)}"
+                        : "#${ticket.orderNumber} | ${DateFormat('HH:mm').format(ticket.completedAt)}",
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (ticket.client != null)
-                        Text('Cliente: ${ticket.client}'),
-                      Text('${ticket.items?.length ?? 0} artículos'),
-                      // TODO: CAMBIAR PARA USAR EL METODO DE PAGO NO EL ID
-                      Text('Pago: ${ticket.paymentMethod}'),
+                      if (ticket.clientName != null)
+                        Text('Cliente: ${ticket.clientName}'),
+                      Text('${ticket.items.length} artículos'),
+                      Text(
+                          'Pago: ${ticket.paymentMethod?.shortDescription.toLowerCase()}'),
                     ],
                   ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        (ticket.total ?? 0).formatToCurrency(),
+                        (ticket.total).formatToCurrency(),
                         style:
                             Theme.of(context).textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
@@ -381,7 +382,7 @@ class _ReportsPageState extends State<ReportsPage>
     );
   }
 
-  void _showTicketPreview(TicketResponseModel ticket) {
+  void _showTicketPreview(CompletedOrder ticket) {
     showDialog(
       context: context,
       builder: (context) => TicketPreviewDialog(ticket: ticket),

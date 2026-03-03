@@ -14,7 +14,7 @@ class ReportsInitial extends ReportsState {}
 class ReportsLoading extends ReportsState {}
 
 class ReportsLoaded extends ReportsState {
-  final List<TicketResponseModel> tickets;
+  final List<CompletedOrder> tickets;
   final Map<String, dynamic>? summary;
   final bool hasMoreData;
   final bool isLoadingMore;
@@ -27,7 +27,7 @@ class ReportsLoaded extends ReportsState {
   });
 
   ReportsLoaded copyWith({
-    List<TicketResponseModel>? orders,
+    List<CompletedOrder>? orders,
     Map<String, dynamic>? summary,
     bool? hasMoreData,
     bool? isLoadingMore,

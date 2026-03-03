@@ -1,5 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:punto_venta_app/features/pos/data/models/ticket_models/ticket_response_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/generate_credit_note_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_reports_usecase.dart';
@@ -72,7 +71,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     _currentPage++;
 
     try {
-      List<TicketResponseModel> newOrders;
+      List<CompletedOrder> newOrders;
       final skip = (_currentPage - 1) * _pageSize;
 
       if (_isAllReportsMode) {
@@ -92,7 +91,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
         return;
       }
 
-      final updatedOrders = List<TicketResponseModel>.from(currentState.tickets)
+      final updatedOrders = List<CompletedOrder>.from(currentState.tickets)
         ..addAll(newOrders);
 
       emit(ReportsLoaded(
@@ -159,7 +158,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
             skip: skip,
             limit: _pageSize);
 
-        final orders = summary['orders'] as List<TicketResponseModel>;
+        final orders = summary['orders'] as List<CompletedOrder>;
 
         emit(ReportsLoaded(orders,
             summary: summary, hasMoreData: orders.length >= _pageSize));

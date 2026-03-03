@@ -85,24 +85,26 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
 
   // Remote methods  // TODO: cambiar el payload (al modelo de TicketResponseModel)
   @override
-  Future<List<TicketResponseModel>> getCompletedOrdersFromRemote(
+  Future<List<CompletedOrder>> getCompletedOrdersFromRemote(
       {int skip = 0, int limit = 10}) async {
     if (remoteDataSource == null) {
       throw Exception('Remote data source not available');
     }
 
     try {
-      final tickets =
+      final invoicePayloads =
           await remoteDataSource!.getAllTickets(skip: skip, limit: limit);
-      return tickets
-          ;
+
+      return invoicePayloads
+          .map((payload) => _convertInvoicePayloadToCompletedOrder(payload))
+          .toList();
     } catch (e) {
       throw Exception('Error al obtener órdenes desde el servidor: $e');
     }
   }
 
   @override
-  Future<List<TicketResponseModel>> getOrdersByDateRangeFromRemote(
+  Future<List<CompletedOrder>> getOrdersByDateRangeFromRemote(
       DateTime startDate,
       {DateTime? endDate,
       int skip = 0,
@@ -117,14 +119,12 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
           endDate: endDate,
           skip: skip,
           limit: limit);
+      final orders = invoicePayloads
+          .map((payload) => _convertInvoicePayloadToCompletedOrder(payload))
+          .toList();
+      orders.sort((a, b) => b.completedAt.compareTo(a.completedAt));
 
-      // final orders = invoicePayloads
-      //     .map((payload) => _convertInvoicePayloadToCompletedOrder(payload))
-      //     .toList();
-
-      // Ordenar por fecha de completado descendente
-      invoicePayloads.sort((a, b) => b.timestamp!.compareTo(a.timestamp!));
-      return invoicePayloads;
+      return orders;
     } catch (e) {
       throw Exception(
           'Error al obtener órdenes por rango de fechas desde el servidor: $e');
@@ -147,26 +147,24 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
   }
 
   // Helper method to convert InvoicePayload to CompletedOrder
-  CompletedOrder _convertInvoicePayloadToCompletedOrder(
-      TicketResponseModel ticket) {
-
+  CompletedOrder _convertInvoicePayloadToCompletedOrder(InvoicePayload ticket) {
     // Convert log items to CartItems
-    final List<CartItem> items = ticket.items!.map((item) {
+    final List<CartItem> items = ticket.logItems.map((itemJson) {
       // Create a CartItemModel from the JSON
-      final productId = item.productId as int;
-      final productName = item.productName as String;
-      final quantity = item.quantity as int;
-      final unitPrice = (item.unitPrice as num).toDouble();
-      final isWeighted = item.isWeighted == 'S';
+      final productId = itemJson['productId'] as int;
+      final productName = itemJson['productName'] as String;
+      final quantity = itemJson['quantity'] as int;
+      final unitPrice = (itemJson['unitPrice'] as num).toDouble();
+      final isWeighted = itemJson['is_weighted'] == 'S';
       final weightKg =
-          isWeighted ? (item.weight as num?)?.toDouble() : null;
+          isWeighted ? (itemJson['weight'] as num?)?.toDouble() : null;
       final netWeight =
-          isWeighted ? (item.netWeight as num?)?.toDouble() : null;
+          isWeighted ? (itemJson['net_weight'] as num?)?.toDouble() : null;
 
       // Extract tax percentage from taxes array
       double taxPercentage = 0.0;
-      if (item.taxes != null && (item.taxes as List).isNotEmpty) {
-        final firstTax = (item.taxes as List)[0];
+      if (itemJson['taxes'] != null && (itemJson['taxes'] as List).isNotEmpty) {
+        final firstTax = (itemJson['taxes'] as List)[0];
         taxPercentage = (firstTax['percentage'] as num?)?.toDouble() ?? 0.0;
       }
 
@@ -202,20 +200,19 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
     }).toList();
 
     // Convert log items to CartLogEntry
-    final List<CartLogEntry> logs = ticket.items!.map((item) {
-      final productId = item.productId as int;
-      final productName = item.productName as String;
-      final quantity = item.quantity as int;
-      final unitPrice = (item.unitPrice as num).toDouble();
-      final isWeighted = item.isWeighted == 'S';
+    final List<CartLogEntry> logs = ticket.logItems.map((itemJson) {
+      final productId = itemJson['productId'] as int;
+      final productName = itemJson['productName'] as String;
+      final quantity = itemJson['quantity'] as int;
+      final unitPrice = (itemJson['unitPrice'] as num).toDouble();
+      final isWeighted = itemJson['is_weighted'] == 'S';
       final weightKg =
-          isWeighted ? (item.weight as num?)?.toDouble() : null;
+          isWeighted ? (itemJson['weight'] as num?)?.toDouble() : null;
       final netWeight =
-          isWeighted ? (item.netWeight as num?)?.toDouble() : null;
-
+          isWeighted ? (itemJson['net_weight'] as num?)?.toDouble() : null;
       double taxPercentage = 0.0;
-      if (item.taxes != null && (item.taxes as List).isNotEmpty) {
-        final firstTax = (item.taxes as List)[0];
+      if (itemJson['taxes'] != null && (itemJson['taxes'] as List).isNotEmpty) {
+        final firstTax = (itemJson['taxes'] as List)[0];
         taxPercentage = (firstTax['percentage'] as num?)?.toDouble() ?? 0.0;
       }
 
@@ -247,8 +244,8 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
       );
 
       return CartLogEntry(
-        id: item.id as String,
-        timestamp: DateTime.parse(ticket.timestamp ?? ""),
+        id: itemJson['id'] as String,
+        timestamp: DateTime.parse(ticket.timestamp),
         item: cartItem,
         type: CartActionType.add, // Default to add
       );
@@ -256,7 +253,7 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
 
     // Calculate total tax
     final totalTax =
-        ticket.totalTax?.fold(0.0, (sum, tax) => sum + (tax.amount ?? 0.0));
+        ticket.totalTax.fold(0.0, (sum, tax) => sum + (tax.amount ?? 0.0));
 
     // Calculate total items
     final totalItems = items.fold(0, (sum, item) => sum + item.quantity);
@@ -288,20 +285,20 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
 
     // Generate order number from ticketId or timestamp
     final orderNumber = ticket.ticketId ??
-        'ORD-${DateTime.parse(ticket.timestamp ?? "").millisecondsSinceEpoch}';
+        'ORD-${DateTime.parse(ticket.timestamp).millisecondsSinceEpoch}';
 
     return CompletedOrder(
       id: ticket.ticketId ??
-          DateTime.parse(ticket.timestamp ?? "").millisecondsSinceEpoch.toString(),
+          DateTime.parse(ticket.timestamp).millisecondsSinceEpoch.toString(),
       orderNumber: orderNumber,
       items: items,
       logs: logs,
-      total: ticket.total ?? 0.0,
-      completedAt: DateTime.parse(ticket.timestamp ?? ""),
-      clientName: ticket.client ?? 'Consumidor Final',
+      total: ticket.total,
+      completedAt: DateTime.parse(ticket.timestamp),
+      clientName: ticket.client?['name'] as String?,
       cashierName: 'Cajero ${ticket.cashier ?? ""}',
       paymentMethod: paymentMethod,
-      totalTax: totalTax ?? 0.0,
+      totalTax: totalTax,
       totalItems: totalItems,
       showSubtotalAndTax: false,
       showPricesWithTax: true,

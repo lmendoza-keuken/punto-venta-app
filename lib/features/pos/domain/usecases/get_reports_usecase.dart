@@ -1,4 +1,3 @@
-import 'package:punto_venta_app/features/pos/data/models/ticket_models/ticket_response_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/completed_orders_repository.dart';
 
@@ -45,27 +44,35 @@ class GetReportsUsecase {
   }
 
   // Remote methods
-  Future<List<TicketResponseModel>> getAllCompletedOrdersFromRemote({int skip = 0, int limit = 10}) async {
-    return await repository.getCompletedOrdersFromRemote(skip: skip, limit: limit);
+  Future<List<CompletedOrder>> getAllCompletedOrdersFromRemote(
+      {int skip = 0, int limit = 10}) async {
+    return await repository.getCompletedOrdersFromRemote(
+        skip: skip, limit: limit);
   }
 
-  Future<List<TicketResponseModel>> getOrdersByDateRangeFromRemote(
-      DateTime startDate, {DateTime? endDate, int skip = 0, int limit = 10}) async {
-    return await repository.getOrdersByDateRangeFromRemote(startDate, endDate: endDate, skip: skip, limit: limit);
+  Future<List<CompletedOrder>> getOrdersByDateRangeFromRemote(
+      DateTime startDate,
+      {DateTime? endDate,
+      int skip = 0,
+      int limit = 10}) async {
+    return await repository.getOrdersByDateRangeFromRemote(startDate,
+        endDate: endDate, skip: skip, limit: limit);
   }
 
-  Future<Map<String, dynamic>> getDailySummaryFromRemote(DateTime date, {int skip = 0, int limit = 10}) async {
+  Future<Map<String, dynamic>> getDailySummaryFromRemote(DateTime date,
+      {int skip = 0, int limit = 10}) async {
     // Fecha de inicio (solo enviar esta fecha para obtener el día completo)
     final startDate = DateTime(date.year, date.month, date.day);
 
     // Obtener órdenes del día desde remote (sin endDate para obtener solo ese día)
-    final orders = await repository.getOrdersByDateRangeFromRemote(startDate, skip: skip, limit: limit);
+    final orders = await repository.getOrdersByDateRangeFromRemote(startDate,
+        skip: skip, limit: limit);
 
     // stats diarios
-    final totalSales = orders.fold(0.0, (sum, order) => sum + order.total!);
+    final totalSales = orders.fold(0.0, (sum, order) => sum + order.total);
     final totalOrders = orders.length;
-    final totalItems = orders.fold(0, (sum, order) => sum + order.items!.fold(0, (itemSum, item) => itemSum + (item.quantity ?? 0)));
-    final totalTax = orders.fold(0.0, (sum, order) => sum + order.totalTax!.fold(0.0, (taxSum, tax) => taxSum + (tax.amount ?? 0.0)));
+    final totalItems = orders.fold(0, (sum, order) => sum + order.totalItems);
+    final totalTax = orders.fold(0.0, (sum, order) => sum + order.totalTax);
 
     return {
       'total_sales': totalSales,

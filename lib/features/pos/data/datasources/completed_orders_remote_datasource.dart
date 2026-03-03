@@ -7,11 +7,11 @@ import 'package:punto_venta_app/features/pos/data/models/ticket_models/ticket_re
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 abstract class CompletedOrdersRemoteDataSource {
-  Future<List<TicketResponseModel>> getAllTickets({int skip = 0, int limit = 10});
-  Future<List<TicketResponseModel>> getTicketsByDateRange(
+  Future<List<InvoicePayload>> getAllTickets({int skip = 0, int limit = 10});
+  Future<List<InvoicePayload>> getTicketsByDateRange(
       DateTime startDate, {DateTime? endDate, int skip = 0, int limit = 10});
-  Future<TicketResponseModel?> getTicketById(String ticketId);
-  Future<TicketResponseModel?> convertToCreditNote(String ticketId);
+  Future<InvoicePayload?> getTicketById(String ticketId);
+  Future<InvoicePayload?> convertToCreditNote(String ticketId);
 }
 
 class CompletedOrdersRemoteDataSourceImpl
@@ -25,7 +25,7 @@ class CompletedOrdersRemoteDataSourceImpl
   }) : _dio = dio ?? DioClient.instance;
 
   @override
-  Future<List<TicketResponseModel>> getAllTickets({int skip = 0, int limit = 10}) async {
+  Future<List<InvoicePayload>> getAllTickets({int skip = 0, int limit = 10}) async {
     final url = ApiConfig.invoiceUrl;
 
     if (url.isEmpty || ApiConfig.invoiceUrl.isEmpty) {
@@ -61,7 +61,7 @@ class CompletedOrdersRemoteDataSourceImpl
         final data = response.data as List;
         return data
             .map(
-                (json) => TicketResponseModel.fromJson(json as Map<String, dynamic>))
+                (json) => InvoicePayload.fromJson(json as Map<String, dynamic>))
             .toList();
       } else {
         throw DioException(
@@ -92,7 +92,7 @@ class CompletedOrdersRemoteDataSourceImpl
   }
 
   @override
-  Future<List<TicketResponseModel>> getTicketsByDateRange(
+  Future<List<InvoicePayload>> getTicketsByDateRange(
       DateTime startDate, {DateTime? endDate, int skip = 0, int limit = 10}) async {
     final url = ApiConfig.invoiceUrl;
 
@@ -135,7 +135,7 @@ class CompletedOrdersRemoteDataSourceImpl
         final data = response.data as List;
         return data
             .map(
-                (json) => TicketResponseModel.fromJson(json as Map<String, dynamic>))
+                (json) => InvoicePayload.fromJson(json as Map<String, dynamic>))
             .toList();
       } else {
         throw DioException(
@@ -166,7 +166,7 @@ class CompletedOrdersRemoteDataSourceImpl
   }
 
   @override
-  Future<TicketResponseModel?> getTicketById(String orderId) async {
+  Future<InvoicePayload?> getTicketById(String orderId) async {
     final url = '${ApiConfig.invoiceUrl}$orderId';
 
     if (url.isEmpty || ApiConfig.invoiceUrl.isEmpty) {
@@ -195,7 +195,7 @@ class CompletedOrdersRemoteDataSourceImpl
       );
 
       if (response.statusCode == 200) {
-        return TicketResponseModel.fromJson(response.data as Map<String, dynamic>);
+        return InvoicePayload.fromJson(response.data as Map<String, dynamic>);
       } else if (response.statusCode == 404) {
         return null;
       } else {
@@ -227,7 +227,7 @@ class CompletedOrdersRemoteDataSourceImpl
   }
 
   @override
-  Future<TicketResponseModel?> convertToCreditNote(String ticketId) async {
+  Future<InvoicePayload?> convertToCreditNote(String ticketId) async {
     final url = '${ApiConfig.invoiceUrl}$ticketId/nota-credito';
 
     if (url.isEmpty || ApiConfig.invoiceUrl.isEmpty) {
@@ -257,7 +257,7 @@ class CompletedOrdersRemoteDataSourceImpl
 
       if (response.statusCode == 200) {
         print('✅ [CREDIT NOTE] Nota de crédito generada correctamente para el ticket $ticketId');
-        return TicketResponseModel.fromJson(response.data as Map<String, dynamic>);
+        return InvoicePayload.fromJson(response.data as Map<String, dynamic>);
       } else {
         throw DioException(
           requestOptions: response.requestOptions,

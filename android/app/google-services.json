@@ -166,6 +166,30 @@
       },
       "oauth_client": [
         {
+          "client_id": "532336033127-7f0lujjbt07t4vb3kir7fjbl57oeblrv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "ar.com.keuken.pedidos.supervisor",
+            "certificate_hash": "33a9d1020600924c8818f1c9ed66dcc2ac4a3a7d"
+          }
+        },
+        {
+          "client_id": "532336033127-fmngc0c59t231irga0fv20ucouasrd6i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "ar.com.keuken.pedidos.supervisor",
+            "certificate_hash": "bdb9230e568d7c8c6a8dcbf734aee82f69955ef9"
+          }
+        },
+        {
+          "client_id": "532336033127-j90kgjdb73ahbrfogfrh07niksodm0li.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "ar.com.keuken.pedidos.supervisor",
+            "certificate_hash": "0b52199c6267ae876f713f49176bb3f94a966ab5"
+          }
+        },
+        {
           "client_id": "532336033127-l4dh3ctrqf8uq8701jqt40naqt0a075m.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -259,6 +283,14 @@
           "android_info": {
             "package_name": "ar.com.keuken.punto_venta_app",
             "certificate_hash": "bdb9230e568d7c8c6a8dcbf734aee82f69955ef9"
+          }
+        },
+        {
+          "client_id": "532336033127-ur9ijl92fc5q70hu0jb0kaujm9qbmftn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "ar.com.keuken.punto_venta_app",
+            "certificate_hash": "185e342a5a38fd49391404e8b606a607072e8277"
           }
         },
         {
