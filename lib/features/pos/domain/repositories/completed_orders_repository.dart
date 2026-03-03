@@ -10,9 +10,9 @@ abstract class CompletedOrdersRepository {
   Future<double> getTotalSalesByDate(DateTime date);
   
   // Remote methods
-  Future<List<CompletedOrder>> getCompletedOrdersFromRemote({int skip = 0, int limit = 10});
+  Future<List<CompletedOrder>> getCompletedOrdersFromRemote({int skip = 0, int limit = 10, bool? includeCreditNotes});
   Future<List<CompletedOrder>> getOrdersByDateRangeFromRemote(
-      DateTime startDate, {DateTime? endDate, int skip = 0, int limit = 10});
+      DateTime startDate, {DateTime? endDate, int skip = 0, int limit = 10, bool? includeCreditNotes});
   Future<CompletedOrder?> getOrderByIdFromRemote(String orderId);
   Future<CompletedOrder?> convertToCreditNote(String ticketId);
 }

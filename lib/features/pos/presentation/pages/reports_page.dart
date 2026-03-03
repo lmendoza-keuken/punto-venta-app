@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/core/utils/extensions.dart';
-import 'package:punto_venta_app/features/pos/data/models/ticket_models/ticket_response_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_event.dart';
@@ -27,6 +26,7 @@ class _ReportsPageState extends State<ReportsPage>
   DateTime? selectedEndDate;
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  String _ticketFilter = 'all';
 
   @override
   void initState() {
@@ -61,7 +61,7 @@ class _ReportsPageState extends State<ReportsPage>
     }
 
     if (index == 0) {
-      // Mantener el rango de fechas al volver a resumen diario
+      setState(() => _ticketFilter = 'all');
       if (selectedEndDate != null) {
         context.read<ReportsBloc>().add(
               LoadReportsByDateRange(selectedDate, selectedEndDate!),
@@ -73,7 +73,18 @@ class _ReportsPageState extends State<ReportsPage>
       // Limpiar buscador y cargar todos los tickets
       _searchController.clear();
       setState(() {});
-      context.read<ReportsBloc>().add(LoadAllReports());
+      final includeCreditNotes = _ticketFilter == 'all' || _ticketFilter == 'credit_notes' ? true : false;
+      context.read<ReportsBloc>().add(LoadAllReports(includeCreditNotes: includeCreditNotes));
+    }
+  }
+
+  void _reloadCurrentView() {
+    if (selectedEndDate != null) {
+      context.read<ReportsBloc>().add(
+            LoadReportsByDateRange(selectedDate, selectedEndDate!),
+          );
+    } else {
+      context.read<ReportsBloc>().add(LoadDailySummary(selectedDate));
     }
   }
 
@@ -166,13 +177,7 @@ class _ReportsPageState extends State<ReportsPage>
             });
           },
           onUpdate: () {
-            if (selectedEndDate != null) {
-              context.read<ReportsBloc>().add(
-                    LoadReportsByDateRange(selectedDate, selectedEndDate!),
-                  );
-            } else {
-              context.read<ReportsBloc>().add(LoadDailySummary(selectedDate));
-            }
+            _reloadCurrentView();
           },
         ),
 
@@ -208,6 +213,49 @@ class _ReportsPageState extends State<ReportsPage>
   Widget _buildHistoryTab() {
     return Column(
       children: [
+        // Filter chips
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.paddingM,
+            vertical: AppDimensions.paddingS,
+          ),
+          child: Row(
+            children: [
+              FilterChip(
+                label: const Text('Todos'),
+                selected: _ticketFilter == 'all',
+                onSelected: (selected) {
+                  if (selected) {
+                    setState(() => _ticketFilter = 'all');
+                    context.read<ReportsBloc>().add(const LoadAllReports(includeCreditNotes: true));
+                  }
+                },
+              ),
+              const SizedBox(width: AppDimensions.paddingS),
+              FilterChip(
+                label: const Text('Facturas'),
+                selected: _ticketFilter == 'invoices',
+                onSelected: (selected) {
+                  if (selected) {
+                    setState(() => _ticketFilter = 'invoices');
+                    context.read<ReportsBloc>().add(const LoadAllReports(includeCreditNotes: false));
+                  }
+                },
+              ),
+              const SizedBox(width: AppDimensions.paddingS),
+              FilterChip(
+                label: const Text('Notas de Crédito'),
+                selected: _ticketFilter == 'credit_notes',
+                onSelected: (selected) {
+                  if (selected) {
+                    setState(() => _ticketFilter = 'credit_notes');
+                    context.read<ReportsBloc>().add(const LoadAllReports(includeCreditNotes: true));
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
         // Buscador
         Container(
           padding: const EdgeInsets.all(AppDimensions.paddingM),
@@ -242,13 +290,20 @@ class _ReportsPageState extends State<ReportsPage>
               if (state is ReportsLoading) {
                 return const Center(child: CircularProgressIndicator());
               } else if (state is ReportsLoaded) {
-                final filteredTickets = _searchController.text.isEmpty
+                var filteredTickets = _searchController.text.isEmpty
                     ? state.tickets
                     : state.tickets
                         .where((ticket) => (ticket.id)
                             .toLowerCase()
                             .contains(_searchController.text.toLowerCase()))
                         .toList();
+                
+                if (_ticketFilter == 'credit_notes') {
+                  filteredTickets = filteredTickets
+                      .where((ticket) => ticket.typeCode == 'NC')
+                      .toList();
+                }
+                
                 return _buildOrdersList(filteredTickets, showDate: true);
               } else if (state is ReportsError) {
                 return _buildErrorWidget(state.message);
@@ -301,26 +356,72 @@ class _ReportsPageState extends State<ReportsPage>
             }
 
             final ticket = tickets[index];
+            final isCreditNote = ticket.typeCode == 'NC';
+            
             // card del ticket
             return GestureDetector(
               onTap: () => _showTicketPreview(ticket),
               child: Card(
                 margin: const EdgeInsets.only(bottom: AppDimensions.paddingS),
+                color: isCreditNote ? Colors.red.shade50 : null,
                 child: ListTile(
-                  title: Text(
-                    showDate
-                        ? "#${ticket.id} | ${DateFormat('dd/MM/yyyy HH:mm').format(ticket.completedAt)}"
-                        : "#${ticket.orderNumber} | ${DateFormat('HH:mm').format(ticket.completedAt)}",
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  leading: Icon(
+                    isCreditNote ? Icons.receipt_long : Icons.receipt,
+                    color: isCreditNote ? Colors.red.shade700 : AppColors.primary,
+                    size: 32,
+                  ),
+                  title: Row(
+                    children: [
+                      if (isCreditNote)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade700,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text(
+                            'NC',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      if (isCreditNote)
+                        const SizedBox(width: AppDimensions.paddingS),
+                      Expanded(
+                        child: Text(
+                          showDate
+                              ? "#${ticket.id} | ${DateFormat('dd/MM/yyyy HH:mm').format(ticket.completedAt)}"
+                              : "#${ticket.orderNumber} | ${DateFormat('HH:mm').format(ticket.completedAt)}",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: isCreditNote ? Colors.grey.shade900 : null,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (ticket.clientName != null)
-                        Text('Cliente: ${ticket.clientName}'),
-                      Text('${ticket.items.length} artículos'),
+                        Text(
+                          'Cliente: ${ticket.clientName}',
+                          style: isCreditNote ? TextStyle(color: Colors.grey.shade900) : null,
+                        ),
                       Text(
-                          'Pago: ${ticket.paymentMethod?.shortDescription.toLowerCase()}'),
+                        '${ticket.items.length} artículos',
+                        style: isCreditNote ? TextStyle(color: Colors.grey.shade900) : null,
+                      ),
+                      Text(
+                        'Pago: ${ticket.paymentMethod?.shortDescription.toLowerCase()}',
+                        style: isCreditNote ? TextStyle(color: Colors.grey.shade900) : null,
+                      ),
                     ],
                   ),
                   trailing: Row(
@@ -331,7 +432,7 @@ class _ReportsPageState extends State<ReportsPage>
                         style:
                             Theme.of(context).textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: AppColors.primary,
+                                  color: isCreditNote ? Colors.red.shade700 : AppColors.primary,
                                 ),
                       ),
                     ],

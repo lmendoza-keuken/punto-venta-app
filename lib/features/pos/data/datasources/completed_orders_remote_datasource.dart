@@ -3,13 +3,12 @@ import 'package:punto_venta_app/core/config/api_config.dart';
 import 'package:punto_venta_app/core/network/dio_client.dart';
 import 'package:punto_venta_app/features/pos/data/models/invoice_payload_model.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
-import 'package:punto_venta_app/features/pos/data/models/ticket_models/ticket_response_model.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 abstract class CompletedOrdersRemoteDataSource {
-  Future<List<InvoicePayload>> getAllTickets({int skip = 0, int limit = 10});
+  Future<List<InvoicePayload>> getAllTickets({int skip = 0, int limit = 10, bool? includeCreditNotes});
   Future<List<InvoicePayload>> getTicketsByDateRange(
-      DateTime startDate, {DateTime? endDate, int skip = 0, int limit = 10});
+      DateTime startDate, {DateTime? endDate, int skip = 0, int limit = 10, bool? includeCreditNotes});
   Future<InvoicePayload?> getTicketById(String ticketId);
   Future<InvoicePayload?> convertToCreditNote(String ticketId);
 }
@@ -25,7 +24,7 @@ class CompletedOrdersRemoteDataSourceImpl
   }) : _dio = dio ?? DioClient.instance;
 
   @override
-  Future<List<InvoicePayload>> getAllTickets({int skip = 0, int limit = 10}) async {
+  Future<List<InvoicePayload>> getAllTickets({int skip = 0, int limit = 10, bool? includeCreditNotes}) async {
     final url = ApiConfig.invoiceUrl;
 
     if (url.isEmpty || ApiConfig.invoiceUrl.isEmpty) {
@@ -41,12 +40,17 @@ class CompletedOrdersRemoteDataSourceImpl
     }
 
     try {
+      final queryParams = <String, dynamic>{
+        'skip': skip,
+        'limit': limit,
+      };
+      if (includeCreditNotes != null) {
+        queryParams['include_credit_notes'] = includeCreditNotes;
+      }
+
       final response = await _dio.get(
         url,
-        queryParameters: {
-          'skip': skip,
-          'limit': limit,
-        },
+        queryParameters: queryParams,
         options: Options(
           headers: {
             'Content-Type': 'application/json; charset=utf-8',
@@ -93,7 +97,7 @@ class CompletedOrdersRemoteDataSourceImpl
 
   @override
   Future<List<InvoicePayload>> getTicketsByDateRange(
-      DateTime startDate, {DateTime? endDate, int skip = 0, int limit = 10}) async {
+      DateTime startDate, {DateTime? endDate, int skip = 0, int limit = 10, bool? includeCreditNotes}) async {
     final url = ApiConfig.invoiceUrl;
 
     if (url.isEmpty || ApiConfig.invoiceUrl.isEmpty) {
@@ -115,6 +119,9 @@ class CompletedOrdersRemoteDataSourceImpl
     };
     if (endDate != null) {
       queryParams['end_date'] = _formatDateYYYYMMDD(endDate);
+    }
+    if (includeCreditNotes != null) {
+      queryParams['include_credit_notes'] = includeCreditNotes;
     }
 
     try {

@@ -148,6 +148,12 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
         ),
       ],
       child: Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.borderRadiusL),
+          side: widget.ticket.typeCode == 'NC'
+              ? const BorderSide(color: Colors.red, width: 2)
+              : BorderSide.none,
+        ),
         child: Container(
           width: 450,
           constraints: const BoxConstraints(maxHeight: 600),
@@ -155,23 +161,50 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
             children: [
               Container(
                 padding: const EdgeInsets.all(AppDimensions.paddingM),
-                decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.only(
+                decoration: BoxDecoration(
+                  color: widget.ticket.typeCode == 'NC' ? Colors.red.shade50 : null,
+                  borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(AppDimensions.borderRadiusL),
                     topRight: Radius.circular(AppDimensions.borderRadiusL),
                   ),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.receipt, color: AppColors.primary),
+                    Icon(
+                      widget.ticket.typeCode == 'NC' ? Icons.receipt_long : Icons.receipt, 
+                      color: widget.ticket.typeCode == 'NC' ? Colors.red.shade700 : AppColors.primary,
+                    ),
                     const SizedBox(width: AppDimensions.paddingS),
-                    Text(
-                      'Ticket - ${widget.ticket.id}',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    if (widget.ticket.typeCode == 'NC')
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade700,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          'NOTA DE CRÉDITO',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),
+                        ),
+                      ),
+                    if (widget.ticket.typeCode == 'NC')
+                      const SizedBox(width: AppDimensions.paddingS),
+                    Expanded(
+                      child: Text(
+                        'Ticket - ${widget.ticket.id}',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: widget.ticket.typeCode == 'NC' ? Colors.grey.shade900 : null,
+                            ),
+                      ),
                     ),
-                    const Spacer(),
                     IconButton(
                       icon: const Icon(Icons.close),
                       onPressed: () => Navigator.of(context).pop(),
@@ -197,6 +230,7 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                 child: BlocBuilder<PrinterBloc, PrinterState>(
                   builder: (context, state) {
                     final isLoading = state is PrinterPrinting;
+                    final isCreditNote = widget.ticket.typeCode == 'NC';
 
                     return Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -207,28 +241,35 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                               : () => Navigator.of(context).pop(),
                           child: const Text('Cerrar'),
                         ),
-                        ElevatedButton.icon(
-                          onPressed: isLoading
-                              ? null
-                              : () => _handleConvertToCreditNote(context),
-                          icon: isLoading
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white),
+                        const Spacer(),
+                        if (!isCreditNote)
+                          ElevatedButton.icon(
+                            onPressed: isLoading
+                                ? null
+                                : () => _handleConvertToCreditNote(context),
+                            icon: isLoading
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          Colors.white),
+                                    ),
+                                  )
+                                : const Icon(
+                                    Icons.receipt,
+                                    color: Colors.white,
                                   ),
-                                )
-                              : const Icon(
-                                  Icons.receipt,
-                                  color: Colors.white,
-                                ),
-                          label: Text(isLoading
-                              ? 'Convirtiendo...'
-                              : 'Pasar a nota de crédito'),
-                        ),
+                            label: Text(isLoading
+                                ? 'Convirtiendo...'
+                                : 'Pasar a nota de crédito'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange,
+                            ),
+                          ),
+                        if (!isCreditNote)
+                          const SizedBox(width: AppDimensions.paddingS),
                         ElevatedButton.icon(
                           onPressed:
                               isLoading ? null : () => _handlePrint(context),

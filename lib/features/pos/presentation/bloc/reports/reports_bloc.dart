@@ -15,6 +15,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
   DateTime? _currentStartDate;
   DateTime? _currentEndDate;
   bool _isAllReportsMode = false;
+  bool? _currentIncludeCreditNotes;
 
   ReportsBloc(
       {required this.getReportsUsecase,
@@ -36,13 +37,14 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     _isAllReportsMode = true;
     _currentStartDate = null;
     _currentEndDate = null;
+    _currentIncludeCreditNotes = event.includeCreditNotes;
 
     try {
       // Se hace llamado a back si falla se usa local
       try {
         final skip = (_currentPage - 1) * _pageSize;
         final orders = await getReportsUsecase.getAllCompletedOrdersFromRemote(
-            skip: skip, limit: _pageSize);
+            skip: skip, limit: _pageSize, includeCreditNotes: event.includeCreditNotes);
         emit(ReportsLoaded(orders, hasMoreData: orders.length >= _pageSize));
       } catch (remoteError) {
         // TODO: CAMBIAR PARA USAR EL MISMO MODELO TicketResponseModel
@@ -78,6 +80,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
         newOrders = await getReportsUsecase.getAllCompletedOrdersFromRemote(
           skip: skip,
           limit: _pageSize,
+          includeCreditNotes: _currentIncludeCreditNotes,
         );
       } else if (_currentStartDate != null) {
         newOrders = await getReportsUsecase.getOrdersByDateRangeFromRemote(
@@ -85,6 +88,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
           endDate: _currentEndDate,
           skip: skip,
           limit: _pageSize,
+          includeCreditNotes: _currentIncludeCreditNotes,
         );
       } else {
         emit(currentState.copyWith(isLoadingMore: false));
@@ -115,6 +119,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     _isAllReportsMode = false;
     _currentStartDate = event.startDate;
     _currentEndDate = event.endDate;
+    _currentIncludeCreditNotes = event.includeCreditNotes;
 
     try {
       try {
@@ -123,7 +128,8 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
             event.startDate,
             endDate: event.endDate,
             skip: skip,
-            limit: _pageSize);
+            limit: _pageSize,
+            includeCreditNotes: event.includeCreditNotes);
         emit(ReportsLoaded(orders, hasMoreData: orders.length >= _pageSize));
       } catch (remoteError) {
         // TODO: CAMBIAR PARA USAR EL MISMO MODELO TicketResponseModel
@@ -148,6 +154,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     _currentStartDate =
         DateTime(event.date.year, event.date.month, event.date.day);
     _currentEndDate = null;
+    _currentIncludeCreditNotes = event.includeCreditNotes;
 
     try {
       try {
@@ -156,7 +163,8 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
         final summary = await getReportsUsecase.getDailySummaryFromRemote(
             event.date,
             skip: skip,
-            limit: _pageSize);
+            limit: _pageSize,
+            includeCreditNotes: event.includeCreditNotes);
 
         final orders = summary['orders'] as List<CompletedOrder>;
 
