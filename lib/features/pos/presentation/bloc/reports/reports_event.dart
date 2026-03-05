@@ -8,12 +8,12 @@ abstract class ReportsEvent extends Equatable {
 }
 
 class LoadAllReports extends ReportsEvent {
-  final bool? includeCreditNotes;
+  final bool? onlySales;
 
-  const LoadAllReports({this.includeCreditNotes});
+  const LoadAllReports({this.onlySales});
 
   @override
-  List<Object?> get props => [includeCreditNotes];
+  List<Object?> get props => [onlySales];
 }
 
 class LoadMoreReports extends ReportsEvent {
@@ -23,22 +23,22 @@ class LoadMoreReports extends ReportsEvent {
 class LoadReportsByDateRange extends ReportsEvent {
   final DateTime startDate;
   final DateTime endDate;
-  final bool? includeCreditNotes;
+  final bool? onlySales;
 
-  const LoadReportsByDateRange(this.startDate, this.endDate, {this.includeCreditNotes});
+  const LoadReportsByDateRange(this.startDate, this.endDate, {this.onlySales});
 
   @override
-  List<Object?> get props => [startDate, endDate, includeCreditNotes];
+  List<Object?> get props => [startDate, endDate, onlySales];
 }
 
 class LoadDailySummary extends ReportsEvent {
   final DateTime date;
-  final bool? includeCreditNotes;
+  final bool? onlySales;
 
-  const LoadDailySummary(this.date, {this.includeCreditNotes});
+  const LoadDailySummary(this.date, {this.onlySales});
 
   @override
-  List<Object?> get props => [date, includeCreditNotes];
+  List<Object?> get props => [date, onlySales];
 }
 
 class GenerateCreditNote extends ReportsEvent {

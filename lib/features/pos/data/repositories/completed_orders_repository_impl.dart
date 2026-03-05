@@ -86,14 +86,14 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
   // Remote methods  // TODO: cambiar el payload (al modelo de TicketResponseModel)
   @override
   Future<List<CompletedOrder>> getCompletedOrdersFromRemote(
-      {int skip = 0, int limit = 10, bool? includeCreditNotes}) async {
+      {int skip = 0, int limit = 10, bool? onlySales}) async {
     if (remoteDataSource == null) {
       throw Exception('Remote data source not available');
     }
 
     try {
       final invoicePayloads =
-          await remoteDataSource!.getAllTickets(skip: skip, limit: limit, includeCreditNotes: includeCreditNotes);
+          await remoteDataSource!.getAllTickets(skip: skip, limit: limit, onlySales: onlySales);
 
       return invoicePayloads
           .map((payload) => _convertInvoicePayloadToCompletedOrder(payload))
@@ -109,7 +109,7 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
       {DateTime? endDate,
       int skip = 0,
       int limit = 10,
-      bool? includeCreditNotes}) async {
+      bool? onlySales}) async {
     if (remoteDataSource == null) {
       throw Exception('Remote data source not available');
     }
@@ -120,7 +120,7 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
           endDate: endDate,
           skip: skip,
           limit: limit,
-          includeCreditNotes: includeCreditNotes);
+          onlySales: onlySales);
       final orders = invoicePayloads
           .map((payload) => _convertInvoicePayloadToCompletedOrder(payload))
           .toList();

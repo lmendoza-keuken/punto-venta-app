@@ -45,9 +45,9 @@ class GetReportsUsecase {
 
   // Remote methods
   Future<List<CompletedOrder>> getAllCompletedOrdersFromRemote(
-      {int skip = 0, int limit = 10, bool? includeCreditNotes}) async {
+      {int skip = 0, int limit = 10, bool? onlySales}) async {
     return await repository.getCompletedOrdersFromRemote(
-        skip: skip, limit: limit, includeCreditNotes: includeCreditNotes);
+        skip: skip, limit: limit, onlySales: onlySales);
   }
 
   Future<List<CompletedOrder>> getOrdersByDateRangeFromRemote(
@@ -55,19 +55,19 @@ class GetReportsUsecase {
       {DateTime? endDate,
       int skip = 0,
       int limit = 10,
-      bool? includeCreditNotes}) async {
+      bool? onlySales}) async {
     return await repository.getOrdersByDateRangeFromRemote(startDate,
-        endDate: endDate, skip: skip, limit: limit, includeCreditNotes: includeCreditNotes);
+        endDate: endDate, skip: skip, limit: limit, onlySales: onlySales);
   }
 
   Future<Map<String, dynamic>> getDailySummaryFromRemote(DateTime date,
-      {int skip = 0, int limit = 10, bool? includeCreditNotes}) async {
+      {int skip = 0, int limit = 10, bool? onlySales}) async {
     // Fecha de inicio (solo enviar esta fecha para obtener el día completo)
     final startDate = DateTime(date.year, date.month, date.day);
 
     // Obtener órdenes del día desde remote (sin endDate para obtener solo ese día)
     final orders = await repository.getOrdersByDateRangeFromRemote(startDate,
-        skip: skip, limit: limit, includeCreditNotes: includeCreditNotes);
+        skip: skip, limit: limit, onlySales: onlySales);
 
     // stats diarios
     final totalSales = orders.fold(0.0, (sum, order) => sum + order.total);

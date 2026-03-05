@@ -73,8 +73,8 @@ class _ReportsPageState extends State<ReportsPage>
       // Limpiar buscador y cargar todos los tickets
       _searchController.clear();
       setState(() {});
-      final includeCreditNotes = _ticketFilter == 'all' || _ticketFilter == 'credit_notes' ? true : false;
-      context.read<ReportsBloc>().add(LoadAllReports(includeCreditNotes: includeCreditNotes));
+      final onlySales = _ticketFilter == 'invoices' ? true : false;
+      context.read<ReportsBloc>().add(LoadAllReports(onlySales: onlySales));
     }
   }
 
@@ -227,7 +227,7 @@ class _ReportsPageState extends State<ReportsPage>
                 onSelected: (selected) {
                   if (selected) {
                     setState(() => _ticketFilter = 'all');
-                    context.read<ReportsBloc>().add(const LoadAllReports(includeCreditNotes: true));
+                    context.read<ReportsBloc>().add(const LoadAllReports(onlySales: false));
                   }
                 },
               ),
@@ -238,7 +238,7 @@ class _ReportsPageState extends State<ReportsPage>
                 onSelected: (selected) {
                   if (selected) {
                     setState(() => _ticketFilter = 'invoices');
-                    context.read<ReportsBloc>().add(const LoadAllReports(includeCreditNotes: false));
+                    context.read<ReportsBloc>().add(const LoadAllReports(onlySales: true));
                   }
                 },
               ),
@@ -249,7 +249,7 @@ class _ReportsPageState extends State<ReportsPage>
                 onSelected: (selected) {
                   if (selected) {
                     setState(() => _ticketFilter = 'credit_notes');
-                    context.read<ReportsBloc>().add(const LoadAllReports(includeCreditNotes: true));
+                    context.read<ReportsBloc>().add(const LoadAllReports(onlySales: false));
                   }
                 },
               ),
@@ -473,7 +473,8 @@ class _ReportsPageState extends State<ReportsPage>
                       .add(LoadDailySummary(selectedDate));
                 }
               } else {
-                context.read<ReportsBloc>().add(LoadAllReports());
+                final onlySales = _ticketFilter == 'invoices' ? true : false;
+                context.read<ReportsBloc>().add(LoadAllReports(onlySales: onlySales));
               }
             },
             child: const Text('Reintentar'),

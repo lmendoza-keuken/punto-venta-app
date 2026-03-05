@@ -6,9 +6,9 @@ import 'package:punto_venta_app/features/auth/data/datasources/auth_local_dataso
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 abstract class CompletedOrdersRemoteDataSource {
-  Future<List<InvoicePayload>> getAllTickets({int skip = 0, int limit = 10, bool? includeCreditNotes});
+  Future<List<InvoicePayload>> getAllTickets({int skip = 0, int limit = 10, bool? onlySales});
   Future<List<InvoicePayload>> getTicketsByDateRange(
-      DateTime startDate, {DateTime? endDate, int skip = 0, int limit = 10, bool? includeCreditNotes});
+      DateTime startDate, {DateTime? endDate, int skip = 0, int limit = 10, bool? onlySales});
   Future<InvoicePayload?> getTicketById(String ticketId);
   Future<InvoicePayload?> convertToCreditNote(String ticketId);
 }
@@ -24,7 +24,7 @@ class CompletedOrdersRemoteDataSourceImpl
   }) : _dio = dio ?? DioClient.instance;
 
   @override
-  Future<List<InvoicePayload>> getAllTickets({int skip = 0, int limit = 10, bool? includeCreditNotes}) async {
+  Future<List<InvoicePayload>> getAllTickets({int skip = 0, int limit = 10, bool? onlySales}) async {
     final url = ApiConfig.invoiceUrl;
 
     if (url.isEmpty || ApiConfig.invoiceUrl.isEmpty) {
@@ -44,8 +44,8 @@ class CompletedOrdersRemoteDataSourceImpl
         'skip': skip,
         'limit': limit,
       };
-      if (includeCreditNotes != null) {
-        queryParams['include_credit_notes'] = includeCreditNotes;
+      if (onlySales != null) {
+        queryParams['only_sales'] = onlySales;
       }
 
       final response = await _dio.get(
@@ -97,7 +97,7 @@ class CompletedOrdersRemoteDataSourceImpl
 
   @override
   Future<List<InvoicePayload>> getTicketsByDateRange(
-      DateTime startDate, {DateTime? endDate, int skip = 0, int limit = 10, bool? includeCreditNotes}) async {
+      DateTime startDate, {DateTime? endDate, int skip = 0, int limit = 10, bool? onlySales}) async {
     final url = ApiConfig.invoiceUrl;
 
     if (url.isEmpty || ApiConfig.invoiceUrl.isEmpty) {
@@ -120,8 +120,8 @@ class CompletedOrdersRemoteDataSourceImpl
     if (endDate != null) {
       queryParams['end_date'] = _formatDateYYYYMMDD(endDate);
     }
-    if (includeCreditNotes != null) {
-      queryParams['include_credit_notes'] = includeCreditNotes;
+    if (onlySales != null) {
+      queryParams['only_sales'] = onlySales;
     }
 
     try {
