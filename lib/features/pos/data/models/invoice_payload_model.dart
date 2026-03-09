@@ -1,7 +1,6 @@
 import 'package:punto_venta_app/core/mocked_taxes_list.dart';
 import 'package:punto_venta_app/features/pos/data/models/cart_item_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/cart_log_entry_model.dart';
-import 'package:punto_venta_app/features/pos/data/models/client_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/tax_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
@@ -73,8 +72,7 @@ class InvoicePayload {
   factory InvoicePayload.fromPrintJob(PrintJob job) {
     Map<String, dynamic>? serializeClient(Client? c) {
       if (c == null) return null;
-      final model = ClientModel.fromEntity(c);
-      return model.toJson();
+      return c.toJson();
     }
 
     final Map<double, double> totalsByPercentage = {};

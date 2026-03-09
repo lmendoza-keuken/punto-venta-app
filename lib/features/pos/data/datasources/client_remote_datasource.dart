@@ -3,10 +3,10 @@ import 'package:punto_venta_app/core/config/api_config.dart';
 import 'package:punto_venta_app/core/network/dio_client.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
-import '../models/client_model.dart';
+import '../../domain/entities/client.dart';
 
 abstract class ClientRemoteDataSource {
-  Future<List<ClientModel>> getClients();
+  Future<List<Client>> getClients();
 }
 
 class ClientRemoteDataSourceImpl implements ClientRemoteDataSource {
@@ -19,7 +19,7 @@ class ClientRemoteDataSourceImpl implements ClientRemoteDataSource {
   }) : _dio = dio ?? DioClient.instance;
 
   @override
-  Future<List<ClientModel>> getClients() async {
+  Future<List<Client>> getClients() async {
     final url = ApiConfig.pdvUrl;
 
     if (url.isEmpty) {
@@ -50,7 +50,7 @@ class ClientRemoteDataSourceImpl implements ClientRemoteDataSource {
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data as List<dynamic>;
         return data
-            .map((json) => ClientModel.fromBackendJson(json as Map<String, dynamic>))
+            .map((json) => Client.fromBackendJson(json as Map<String, dynamic>))
             .toList();
       } else {
         throw DioException(
