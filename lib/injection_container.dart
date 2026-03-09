@@ -170,7 +170,7 @@ Future<void> init() async {
   sl.registerFactory(
       () => ClientsBloc(getClients: sl(), addClient: sl(), deleteClient: sl()));
   sl.registerFactory(() => PaymentMethodsBloc(fetchPaymentMethods: sl()));
-  sl.registerFactory(() => PdvConfigBloc(
+  sl.registerLazySingleton(() => PdvConfigBloc(
         fetchPdvConfigUsecase: sl(),
         fetchBranchesUsecase: sl(),
         repository: sl(),

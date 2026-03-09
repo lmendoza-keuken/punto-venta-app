@@ -14,24 +14,28 @@ class PdvConfigRepositoryImpl implements PdvConfigRepository {
 
   @override
   Future<PdvConfig> fetchPdvConfig() async {
+    final localConfig = await localDataSource.getPdvConfig();
+    
     try {
       final data = await remoteDataSource.fetchPdvConfig();
 
-      final config = PdvConfig(
+      final remoteConfig = PdvConfig(
         pdvId: data.deliveryLocationId,
         branchId: data.branchId,
         offlineMode: data.offlineMode,
       );
 
-      // Obtener el numeroSucursal local si existe
-      final localConfig = await localDataSource.getPdvConfig();
       if (localConfig != null) {
-        return config.copyWith(branchNumber: localConfig.branchNumber);
+        return PdvConfig(
+          pdvId: localConfig.pdvId ?? remoteConfig.pdvId,
+          branchId: localConfig.branchId ?? remoteConfig.branchId,
+          branchNumber: localConfig.branchNumber,
+          offlineMode: remoteConfig.offlineMode ?? localConfig.offlineMode,
+        );
       }
 
-      return config;
+      return remoteConfig;
     } catch (e) {
-      final localConfig = await localDataSource.getPdvConfig();
       if (localConfig != null) {
         return localConfig;
       }

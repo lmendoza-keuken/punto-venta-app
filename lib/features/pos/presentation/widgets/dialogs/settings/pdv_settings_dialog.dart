@@ -11,10 +11,15 @@ import 'package:punto_venta_app/injection_container.dart' as di;
 
 Future<({int pdvId, int sucursalId})?> showPdvSettingsDialog(
     BuildContext context) async {
+  final bloc = di.sl<PdvConfigBloc>();
+  if (bloc.state is! PdvConfigLoaded) {
+    bloc.add(FetchPdvConfigEvent());
+  }
+  
   return await showDialog<({int pdvId, int sucursalId})>(
     context: context,
-    builder: (ctx) => BlocProvider(
-      create: (_) => di.sl<PdvConfigBloc>()..add(FetchPdvConfigEvent()),
+    builder: (ctx) => BlocProvider.value(
+      value: bloc,
       child: const _PdvSettingsDialogContent(),
     ),
   );
@@ -43,6 +48,13 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
     pdvIdController = TextEditingController();
     branchIdController = TextEditingController();
     branchNumberController = TextEditingController();
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = context.read<PdvConfigBloc>().state;
+      if (state is PdvConfigLoaded) {
+        _updateControllersFromConfig(state.config, state.branches);
+      }
+    });
   }
 
   @override

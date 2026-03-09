@@ -10,6 +10,8 @@ class PdvConfigBloc extends Bloc<PdvConfigEvent, PdvConfigState> {
   final FetchPdvConfigUsecase fetchPdvConfigUsecase;
   final FetchBranchesUsecase fetchBranchesUsecase;
   final PdvConfigRepository repository;
+  
+  List<Branch> _cachedBranches = [];
 
   PdvConfigBloc({
     required this.fetchPdvConfigUsecase,
@@ -28,6 +30,7 @@ class PdvConfigBloc extends Bloc<PdvConfigEvent, PdvConfigState> {
     try {
       final config = await fetchPdvConfigUsecase();
       final branches = await fetchBranchesUsecase();
+      _cachedBranches = branches; 
       emit(PdvConfigLoaded(config, branches: branches));
     } catch (e) {
       emit(PdvConfigError(e.toString()));
@@ -50,6 +53,7 @@ class PdvConfigBloc extends Bloc<PdvConfigEvent, PdvConfigState> {
     try {
       await repository.savePdvConfig(event.config);
       emit(PdvConfigSaved(event.config));
+      emit(PdvConfigLoaded(event.config, branches: _cachedBranches));
     } catch (e) {
       emit(PdvConfigError('Error al guardar configuración: $e'));
     }
