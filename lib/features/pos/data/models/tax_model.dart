@@ -8,8 +8,9 @@ class TaxModel with _$TaxModel {
   const TaxModel._();
 
   const factory TaxModel({
-    @JsonKey(name: 'id') int? id,
-    @JsonKey(name: 'percentage') double? percentage,
+    @JsonKey(name: 'id') required int id,
+    @JsonKey(name: 'descripcion') String? description,
+    @JsonKey(name: 'porcentaje') double? percentage,
     @JsonKey(name: 'amount') double? amount,
   }) = _TaxModel;
 

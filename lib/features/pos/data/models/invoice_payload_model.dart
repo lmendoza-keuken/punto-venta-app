@@ -1,4 +1,3 @@
-import 'package:punto_venta_app/core/mocked_taxes_list.dart';
 import 'package:punto_venta_app/features/pos/data/models/cart_item_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/cart_log_entry_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/tax_model.dart';
@@ -69,7 +68,7 @@ class InvoicePayload {
     );
   }
 
-  factory InvoicePayload.fromPrintJob(PrintJob job) {
+  factory InvoicePayload.fromPrintJob(PrintJob job, List<TaxModel> taxes) {
     Map<String, dynamic>? serializeClient(Client? c) {
       if (c == null) return null;
       return c.toJson();
@@ -89,7 +88,6 @@ class InvoicePayload {
         //
         final weightKg = itemLog.item.weightKg;
         final isWeighted = (itemLog.item.isWeighted == true);
-        final taxesList = mockedTaxesList;
 
         final double taxableBase = isWeighted
             ? (itemModel.pricePerKg ?? unitPrice)
@@ -98,9 +96,20 @@ class InvoicePayload {
         final double taxPercentage = (itemModel.iva) + 0.0;
         final double taxAmount = taxableBase * (taxPercentage / 100.0);
 
-        final List<TaxModel> taxes = [
+        TaxModel? matchedTax;
+        try {
+          matchedTax = taxes.firstWhere((t) => t.percentage == taxPercentage);
+        } catch (e) {
+          matchedTax = TaxModel(
+            id: 0,
+            percentage: taxPercentage,
+            description: 'IVA $taxPercentage%',
+          );
+        }
+
+        final List<TaxModel> itemTaxes = [
           TaxModel(
-            id: taxesList.firstWhere((t) => t.percentage == taxPercentage).id,
+            id: matchedTax.id,
             percentage: taxPercentage,
             amount: double.parse(taxAmount.toStringAsFixed(2)),
           ),
@@ -121,7 +130,7 @@ class InvoicePayload {
           'discount': 0,
           'unitPrice': unitPrice,
           'priceListId': job.priceListId,
-          'taxes': taxes.map((t) => t.toJson()).toList(),
+          'taxes': itemTaxes.map((t) => t.toJson()).toList(),
           'is_weighted': isWeighted ? "S" : "N",
           'net_weight': isWeighted ? itemModel.product.netWeight : null,
           'weight': isWeighted ? weightKg ?? 0.0 : null,
@@ -134,8 +143,14 @@ class InvoicePayload {
     final totalTax = totalsByPercentage.entries.map((e) {
       final percentage = e.key;
       final amount = e.value;
+      TaxModel? matchedTax;
+      try {
+        matchedTax = taxes.firstWhere((t) => t.percentage == percentage);
+      } catch (e) {
+        matchedTax = TaxModel(id: 0, percentage: percentage, description: 'IVA $percentage%');
+      }
       return TaxModel(
-        id: mockedTaxesList.firstWhere((t) => t.percentage == percentage).id,
+        id: matchedTax.id,
         percentage: double.parse(percentage.toStringAsFixed(2)),
         amount: double.parse(amount.toStringAsFixed(2)),
       );

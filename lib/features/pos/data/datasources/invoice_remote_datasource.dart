@@ -2,7 +2,9 @@ import 'package:dio/dio.dart';
 import 'package:punto_venta_app/core/config/api_config.dart';
 import 'package:punto_venta_app/core/network/dio_client.dart';
 import 'package:punto_venta_app/features/pos/data/models/invoice_payload_model.dart';
+import 'package:punto_venta_app/features/pos/data/models/tax_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
+import 'package:punto_venta_app/features/pos/domain/repositories/tax_repository.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
@@ -12,10 +14,12 @@ abstract class InvoiceRemoteDataSource {
 
 class InvoiceRemoteDataSourceImpl implements InvoiceRemoteDataSource {
   final Dio _dio;
+  final TaxRepository taxRepository;
   final Duration timeout;
 
   InvoiceRemoteDataSourceImpl({
     Dio? dio,
+    required this.taxRepository,
     this.timeout = const Duration(seconds: 15),
   }) : _dio = dio ?? DioClient.instance;
 
@@ -49,7 +53,7 @@ class InvoiceRemoteDataSourceImpl implements InvoiceRemoteDataSource {
     final url = ApiConfig.invoiceUrl;
 
     if (url.isEmpty) {
-      print('⚠️ [INVOICE] URL vacía, simulando envío exitoso');
+      print('[INVOICE] URL vacía, simulando envío exitoso');
       await Future.delayed(const Duration(seconds: 1));
       return job.ticketId ?? "";
     }
@@ -61,7 +65,14 @@ class InvoiceRemoteDataSourceImpl implements InvoiceRemoteDataSource {
       throw Exception('No hay token de autenticación disponible');
     }
 
-    final payload = InvoicePayload.fromPrintJob(job).toJson();
+    List<TaxModel> taxes = [];
+    try {
+      taxes = await taxRepository.getTaxes();
+    } catch (e) {
+      print(' [INVOICE] Error al obtener taxes, usando lista vacía: $e');
+    }
+
+    final payload = InvoicePayload.fromPrintJob(job, taxes).toJson();
 
     try {
       final response = await _dio.post(
