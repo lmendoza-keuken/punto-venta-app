@@ -9,10 +9,13 @@ class ApiConfig {
   static String get categoriesUrl => '$_baseUrl/categories/';
   static String get invoiceUrl => '$_baseUrl/tickets/';
   static String get pdvUrl => '$_baseUrl/pdv/';
-  static String get ticketConfigUrl => '$_baseUrl/ticket_config/'; 
+  static String get ticketConfigUrl => '$_baseUrl/ticket_config/';
   static String get paymentMethodsUrl => '$_baseUrl/payment_methods/';
   static String get configPdvUrl => '$_baseUrl/configuration/';
   static String get branchesUrl => '$_baseUrl/branches/';
+  static String get taxesUrl => '$_baseUrl/taxes/';
+  static String get vatCategoriesUrl => '$_baseUrl/vat-categories/';
+
 
   static void updateCompanyConfig(String companyId, String? baseUrl) {
     _companyId = companyId;

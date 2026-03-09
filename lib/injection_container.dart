@@ -14,6 +14,8 @@ import 'package:punto_venta_app/features/pos/data/datasources/client_local_datas
 import 'package:punto_venta_app/features/pos/data/datasources/client_remote_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/tax_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/tax_remote_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/vat_category_local_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/vat_category_remote_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/completed_orders_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/completed_orders_remote_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/invoice_remote_datasource.dart';
@@ -29,6 +31,7 @@ import 'package:punto_venta_app/features/pos/data/datasources/product_local_data
 import 'package:punto_venta_app/features/pos/data/datasources/saved_orders_local_dasource.dart';
 import 'package:punto_venta_app/features/pos/data/repositories/client_repository_impl.dart';
 import 'package:punto_venta_app/features/pos/data/repositories/tax_repository_impl.dart';
+import 'package:punto_venta_app/features/pos/data/repositories/vat_category_repository_impl.dart';
 import 'package:punto_venta_app/features/pos/data/repositories/completed_orders_repository_impl.dart';
 import 'package:punto_venta_app/features/pos/data/repositories/invoice_repository_impl.dart';
 import 'package:punto_venta_app/features/pos/data/repositories/ticket_config_repository_impl.dart';
@@ -37,6 +40,7 @@ import 'package:punto_venta_app/features/pos/data/repositories/payment_method_re
 import 'package:punto_venta_app/features/pos/data/repositories/printer_repository_impl.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/client_repository.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/tax_repository.dart';
+import 'package:punto_venta_app/features/pos/domain/repositories/vat_category_repository.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/completed_orders_repository.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/ticket_config_repository.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/pdv_config_repository.dart';
@@ -54,6 +58,7 @@ import 'package:punto_venta_app/features/pos/domain/usecases/fetch_payment_metho
 import 'package:punto_venta_app/features/pos/domain/usecases/generate_credit_note_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_clients_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_taxes_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/get_vat_categories_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_ticket_config_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_reports_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/load_ordes_usecase.dart';
@@ -202,6 +207,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => AddClientUsecase(sl()));
   sl.registerLazySingleton(() => DeleteClientUsecase(sl()));
   sl.registerLazySingleton(() => GetTaxesUsecase(sl()));
+  sl.registerLazySingleton(() => GetVatCategoriesUsecase(sl()));
   sl.registerLazySingleton(() => SendInvoiceUseCase(sl()));
   sl.registerLazySingleton(() => GetTicketConfigUsecase(sl()));
   sl.registerLazySingleton(() => FetchTicketConfigUsecase(sl()));
@@ -234,6 +240,12 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<TaxRepository>(
     () => TaxRepositoryImpl(
+      localDataSource: sl(),
+      remoteDataSource: sl(),
+    ),
+  );
+  sl.registerLazySingleton<VatCategoryRepository>(
+    () => VatCategoryRepositoryImpl(
       localDataSource: sl(),
       remoteDataSource: sl(),
     ),
@@ -317,6 +329,10 @@ Future<void> init() async {
       () => TaxLocalDataSourceImpl(sharedPreferences: sl()));
   sl.registerLazySingleton<TaxRemoteDataSource>(
       () => TaxRemoteDataSourceImpl(dio: sl()));
+  sl.registerLazySingleton<VatCategoryLocalDataSource>(
+      () => VatCategoryLocalDataSourceImpl(sharedPreferences: sl()));
+  sl.registerLazySingleton<VatCategoryRemoteDataSource>(
+      () => VatCategoryRemoteDataSourceImpl(dio: sl()));
   sl.registerLazySingleton<InvoiceRemoteDataSource>(
     () => InvoiceRemoteDataSourceImpl(dio: sl(), taxRepository: sl()),
   );
