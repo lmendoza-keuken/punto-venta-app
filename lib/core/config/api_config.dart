@@ -12,7 +12,7 @@ class ApiConfig {
   static String get ticketConfigUrl => '$_baseUrl/ticket_config/'; 
   static String get paymentMethodsUrl => '$_baseUrl/payment_methods/';
   static String get configPdvUrl => '$_baseUrl/configuration/';
-
+  static String get branchesUrl => '$_baseUrl/branches/';
 
   static void updateCompanyConfig(String companyId, String? baseUrl) {
     _companyId = companyId;

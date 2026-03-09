@@ -33,6 +33,9 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
   late TextEditingController pdvIdController;
   late TextEditingController branchIdController;
   late TextEditingController branchNumberController;
+  
+  List<Branch> _branches = [];
+  Branch? _selectedBranch;
 
   @override
   void initState() {
@@ -50,10 +53,32 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
     super.dispose();
   }
 
-  void _updateControllersFromConfig(PdvConfig config) {
-    pdvIdController.text = config.pdvId.toString();
-    branchIdController.text = config.branchId.toString();
+  void _updateControllersFromConfig(PdvConfig config, List<Branch> branches) {
+    pdvIdController.text = config.pdvId?.toString() ?? '';
+    branchIdController.text = config.branchId?.toString() ?? '';
     branchNumberController.text = config.branchNumber ?? "";
+    
+    _branches = branches;
+    
+    if (config.branchId != null) {
+      Branch? matchedBranch;
+      for (final branch in branches) {
+        if (branch.id == config.branchId) {
+          matchedBranch = branch;
+          break;
+        }
+      }
+      _selectedBranch = matchedBranch ?? (branches.isNotEmpty ? branches.first : null);
+    }
+  }
+  
+  void _onBranchSelected(Branch? branch) {
+    setState(() {
+      _selectedBranch = branch;
+      if (branch != null) {
+        branchIdController.text = branch.id.toString();
+      }
+    });
   }
 
   @override
@@ -61,7 +86,7 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
     return BlocConsumer<PdvConfigBloc, PdvConfigState>(
       listener: (context, state) {
         if (state is PdvConfigLoaded) {
-          _updateControllersFromConfig(state.config);
+          _updateControllersFromConfig(state.config, state.branches);
         } else if (state is PdvConfigSaved) {
           Navigator.of(context).pop(
             (pdvId: state.config.pdvId, sucursalId: state.config.branchId),
@@ -96,7 +121,7 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
         }
       },
       builder: (context, state) {
-        final isLoading = state is PdvConfigLoading;
+        final isLoading = state is PdvConfigLoading || state is BranchesLoading;
 
         return AlertDialog(
           title: const Text('Configuración del PDV'),
@@ -167,32 +192,48 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                         },
                       ),
                       const SizedBox(height: AppDimensions.paddingM),
-                      // Campo: Sucursal ID
-                      TextFormField(
-                        controller: branchIdController,
-                        keyboardType: TextInputType.number,
+                      // Dropdown: Selección de Sucursal
+                      DropdownButtonFormField<Branch>(
+                        value: _selectedBranch,
                         decoration: const InputDecoration(
-                          labelText: 'ID de Sucursal',
-                          hintText: '1',
-                          prefixIcon: Icon(Icons.location_on),
+                          labelText: 'Seleccionar Sucursal',
+                          prefixIcon: Icon(Icons.business),
                           border: OutlineInputBorder(),
                         ),
+                        items: _branches.map((branch) {
+                          return DropdownMenuItem<Branch>(
+                            value: branch,
+                            child: Text(branch.name),
+                          );
+                        }).toList(),
+                        onChanged: _onBranchSelected,
                         validator: (v) {
-                          if (v == null || v.isEmpty) {
-                            return 'Ingresa el ID de Sucursal';
-                          }
-                          final parsedValue = int.tryParse(v);
-                          if (parsedValue == null) {
-                            return 'Debe ser un número';
-                          }
-                          if (parsedValue <= 0) {
-                            return 'Debe ser mayor a 0';
+                          if (v == null) {
+                            return 'Selecciona una sucursal';
                           }
                           return null;
                         },
                       ),
                       const SizedBox(height: AppDimensions.paddingM),
-                      // Campo: Número de Sucursal
+                      // Campo: Sucursal ID (readonly, populated by dropdown)
+                      TextFormField(
+                        controller: branchIdController,
+                        readOnly: true,
+                        decoration: const InputDecoration(
+                          labelText: 'ID de Sucursal',
+                          prefixIcon: Icon(Icons.location_on),
+                          border: OutlineInputBorder(),
+                          filled: true,
+                          fillColor: Color(0xFFF5F5F5),
+                        ),
+                        validator: (v) {
+                          if (v == null || v.isEmpty) {
+                            return 'Selecciona una sucursal';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: AppDimensions.paddingM),
                       TextFormField(
                         controller: branchNumberController,
                         decoration: const InputDecoration(
@@ -200,6 +241,8 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                           hintText: 'Sucursal Centro',
                           prefixIcon: Icon(Icons.tag),
                           border: OutlineInputBorder(),
+                          filled: true,
+                          fillColor: Color(0xFFF5F5F5),
                         ),
                         inputFormatters: [
                           LengthLimitingTextInputFormatter(4),

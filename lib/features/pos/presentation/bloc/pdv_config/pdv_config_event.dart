@@ -9,6 +9,8 @@ abstract class PdvConfigEvent extends Equatable {
 
 class FetchPdvConfigEvent extends PdvConfigEvent {}
 
+class FetchBranchesEvent extends PdvConfigEvent {}
+
 class SavePdvConfigEvent extends PdvConfigEvent {
   final PdvConfig config;
   
@@ -16,4 +18,13 @@ class SavePdvConfigEvent extends PdvConfigEvent {
   
   @override
   List<Object?> get props => [config];
+}
+
+class UpdateOfflineModeEvent extends PdvConfigEvent {
+  final bool offlineMode;
+  
+  const UpdateOfflineModeEvent(this.offlineMode);
+  
+  @override
+  List<Object?> get props => [offlineMode];
 }

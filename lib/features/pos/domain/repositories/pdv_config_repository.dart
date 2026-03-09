@@ -4,4 +4,6 @@ abstract class PdvConfigRepository {
   Future<PdvConfig> fetchPdvConfig();
   Future<PdvConfig?> getLocalPdvConfig();
   Future<void> savePdvConfig(PdvConfig config);
+  Future<void> updateOfflineMode(PdvConfig config);
+  Future<List<Branch>> fetchBranches();
 }

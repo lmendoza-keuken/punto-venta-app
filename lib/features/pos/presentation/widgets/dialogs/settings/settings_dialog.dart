@@ -6,6 +6,7 @@ import 'package:punto_venta_app/injection_container.dart' as di;
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/printer_settings_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/price_list_selector_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/ticket_settings_dialog.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/app_mode_settings_dialog.dart';
 
 class SettingsDialog extends StatefulWidget {
   const SettingsDialog({super.key});
@@ -90,8 +91,11 @@ class _SettingsDialogState extends State<SettingsDialog> {
                     backgroundColor: Colors.blueAccent.withOpacity(0.1),
                     title: 'Configurar Modo de la App',
                     subtitle: 'Configurar Modo En linea / Modo Offline',
-                    onTap: () {},
-                    enabled: false,
+                    onTap: () {
+                      final navigatorContext = Navigator.of(context).context;
+                      Navigator.of(context).pop();
+                      showAppModeSettingsDialog(navigatorContext);
+                    },
                   ),
                 ],
               ),

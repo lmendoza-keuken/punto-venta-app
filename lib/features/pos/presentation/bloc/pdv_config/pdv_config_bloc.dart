@@ -1,4 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/pdv_config.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/fetch_branches_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_pdv_config_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/pdv_config_repository.dart';
 import 'pdv_config_event.dart';
@@ -6,14 +8,18 @@ import 'pdv_config_state.dart';
 
 class PdvConfigBloc extends Bloc<PdvConfigEvent, PdvConfigState> {
   final FetchPdvConfigUsecase fetchPdvConfigUsecase;
+  final FetchBranchesUsecase fetchBranchesUsecase;
   final PdvConfigRepository repository;
 
   PdvConfigBloc({
     required this.fetchPdvConfigUsecase,
+    required this.fetchBranchesUsecase,
     required this.repository,
   }) : super(PdvConfigInitial()) {
     on<FetchPdvConfigEvent>(_onFetchPdvConfig);
+    on<FetchBranchesEvent>(_onFetchBranches);
     on<SavePdvConfigEvent>(_onSavePdvConfig);
+    on<UpdateOfflineModeEvent>(_onUpdateOfflineMode);
   }
 
   Future<void> _onFetchPdvConfig(
@@ -21,9 +27,21 @@ class PdvConfigBloc extends Bloc<PdvConfigEvent, PdvConfigState> {
     emit(PdvConfigLoading());
     try {
       final config = await fetchPdvConfigUsecase();
-      emit(PdvConfigLoaded(config));
+      final branches = await fetchBranchesUsecase();
+      emit(PdvConfigLoaded(config, branches: branches));
     } catch (e) {
       emit(PdvConfigError(e.toString()));
+    }
+  }
+
+  Future<void> _onFetchBranches(
+      FetchBranchesEvent event, Emitter<PdvConfigState> emit) async {
+    emit(BranchesLoading());
+    try {
+      final branches = await fetchBranchesUsecase();
+      emit(BranchesLoaded(branches));
+    } catch (e) {
+      emit(PdvConfigError('Error al obtener sucursales: $e'));
     }
   }
 
@@ -34,6 +52,22 @@ class PdvConfigBloc extends Bloc<PdvConfigEvent, PdvConfigState> {
       emit(PdvConfigSaved(event.config));
     } catch (e) {
       emit(PdvConfigError('Error al guardar configuración: $e'));
+    }
+  }
+
+  Future<void> _onUpdateOfflineMode(
+      UpdateOfflineModeEvent event, Emitter<PdvConfigState> emit) async {
+    emit(PdvConfigLoading());
+    try {
+      final updatedConfig = PdvConfig(
+        offlineMode: event.offlineMode,
+      );
+
+      await repository.updateOfflineMode(updatedConfig);
+
+      emit(OfflineModeUpdated(event.offlineMode));
+    } catch (e) {
+      emit(PdvConfigError('Error al actualizar modo offline: $e'));
     }
   }
 }
