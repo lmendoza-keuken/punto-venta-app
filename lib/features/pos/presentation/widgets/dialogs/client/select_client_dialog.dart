@@ -6,6 +6,7 @@ import '../../../../../../core/constants/app_dimensions.dart';
 import '../../../bloc/clients/clients_bloc.dart';
 import '../../../bloc/clients/clients_event.dart';
 import '../../../bloc/clients/clients_state.dart';
+import '../../../utils/client_selection_helper.dart';
 
 class SelectClientDialog extends StatefulWidget {
   const SelectClientDialog({super.key});
@@ -163,10 +164,9 @@ class _SelectClientDialogState extends State<SelectClientDialog> {
                             icon:
                                 const Icon(Icons.clear, color: AppColors.error),
                             tooltip: 'Deseleccionar cliente',
-                            onPressed: () {
-                              context.read<ClientsBloc>().add(
-                                    const SelectClientEvent(null),
-                                  );
+                            onPressed: () async {
+                              await ClientSelectionHelper
+                                  .selectClientAndUpdatePrices(context, null);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text(

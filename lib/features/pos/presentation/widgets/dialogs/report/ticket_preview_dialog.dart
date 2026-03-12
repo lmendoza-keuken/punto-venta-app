@@ -3,11 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
+import 'package:punto_venta_app/core/constants/ticket_types.dart';
 import 'package:punto_venta_app/core/utils/extensions.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/pdv_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
-import 'package:punto_venta_app/features/pos/data/models/ticket_models/ticket_response_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_bloc.dart';
@@ -150,7 +150,7 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
       child: Dialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppDimensions.borderRadiusL),
-          side: widget.ticket.typeCode == 'NC'
+          side: TicketType.isNotaCredito(widget.ticket.typeCode)
               ? const BorderSide(color: Colors.red, width: 2)
               : BorderSide.none,
         ),
@@ -162,7 +162,7 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
               Container(
                 padding: const EdgeInsets.all(AppDimensions.paddingM),
                 decoration: BoxDecoration(
-                  color: widget.ticket.typeCode == 'NC' ? Colors.red.shade50 : null,
+                  color: TicketType.isNotaCredito(widget.ticket.typeCode) ? Colors.red.shade50 : null,
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(AppDimensions.borderRadiusL),
                     topRight: Radius.circular(AppDimensions.borderRadiusL),
@@ -171,11 +171,11 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                 child: Row(
                   children: [
                     Icon(
-                      widget.ticket.typeCode == 'NC' ? Icons.receipt_long : Icons.receipt, 
-                      color: widget.ticket.typeCode == 'NC' ? Colors.red.shade700 : AppColors.primary,
+                      TicketType.isNotaCredito(widget.ticket.typeCode) ? Icons.receipt_long : Icons.receipt, 
+                      color: TicketType.isNotaCredito(widget.ticket.typeCode) ? Colors.red.shade700 : AppColors.primary,
                     ),
                     const SizedBox(width: AppDimensions.paddingS),
-                    if (widget.ticket.typeCode == 'NC')
+                    if (TicketType.isNotaCredito(widget.ticket.typeCode))
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
@@ -194,14 +194,14 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                           ),
                         ),
                       ),
-                    if (widget.ticket.typeCode == 'NC')
+                    if (TicketType.isNotaCredito(widget.ticket.typeCode))
                       const SizedBox(width: AppDimensions.paddingS),
                     Expanded(
                       child: Text(
                         'Ticket - ${widget.ticket.id}',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: widget.ticket.typeCode == 'NC' ? Colors.grey.shade900 : null,
+                              color: TicketType.isNotaCredito(widget.ticket.typeCode) ? Colors.grey.shade900 : null,
                             ),
                       ),
                     ),
@@ -230,7 +230,7 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                 child: BlocBuilder<PrinterBloc, PrinterState>(
                   builder: (context, state) {
                     final isLoading = state is PrinterPrinting;
-                    final isCreditNote = widget.ticket.typeCode == 'NC';
+                    final isCreditNote = TicketType.isNotaCredito(widget.ticket.typeCode);
 
                     return Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,

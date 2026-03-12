@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/add_client_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/delete_client_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_clients_usecase.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/price_list_local_datasource.dart';
 import 'clients_event.dart';
 import 'clients_state.dart';
 
@@ -9,11 +10,13 @@ class ClientsBloc extends Bloc<ClientsEvent, ClientsState> {
   final GetClientsUsecase getClients;
   final AddClientUsecase addClient;
   final DeleteClientUsecase deleteClient;
+  final PriceListLocalDataSource priceListLocalDataSource;
 
   ClientsBloc({
     required this.getClients,
     required this.addClient,
     required this.deleteClient,
+    required this.priceListLocalDataSource,
   }) : super(ClientsInitial()) {
     on<LoadClients>(_onLoadClients);
     on<AddClientEvent>(_onAddClient);
@@ -80,5 +83,23 @@ class ClientsBloc extends Bloc<ClientsEvent, ClientsState> {
     } else {
       emit(ClientsLoaded(clients: [], selectedClient: event.client));
     }
+  }
+
+  int? getSelectedClientListId() {
+    final current = state;
+    if (current is ClientsLoaded && current.selectedClient != null) {
+      return current.selectedClient!.listId;
+    }
+    return null;
+  }
+
+  Future<int> getPriceListToUse() async {
+    final clientListId = getSelectedClientListId();
+    if (clientListId != null && clientListId > 0) {
+      return clientListId;
+    }
+
+    final defaultListId = await priceListLocalDataSource.getCurrentPriceList();
+    return defaultListId > 0 ? defaultListId : 1;
   }
 }

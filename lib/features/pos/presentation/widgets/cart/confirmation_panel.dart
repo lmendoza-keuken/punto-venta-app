@@ -3,6 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/pdv_local_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/branch_local_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/vat_category_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_state.dart';
@@ -20,6 +23,7 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_s
 import 'package:punto_venta_app/features/pos/presentation/widgets/cart/cash_payment_widget.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/cart/payment_option_widget.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/common/error_dialog.dart';
+import 'package:punto_venta_app/features/pos/presentation/utils/iibb_calculator.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 class ConfirmationPanel extends StatefulWidget {
@@ -37,58 +41,136 @@ class ConfirmationPanel extends StatefulWidget {
 class _ConfirmationPanelState extends State<ConfirmationPanel> {
   double? _receivedAmount;
   double? _change;
+  double _iibbAmount = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _calculateIibbForUI();
+  }
+
+  Future<void> _calculateIibbForUI() async {
+    try {
+      final clientsState = context.read<ClientsBloc>().state;
+      final selectedClient =
+          clientsState is ClientsLoaded ? clientsState.selectedClient : null;
+
+      if (selectedClient == null) {
+        setState(() {
+          _iibbAmount = 0.0;
+        });
+        return;
+      }
+
+      final cartState = context.read<CartBloc>().state;
+      if (cartState is! CartLoaded) {
+        setState(() {
+          _iibbAmount = 0.0;
+        });
+        return;
+      }
+
+      // Obtener configuración del PDV (branch)
+      final pdvConfig = await di.sl<PdvLocalDataSource>().getPdvConfig();
+      final branchId = pdvConfig?.branchId;
+      
+      if (branchId == null) {
+        setState(() {
+          _iibbAmount = 0.0;
+        });
+        return;
+      }
+
+      // Obtener branch
+      final branch = await di.sl<BranchLocalDataSource>().getBranchById(branchId);
+
+      // Obtener VAT category
+      final vatCategoryId = selectedClient.vatCategoryId;
+      final vatCategoryDataSource = di.sl<VatCategoryLocalDataSource>();
+      final allVatCategories = await vatCategoryDataSource.getCachedVatCategories();
+      final vatCategory = allVatCategories
+          ?.where((cat) => cat.id == vatCategoryId)
+          .firstOrNull;
+
+      // Calcular IIBB
+      final iibb = IibbCalculator.calculateIibb(
+        client: selectedClient,
+        branch: branch,
+        vatCategory: vatCategory,
+        subtotal: cartState.subtotal,
+        totalWithVat: cartState.subtotal + cartState.totalIva,
+      );
+
+      setState(() {
+        _iibbAmount = iibb;
+      });
+    } catch (e) {
+      setState(() {
+        _iibbAmount = 0.0;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<CheckoutBloc, CheckoutState>(
-      listener: (context, checkoutState) async {
-        if (checkoutState is CheckoutSuccess) {
-          // Imprimir el ticket si el estado es success
-          final printerConfig =
-              await di.sl<PrinterLocalDataSource>().getPrinterConfig();
-          final printerBloc = di.sl<PrinterBloc>();
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<ClientsBloc, ClientsState>(
+          listener: (context, clientsState) {
+            // Recalcular IIBB cuando cambia el cliente
+            _calculateIibbForUI();
+          },
+        ),
+        BlocListener<CheckoutBloc, CheckoutState>(
+          listener: (context, checkoutState) async {
+            if (checkoutState is CheckoutSuccess) {
+              final printerConfig =
+                  await di.sl<PrinterLocalDataSource>().getPrinterConfig();
+              final printerBloc = di.sl<PrinterBloc>();
 
-          printerBloc.add(PrintTicket(
-            printJob: checkoutState.printJob,
-            config: printerConfig,
-          ));
+              printerBloc.add(PrintTicket(
+                printJob: checkoutState.printJob,
+                config: printerConfig,
+              ));
 
-          await printerBloc.stream.firstWhere(
-            (state) => state is PrinterSuccess || state is PrinterError,
-          );
+              await printerBloc.stream.firstWhere(
+                (state) => state is PrinterSuccess || state is PrinterError,
+              );
 
-          // Limpiar el carrito y cerrar el panel de confirmación
-          if (mounted) {
-            context.read<CartBloc>().add(ClearCart());
-            context.read<CheckoutBloc>().add(const ResetCheckout());
-            widget.onClose();
+              // Limpiar el carrito y cerrar el panel de confirmación
+              if (mounted) {
+                context.read<CartBloc>().add(ClearCart());
+                context.read<CheckoutBloc>().add(const ResetCheckout());
+                widget.onClose();
 
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Venta procesada exitosamente'),
-                backgroundColor: AppColors.success,
-              ),
-            );
-          }
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Venta procesada exitosamente'),
+                    backgroundColor: AppColors.success,
+                  ),
+                );
+              }
 
-          printerBloc.close();
-        } else if (checkoutState is CheckoutError) {
-          if (mounted) {
-            showDialog(
-              context: context,
-              barrierDismissible: false,
-              builder: (BuildContext dialogContext) {
-                return ErrorDialog(
-                  message: checkoutState.message,
-                  onAccept: () {
-                    context.read<CheckoutBloc>().add(const ResetCheckout());
+              printerBloc.close();
+            } else if (checkoutState is CheckoutError) {
+              if (mounted) {
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (BuildContext dialogContext) {
+                    return ErrorDialog(
+                      message: checkoutState.message,
+                      onAccept: () {
+                        context.read<CheckoutBloc>().add(const ResetCheckout());
+                      },
+                    );
                   },
                 );
-              },
-            );
-          }
-        }
-      },
+              }
+            }
+          },
+        ),
+      ],
       child: BlocBuilder<CartBloc, CartState>(
         builder: (context, state) {
           if (state is! CartLoaded) {
@@ -276,9 +358,88 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                           const Divider(height: 1),
                           const SizedBox(height: 24),
 
+                          // Mostrar desglose de IIBB si aplica
+                          if (_iibbAmount > 0) ...[
+                            Container(
+                              padding: const EdgeInsets.all(AppDimensions.paddingM),
+                              decoration: BoxDecoration(
+                                color: AppColors.info.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: AppColors.info.withOpacity(0.3),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text(
+                                        'Subtotal:',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      Text(
+                                        '\$ ${state.subtotal.toStringAsFixed(2)}',
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text(
+                                        'IVA:',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      Text(
+                                        '\$ ${state.totalIva.toStringAsFixed(2)}',
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text(
+                                        'IIBB:',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.info,
+                                        ),
+                                      ),
+                                      Text(
+                                        '\$ ${_iibbAmount.toStringAsFixed(2)}',
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.info,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+
                           CashPaymentWidget(
-                            key: ValueKey(state.subtotal + state.totalIva),
-                            totalAmount: state.subtotal + state.totalIva,
+                            key: ValueKey(state.subtotal + state.totalIva + _iibbAmount),
+                            totalAmount: state.subtotal + state.totalIva + _iibbAmount,
                             onAmountChanged: (amount) {
                               setState(() {
                                 _receivedAmount = amount;
@@ -429,6 +590,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
             // total y totalIva
             total: cartState.total,
             totalIva: cartState.totalIva,
+            subtotal: cartState.subtotal,
             client: selectedClient,
             paymentMethod: selectedPaymentMethod,
             receivedAmount: _receivedAmount,

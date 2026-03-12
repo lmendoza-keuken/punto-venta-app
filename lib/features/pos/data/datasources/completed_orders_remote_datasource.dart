@@ -1,14 +1,16 @@
 import 'package:dio/dio.dart';
 import 'package:punto_venta_app/core/config/api_config.dart';
+import 'package:punto_venta_app/core/constants/ticket_types.dart';
 import 'package:punto_venta_app/core/network/dio_client.dart';
 import 'package:punto_venta_app/features/pos/data/models/invoice_payload_model.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 abstract class CompletedOrdersRemoteDataSource {
-  Future<List<InvoicePayload>> getAllTickets({int skip = 0, int limit = 10, bool? onlySales});
-  Future<List<InvoicePayload>> getTicketsByDateRange(
-      DateTime startDate, {DateTime? endDate, int skip = 0, int limit = 10, bool? onlySales});
+  Future<List<InvoicePayload>> getAllTickets(
+      {int skip = 0, int limit = 10, bool? onlySales});
+  Future<List<InvoicePayload>> getTicketsByDateRange(DateTime startDate,
+      {DateTime? endDate, int skip = 0, int limit = 10, bool? onlySales});
   Future<InvoicePayload?> getTicketById(String ticketId);
   Future<InvoicePayload?> convertToCreditNote(String ticketId);
 }
@@ -24,7 +26,8 @@ class CompletedOrdersRemoteDataSourceImpl
   }) : _dio = dio ?? DioClient.instance;
 
   @override
-  Future<List<InvoicePayload>> getAllTickets({int skip = 0, int limit = 10, bool? onlySales}) async {
+  Future<List<InvoicePayload>> getAllTickets(
+      {int skip = 0, int limit = 10, bool? onlySales}) async {
     final url = ApiConfig.invoiceUrl;
 
     if (url.isEmpty || ApiConfig.invoiceUrl.isEmpty) {
@@ -63,10 +66,12 @@ class CompletedOrdersRemoteDataSourceImpl
 
       if (response.statusCode == 200) {
         final data = response.data as List;
-        return data
+        final tickets = data
             .map(
                 (json) => InvoicePayload.fromJson(json as Map<String, dynamic>))
             .toList();
+
+        return tickets;
       } else {
         throw DioException(
           requestOptions: response.requestOptions,
@@ -96,8 +101,11 @@ class CompletedOrdersRemoteDataSourceImpl
   }
 
   @override
-  Future<List<InvoicePayload>> getTicketsByDateRange(
-      DateTime startDate, {DateTime? endDate, int skip = 0, int limit = 10, bool? onlySales}) async {
+  Future<List<InvoicePayload>> getTicketsByDateRange(DateTime startDate,
+      {DateTime? endDate,
+      int skip = 0,
+      int limit = 10,
+      bool? onlySales}) async {
     final url = ApiConfig.invoiceUrl;
 
     if (url.isEmpty || ApiConfig.invoiceUrl.isEmpty) {
@@ -140,10 +148,12 @@ class CompletedOrdersRemoteDataSourceImpl
 
       if (response.statusCode == 200) {
         final data = response.data as List;
-        return data
+        final tickets = data
             .map(
                 (json) => InvoicePayload.fromJson(json as Map<String, dynamic>))
             .toList();
+
+        return tickets;
       } else {
         throw DioException(
           requestOptions: response.requestOptions,
@@ -238,7 +248,8 @@ class CompletedOrdersRemoteDataSourceImpl
     final url = '${ApiConfig.invoiceUrl}$ticketId/nota-credito';
 
     if (url.isEmpty || ApiConfig.invoiceUrl.isEmpty) {
-      print('⚠️ [CREDIT NOTE] URL vacía, no se puede convertir a nota de crédito');
+      print(
+          '⚠️ [CREDIT NOTE] URL vacía, no se puede convertir a nota de crédito');
       return null;
     }
 
@@ -262,14 +273,17 @@ class CompletedOrdersRemoteDataSourceImpl
         ),
       );
 
-      if (response.statusCode == 200) {
-        print('✅ [CREDIT NOTE] Nota de crédito generada correctamente para el ticket $ticketId');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print(
+            '✅ [CREDIT NOTE] Nota de crédito generada correctamente para el ticket $ticketId');
+        print('✅ [CREDIT NOTE] Response: ${response.data}');
         return InvoicePayload.fromJson(response.data as Map<String, dynamic>);
       } else {
         throw DioException(
           requestOptions: response.requestOptions,
           response: response,
-          message: 'Credit Note API error: ${response.statusCode} ${response.data}',
+          message:
+              'Credit Note API error: ${response.statusCode} ${response.data}',
         );
       }
     } on DioException catch (e) {
@@ -286,7 +300,8 @@ class CompletedOrdersRemoteDataSourceImpl
         throw Exception(
             'Error al convertir a nota de crédito: ${e.response?.statusCode} - ${e.response?.data}');
       } else {
-        throw Exception('Error de conexión al convertir a nota de crédito: ${e.message}');
+        throw Exception(
+            'Error de conexión al convertir a nota de crédito: ${e.message}');
       }
     } catch (e) {
       throw Exception('Error inesperado al convertir a nota de crédito: $e');

@@ -16,6 +16,7 @@ class ProcessSale extends CheckoutEvent {
   final List<CartLogEntry> logItems;
   final double total;
   final double totalIva;
+  final double subtotal;
   final Client? client;
   final PaymentMethod? paymentMethod;
   final double? receivedAmount;
@@ -26,6 +27,7 @@ class ProcessSale extends CheckoutEvent {
     required this.logItems,
     required this.total,
     required this.totalIva,
+    required this.subtotal,
     this.client,
     this.paymentMethod,
     this.receivedAmount,
@@ -38,6 +40,7 @@ class ProcessSale extends CheckoutEvent {
         logItems,
         total,
         totalIva,
+        subtotal,
         client,
         paymentMethod,
         receivedAmount,

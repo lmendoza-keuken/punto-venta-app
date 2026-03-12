@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
+import 'package:punto_venta_app/core/constants/ticket_types.dart';
 import 'package:punto_venta_app/core/utils/extensions.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_bloc.dart';
@@ -227,7 +228,9 @@ class _ReportsPageState extends State<ReportsPage>
                 onSelected: (selected) {
                   if (selected) {
                     setState(() => _ticketFilter = 'all');
-                    context.read<ReportsBloc>().add(const LoadAllReports(onlySales: false));
+                    context
+                        .read<ReportsBloc>()
+                        .add(const LoadAllReports(onlySales: false));
                   }
                 },
               ),
@@ -238,7 +241,9 @@ class _ReportsPageState extends State<ReportsPage>
                 onSelected: (selected) {
                   if (selected) {
                     setState(() => _ticketFilter = 'invoices');
-                    context.read<ReportsBloc>().add(const LoadAllReports(onlySales: true));
+                    context
+                        .read<ReportsBloc>()
+                        .add(const LoadAllReports(onlySales: true));
                   }
                 },
               ),
@@ -249,7 +254,9 @@ class _ReportsPageState extends State<ReportsPage>
                 onSelected: (selected) {
                   if (selected) {
                     setState(() => _ticketFilter = 'credit_notes');
-                    context.read<ReportsBloc>().add(const LoadAllReports(onlySales: false));
+                    context
+                        .read<ReportsBloc>()
+                        .add(const LoadAllReports(onlySales: false));
                   }
                 },
               ),
@@ -297,13 +304,20 @@ class _ReportsPageState extends State<ReportsPage>
                             .toLowerCase()
                             .contains(_searchController.text.toLowerCase()))
                         .toList();
-                
-                if (_ticketFilter == 'credit_notes') {
+
+                if (_ticketFilter == 'invoices') {
                   filteredTickets = filteredTickets
-                      .where((ticket) => ticket.typeCode == 'NC')
+                      .where((ticket) =>
+                          TicketType.isFactura(ticket.typeCode) ||
+                          ticket.typeCode == null)
+                      .toList();
+                } else if (_ticketFilter == 'credit_notes') {
+                  filteredTickets = filteredTickets
+                      .where(
+                          (ticket) => TicketType.isNotaCredito(ticket.typeCode))
                       .toList();
                 }
-                
+
                 return _buildOrdersList(filteredTickets, showDate: true);
               } else if (state is ReportsError) {
                 return _buildErrorWidget(state.message);
@@ -356,8 +370,8 @@ class _ReportsPageState extends State<ReportsPage>
             }
 
             final ticket = tickets[index];
-            final isCreditNote = ticket.typeCode == 'NC';
-            
+            final isCreditNote = TicketType.isNotaCredito(ticket.typeCode);
+
             // card del ticket
             return GestureDetector(
               onTap: () => _showTicketPreview(ticket),
@@ -367,7 +381,8 @@ class _ReportsPageState extends State<ReportsPage>
                 child: ListTile(
                   leading: Icon(
                     isCreditNote ? Icons.receipt_long : Icons.receipt,
-                    color: isCreditNote ? Colors.red.shade700 : AppColors.primary,
+                    color:
+                        isCreditNote ? Colors.red.shade700 : AppColors.primary,
                     size: 32,
                   ),
                   title: Row(
@@ -383,7 +398,7 @@ class _ReportsPageState extends State<ReportsPage>
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: const Text(
-                            'NC',
+                            'N.C',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 10,
@@ -412,15 +427,21 @@ class _ReportsPageState extends State<ReportsPage>
                       if (ticket.clientName != null)
                         Text(
                           'Cliente: ${ticket.clientName}',
-                          style: isCreditNote ? TextStyle(color: Colors.grey.shade900) : null,
+                          style: isCreditNote
+                              ? TextStyle(color: Colors.grey.shade900)
+                              : null,
                         ),
                       Text(
                         '${ticket.items.length} artículos',
-                        style: isCreditNote ? TextStyle(color: Colors.grey.shade900) : null,
+                        style: isCreditNote
+                            ? TextStyle(color: Colors.grey.shade900)
+                            : null,
                       ),
                       Text(
                         'Pago: ${ticket.paymentMethod?.shortDescription.toLowerCase()}',
-                        style: isCreditNote ? TextStyle(color: Colors.grey.shade900) : null,
+                        style: isCreditNote
+                            ? TextStyle(color: Colors.grey.shade900)
+                            : null,
                       ),
                     ],
                   ),
@@ -432,7 +453,9 @@ class _ReportsPageState extends State<ReportsPage>
                         style:
                             Theme.of(context).textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: isCreditNote ? Colors.red.shade700 : AppColors.primary,
+                                  color: isCreditNote
+                                      ? Colors.red.shade700
+                                      : AppColors.primary,
                                 ),
                       ),
                     ],
@@ -474,7 +497,9 @@ class _ReportsPageState extends State<ReportsPage>
                 }
               } else {
                 final onlySales = _ticketFilter == 'invoices' ? true : false;
-                context.read<ReportsBloc>().add(LoadAllReports(onlySales: onlySales));
+                context
+                    .read<ReportsBloc>()
+                    .add(LoadAllReports(onlySales: onlySales));
               }
             },
             child: const Text('Reintentar'),

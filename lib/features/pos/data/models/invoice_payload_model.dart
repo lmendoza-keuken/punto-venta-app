@@ -34,6 +34,14 @@ class InvoicePayload {
     this.typeCode,
   });
 
+  static Map<String, dynamic> _serializeTax(TaxModel t) {
+    return {
+      'id': t.id,
+      'percentage': t.percentage,
+      'amount': t.amount,
+    };
+  }
+
   Map<String, dynamic> toJson() => {
         if (ticketId != null) 'ticketId': ticketId,
         'timestamp': timestamp,
@@ -42,8 +50,9 @@ class InvoicePayload {
         'paymentMethod': paymentMethod,
         'total': total,
         'branch_number': branchNumber,
-        'branch_id': branchId, 
-        'totalTax': totalTax.map((t) => t.toJson()).toList(),
+        'branch_id': branchId,
+        'totalTax':
+            totalTax.map((t) => InvoicePayload._serializeTax(t)).toList(),
         'items': logItems,
       };
 
@@ -69,9 +78,30 @@ class InvoicePayload {
   }
 
   factory InvoicePayload.fromPrintJob(PrintJob job, List<TaxModel> taxes) {
+    if (taxes.isEmpty) {
+      print(
+          '[INVOICE_PAYLOAD] Lista de taxes está vacía. Los IDs de impuestos pueden ser incorrectos.');
+    }
+
+    // Helper para obtener el ID correcto del tax según el porcentaje
+    int getTaxIdByPercentage(double percentage) {
+      if (percentage == 0) return 0;
+      if (percentage == 21) return 1;
+      if (percentage == 10.5) return 2;
+      if (percentage == 27) return 3;
+      return 0; 
+    }
+
     Map<String, dynamic>? serializeClient(Client? c) {
       if (c == null) return null;
-      return c.toJson();
+      return {
+        'id': c.id,
+        'name': c.name,
+        'document': c.document,
+        'phone': c.phone,
+        'email': c.email,
+        'address': c.address,
+      };
     }
 
     final Map<double, double> totalsByPercentage = {};
@@ -85,7 +115,6 @@ class InvoicePayload {
 
         final unitPrice = itemModel.product.price ?? 0.0;
         final quantity = itemModel.quantity;
-        //
         final weightKg = itemLog.item.weightKg;
         final isWeighted = (itemLog.item.isWeighted == true);
 
@@ -100,8 +129,9 @@ class InvoicePayload {
         try {
           matchedTax = taxes.firstWhere((t) => t.percentage == taxPercentage);
         } catch (e) {
+          final taxId = getTaxIdByPercentage(taxPercentage);
           matchedTax = TaxModel(
-            id: 0,
+            id: taxId,
             percentage: taxPercentage,
             description: 'IVA $taxPercentage%',
           );
@@ -130,7 +160,8 @@ class InvoicePayload {
           'discount': 0,
           'unitPrice': unitPrice,
           'priceListId': job.priceListId,
-          'taxes': itemTaxes.map((t) => t.toJson()).toList(),
+          'taxes':
+              itemTaxes.map((t) => InvoicePayload._serializeTax(t)).toList(),
           'is_weighted': isWeighted ? "S" : "N",
           'net_weight': isWeighted ? itemModel.product.netWeight : null,
           'weight': isWeighted ? weightKg ?? 0.0 : null,
@@ -147,7 +178,9 @@ class InvoicePayload {
       try {
         matchedTax = taxes.firstWhere((t) => t.percentage == percentage);
       } catch (e) {
-        matchedTax = TaxModel(id: 0, percentage: percentage, description: 'IVA $percentage%');
+        final taxId = getTaxIdByPercentage(percentage);
+        matchedTax = TaxModel(
+            id: taxId, percentage: percentage, description: 'IVA $percentage%');
       }
       return TaxModel(
         id: matchedTax.id,
@@ -155,6 +188,26 @@ class InvoicePayload {
         amount: double.parse(amount.toStringAsFixed(2)),
       );
     }).toList();
+
+    // Agregar IIBB si existe
+    if (job.iibbTax > 0) {
+      TaxModel? iibbTaxModel;
+      try {
+        iibbTaxModel = taxes.firstWhere((t) => t.id == 4);
+      } catch (e) {
+        iibbTaxModel = const TaxModel(
+          id: 4,
+          description: 'IIBB',
+          percentage: null,
+        );
+      }
+
+      totalTax.add(TaxModel(
+        id: iibbTaxModel.id,
+        percentage: job.iibbTaxPercentage,
+        amount: double.parse(job.iibbTax.toStringAsFixed(2)),
+      ));
+    }
 
     return InvoicePayload(
       ticketId: job.ticketId,

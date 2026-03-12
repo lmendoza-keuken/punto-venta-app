@@ -10,6 +10,8 @@ class PrintJob {
   final List<CartLogEntry> logItems;
   final double total;
   final double totalTax;
+  final double iibbTax;
+  final double? iibbTaxPercentage;
   final String? clientName;
   final Client? client;
   final int? priceListId;
@@ -30,6 +32,8 @@ class PrintJob {
     required this.logItems,
     required this.total,
     required this.totalTax,
+    this.iibbTax = 0.0,
+    this.iibbTaxPercentage,
     this.client,
     this.clientName,
     this.priceListId,

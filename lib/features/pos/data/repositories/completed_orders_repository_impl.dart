@@ -3,7 +3,7 @@ import 'package:punto_venta_app/features/pos/data/datasources/completed_orders_r
 import 'package:punto_venta_app/features/pos/data/models/completed_order_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/invoice_payload_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/product_model.dart';
-import 'package:punto_venta_app/features/pos/data/models/ticket_models/ticket_response_model.dart';
+import 'package:punto_venta_app/core/constants/ticket_types.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_item.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
@@ -92,12 +92,14 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
     }
 
     try {
-      final invoicePayloads =
-          await remoteDataSource!.getAllTickets(skip: skip, limit: limit, onlySales: onlySales);
+      final invoicePayloads = await remoteDataSource!
+          .getAllTickets(skip: skip, limit: limit, onlySales: onlySales);
 
-      return invoicePayloads
+      final orders = invoicePayloads
           .map((payload) => _convertInvoicePayloadToCompletedOrder(payload))
           .toList();
+
+      return orders;
     } catch (e) {
       throw Exception('Error al obtener órdenes desde el servidor: $e');
     }

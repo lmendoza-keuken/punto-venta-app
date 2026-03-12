@@ -13,15 +13,13 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_bloc.da
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_bloc.dart';
-import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_event.dart';
+import 'package:punto_venta_app/features/pos/presentation/utils/client_selection_helper.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/client/add_client_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/client/select_client_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/order/load_saved_orders_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/order/save_order_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/settings_dialog.dart';
 
-/// Sidebar navigation component inspired by modern POS designs
-/// Provides quick access to main app sections
 class AppSidebar extends StatefulWidget {
   final String currentRoute;
   final bool isAdmin;
@@ -160,7 +158,7 @@ class _AppSidebarState extends State<AppSidebar> {
                       isDark: isDark,
                       sidebarSurface: sidebarSurface,
                       child: SidebarItem(
-                        isDisabled: true, // Deshabilitado temporalmente
+                        // isDisabled: true, // Deshabilitado temporalmente
                         icon: Icons.person_search_outlined,
                         isHighlighted: _isSelectClientDialogOpen,
                         tooltip: 'Seleccionar Cliente',
@@ -444,7 +442,7 @@ class _AppSidebarState extends State<AppSidebar> {
       ),
     );
     if (result != null && mounted) {
-      context.read<ClientsBloc>().add(SelectClientEvent(result));
+      await ClientSelectionHelper.selectClientAndUpdatePrices(context, result);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Cliente ${result.name} seleccionado'),
@@ -467,7 +465,7 @@ class _AppSidebarState extends State<AppSidebar> {
       ),
     );
     if (added is Client && mounted) {
-      context.read<ClientsBloc>().add(SelectClientEvent(added));
+      await ClientSelectionHelper.selectClientAndUpdatePrices(context, added);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Cliente ${added.name} agregado y seleccionado'),

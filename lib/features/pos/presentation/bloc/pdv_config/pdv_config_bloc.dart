@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/pdv_config.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_branches_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_pdv_config_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/get_vat_categories_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/pdv_config_repository.dart';
 import 'pdv_config_event.dart';
 import 'pdv_config_state.dart';
@@ -9,13 +10,13 @@ import 'pdv_config_state.dart';
 class PdvConfigBloc extends Bloc<PdvConfigEvent, PdvConfigState> {
   final FetchPdvConfigUsecase fetchPdvConfigUsecase;
   final FetchBranchesUsecase fetchBranchesUsecase;
+  final GetVatCategoriesUsecase getVatCategoriesUsecase;
   final PdvConfigRepository repository;
-  
-  List<Branch> _cachedBranches = [];
 
   PdvConfigBloc({
     required this.fetchPdvConfigUsecase,
     required this.fetchBranchesUsecase,
+    required this.getVatCategoriesUsecase,
     required this.repository,
   }) : super(PdvConfigInitial()) {
     on<FetchPdvConfigEvent>(_onFetchPdvConfig);
@@ -30,7 +31,7 @@ class PdvConfigBloc extends Bloc<PdvConfigEvent, PdvConfigState> {
     try {
       final config = await fetchPdvConfigUsecase();
       final branches = await fetchBranchesUsecase();
-      _cachedBranches = branches; 
+      await getVatCategoriesUsecase();
       emit(PdvConfigLoaded(config, branches: branches));
     } catch (e) {
       emit(PdvConfigError(e.toString()));
@@ -53,7 +54,6 @@ class PdvConfigBloc extends Bloc<PdvConfigEvent, PdvConfigState> {
     try {
       await repository.savePdvConfig(event.config);
       emit(PdvConfigSaved(event.config));
-      emit(PdvConfigLoaded(event.config, branches: _cachedBranches));
     } catch (e) {
       emit(PdvConfigError('Error al guardar configuración: $e'));
     }

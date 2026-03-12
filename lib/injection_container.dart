@@ -16,6 +16,7 @@ import 'package:punto_venta_app/features/pos/data/datasources/tax_local_datasour
 import 'package:punto_venta_app/features/pos/data/datasources/tax_remote_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/vat_category_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/vat_category_remote_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/branch_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/completed_orders_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/completed_orders_remote_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/invoice_remote_datasource.dart';
@@ -178,17 +179,25 @@ Future<void> init() async {
       ));
   sl.registerFactory(() => ReportsBloc(getReportsUsecase: sl(), generateCreditNoteUsecase: sl()));
   sl.registerFactory(
-      () => ClientsBloc(getClients: sl(), addClient: sl(), deleteClient: sl()));
+      () => ClientsBloc(
+        getClients: sl(), 
+        addClient: sl(), 
+        deleteClient: sl(),
+        priceListLocalDataSource: sl(),
+      ));
   sl.registerFactory(() => PaymentMethodsBloc(fetchPaymentMethods: sl()));
   sl.registerLazySingleton(() => PdvConfigBloc(
         fetchPdvConfigUsecase: sl(),
         fetchBranchesUsecase: sl(),
+        getVatCategoriesUsecase: sl(),
         repository: sl(),
       ));
   sl.registerFactory(()=> CheckoutBloc(
         authLocalDataSource: sl(),
         pdvLocalDataSource: sl(),
         priceListLocalDataSource: sl(),
+        branchLocalDataSource: sl(),
+        vatCategoryLocalDataSource: sl(),
         completeOrderUsecase: sl(),
         getTicketConfigUsecase: sl(),
         sendInvoiceUseCase: sl(),
@@ -266,6 +275,7 @@ Future<void> init() async {
     () => PdvConfigRepositoryImpl(
       localDataSource: sl(),
       remoteDataSource: sl(),
+      branchLocalDataSource: sl(),
     ),
   );
 
@@ -333,6 +343,8 @@ Future<void> init() async {
       () => VatCategoryLocalDataSourceImpl(sharedPreferences: sl()));
   sl.registerLazySingleton<VatCategoryRemoteDataSource>(
       () => VatCategoryRemoteDataSourceImpl(dio: sl()));
+  sl.registerLazySingleton<BranchLocalDataSource>(
+      () => BranchLocalDataSourceImpl(sharedPreferences: sl()));
   sl.registerLazySingleton<InvoiceRemoteDataSource>(
     () => InvoiceRemoteDataSourceImpl(dio: sl(), taxRepository: sl()),
   );

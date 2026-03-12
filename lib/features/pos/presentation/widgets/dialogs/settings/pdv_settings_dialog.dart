@@ -4,6 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/pdv_config.dart';
+import 'package:punto_venta_app/features/pos/domain/repositories/pdv_config_repository.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/fetch_branches_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/fetch_pdv_config_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/get_vat_categories_usecase.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/pdv_config/pdv_config_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/pdv_config/pdv_config_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/pdv_config/pdv_config_state.dart';
@@ -11,15 +15,15 @@ import 'package:punto_venta_app/injection_container.dart' as di;
 
 Future<({int pdvId, int sucursalId})?> showPdvSettingsDialog(
     BuildContext context) async {
-  final bloc = di.sl<PdvConfigBloc>();
-  if (bloc.state is! PdvConfigLoaded) {
-    bloc.add(FetchPdvConfigEvent());
-  }
-  
   return await showDialog<({int pdvId, int sucursalId})>(
     context: context,
-    builder: (ctx) => BlocProvider.value(
-      value: bloc,
+    builder: (ctx) => BlocProvider(
+      create: (_) => PdvConfigBloc(
+        fetchPdvConfigUsecase: di.sl<FetchPdvConfigUsecase>(),
+        fetchBranchesUsecase: di.sl<FetchBranchesUsecase>(),
+        getVatCategoriesUsecase: di.sl<GetVatCategoriesUsecase>(),
+        repository: di.sl<PdvConfigRepository>(),
+      )..add(FetchPdvConfigEvent()),
       child: const _PdvSettingsDialogContent(),
     ),
   );
@@ -48,13 +52,6 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
     pdvIdController = TextEditingController();
     branchIdController = TextEditingController();
     branchNumberController = TextEditingController();
-    
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final state = context.read<PdvConfigBloc>().state;
-      if (state is PdvConfigLoaded) {
-        _updateControllersFromConfig(state.config, state.branches);
-      }
-    });
   }
 
   @override
@@ -66,22 +63,24 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
   }
 
   void _updateControllersFromConfig(PdvConfig config, List<Branch> branches) {
-    pdvIdController.text = config.pdvId?.toString() ?? '';
-    branchIdController.text = config.branchId?.toString() ?? '';
-    branchNumberController.text = config.branchNumber ?? "";
-    
-    _branches = branches;
-    
-    if (config.branchId != null) {
-      Branch? matchedBranch;
-      for (final branch in branches) {
-        if (branch.id == config.branchId) {
-          matchedBranch = branch;
-          break;
+    setState(() {
+      pdvIdController.text = config.pdvId?.toString() ?? '';
+      branchIdController.text = config.branchId?.toString() ?? '';
+      branchNumberController.text = config.branchNumber ?? "";
+      
+      _branches = branches;
+      
+      if (config.branchId != null) {
+        Branch? matchedBranch;
+        for (final branch in branches) {
+          if (branch.id == config.branchId) {
+            matchedBranch = branch;
+            break;
+          }
         }
+        _selectedBranch = matchedBranch ?? (branches.isNotEmpty ? branches.first : null);
       }
-      _selectedBranch = matchedBranch ?? (branches.isNotEmpty ? branches.first : null);
-    }
+    });
   }
   
   void _onBranchSelected(Branch? branch) {
