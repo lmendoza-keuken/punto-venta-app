@@ -14,6 +14,8 @@ class PrintJob {
   final double? iibbTaxPercentage;
   final double vatPerception;
   final Map<double, double>? vatPerceptionByRate;
+  final double internalTax;
+  final double? internalTaxRate;
   final String? clientName;
   final Client? client;
   final int? priceListId;
@@ -38,6 +40,8 @@ class PrintJob {
     this.iibbTaxPercentage,
     this.vatPerception = 0.0,
     this.vatPerceptionByRate,
+    this.internalTax = 0.0,
+    this.internalTaxRate,
     this.client,
     this.clientName,
     this.priceListId,

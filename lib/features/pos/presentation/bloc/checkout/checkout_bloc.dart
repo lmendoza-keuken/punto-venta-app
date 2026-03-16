@@ -10,6 +10,7 @@ import 'package:punto_venta_app/features/pos/domain/usecases/get_ticket_config_u
 import 'package:punto_venta_app/features/pos/domain/usecases/send_invoice_usecase.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/iibb_calculator.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/vat_perception_calculator.dart';
+import 'package:punto_venta_app/features/pos/presentation/utils/internal_tax_calculator.dart';
 import 'checkout_event.dart';
 import 'checkout_state.dart';
 
@@ -81,6 +82,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
       final iibbAmount = iibbResult['amount'] ?? 0.0;
       final iibbPercentage = iibbResult['percentage'];
 
+      // Calcular percepción de IVA
       final vatPerceptionResult = VatPerceptionCalculator.calculateVatPerceptionWithBreakdown(
         cartItems: event.items,
         branch: branch,
@@ -90,7 +92,15 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
       final vatPerceptionAmount = vatPerceptionResult['total'] ?? 0.0;
       final vatPerceptionByRate = vatPerceptionResult['byPerception'] as Map<double, double>?;
 
-      final totalWithIibb = event.total + iibbAmount + vatPerceptionAmount;
+      // Calcular impuesto interno
+      final internalTaxResult = InternalTaxCalculator.calculateInternalTax(
+        items: event.items,
+      );
+
+      final internalTaxAmount = internalTaxResult['total'] ?? 0.0;
+      final internalTaxRate = internalTaxResult['rate'];
+
+      final totalWithIibb = event.total + iibbAmount + vatPerceptionAmount + internalTaxAmount;
 
       // Configurar opciones de impresión
       bool showSubtotalAndTax = false;
@@ -130,6 +140,8 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         iibbTaxPercentage: iibbPercentage,
         vatPerception: vatPerceptionAmount,
         vatPerceptionByRate: vatPerceptionByRate,
+        internalTax: internalTaxAmount,
+        internalTaxRate: internalTaxRate,
         paymentMethod: event.paymentMethod,
         cashierName: user?.name ?? 'Desconocido',
         cashierId: int.tryParse(user?.id ?? ''),
@@ -160,6 +172,8 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         iibbTaxPercentage: iibbPercentage,
         vatPerception: vatPerceptionAmount,
         vatPerceptionByRate: vatPerceptionByRate,
+        internalTax: internalTaxAmount,
+        internalTaxRate: internalTaxRate,
         paymentMethod: event.paymentMethod,
         cashierName: user?.name ?? 'Desconocido',
         cashierId: int.tryParse(user?.id ?? ''),

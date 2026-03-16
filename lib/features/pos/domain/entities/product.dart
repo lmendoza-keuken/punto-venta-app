@@ -9,7 +9,8 @@ class Product extends Equatable {
   final int supplierId;
   final double vat;
   final double? vatPerception;
-  final int internalTax;
+  final double internalTax;
+  final double? internalTaxRate;
   final String isWeighted;
   final double netWeight;
   final String categoryId;
@@ -32,6 +33,7 @@ class Product extends Equatable {
     required this.vat,
     this.vatPerception,
     required this.internalTax,
+    this.internalTaxRate,
     required this.isWeighted,
     required this.netWeight,
     required this.categoryId,
@@ -61,6 +63,7 @@ class Product extends Equatable {
         vat,
         vatPerception,
         internalTax,
+        internalTaxRate,
         isWeighted,
         netWeight,
         categoryId,

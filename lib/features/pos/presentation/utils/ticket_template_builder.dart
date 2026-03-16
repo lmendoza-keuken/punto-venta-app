@@ -147,7 +147,8 @@ class TicketTemplateBuilder {
     final subtotalAmount = (printJob.total - 
         printJob.totalTax - 
         printJob.iibbTax - 
-        printJob.vatPerception).formatToCurrency();
+        printJob.vatPerception -
+        printJob.internalTax).formatToCurrency();
 
     // Subtotal siempre se muestra
     commands.add(TicketCommand.lineWithValue("Subtotal:", subtotalAmount));
@@ -171,6 +172,15 @@ class TicketTemplateBuilder {
     if (printJob.vatPerception > 0) {
       final vatPercepAmount = printJob.vatPerception.formatToCurrency();
       commands.add(TicketCommand.lineWithValue("Percep. IVA:", vatPercepAmount));
+    }
+
+    // Impuesto Interno si es mayor a 0
+    if (printJob.internalTax > 0) {
+      final internalTaxAmount = printJob.internalTax.formatToCurrency();
+      final internalTaxLabel = printJob.internalTaxRate != null && printJob.internalTaxRate! > 0
+          ? "Imp. Interno (${printJob.internalTaxRate}%):"
+          : "Imp. Interno:";
+      commands.add(TicketCommand.lineWithValue(internalTaxLabel, internalTaxAmount));
     }
 
     commands.add(TicketCommand.text(_buildSeparator('_')));

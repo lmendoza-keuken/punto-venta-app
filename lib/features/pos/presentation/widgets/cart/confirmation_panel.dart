@@ -26,6 +26,7 @@ import 'package:punto_venta_app/features/pos/presentation/widgets/cart/payment_o
 import 'package:punto_venta_app/features/pos/presentation/widgets/common/error_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/iibb_calculator.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/vat_perception_calculator.dart';
+import 'package:punto_venta_app/features/pos/presentation/utils/internal_tax_calculator.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 class ConfirmationPanel extends StatefulWidget {
@@ -45,6 +46,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
   double? _change;
   double _iibbAmount = 0.0;
   double _vatPerceptionAmount = 0.0;
+  double _internalTaxAmount = 0.0;
 
   @override
   void initState() {
@@ -62,6 +64,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
         setState(() {
           _iibbAmount = 0.0;
           _vatPerceptionAmount = 0.0;
+          _internalTaxAmount = 0.0;
         });
         return;
       }
@@ -71,6 +74,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
         setState(() {
           _iibbAmount = 0.0;
           _vatPerceptionAmount = 0.0;
+          _internalTaxAmount = 0.0;
         });
         return;
       }
@@ -83,6 +87,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
         setState(() {
           _iibbAmount = 0.0;
           _vatPerceptionAmount = 0.0;
+          _internalTaxAmount = 0.0;
         });
         return;
       }
@@ -114,14 +119,22 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
         vatCategory: vatCategory,
       );
 
+      // Calcular impuesto interno
+      final internalTaxResult = InternalTaxCalculator.calculateInternalTax(
+        items: cartState.items,
+      );
+      final internalTax = internalTaxResult['total'] ?? 0.0;
+
       setState(() {
         _iibbAmount = iibb;
         _vatPerceptionAmount = vatPerception;
+        _internalTaxAmount = internalTax;
       });
     } catch (e) {
       setState(() {
         _iibbAmount = 0.0;
         _vatPerceptionAmount = 0.0;
+        _internalTaxAmount = 0.0;
       });
     }
   }
@@ -381,7 +394,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                           const SizedBox(height: 24),
 
                           // Mostrar desglose si aplican percepciones
-                          if (_iibbAmount > 0 || _vatPerceptionAmount > 0) ...[
+                          if (_iibbAmount > 0 || _vatPerceptionAmount > 0 || _internalTaxAmount > 0) ...[
                             Container(
                               padding: const EdgeInsets.all(AppDimensions.paddingM),
                               decoration: BoxDecoration(
@@ -479,6 +492,30 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                                       ],
                                     ),
                                   ],
+                                  if (_internalTaxAmount > 0) ...[
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text(
+                                          'Imp. Interno:',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.info,
+                                          ),
+                                        ),
+                                        Text(
+                                          '\$ ${_internalTaxAmount.toStringAsFixed(2)}',
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.info,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ],
                               ),
                             ),
@@ -486,8 +523,8 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                           ],
 
                           CashPaymentWidget(
-                            key: ValueKey(state.subtotal + state.totalIva + _iibbAmount + _vatPerceptionAmount),
-                            totalAmount: state.subtotal + state.totalIva + _iibbAmount + _vatPerceptionAmount,
+                            key: ValueKey(state.subtotal + state.totalIva + _iibbAmount + _vatPerceptionAmount + _internalTaxAmount),
+                            totalAmount: state.subtotal + state.totalIva + _iibbAmount + _vatPerceptionAmount + _internalTaxAmount,
                             onAmountChanged: (amount) {
                               setState(() {
                                 _receivedAmount = amount;

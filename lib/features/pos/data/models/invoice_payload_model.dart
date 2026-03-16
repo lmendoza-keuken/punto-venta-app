@@ -158,6 +158,22 @@ class InvoicePayload {
           ));
         }
 
+        final internalTax = itemModel.product.internalTax;
+        final internalTaxRate = itemModel.product.internalTaxRate;
+        if (internalTax != null && internalTax > 0) {
+          final fractional = itemModel.product.fractional ?? 1;
+          final itemTotalWithInternalTax = (internalTax + unitPrice) * quantity * fractional;
+          final baseAmount = unitPrice * quantity * fractional;
+          final internalTaxAmount = itemTotalWithInternalTax - baseAmount;
+          
+          itemTaxes.add(TaxModel(
+            id: 7,
+            percentage: internalTaxRate,
+            amount: double.parse(internalTaxAmount.toStringAsFixed(2)),
+            provinceId: null,
+          ));
+        }
+
         totalsByPercentage.update(
           taxPercentage,
           (prev) => prev + taxAmount,
@@ -243,6 +259,26 @@ class InvoicePayload {
         id: vatPerceptionTaxModel.id,
         percentage: null, 
         amount: double.parse(job.vatPerception.toStringAsFixed(2)),
+        provinceId: null,
+      ));
+    }
+
+    if (job.internalTax > 0) {
+      TaxModel? internalTaxModel;
+      try {
+        internalTaxModel = taxes.firstWhere((t) => t.id == 7);
+      } catch (e) {
+        internalTaxModel = const TaxModel(
+          id: 7,
+          description: 'IMPINT',
+          percentage: null,
+        );
+      }
+
+      totalTax.add(TaxModel(
+        id: internalTaxModel.id,
+        percentage: null,
+        amount: double.parse(job.internalTax.toStringAsFixed(2)),
         provinceId: null,
       ));
     }

@@ -86,6 +86,8 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
     double iibbAmount = 0.0;
     double iibbPercentage = 0.0;
     double vatPerceptionAmount = 0.0;
+    double internalTaxAmount = 0.0;
+    double? internalTaxRate;
     double ivaAmount = 0.0;
 
     try {
@@ -113,6 +115,14 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
           orElse: () => const TaxModel(id: 6, amount: 0.0),
         );
         vatPerceptionAmount = vatPercepTax.amount ?? 0.0;
+
+        // Extraer Impuesto Interno (id: 7)
+        final internalTax = invoicePayload.totalTax.firstWhere(
+          (tax) => tax.id == 7,
+          orElse: () => const TaxModel(id: 7, amount: 0.0),
+        );
+        internalTaxAmount = internalTax.amount ?? 0.0;
+        internalTaxRate = internalTax.percentage;
       }
     } catch (e) {
       ivaAmount = widget.ticket.totalTax;
@@ -127,6 +137,8 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
       iibbTax: iibbAmount,
       iibbTaxPercentage: iibbPercentage,
       vatPerception: vatPerceptionAmount,
+      internalTax: internalTaxAmount,
+      internalTaxRate: internalTaxRate,
       paymentMethod: widget.ticket.paymentMethod,
       cashierName: widget.ticket.cashierName,
       timestamp: widget.ticket.completedAt,
@@ -517,7 +529,8 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                 Text((widget.ticket.total -
                         _printJob!.totalTax -
                         _printJob!.iibbTax -
-                        _printJob!.vatPerception)
+                        _printJob!.vatPerception -
+                        _printJob!.internalTax)
                     .formatToCurrency()),
               ],
             ),
@@ -554,6 +567,20 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                 children: [
                   const Text('Percep. IVA:'),
                   Text(_printJob!.vatPerception.formatToCurrency()),
+                ],
+              ),
+            ],
+
+            // Impuesto Interno
+            if (_printJob!.internalTax > 0) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(_printJob!.internalTaxRate != null &&
+                          _printJob!.internalTaxRate! > 0
+                      ? 'Imp. Interno (${_printJob!.internalTaxRate!.toStringAsFixed(1)}%):'  
+                      : 'Imp. Interno:'),
+                  Text(_printJob!.internalTax.formatToCurrency()),
                 ],
               ),
             ],
