@@ -20,13 +20,13 @@ class IibbCalculator {
     if (client.vatCategoryId == 3) {
       return {'amount': 0.0, 'percentage': null};
     }
-    debugPrint('[IIBB_CALC] ✅ Condición 1: Cliente NO es Consumidor Final');
+    debugPrint('[IIBB_CALC]  Condición 1: Cliente NO es Consumidor Final');
 
     // Check condition 2: branch.apply_per_iibb == true
     if (branch.applyPerIibb != true) {
       return {'amount': 0.0, 'percentage': null};
     }
-    debugPrint('[IIBB_CALC] ✅ Condición 2: Sucursal aplica IIBB');
+    debugPrint('[IIBB_CALC]  Condición 2: Sucursal aplica IIBB');
 
     // Check condition 3: totalWithVat >= branch.per_iibb_amount
     final perIibbAmount = branch.perIibbAmount?.toDouble() ?? 0.0;
@@ -34,7 +34,7 @@ class IibbCalculator {
       return {'amount': 0.0, 'percentage': null};
     }
     debugPrint(
-        '[IIBB_CALC] ✅ Condición 3: Total (\$$totalWithVat) >= Mínimo (\$$perIibbAmount)');
+        '[IIBB_CALC]  Condición 3: Total (\$$totalWithVat) >= Mínimo (\$$perIibbAmount)');
 
     // Get client's IIBB tax rates for this branch
     final iibbTaxRates = client.iibbTaxRates ?? [];

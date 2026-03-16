@@ -7,6 +7,8 @@ import 'package:punto_venta_app/features/pos/domain/usecases/fetch_ticket_config
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_state.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/payment_methods_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/payment_methods_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product/product_bloc.dart';
@@ -41,6 +43,7 @@ class _PosMainPageState extends State<PosMainPage> {
     super.initState();
     context.read<ProductBloc>().add(LoadProducts());
     context.read<PaymentMethodsBloc>().add(LoadPaymentMethods());
+    context.read<ClientsBloc>().add(LoadDefaultClientEvent());
 
     if (context.read<CartBloc>().state is! CartLoaded) {
       context.read<CartBloc>().add(ClearCart());

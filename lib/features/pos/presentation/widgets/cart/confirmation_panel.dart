@@ -13,6 +13,7 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/checkout/checkout
 import 'package:punto_venta_app/features/pos/presentation/bloc/checkout/checkout_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/checkout/checkout_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/payment_methods_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/payment_methods_event.dart';
@@ -141,6 +142,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
               if (mounted) {
                 context.read<CartBloc>().add(ClearCart());
                 context.read<CheckoutBloc>().add(const ResetCheckout());
+                context.read<ClientsBloc>().add(ResetToDefaultClientEvent());
                 widget.onClose();
 
                 ScaffoldMessenger.of(context).showSnackBar(

@@ -39,6 +39,7 @@ class InvoicePayload {
       'id': t.id,
       'percentage': t.percentage,
       'amount': t.amount,
+      'province_id': t.provinceId,
     };
   }
 
@@ -142,6 +143,7 @@ class InvoicePayload {
             id: matchedTax.id,
             percentage: taxPercentage,
             amount: double.parse(taxAmount.toStringAsFixed(2)),
+            provinceId: null,
           ),
         ];
 
@@ -160,8 +162,11 @@ class InvoicePayload {
           'discount': 0,
           'unitPrice': unitPrice,
           'priceListId': job.priceListId,
-          'taxes':
-              itemTaxes.map((t) => InvoicePayload._serializeTax(t)).toList(),
+          'taxes': itemTaxes.map((t) => {
+                'id': t.id,
+                'percentage': t.percentage,
+                'amount': t.amount,
+              }).toList(),
           'is_weighted': isWeighted ? "S" : "N",
           'net_weight': isWeighted ? itemModel.product.netWeight : null,
           'weight': isWeighted ? weightKg ?? 0.0 : null,
@@ -186,6 +191,7 @@ class InvoicePayload {
         id: matchedTax.id,
         percentage: double.parse(percentage.toStringAsFixed(2)),
         amount: double.parse(amount.toStringAsFixed(2)),
+        provinceId: null,
       );
     }).toList();
 
@@ -206,6 +212,7 @@ class InvoicePayload {
         id: iibbTaxModel.id,
         percentage: job.iibbTaxPercentage,
         amount: double.parse(job.iibbTax.toStringAsFixed(2)),
+        provinceId: job.client?.provinceId,
       ));
     }
 

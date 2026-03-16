@@ -4,10 +4,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/pdv_config.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/client.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/pdv_config_repository.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_branches_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_pdv_config_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_vat_categories_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/get_clients_usecase.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/pdv_config/pdv_config_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/pdv_config/pdv_config_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/pdv_config/pdv_config_state.dart';
@@ -42,9 +44,14 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
   late TextEditingController pdvIdController;
   late TextEditingController branchIdController;
   late TextEditingController branchNumberController;
+  final TextEditingController _clientSearchController = TextEditingController();
   
   List<Branch> _branches = [];
   Branch? _selectedBranch;
+  
+  List<Client> _clients = [];
+  Client? _selectedClient;
+  String _clientSearchQuery = '';
 
   @override
   void initState() {
@@ -52,6 +59,19 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
     pdvIdController = TextEditingController();
     branchIdController = TextEditingController();
     branchNumberController = TextEditingController();
+    _loadClients();
+  }
+
+  Future<void> _loadClients() async {
+    try {
+      final getClientsUsecase = di.sl<GetClientsUsecase>();
+      final clients = await getClientsUsecase();
+      setState(() {
+        _clients = clients;
+      });
+    } catch (e) {
+      print('Error loading clients: $e');
+    }
   }
 
   @override
@@ -59,6 +79,7 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
     pdvIdController.dispose();
     branchIdController.dispose();
     branchNumberController.dispose();
+    _clientSearchController.dispose();
     super.dispose();
   }
 
@@ -70,6 +91,7 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
       
       _branches = branches;
       
+      // Seleccionar la sucursal actual
       if (config.branchId != null) {
         Branch? matchedBranch;
         for (final branch in branches) {
@@ -79,6 +101,18 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
           }
         }
         _selectedBranch = matchedBranch ?? (branches.isNotEmpty ? branches.first : null);
+      }
+
+      // Seleccionar el cliente default (pdvId = delivery_location_id = client id)
+      if (config.pdvId != null) {
+        Client? matchedClient;
+        for (final client in _clients) {
+          if (client.id == config.pdvId.toString()) {
+            matchedClient = client;
+            break;
+          }
+        }
+        _selectedClient = matchedClient;
       }
     });
   }
@@ -90,6 +124,27 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
         branchIdController.text = branch.id.toString();
       }
     });
+  }
+
+  void _onClientSelected(Client? client) {
+    setState(() {
+      _selectedClient = client;
+      if (client != null) {
+        pdvIdController.text = client.id;
+      }
+    });
+  }
+
+  List<Client> get _filteredClients {
+    if (_clientSearchQuery.isEmpty) {
+      return _clients;
+    }
+    return _clients.where((client) {
+      final query = _clientSearchQuery.toLowerCase();
+      return client.name.toLowerCase().contains(query) ||
+          client.id.toLowerCase().contains(query) ||
+          (client.document?.toLowerCase().contains(query) ?? false);
+    }).toList();
   }
 
   @override
@@ -178,29 +233,145 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                         ),
                       )
                     else ...[
-                      // Campo: PDV ID
-                      TextFormField(
-                        controller: pdvIdController,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'ID del PDV',
-                          hintText: '1',
-                          prefixIcon: Icon(Icons.store),
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (v) {
-                          if (v == null || v.isEmpty) {
-                            return 'Ingresa el ID del PDV';
-                          }
-                          final parsedValue = int.tryParse(v);
-                          if (parsedValue == null) {
-                            return 'Debe ser un número';
-                          }
-                          if (parsedValue <= 0) {
-                            return 'Debe ser mayor a 0';
-                          }
-                          return null;
-                        },
+                      // Campo: Cliente Default (PDV ID = delivery_location_id = Client ID)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Cliente Default',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextFormField(
+                            controller: _clientSearchController,
+                            decoration: InputDecoration(
+                              labelText: 'Buscar cliente',
+                              hintText: 'Nombre, ID o documento',
+                              prefixIcon: const Icon(Icons.search),
+                              border: const OutlineInputBorder(),
+                              suffixIcon: _clientSearchQuery.isNotEmpty
+                                  ? IconButton(
+                                      icon: const Icon(Icons.clear),
+                                      onPressed: () {
+                                        setState(() {
+                                          _clientSearchController.clear();
+                                          _clientSearchQuery = '';
+                                        });
+                                      },
+                                    )
+                                  : null,
+                            ),
+                            onChanged: (value) {
+                              setState(() {
+                                _clientSearchQuery = value;
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey.shade300),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            height: 200,
+                            child: _filteredClients.isEmpty
+                                ? const Center(
+                                    child: Text(
+                                      'No se encontraron clientes',
+                                      style: TextStyle(color: Colors.grey),
+                                    ),
+                                  )
+                                : ListView.builder(
+                                    itemCount: _filteredClients.length,
+                                    itemBuilder: (context, index) {
+                                      final client = _filteredClients[index];
+                                      final isSelected =
+                                          _selectedClient?.id == client.id;
+
+                                      return ListTile(
+                                        selected: isSelected,
+                                        selectedTileColor:
+                                            AppColors.primary.withValues(alpha: 0.1),
+                                        leading: CircleAvatar(
+                                          backgroundColor: isSelected
+                                              ? AppColors.primary
+                                              : Colors.grey.shade300,
+                                          child: Icon(
+                                            Icons.person,
+                                            color: isSelected
+                                                ? Colors.white
+                                                : Colors.grey.shade600,
+                                          ),
+                                        ),
+                                        title: Text(
+                                          client.name,
+                                          style: TextStyle(
+                                            fontWeight: isSelected
+                                                ? FontWeight.bold
+                                                : FontWeight.normal,
+                                          ),
+                                        ),
+                                        subtitle: Text('ID: ${client.id}${client.document != null ? ' - ${client.document}' : ''}'),
+                                        trailing: isSelected
+                                            ? const Icon(
+                                                Icons.check_circle,
+                                                color: AppColors.primary,
+                                              )
+                                            : null,
+                                        onTap: () => _onClientSelected(client),
+                                      );
+                                    },
+                                  ),
+                          ),
+                          const SizedBox(height: 8),
+                          if (_selectedClient != null)
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.green.shade50,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.green.shade200),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.check_circle,
+                                      size: 20, color: Colors.green),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'Cliente seleccionado: ${_selectedClient!.name}',
+                                      style: const TextStyle(fontSize: 13),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          else
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.shade50,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.orange.shade200),
+                              ),
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.warning_amber,
+                                      size: 20, color: Colors.orange),
+                                  SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'Selecciona un cliente default',
+                                      style: TextStyle(fontSize: 13),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
                       ),
                       const SizedBox(height: AppDimensions.paddingM),
                       // Dropdown: Selección de Sucursal
@@ -286,7 +457,20 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                   : () {
                       if (!formKey.currentState!.validate()) return;
 
-                      final pdvId = int.parse(pdvIdController.text.trim());
+                      // Validar que se haya seleccionado un cliente default
+                      if (_selectedClient == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Debes seleccionar un cliente default'),
+                            backgroundColor: AppColors.error,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                        return;
+                      }
+
+                      // El pdvId es el ID del cliente seleccionado (delivery_location_id)
+                      final pdvId = int.parse(_selectedClient!.id);
                       final branchId =
                           int.parse(branchIdController.text.trim());
                       final branchNumber = branchNumberController.text.trim();

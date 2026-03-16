@@ -29,3 +29,7 @@ class SelectClientEvent extends ClientsEvent {
   @override
   List<Object?> get props => [client];
 }
+
+class LoadDefaultClientEvent extends ClientsEvent {}
+
+class ResetToDefaultClientEvent extends ClientsEvent {}

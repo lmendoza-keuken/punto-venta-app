@@ -12,6 +12,7 @@ class TaxModel with _$TaxModel {
     @JsonKey(name: 'descripcion') String? description,
     @JsonKey(name: 'porcentaje') double? percentage,
     @JsonKey(name: 'amount') double? amount,
+    @JsonKey(name: 'province_id') int? provinceId,
   }) = _TaxModel;
 
   factory TaxModel.fromJson(Map<String, dynamic> json) =>

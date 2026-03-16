@@ -184,6 +184,7 @@ Future<void> init() async {
         addClient: sl(), 
         deleteClient: sl(),
         priceListLocalDataSource: sl(),
+        pdvLocalDataSource: sl(),
       ));
   sl.registerFactory(() => PaymentMethodsBloc(fetchPaymentMethods: sl()));
   sl.registerLazySingleton(() => PdvConfigBloc(
