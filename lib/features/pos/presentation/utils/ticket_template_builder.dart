@@ -143,17 +143,38 @@ class TicketTemplateBuilder {
   List<TicketCommand> _buildTotals() {
     final commands = <TicketCommand>[];
 
-    if (printJob.showSubtotalAndTax) {
-      // Mostrar subtotal e IVA por separado
-      final subtotalAmount =
-          (printJob.total - printJob.totalTax).formatToCurrency();
-      final taxAmount = printJob.totalTax.formatToCurrency();
+    // Calcular subtotal restando todos los impuestos
+    final subtotalAmount = (printJob.total - 
+        printJob.totalTax - 
+        printJob.iibbTax - 
+        printJob.vatPerception).formatToCurrency();
 
-      commands.add(TicketCommand.lineWithValue("Subtotal:", subtotalAmount));
+    // Subtotal siempre se muestra
+    commands.add(TicketCommand.lineWithValue("Subtotal:", subtotalAmount));
+
+    // IVA si es mayor a 0
+    if (printJob.totalTax > 0) {
+      final taxAmount = printJob.totalTax.formatToCurrency();
       commands.add(TicketCommand.lineWithValue("IVA:", taxAmount));
-      commands.add(TicketCommand.text(_buildSeparator('_')));
-      commands.add(TicketCommand.feedLine());
     }
+
+    // Percepción IIBB si es mayor a 0
+    if (printJob.iibbTax > 0) {
+      final iibbAmount = printJob.iibbTax.formatToCurrency();
+      final iibbLabel = printJob.iibbTaxPercentage != null
+          ? "Percep. IIBB (${printJob.iibbTaxPercentage}%):"
+          : "Percep. IIBB:";
+      commands.add(TicketCommand.lineWithValue(iibbLabel, iibbAmount));
+    }
+
+    // Percepción IVA si es mayor a 0
+    if (printJob.vatPerception > 0) {
+      final vatPercepAmount = printJob.vatPerception.formatToCurrency();
+      commands.add(TicketCommand.lineWithValue("Percep. IVA:", vatPercepAmount));
+    }
+
+    commands.add(TicketCommand.text(_buildSeparator('_')));
+    commands.add(TicketCommand.feedLine());
 
     if (printJob.receivedAmount != null && printJob.change != null) {
       final receivedAmount = printJob.receivedAmount!.formatToCurrency();

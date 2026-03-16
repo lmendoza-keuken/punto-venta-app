@@ -25,6 +25,7 @@ import 'package:punto_venta_app/features/pos/presentation/widgets/cart/cash_paym
 import 'package:punto_venta_app/features/pos/presentation/widgets/cart/payment_option_widget.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/common/error_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/iibb_calculator.dart';
+import 'package:punto_venta_app/features/pos/presentation/utils/vat_perception_calculator.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 class ConfirmationPanel extends StatefulWidget {
@@ -43,14 +44,15 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
   double? _receivedAmount;
   double? _change;
   double _iibbAmount = 0.0;
+  double _vatPerceptionAmount = 0.0;
 
   @override
   void initState() {
     super.initState();
-    _calculateIibbForUI();
+    _calculateTaxesForUI();
   }
 
-  Future<void> _calculateIibbForUI() async {
+  Future<void> _calculateTaxesForUI() async {
     try {
       final clientsState = context.read<ClientsBloc>().state;
       final selectedClient =
@@ -59,6 +61,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
       if (selectedClient == null) {
         setState(() {
           _iibbAmount = 0.0;
+          _vatPerceptionAmount = 0.0;
         });
         return;
       }
@@ -67,6 +70,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
       if (cartState is! CartLoaded) {
         setState(() {
           _iibbAmount = 0.0;
+          _vatPerceptionAmount = 0.0;
         });
         return;
       }
@@ -78,6 +82,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
       if (branchId == null) {
         setState(() {
           _iibbAmount = 0.0;
+          _vatPerceptionAmount = 0.0;
         });
         return;
       }
@@ -102,12 +107,21 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
         totalWithVat: cartState.subtotal + cartState.totalIva,
       );
 
+      // Calcular percepción de IVA
+      final vatPerception = VatPerceptionCalculator.calculateVatPerception(
+        cartItems: cartState.items,
+        branch: branch,
+        vatCategory: vatCategory,
+      );
+
       setState(() {
         _iibbAmount = iibb;
+        _vatPerceptionAmount = vatPerception;
       });
     } catch (e) {
       setState(() {
         _iibbAmount = 0.0;
+        _vatPerceptionAmount = 0.0;
       });
     }
   }
@@ -118,8 +132,14 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
       listeners: [
         BlocListener<ClientsBloc, ClientsState>(
           listener: (context, clientsState) {
-            // Recalcular IIBB cuando cambia el cliente
-            _calculateIibbForUI();
+            // Recalcular impuestos cuando cambia el cliente
+            _calculateTaxesForUI();
+          },
+        ),
+        BlocListener<CartBloc, CartState>(
+          listener: (context, cartState) {
+            // Recalcular impuestos cuando cambia el carrito
+            _calculateTaxesForUI();
           },
         ),
         BlocListener<CheckoutBloc, CheckoutState>(
@@ -360,8 +380,8 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                           const Divider(height: 1),
                           const SizedBox(height: 24),
 
-                          // Mostrar desglose de IIBB si aplica
-                          if (_iibbAmount > 0) ...[
+                          // Mostrar desglose si aplican percepciones
+                          if (_iibbAmount > 0 || _vatPerceptionAmount > 0) ...[
                             Container(
                               padding: const EdgeInsets.all(AppDimensions.paddingM),
                               decoration: BoxDecoration(
@@ -411,28 +431,54 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      const Text(
-                                        'IIBB:',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.info,
+                                  if (_iibbAmount > 0) ...[
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text(
+                                          'Percep. IIBB:',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.info,
+                                          ),
                                         ),
-                                      ),
-                                      Text(
-                                        '\$ ${_iibbAmount.toStringAsFixed(2)}',
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.info,
+                                        Text(
+                                          '\$ ${_iibbAmount.toStringAsFixed(2)}',
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.info,
+                                          ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
+                                      ],
+                                    ),
+                                  ],
+                                  if (_vatPerceptionAmount > 0) ...[
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text(
+                                          'Percep. IVA:',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.info,
+                                          ),
+                                        ),
+                                        Text(
+                                          '\$ ${_vatPerceptionAmount.toStringAsFixed(2)}',
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.info,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ],
                               ),
                             ),
@@ -440,8 +486,8 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                           ],
 
                           CashPaymentWidget(
-                            key: ValueKey(state.subtotal + state.totalIva + _iibbAmount),
-                            totalAmount: state.subtotal + state.totalIva + _iibbAmount,
+                            key: ValueKey(state.subtotal + state.totalIva + _iibbAmount + _vatPerceptionAmount),
+                            totalAmount: state.subtotal + state.totalIva + _iibbAmount + _vatPerceptionAmount,
                             onAmountChanged: (amount) {
                               setState(() {
                                 _receivedAmount = amount;

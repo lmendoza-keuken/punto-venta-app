@@ -9,6 +9,7 @@ import 'package:punto_venta_app/features/pos/domain/usecases/complete_order_usec
 import 'package:punto_venta_app/features/pos/domain/usecases/get_ticket_config_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/send_invoice_usecase.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/iibb_calculator.dart';
+import 'package:punto_venta_app/features/pos/presentation/utils/vat_perception_calculator.dart';
 import 'checkout_event.dart';
 import 'checkout_state.dart';
 
@@ -80,8 +81,16 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
       final iibbAmount = iibbResult['amount'] ?? 0.0;
       final iibbPercentage = iibbResult['percentage'];
 
-      // Total final incluye IIBB
-      final totalWithIibb = event.total + iibbAmount;
+      final vatPerceptionResult = VatPerceptionCalculator.calculateVatPerceptionWithBreakdown(
+        cartItems: event.items,
+        branch: branch,
+        vatCategory: vatCategory,
+      );
+
+      final vatPerceptionAmount = vatPerceptionResult['total'] ?? 0.0;
+      final vatPerceptionByRate = vatPerceptionResult['byPerception'] as Map<double, double>?;
+
+      final totalWithIibb = event.total + iibbAmount + vatPerceptionAmount;
 
       // Configurar opciones de impresión
       bool showSubtotalAndTax = false;
@@ -119,6 +128,8 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         totalTax: event.totalIva,
         iibbTax: iibbAmount,
         iibbTaxPercentage: iibbPercentage,
+        vatPerception: vatPerceptionAmount,
+        vatPerceptionByRate: vatPerceptionByRate,
         paymentMethod: event.paymentMethod,
         cashierName: user?.name ?? 'Desconocido',
         cashierId: int.tryParse(user?.id ?? ''),
@@ -147,6 +158,8 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         totalTax: event.totalIva,
         iibbTax: iibbAmount,
         iibbTaxPercentage: iibbPercentage,
+        vatPerception: vatPerceptionAmount,
+        vatPerceptionByRate: vatPerceptionByRate,
         paymentMethod: event.paymentMethod,
         cashierName: user?.name ?? 'Desconocido',
         cashierId: int.tryParse(user?.id ?? ''),

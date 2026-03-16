@@ -147,6 +147,17 @@ class InvoicePayload {
           ),
         ];
 
+        final vatPerception = itemModel.product.vatPerception;
+        if (vatPerception != null && vatPerception > 0) {
+          final vatPerceptionAmount = taxableBase * (vatPerception / 100.0);
+          itemTaxes.add(TaxModel(
+            id: 6, 
+            percentage: vatPerception,
+            amount: double.parse(vatPerceptionAmount.toStringAsFixed(2)),
+            provinceId: null,
+          ));
+        }
+
         totalsByPercentage.update(
           taxPercentage,
           (prev) => prev + taxAmount,
@@ -213,6 +224,26 @@ class InvoicePayload {
         percentage: job.iibbTaxPercentage,
         amount: double.parse(job.iibbTax.toStringAsFixed(2)),
         provinceId: job.client?.provinceId,
+      ));
+    }
+
+    if (job.vatPerception > 0) {
+      TaxModel? vatPerceptionTaxModel;
+      try {
+        vatPerceptionTaxModel = taxes.firstWhere((t) => t.id == 6);
+      } catch (e) {
+        vatPerceptionTaxModel = const TaxModel(
+          id: 6,
+          description: 'Percep.IVA',
+          percentage: null,
+        );
+      }
+
+      totalTax.add(TaxModel(
+        id: vatPerceptionTaxModel.id,
+        percentage: null, 
+        amount: double.parse(job.vatPerception.toStringAsFixed(2)),
+        provinceId: null,
       ));
     }
 
