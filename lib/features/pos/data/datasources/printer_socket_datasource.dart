@@ -9,6 +9,7 @@ abstract class PrinterSocketDatasource {
   Future<bool> connect(PrinterConfig config);
   Future<bool> disconnect();
   Future<bool> printTicket(PrintJob printJob);
+  Future<bool> printCommands(List<TicketCommand> commands);
   Future<bool> isConnected();
 }
 
@@ -71,6 +72,21 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
       return true;
     } catch (e) {
       print('❌ Error al imprimir: $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> printCommands(List<TicketCommand> commands) async {
+    if (!_isConnected || _socket == null) return false;
+
+    try {
+      for (final command in commands) {
+        await _executeCommand(command);
+      }
+      return true;
+    } catch (e) {
+      print('❌ Error al imprimir comandos: $e');
       return false;
     }
   }

@@ -11,6 +11,7 @@ import 'package:punto_venta_app/features/auth/prensetation/pages/login_page.dart
 import 'package:punto_venta_app/features/auth/domain/entities/user.dart';
 import 'package:punto_venta_app/features/pos/presentation/pages/pos_main_page.dart';
 import 'package:punto_venta_app/features/pos/presentation/pages/reports_page.dart';
+import 'package:punto_venta_app/features/pos/presentation/pages/product_labels_page.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_bloc.dart';
 import 'package:punto_venta_app/features/splash/presentation/pages/splash_page.dart';
 import 'package:punto_venta_app/features/stock/presentation/pages/stock_management_page.dart';
@@ -78,6 +79,12 @@ class AppRouter {
                 create: (_) => di.sl<ReportsBloc>(),
                 child: const ReportsPage(),
               );
+            },
+          ),
+          GoRoute(
+            path: RoutePaths.productLabels,
+            builder: (BuildContext context, GoRouterState state) {
+              return const ProductLabelsPage();
             },
           ),
           GoRoute(

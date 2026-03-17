@@ -6,5 +6,6 @@ class RoutePaths {
   static const String pos = '/pos';
   static const String stock = '/stock';
   static const String reports = '/reports';
+  static const String productLabels = '/product-labels';
   static const String settings = '/settings';
 }

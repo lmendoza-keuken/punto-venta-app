@@ -113,6 +113,20 @@ class _AppSidebarState extends State<AppSidebar> {
                     ),
                   ),
                   const SizedBox(height: 8),
+                  // Product Labels
+                  _buildNavItem(
+                    context,
+                    isSelected: widget.currentRoute == RoutePaths.productLabels,
+                    isDark: isDark,
+                    sidebarSurface: sidebarSurface,
+                    child: SidebarItem(
+                      icon: Icons.label_outlined,
+                      isHighlighted: widget.currentRoute == RoutePaths.productLabels,
+                      tooltip: 'Etiquetas de Productos',
+                      onTap: () => _navigateTo(context, RoutePaths.productLabels),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   // Action buttons
                   Divider(
                     color: sidebarDivider,

@@ -1,0 +1,165 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/get_products_usecase.dart';
+import 'package:punto_venta_app/features/pos/presentation/utils/label_template_builder.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/printer_socket_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/price_list_local_datasource.dart';
+import 'product_labels_event.dart';
+import 'product_labels_state.dart';
+
+class ProductLabelsBloc extends Bloc<ProductLabelsEvent, ProductLabelsState> {
+  final GetProductsUsecase getProductsUsecase;
+  final PriceListLocalDataSource priceListLocalDataSource;
+  final PrinterSocketDatasource? printerDataSource;
+
+  ProductLabelsBloc({
+    required this.getProductsUsecase,
+    required this.priceListLocalDataSource,
+    this.printerDataSource,
+  }) : super(ProductLabelsInitial()) {
+    on<LoadProducts>(_onLoadProducts);
+    on<LoadProductsByCategory>(_onLoadProductsByCategory);
+    on<SearchProducts>(_onSearchProducts);
+    on<ToggleProductSelection>(_onToggleProductSelection);
+    on<ClearSelection>(_onClearSelection);
+    on<PrintSelectedLabels>(_onPrintSelectedLabels);
+  }
+
+  Future<void> _onLoadProducts(
+    LoadProducts event,
+    Emitter<ProductLabelsState> emit,
+  ) async {
+    emit(ProductLabelsLoading());
+    try {
+      int currentList = await priceListLocalDataSource.getCurrentPriceList();
+      if (currentList <= 0) {
+        currentList = 1;
+        await priceListLocalDataSource.savePriceList(currentList);
+      }
+      
+      await getProductsUsecase.updatePriceList(currentList);
+      
+      final products = await getProductsUsecase();
+      final categories = await getProductsUsecase.getCategories();
+
+      emit(ProductLabelsLoaded(
+        products: products,
+        categories: categories,
+        selectedProducts: const [],
+      ));
+    } catch (e) {
+      emit(ProductLabelsError(e.toString()));
+    }
+  }
+
+  Future<void> _onLoadProductsByCategory(
+    LoadProductsByCategory event,
+    Emitter<ProductLabelsState> emit,
+  ) async {
+    if (state is! ProductLabelsLoaded) return;
+
+    final currentState = state as ProductLabelsLoaded;
+    emit(ProductLabelsLoading());
+    
+    try {
+      final products = await getProductsUsecase.getByCategory(event.categoryId);
+
+      emit(ProductLabelsLoaded(
+        products: products,
+        categories: currentState.categories,
+        selectedProducts: currentState.selectedProducts,
+        selectedCategoryId: event.categoryId,
+      ));
+    } catch (e) {
+      emit(ProductLabelsError(e.toString()));
+    }
+  }
+
+  Future<void> _onSearchProducts(
+    SearchProducts event,
+    Emitter<ProductLabelsState> emit,
+  ) async {
+    if (state is! ProductLabelsLoaded) return;
+
+    final currentState = state as ProductLabelsLoaded;
+    emit(ProductLabelsLoading());
+    
+    try {
+      final products = await getProductsUsecase.search(event.query);
+
+      emit(ProductLabelsLoaded(
+        products: products,
+        categories: currentState.categories,
+        selectedProducts: currentState.selectedProducts,
+        searchQuery: event.query,
+      ));
+    } catch (e) {
+      emit(ProductLabelsError(e.toString()));
+    }
+  }
+
+  Future<void> _onToggleProductSelection(
+    ToggleProductSelection event,
+    Emitter<ProductLabelsState> emit,
+  ) async {
+    if (state is! ProductLabelsLoaded) return;
+
+    final currentState = state as ProductLabelsLoaded;
+    final selectedProducts = List<Product>.from(currentState.selectedProducts);
+
+    if (selectedProducts.any((p) => p.id == event.product.id)) {
+      selectedProducts.removeWhere((p) => p.id == event.product.id);
+    } else {
+      selectedProducts.add(event.product);
+    }
+
+    emit(currentState.copyWith(selectedProducts: selectedProducts));
+  }
+
+  Future<void> _onClearSelection(
+    ClearSelection event,
+    Emitter<ProductLabelsState> emit,
+  ) async {
+    if (state is! ProductLabelsLoaded) return;
+
+    final currentState = state as ProductLabelsLoaded;
+    emit(currentState.copyWith(selectedProducts: []));
+  }
+
+  Future<void> _onPrintSelectedLabels(
+    PrintSelectedLabels event,
+    Emitter<ProductLabelsState> emit,
+  ) async {
+    if (state is! ProductLabelsLoaded) return;
+
+    final currentState = state as ProductLabelsLoaded;
+    final selectedProducts = currentState.selectedProducts;
+
+    if (selectedProducts.isEmpty) {
+      emit(const ProductLabelsPrintError(
+          'No hay productos seleccionados para imprimir'));
+      emit(currentState);
+      return;
+    }
+
+    emit(ProductLabelsPrinting(selectedProducts));
+
+    try {
+      if (printerDataSource == null) {
+        throw Exception('Impresora no configurada');
+      }
+
+      for (final product in selectedProducts) {
+        final commands = LabelTemplateBuilder.buildProductLabel(product);
+        await printerDataSource!.printCommands(commands);
+      }
+
+      emit(ProductLabelsPrintSuccess(selectedProducts.length));
+      
+      emit(currentState.copyWith(selectedProducts: []));
+    } catch (e) {
+      emit(ProductLabelsPrintError(e.toString()));
+      emit(currentState);
+    }
+  }
+}
