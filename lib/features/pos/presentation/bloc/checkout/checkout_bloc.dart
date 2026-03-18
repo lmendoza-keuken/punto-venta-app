@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:punto_venta_app/core/constants/ticket_template_types.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/pdv_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/price_list_local_datasource.dart';
@@ -11,6 +12,7 @@ import 'package:punto_venta_app/features/pos/domain/usecases/send_invoice_usecas
 import 'package:punto_venta_app/features/pos/presentation/utils/iibb_calculator.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/vat_perception_calculator.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/internal_tax_calculator.dart';
+import 'package:punto_venta_app/features/pos/presentation/utils/ticket_template_resolver.dart';
 import 'checkout_event.dart';
 import 'checkout_state.dart';
 
@@ -50,7 +52,6 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
       final priceList = await priceListLocalDataSource.getCurrentPriceList();
       final enterprise = await authLocalDataSource.getCachedEnterprise();
       final config = await pdvLocalDataSource.getPdvConfig();
-      final appConfig = await getTicketConfigUsecase();
 
       // Validar número de sucursal
       final branchNumber = config?.branchNumber;
@@ -102,16 +103,30 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
 
       final totalWithIibb = event.total + iibbAmount + vatPerceptionAmount + internalTaxAmount;
 
-      // Configurar opciones de impresión
+      // Determinar template automáticamente
+      TicketTemplateType templateType = TicketTemplateType.standard;
       bool showSubtotalAndTax = false;
       bool showPricesWithTax = true;
 
-      if (appConfig != null) {
-        if (appConfig.showSubtotalAndTax && event.client != null) {
-          showSubtotalAndTax = true;
-        }
-        showPricesWithTax = appConfig.showPricesWithTax;
+      bool? clientTaxDetails;
+      if (vatCategory != null) {
+        clientTaxDetails = vatCategory['tax_details'] as bool?;
       }
+
+      templateType = TicketTemplateResolver.resolveTemplate(
+        branchAfipAvailable: branch?.afipAvailable,
+      );
+
+      showPricesWithTax = TicketTemplateResolver.shouldShowPricesWithTax(
+        templateType: templateType,
+        clientTaxDetails: clientTaxDetails,
+      );
+
+      showSubtotalAndTax = TicketTemplateResolver.shouldShowSubtotalAndTax(
+        templateType: templateType,
+        clientTaxDetails: clientTaxDetails,
+        hasClient: event.client != null,
+      );
 
       // Guardar orden completada
       await completeOrderUsecase(
@@ -153,6 +168,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         change: event.change,
         branchNumber: branchNumber,
         branchId: config?.branchId,
+        templateType: templateType,
       );
 
       // Enviar factura y obtener ticketId
@@ -185,6 +201,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         change: event.change,
         branchNumber: branchNumber,
         branchId: config?.branchId,
+        templateType: templateType,
       );
 
       emit(CheckoutSuccess(printJob: finalPrintJob));

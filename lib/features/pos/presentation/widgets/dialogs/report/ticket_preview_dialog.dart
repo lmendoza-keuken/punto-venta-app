@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
+import 'package:punto_venta_app/core/constants/ticket_template_types.dart';
 import 'package:punto_venta_app/core/constants/ticket_types.dart';
 import 'package:punto_venta_app/core/utils/extensions.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
@@ -128,6 +129,8 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
       ivaAmount = widget.ticket.totalTax;
     }
 
+    final templateType = TicketTemplateType.standard;
+
     final printJob = PrintJob(
       items: widget.ticket.items,
       logItems: widget.ticket.logs,
@@ -149,6 +152,7 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
       change: widget.ticket.change,
       receivedAmount: widget.ticket.receivedAmount,
       branchNumber: branchNumber ?? '',
+      templateType: templateType,
     );
 
     if (mounted) {

@@ -1,3 +1,4 @@
+import 'package:punto_venta_app/core/constants/ticket_template_types.dart';
 import 'package:punto_venta_app/features/auth/data/models/enterprise_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_item.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
@@ -30,6 +31,7 @@ class PrintJob {
   final double? change;
   final String branchNumber;
   final int? branchId;
+  final TicketTemplateType templateType;
 
   const PrintJob({
     required this.items,
@@ -57,5 +59,6 @@ class PrintJob {
     this.change,
     required this.branchNumber,
     this.branchId,
+    this.templateType = TicketTemplateType.standard,
   });
 }

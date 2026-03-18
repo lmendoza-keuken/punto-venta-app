@@ -153,7 +153,7 @@ class _TicketSettingsDialogState extends State<TicketSettingsDialog> {
                       });
                     },
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -167,7 +167,8 @@ class _TicketSettingsDialogState extends State<TicketSettingsDialog> {
                         SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Estas configuraciones se aplicarán a todos los tickets generados desde este punto.',
+                            'El formato del ticket se determina automáticamente '
+                            'según la categoría IVA del cliente y la configuración de la sucursal.',
                             style: TextStyle(fontSize: 12),
                           ),
                         ),
