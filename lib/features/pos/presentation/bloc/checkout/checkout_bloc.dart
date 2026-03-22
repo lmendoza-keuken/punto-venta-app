@@ -5,7 +5,9 @@ import 'package:punto_venta_app/features/pos/data/datasources/pdv_local_datasour
 import 'package:punto_venta_app/features/pos/data/datasources/price_list_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/branch_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/vat_category_local_datasource.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/fiscal_issuer_data.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
+import 'package:punto_venta_app/features/pos/domain/repositories/fiscal_issuer_data_repository.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/complete_order_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_ticket_config_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/send_invoice_usecase.dart';
@@ -22,6 +24,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
   final PriceListLocalDataSource priceListLocalDataSource;
   final BranchLocalDataSource branchLocalDataSource;
   final VatCategoryLocalDataSource vatCategoryLocalDataSource;
+  final FiscalIssuerDataRepository fiscalIssuerDataRepository;
   final CompleteOrderUsecase completeOrderUsecase;
   final GetTicketConfigUsecase getTicketConfigUsecase;
   final SendInvoiceUseCase sendInvoiceUseCase;
@@ -32,6 +35,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
     required this.priceListLocalDataSource,
     required this.branchLocalDataSource,
     required this.vatCategoryLocalDataSource,
+    required this.fiscalIssuerDataRepository,
     required this.completeOrderUsecase,
     required this.getTicketConfigUsecase,
     required this.sendInvoiceUseCase,
@@ -128,6 +132,16 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         hasClient: event.client != null,
       );
 
+      // Obtener datos fiscales del emisor si es operación en blanco
+      FiscalIssuerData? fiscalData;
+      if (branch?.afipAvailable == true && config?.branchId != null) {
+        try {
+          fiscalData = await fiscalIssuerDataRepository.getFiscalIssuerData(config!.branchId!);
+        } catch (e) {
+          print('Error al obtener datos fiscales: $e');
+        }
+      }
+
       // Guardar orden completada
       await completeOrderUsecase(
         items: event.items,
@@ -162,6 +176,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         cashierId: int.tryParse(user?.id ?? ''),
         timestamp: DateTime.now(),
         enterprise: enterprise,
+        fiscalIssuerData: fiscalData,
         showSubtotalAndTax: showSubtotalAndTax,
         showPricesWithTax: showPricesWithTax,
         receivedAmount: event.receivedAmount,
@@ -195,6 +210,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         cashierId: int.tryParse(user?.id ?? ''),
         timestamp: tempPrintJob.timestamp,
         enterprise: enterprise,
+        fiscalIssuerData: fiscalData,
         showSubtotalAndTax: showSubtotalAndTax,
         showPricesWithTax: showPricesWithTax,
         receivedAmount: event.receivedAmount,

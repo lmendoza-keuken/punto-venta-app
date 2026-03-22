@@ -4,6 +4,7 @@ import 'package:punto_venta_app/features/pos/domain/entities/cart_item.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/client.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/payment_method.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/fiscal_issuer_data.dart';
 
 class PrintJob {
   final String? ticketId;
@@ -25,6 +26,7 @@ class PrintJob {
   final int? cashierId;
   final DateTime timestamp;
   final EnterpriseModel? enterprise;
+  final FiscalIssuerData? fiscalIssuerData;
   final bool showSubtotalAndTax;
   final bool showPricesWithTax;
   final double? receivedAmount;
@@ -55,6 +57,7 @@ class PrintJob {
     this.showSubtotalAndTax = true,
     this.showPricesWithTax = false,
     this.enterprise,
+    this.fiscalIssuerData,
     this.receivedAmount,
     this.change,
     required this.branchNumber,

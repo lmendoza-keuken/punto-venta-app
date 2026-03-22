@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'dart:convert';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/printer_config.dart';
+import 'package:punto_venta_app/features/pos/presentation/utils/templates/base_ticket_template.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/ticket_template_builder.dart';
 
 abstract class PrinterSocketDatasource {
