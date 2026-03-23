@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:punto_venta_app/core/constants/ticket_template_types.dart';
 import 'package:punto_venta_app/features/pos/data/models/cart_log_entry_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/payment_method.dart';
@@ -38,6 +39,14 @@ class CompletedOrderModel {
   final double? receivedAmount;
   @JsonKey(name: 'change')
   final double? change;
+  @JsonKey(name: 'description')
+  final String? description;
+  @JsonKey(
+    name: 'template_type',
+    fromJson: _templateTypeFromJson,
+    toJson: _templateTypeToJson,
+  )
+  final TicketTemplateType templateType;
 
   const CompletedOrderModel({
     required this.id,
@@ -55,6 +64,8 @@ class CompletedOrderModel {
     this.showPricesWithTax = true,
     this.receivedAmount,
     this.change,
+    this.description,
+    this.templateType = TicketTemplateType.standard,
   });
 
   factory CompletedOrderModel.fromJson(Map<String, dynamic> json) =>
@@ -79,6 +90,8 @@ class CompletedOrderModel {
       showPricesWithTax: showPricesWithTax,
       change: change,
       receivedAmount: receivedAmount,
+      description: description,
+      templateType: templateType,
     );
   }
 
@@ -99,6 +112,8 @@ class CompletedOrderModel {
       showPricesWithTax: order.showPricesWithTax,
       change: order.change,
       receivedAmount: order.receivedAmount,
+      description: order.description,
+      templateType: order.templateType,
     );
   }
 }
@@ -121,4 +136,29 @@ Map<String, dynamic>? _paymentMethodToJson(PaymentMethod? paymentMethod) {
     'short_description': paymentMethod.shortDescription,
     'delete_at': paymentMethod.deleteAt,
   };
+}
+
+TicketTemplateType _templateTypeFromJson(String? json) {
+  if (json == null) return TicketTemplateType.standard;
+  switch (json) {
+    case 'standard':
+      return TicketTemplateType.standard;
+    case 'blackMarket':
+      return TicketTemplateType.blackMarket;
+    case 'whiteMarket':
+      return TicketTemplateType.whiteMarket;
+    default:
+      return TicketTemplateType.standard;
+  }
+}
+
+String _templateTypeToJson(TicketTemplateType templateType) {
+  switch (templateType) {
+    case TicketTemplateType.standard:
+      return 'standard';
+    case TicketTemplateType.blackMarket:
+      return 'blackMarket';
+    case TicketTemplateType.whiteMarket:
+      return 'whiteMarket';
+  }
 }

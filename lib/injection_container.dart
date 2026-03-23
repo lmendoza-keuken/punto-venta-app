@@ -358,7 +358,7 @@ Future<void> init() async {
   sl.registerLazySingleton<FiscalIssuerDataLocalDatasource>(
       () => FiscalIssuerDataLocalDatasourceImpl(sharedPreferences: sl()));
   sl.registerLazySingleton<FiscalIssuerDataRemoteDatasource>(
-      () => FiscalIssuerDataRemoteDatasourceImpl());
+      () => FiscalIssuerDataRemoteDatasourceImpl(dio: sl()));
   sl.registerLazySingleton<BranchLocalDataSource>(
       () => BranchLocalDataSourceImpl(sharedPreferences: sl()));
   sl.registerLazySingleton<InvoiceRemoteDataSource>(

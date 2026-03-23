@@ -16,6 +16,7 @@ class VatCategoryModel with _$VatCategoryModel {
     @JsonKey(name: 'ib_perception') String? ibPerception,
     @JsonKey(name: 'municipal_perceptions') String? municipalPerceptions,
     @JsonKey(name: 'apply_per_vat') bool? applyPerVat,
+    @JsonKey(name: 'tax_details') bool? taxDetails,
   }) = _VatCategoryModel;
 
   factory VatCategoryModel.fromJson(Map<String, dynamic> json) =>

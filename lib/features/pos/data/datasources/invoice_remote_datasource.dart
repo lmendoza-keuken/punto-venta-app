@@ -9,7 +9,7 @@ import 'package:punto_venta_app/features/auth/data/datasources/auth_local_dataso
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 abstract class InvoiceRemoteDataSource {
-  Future<String> sendInvoice(PrintJob job);
+  Future<Map<String, String?>> sendInvoice(PrintJob job);
 }
 
 class InvoiceRemoteDataSourceImpl implements InvoiceRemoteDataSource {
@@ -49,13 +49,13 @@ class InvoiceRemoteDataSourceImpl implements InvoiceRemoteDataSource {
   }
 
   @override
-  Future<String> sendInvoice(PrintJob job) async {
+  Future<Map<String, String?>> sendInvoice(PrintJob job) async {
     final url = ApiConfig.invoiceUrl;
 
     if (url.isEmpty) {
       print('[INVOICE] URL vacía, simulando envío exitoso');
       await Future.delayed(const Duration(seconds: 1));
-      return job.ticketId ?? "";
+      return {'ticketId': job.ticketId ?? "", 'description': null};
     }
 
     final localDs = di.sl<AuthLocalDataSource>();
@@ -91,7 +91,9 @@ class InvoiceRemoteDataSourceImpl implements InvoiceRemoteDataSource {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data as Map<String, dynamic>;
-        return data['ticketId']?.toString() ?? job.ticketId ?? "";
+        final ticketId = data['ticketId']?.toString() ?? job.ticketId ?? "";
+        final description = data['description']?.toString();
+        return {'ticketId': ticketId, 'description': description};
       } else {
         throw DioException(
           requestOptions: response.requestOptions,

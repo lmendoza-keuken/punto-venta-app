@@ -118,6 +118,19 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
       case TicketCommandType.barcode:
         await _printBarcode(69, command.value as String);
         break;
+      case TicketCommandType.barcodeWithType:
+        final barcodeData = command.value as Map<String, dynamic>;
+        await _printBarcode(barcodeData['type'] as int, barcodeData['code'] as String);
+        break;
+      case TicketCommandType.setBarcodeHeight:
+        await _setBarcodeHeight(command.value as int);
+        break;
+      case TicketCommandType.setBarcodeWidth:
+        await _setBarcodeWidth(command.value as int);
+        break;
+      case TicketCommandType.setBarcodeHRIPosition:
+        await _selectHRICharacterPrintPosition(command.value as int);
+        break;
       case TicketCommandType.cutPaper:
         await _selectCutPaperModeAndCutPaper(66, 1);
         break;

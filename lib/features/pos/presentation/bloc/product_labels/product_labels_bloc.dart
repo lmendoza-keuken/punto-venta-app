@@ -3,6 +3,7 @@ import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_products_usecase.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/label_template_builder.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/printer_socket_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/price_list_local_datasource.dart';
 import 'product_labels_event.dart';
 import 'product_labels_state.dart';
@@ -11,11 +12,13 @@ class ProductLabelsBloc extends Bloc<ProductLabelsEvent, ProductLabelsState> {
   final GetProductsUsecase getProductsUsecase;
   final PriceListLocalDataSource priceListLocalDataSource;
   final PrinterSocketDatasource? printerDataSource;
+  final PrinterLocalDataSource printerLocalDataSource;
 
   ProductLabelsBloc({
     required this.getProductsUsecase,
     required this.priceListLocalDataSource,
     this.printerDataSource,
+    required this.printerLocalDataSource,
   }) : super(ProductLabelsInitial()) {
     on<LoadProducts>(_onLoadProducts);
     on<LoadProductsByCategory>(_onLoadProductsByCategory);
@@ -149,15 +152,36 @@ class ProductLabelsBloc extends Bloc<ProductLabelsEvent, ProductLabelsState> {
         throw Exception('Impresora no configurada');
       }
 
+      // Obtener configuración de la impresora
+      final config = await printerLocalDataSource.getPrinterConfig();
+
+      // Conectar a la impresora
+      final connected = await printerDataSource!.connect(config);
+      if (!connected) {
+        throw Exception('No se pudo conectar con la impresora');
+      }
+
+      // Imprimir etiquetas
       for (final product in selectedProducts) {
         final commands = LabelTemplateBuilder.buildProductLabel(product);
-        await printerDataSource!.printCommands(commands);
+        final success = await printerDataSource!.printCommands(commands);
+        if (!success) {
+          throw Exception('Error al imprimir etiqueta de ${product.name}');
+        }
       }
+
+      // Desconectar de la impresora
+      await printerDataSource!.disconnect();
 
       emit(ProductLabelsPrintSuccess(selectedProducts.length));
       
       emit(currentState.copyWith(selectedProducts: []));
     } catch (e) {
+      // Asegurar desconexión en caso de error
+      try {
+        await printerDataSource?.disconnect();
+      } catch (_) {}
+      
       emit(ProductLabelsPrintError(e.toString()));
       emit(currentState);
     }

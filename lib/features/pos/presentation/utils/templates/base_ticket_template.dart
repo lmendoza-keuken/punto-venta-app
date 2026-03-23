@@ -1,7 +1,8 @@
+import 'package:punto_venta_app/core/constants/ticket_template_types.dart';
 import 'package:punto_venta_app/core/utils/extensions.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
 
-/// Clase base abstracta para todos los templates de tickets
+/// Clase base
 abstract class BaseTicketTemplate {
   static const int lineWidth = 48;
 
@@ -18,13 +19,13 @@ abstract class BaseTicketTemplate {
   /// Si isValidInvoice=true e incluye datos fiscales, muestra información fiscal completa
   List<TicketCommand> buildHeader({bool isValidInvoice = false}) {
     final commands = <TicketCommand>[];
-    
+
     commands.add(TicketCommand.alignment(TicketAlignment.center));
-    
+
     // Si es factura válida y tenemos datos fiscales, mostrar encabezado fiscal
     if (isValidInvoice && printJob.fiscalIssuerData != null) {
       final fiscalData = printJob.fiscalIssuerData!;
-      
+
       // Nombre fiscal
       if (fiscalData.fiscalName != null) {
         commands.add(TicketCommand.bold(true));
@@ -32,56 +33,69 @@ abstract class BaseTicketTemplate {
         commands.add(TicketCommand.bold(false));
         commands.add(TicketCommand.feedLine());
       }
-      
+
       // CUIT
       if (fiscalData.cuit != null) {
         commands.add(TicketCommand.text("C.U.I.T. Nro.: ${fiscalData.cuit!}"));
         commands.add(TicketCommand.feedLine());
       }
-      
+
       // Ingresos Brutos
       if (fiscalData.iibbCuit != null) {
-        commands.add(TicketCommand.text("Ing. Brutos: ${fiscalData.iibbCuit!}"));
+        commands
+            .add(TicketCommand.text("Ing. Brutos: ${fiscalData.iibbCuit!}"));
         commands.add(TicketCommand.feedLine());
       }
-      
+
       // Dirección
       if (fiscalData.address != null) {
         commands.add(TicketCommand.text("Domicilio: ${fiscalData.address!}"));
         commands.add(TicketCommand.feedLine());
       }
-      
-      // Inicio de actividades
-      if (fiscalData.activityStartDate != null) {
-        commands.add(TicketCommand.text("Inicio de Actividades: ${fiscalData.activityStartDate!}"));
+
+      // Código Postal
+      if (fiscalData.postalCode != null) {
+        commands.add(TicketCommand.text(fiscalData.postalCode!));
         commands.add(TicketCommand.feedLine());
       }
-      
+
+      // Inicio de actividades
+      if (fiscalData.activityStartDate != null) {
+        commands.add(TicketCommand.text(
+            "Inicio de Actividades: ${fiscalData.activityStartDate!}"));
+        commands.add(TicketCommand.feedLine());
+      }
+
       // Condición IVA
       if (fiscalData.vatCondition != null) {
         commands.add(TicketCommand.text(fiscalData.vatCondition!));
         commands.add(TicketCommand.feedLine());
       }
-      
+
       // Separador
       commands.add(TicketCommand.feedLine());
       commands.add(TicketCommand.text(buildSeparator('=')));
       commands.add(TicketCommand.feedLine());
-      
-      // Documento válido como factura
+
+      // Documento válido como factura o COPIA
       commands.add(TicketCommand.bold(true));
-      commands.add(TicketCommand.text("DOCUMENTO VALIDO COMO FACTURA"));
+      if (printJob.isCopy) {
+        commands.add(TicketCommand.text("COPIA"));
+        commands.add(TicketCommand.feedLine());
+        commands.add(TicketCommand.text("NO VALIDA COMO FACTURA"));
+      } else {
+        commands.add(TicketCommand.text("DOCUMENTO VALIDO COMO FACTURA"));
+      }
       commands.add(TicketCommand.bold(false));
       commands.add(TicketCommand.feedLine());
       commands.add(TicketCommand.text(buildSeparator('=')));
-      
     } else {
       // Encabezado simple (para templates standard y blackMarket)
       commands.add(TicketCommand.bold(true));
       commands.add(TicketCommand.text("${printJob.enterprise?.name}"));
       commands.add(TicketCommand.bold(false));
       commands.add(TicketCommand.feedLine());
-      
+
       if (!isValidInvoice) {
         // Para operaciones en negro (blackMarket), mostrar mensaje más prominente
         commands.add(TicketCommand.feedLine());
@@ -98,16 +112,16 @@ abstract class BaseTicketTemplate {
         // Para factura sin datos fiscales detallados
         commands.add(TicketCommand.text("Sistema de Punto de Venta"));
         commands.add(TicketCommand.feedLine());
-        commands.add(TicketCommand.text("Factura"));
+        commands.add(TicketCommand.text("Ticket"));
         commands.add(TicketCommand.feedLine());
         commands.add(TicketCommand.feedLine());
         commands.add(TicketCommand.text(buildSeparator('_')));
       }
     }
-    
+
     commands.add(TicketCommand.feedLine());
     commands.add(TicketCommand.feedLine());
-    
+
     return commands;
   }
 
@@ -117,17 +131,53 @@ abstract class BaseTicketTemplate {
       TicketCommand.alignment(TicketAlignment.left),
       TicketCommand.text("Orden: ${printJob.ticketId}"),
       TicketCommand.feedLine(),
-      TicketCommand.text("Fecha: ${formatDate(printJob.timestamp)}"),
-      TicketCommand.feedLine(),
-      TicketCommand.text("Hora: ${formatTime(printJob.timestamp)}"),
+    ];
+
+    // Mostrar descripción solo para tickets en blanco (whiteMarket)
+    if (printJob.templateType == TicketTemplateType.whiteMarket &&
+        printJob.description != null &&
+        printJob.description!.isNotEmpty) {
+      commands.add(TicketCommand.text(printJob.description!));
+      commands.add(TicketCommand.feedLine());
+    }
+
+    commands.addAll([
+      TicketCommand.text(
+          "Fecha: ${formatDate(printJob.timestamp)} Hora: ${formatTime(printJob.timestamp)}"),
       TicketCommand.feedLine(),
       TicketCommand.text("Cajero: ${printJob.cashierName}"),
       TicketCommand.feedLine(),
-    ];
+    ]);
 
     if (printJob.clientName != null && printJob.clientName!.isNotEmpty) {
       commands.add(TicketCommand.text("Cliente: ${printJob.clientName}"));
       commands.add(TicketCommand.feedLine());
+
+      // Mostrar documento del cliente si está disponible
+      if (printJob.client != null) {
+        String? documentLabel;
+        String? documentValue;
+
+        // Priorizar CUIT, luego DNI, luego document
+        if (printJob.client!.cuit != null &&
+            printJob.client!.cuit!.isNotEmpty) {
+          documentLabel = "CUIT";
+          documentValue = printJob.client!.cuit;
+        } else if (printJob.client!.dni != null &&
+            printJob.client!.dni!.isNotEmpty) {
+          documentLabel = "DNI";
+          documentValue = printJob.client!.dni;
+        } else if (printJob.client!.document != null &&
+            printJob.client!.document!.isNotEmpty) {
+          documentLabel = "Doc";
+          documentValue = printJob.client!.document;
+        }
+
+        if (documentLabel != null && documentValue != null) {
+          commands.add(TicketCommand.text("$documentLabel: $documentValue"));
+          commands.add(TicketCommand.feedLine());
+        }
+      }
     }
 
     commands.add(TicketCommand.text(buildSeparator('_')));
@@ -140,15 +190,6 @@ abstract class BaseTicketTemplate {
   /// Construye la sección de ítems con control sobre mostrar precios con o sin IVA
   List<TicketCommand> buildItemsDetailed({required bool showPricesWithTax}) {
     final commands = <TicketCommand>[];
-
-    commands.add(TicketCommand.text(buildSeparator('=')));
-    commands.add(TicketCommand.feedLine());
-    commands.add(TicketCommand.bold(true));
-    commands.add(TicketCommand.text("ARTICULOS"));
-    commands.add(TicketCommand.feedLine());
-    commands.add(TicketCommand.bold(false));
-    commands.add(TicketCommand.text(buildSeparator('=')));
-    commands.add(TicketCommand.feedLine());
 
     for (var item in printJob.items) {
       final productName = item.product.name.length > lineWidth - 2
@@ -201,11 +242,12 @@ abstract class BaseTicketTemplate {
     final commands = <TicketCommand>[];
 
     // Calcular subtotal restando todos los impuestos
-    final subtotalAmount = (printJob.total - 
-        printJob.totalTax - 
-        printJob.iibbTax - 
-        printJob.vatPerception -
-        printJob.internalTax).formatToCurrency();
+    final subtotalAmount = (printJob.total -
+            printJob.totalTax -
+            printJob.iibbTax -
+            printJob.vatPerception -
+            printJob.internalTax)
+        .formatToCurrency();
 
     commands.add(TicketCommand.lineWithValue("Subtotal:", subtotalAmount));
 
@@ -216,25 +258,23 @@ abstract class BaseTicketTemplate {
     // Percepción IIBB si es mayor a 0
     if (printJob.iibbTax > 0) {
       final iibbAmount = printJob.iibbTax.formatToCurrency();
-      final iibbLabel = printJob.iibbTaxPercentage != null
-          ? "Percep. IIBB (${printJob.iibbTaxPercentage}%):"
-          : "Percep. IIBB:";
+      final iibbLabel = "Percep. IIBB:";
       commands.add(TicketCommand.lineWithValue(iibbLabel, iibbAmount));
     }
 
     // Percepción IVA si es mayor a 0
     if (printJob.vatPerception > 0) {
       final vatPercepAmount = printJob.vatPerception.formatToCurrency();
-      commands.add(TicketCommand.lineWithValue("Percep. IVA:", vatPercepAmount));
+      commands
+          .add(TicketCommand.lineWithValue("Percep. IVA:", vatPercepAmount));
     }
 
     // Impuesto Interno si es mayor a 0
     if (printJob.internalTax > 0) {
       final internalTaxAmount = printJob.internalTax.formatToCurrency();
-      final internalTaxLabel = printJob.internalTaxRate != null && printJob.internalTaxRate! > 0
-          ? "Imp. Interno (${printJob.internalTaxRate}%):"
-          : "Imp. Interno:";
-      commands.add(TicketCommand.lineWithValue(internalTaxLabel, internalTaxAmount));
+      final internalTaxLabel = "Imp. Interno:";
+      commands.add(
+          TicketCommand.lineWithValue(internalTaxLabel, internalTaxAmount));
     }
 
     commands.add(TicketCommand.text(buildSeparator('_')));
@@ -307,9 +347,11 @@ abstract class BaseTicketTemplate {
 
   /// Construye el código de barras
   List<TicketCommand> buildBarcode() {
+    final barcodeValue = printJob.ticketId?.padLeft(8, '0') ?? '00000000';
+    
     return [
       TicketCommand.alignment(TicketAlignment.center),
-      TicketCommand.barcode(printJob.ticketId ?? ''),
+      TicketCommand.barcode(barcodeValue),
       TicketCommand.feedLine(),
       TicketCommand.feedLine(),
     ];
@@ -368,6 +410,14 @@ class TicketCommand {
       TicketCommand._(TicketCommandType.doubleHeight, enable);
   factory TicketCommand.barcode(String code) =>
       TicketCommand._(TicketCommandType.barcode, code);
+  factory TicketCommand.barcodeWithType(String code, int barcodeType) =>
+      TicketCommand._(TicketCommandType.barcodeWithType, {'code': code, 'type': barcodeType});
+  factory TicketCommand.setBarcodeHeight(int height) =>
+      TicketCommand._(TicketCommandType.setBarcodeHeight, height);
+  factory TicketCommand.setBarcodeWidth(int width) =>
+      TicketCommand._(TicketCommandType.setBarcodeWidth, width);
+  factory TicketCommand.setBarcodeHRIPosition(int position) =>
+      TicketCommand._(TicketCommandType.setBarcodeHRIPosition, position);
   factory TicketCommand.cutPaper() =>
       TicketCommand._(TicketCommandType.cutPaper);
   factory TicketCommand.lineWithValue(String label, String value) =>
@@ -382,6 +432,10 @@ enum TicketCommandType {
   bold,
   doubleHeight,
   barcode,
+  barcodeWithType,
+  setBarcodeHeight,
+  setBarcodeWidth,
+  setBarcodeHRIPosition,
   cutPaper,
   lineWithValue,
 }

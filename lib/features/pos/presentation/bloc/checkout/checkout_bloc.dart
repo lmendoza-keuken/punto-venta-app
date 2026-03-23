@@ -5,6 +5,7 @@ import 'package:punto_venta_app/features/pos/data/datasources/pdv_local_datasour
 import 'package:punto_venta_app/features/pos/data/datasources/price_list_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/branch_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/vat_category_local_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/models/vat_category_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/fiscal_issuer_data.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/fiscal_issuer_data_repository.dart';
@@ -114,7 +115,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
 
       bool? clientTaxDetails;
       if (vatCategory != null) {
-        clientTaxDetails = vatCategory['tax_details'] as bool?;
+        clientTaxDetails = vatCategory.taxDetails;
       }
 
       templateType = TicketTemplateResolver.resolveTemplate(
@@ -154,6 +155,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         showPricesWithTax: showPricesWithTax,
         receivedAmount: event.receivedAmount,
         change: event.change,
+        templateType: templateType,
       );
 
       // Crear PrintJob (sin ticketId definitivo)
@@ -186,10 +188,12 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         templateType: templateType,
       );
 
-      // Enviar factura y obtener ticketId
-      final ticketId = await sendInvoiceUseCase(tempPrintJob);
+      // Enviar factura y obtener ticketId y description
+      final invoiceResponse = await sendInvoiceUseCase(tempPrintJob);
+      final ticketId = invoiceResponse['ticketId'] ?? '';
+      final description = invoiceResponse['description'];
 
-      // PrintJob final con el ticketId
+      // PrintJob final con el ticketId y description
       final finalPrintJob = PrintJob(
         ticketId: ticketId,
         items: event.items,
@@ -217,6 +221,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         change: event.change,
         branchNumber: branchNumber,
         branchId: config?.branchId,
+        description: description,
         templateType: templateType,
       );
 
@@ -226,7 +231,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
     }
   }
 
-  Future<dynamic> _getVatCategoryById(int vatCategoryId) async {
+  Future<VatCategoryModel?> _getVatCategoryById(int vatCategoryId) async {
     final categories =
         await vatCategoryLocalDataSource.getCachedVatCategories();
 

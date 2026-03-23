@@ -33,7 +33,9 @@ class PrintJob {
   final double? change;
   final String branchNumber;
   final int? branchId;
+  final String? description;
   final TicketTemplateType templateType;
+  final bool isCopy;
 
   const PrintJob({
     required this.items,
@@ -62,6 +64,8 @@ class PrintJob {
     this.change,
     required this.branchNumber,
     this.branchId,
+    this.description,
     this.templateType = TicketTemplateType.standard,
+    this.isCopy = false,
   });
 }

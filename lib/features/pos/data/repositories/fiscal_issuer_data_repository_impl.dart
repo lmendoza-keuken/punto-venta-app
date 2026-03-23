@@ -15,10 +15,10 @@ class FiscalIssuerDataRepositoryImpl implements FiscalIssuerDataRepository {
   @override
   Future<FiscalIssuerData> getFiscalIssuerData(int branchId) async {
     try {
-      final cachedData = await localDatasource.getCachedFiscalIssuerData(branchId);
-      if (cachedData != null) {
-        return cachedData.toEntity();
-      }
+      // final cachedData = await localDatasource.getCachedFiscalIssuerData(branchId);
+      // if (cachedData != null) {
+      //   return cachedData.toEntity();
+      // }
 
       final remoteData = await remoteDatasource.getFiscalIssuerData(branchId);
       

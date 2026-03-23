@@ -10,7 +10,10 @@ import 'package:punto_venta_app/features/auth/data/datasources/auth_local_dataso
 import 'package:punto_venta_app/features/pos/data/datasources/pdv_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/completed_orders_remote_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/branch_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/models/tax_model.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/fiscal_issuer_data.dart';
+import 'package:punto_venta_app/features/pos/domain/repositories/fiscal_issuer_data_repository.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/payment_method_repository.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
@@ -20,6 +23,7 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_s
 import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_state.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/report/print_type_dialog.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 class TicketPreviewDialog extends StatelessWidget {
@@ -129,7 +133,19 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
       ivaAmount = widget.ticket.totalTax;
     }
 
-    final templateType = TicketTemplateType.standard;
+    // Usar el templateType de la orden guardada
+    final templateType = widget.ticket.templateType;
+
+    // Obtener datos fiscales si es whiteMarket
+    FiscalIssuerData? fiscalData;
+    if (templateType == TicketTemplateType.whiteMarket && config?.branchId != null) {
+      try {
+        final fiscalRepo = di.sl<FiscalIssuerDataRepository>();
+        fiscalData = await fiscalRepo.getFiscalIssuerData(config!.branchId!);
+      } catch (e) {
+        print('Error al obtener datos fiscales para reimpresión: $e');
+      }
+    }
 
     final printJob = PrintJob(
       items: widget.ticket.items,
@@ -147,12 +163,15 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
       timestamp: widget.ticket.completedAt,
       ticketId: widget.ticket.id,
       enterprise: enterprise,
+      fiscalIssuerData: fiscalData,
       showSubtotalAndTax: widget.ticket.showSubtotalAndTax,
       showPricesWithTax: widget.ticket.showPricesWithTax,
       change: widget.ticket.change,
       receivedAmount: widget.ticket.receivedAmount,
       branchNumber: branchNumber ?? '',
+      description: widget.ticket.description,
       templateType: templateType,
+      isCopy: false, // Por defecto, pero se cambiará al imprimir
     );
 
     if (mounted) {
@@ -392,12 +411,56 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
   void _handlePrint(BuildContext context) async {
     if (_printJob == null) return;
 
+    bool? isCopy = false;
+    
+    if (_printJob!.templateType == TicketTemplateType.whiteMarket) {
+      isCopy = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const PrintTypeDialog(),
+      );
+      
+      if (isCopy == null) return;
+    }
+
     final printerConfig =
         await di.sl<PrinterLocalDataSource>().getPrinterConfig();
 
+    final printJobWithCopyFlag = PrintJob(
+      items: _printJob!.items,
+      logItems: _printJob!.logItems,
+      total: _printJob!.total,
+      clientName: _printJob!.clientName,
+      client: _printJob!.client,
+      priceListId: _printJob!.priceListId,
+      totalTax: _printJob!.totalTax,
+      iibbTax: _printJob!.iibbTax,
+      iibbTaxPercentage: _printJob!.iibbTaxPercentage,
+      vatPerception: _printJob!.vatPerception,
+      vatPerceptionByRate: _printJob!.vatPerceptionByRate,
+      internalTax: _printJob!.internalTax,
+      internalTaxRate: _printJob!.internalTaxRate,
+      paymentMethod: _printJob!.paymentMethod,
+      cashierName: _printJob!.cashierName,
+      cashierId: _printJob!.cashierId,
+      timestamp: _printJob!.timestamp,
+      ticketId: _printJob!.ticketId,
+      enterprise: _printJob!.enterprise,
+      fiscalIssuerData: _printJob!.fiscalIssuerData,
+      showSubtotalAndTax: _printJob!.showSubtotalAndTax,
+      showPricesWithTax: _printJob!.showPricesWithTax,
+      receivedAmount: _printJob!.receivedAmount,
+      change: _printJob!.change,
+      branchNumber: _printJob!.branchNumber,
+      branchId: _printJob!.branchId,
+      description: _printJob!.description,
+      templateType: _printJob!.templateType,
+      isCopy: isCopy,
+    );
+
     // Disparar evento de impresión
     context.read<PrinterBloc>().add(PrintTicket(
-          printJob: _printJob!,
+          printJob: printJobWithCopyFlag,
           config: printerConfig,
         ));
   }
@@ -445,6 +508,10 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
 
             // Información de la orden
             Text('Orden: ${widget.ticket.id}'),
+            if (widget.ticket.templateType == TicketTemplateType.whiteMarket &&
+                widget.ticket.description != null &&
+                widget.ticket.description!.isNotEmpty)
+              Text(widget.ticket.description!),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

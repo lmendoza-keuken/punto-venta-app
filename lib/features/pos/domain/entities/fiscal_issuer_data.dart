@@ -1,12 +1,12 @@
 class FiscalIssuerData {
-  final String? fiscalName;
-  final String? cuit;
-  final String? iibbCuit;
-  final String? address;
-  final String? postalCode;
-  final String? activityStartDate;
-  final String? vatCondition;
-  final int? branchId;
+  final String? fiscalName; 
+  final String? cuit; 
+  final String? iibbCuit; 
+  final String? address; 
+  final String? postalCode; 
+  final String? activityStartDate; 
+  final String? vatCondition; 
+  final int? branchId; 
 
   const FiscalIssuerData({
     this.fiscalName,

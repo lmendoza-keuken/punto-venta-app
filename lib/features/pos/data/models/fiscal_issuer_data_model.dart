@@ -9,14 +9,14 @@ class FiscalIssuerDataModel with _$FiscalIssuerDataModel {
   const FiscalIssuerDataModel._();
 
   const factory FiscalIssuerDataModel({
-    @JsonKey(name: 'fiscal_name') String? fiscalName,
+    @JsonKey(name: 'name') String? fiscalName,
     @JsonKey(name: 'cuit') String? cuit,
-    @JsonKey(name: 'iibb_cuit') String? iibbCuit,
+    @JsonKey(name: 'perception_iiibb') String? iibbCuit,
     @JsonKey(name: 'address') String? address,
-    @JsonKey(name: 'postal_code') String? postalCode,
-    @JsonKey(name: 'activity_start_date') String? activityStartDate,
-    @JsonKey(name: 'vat_condition') String? vatCondition,
-    @JsonKey(name: 'branch_id') int? branchId,
+    @JsonKey(name: 'city') String? postalCode,
+    @JsonKey(name: 'business_start_date') String? activityStartDate,
+    @JsonKey(name: 'vat_category') String? vatCondition,
+    int? branchId,
   }) = _FiscalIssuerDataModel;
 
   factory FiscalIssuerDataModel.fromJson(Map<String, dynamic> json) =>

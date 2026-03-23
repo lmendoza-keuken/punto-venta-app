@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:punto_venta_app/core/constants/ticket_template_types.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/payment_method.dart';
 import 'cart_item.dart';
@@ -20,6 +21,8 @@ class CompletedOrder extends Equatable {
   final double? receivedAmount;
   final double? change;
   final String? typeCode;
+  final String? description;
+  final TicketTemplateType templateType;
 
   const CompletedOrder({
     required this.id,
@@ -38,6 +41,8 @@ class CompletedOrder extends Equatable {
     this.receivedAmount,
     this.change,
     this.typeCode,
+    this.description,
+    this.templateType = TicketTemplateType.standard,
   });
 
   CompletedOrder copyWith({
@@ -56,7 +61,7 @@ class CompletedOrder extends Equatable {
     bool? showPricesWithTax,
     double? receivedAmount,
     double? change,
-    String? typeCode,
+    String? typeCode,    String? description,    TicketTemplateType? templateType,
   }) {
     return CompletedOrder(
       id: id ?? this.id,
@@ -75,6 +80,8 @@ class CompletedOrder extends Equatable {
       receivedAmount: receivedAmount ?? this.receivedAmount,
       change: change ?? this.change,
       typeCode: typeCode ?? this.typeCode,
+      description: description ?? this.description,
+      templateType: templateType ?? this.templateType,
     );
   }
 
@@ -96,5 +103,7 @@ class CompletedOrder extends Equatable {
         receivedAmount,
         change,
         typeCode,
+        description,
+        templateType,
       ];
 }

@@ -233,6 +233,7 @@ class _ReportsPageState extends State<ReportsPage>
                         .add(const LoadAllReports(onlySales: false));
                   }
                 },
+                
               ),
               const SizedBox(width: AppDimensions.paddingS),
               FilterChip(

@@ -173,6 +173,11 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
 
               // Limpiar el carrito y cerrar el panel de confirmación
               if (mounted) {
+                setState(() {
+                  _receivedAmount = null;
+                  _change = null;
+                });
+                
                 context.read<CartBloc>().add(ClearCart());
                 context.read<CheckoutBloc>().add(const ResetCheckout());
                 context.read<ClientsBloc>().add(ResetToDefaultClientEvent());
@@ -232,7 +237,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                       children: [
                         IconButton(
                           icon: const Icon(Icons.arrow_forward),
-                          onPressed: isProcessing ? null : widget.onClose,
+                          onPressed: isProcessing ? null : _handleClose,
                         ),
                         const SizedBox(width: AppDimensions.paddingS),
                         Expanded(
@@ -625,7 +630,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                           child: SizedBox(
                             height: AppDimensions.buttonHeightS,
                             child: ElevatedButton(
-                              onPressed: isProcessing ? null : widget.onClose,
+                              onPressed: isProcessing ? null : _handleClose,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.error,
                                 shape: RoundedRectangleBorder(
@@ -682,5 +687,14 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
             change: _change,
           ),
         );
+  }
+
+  // Función para manejar el cierre del panel
+  void _handleClose() {
+    setState(() {
+      _receivedAmount = null;
+      _change = null;
+    });
+    widget.onClose();
   }
 }

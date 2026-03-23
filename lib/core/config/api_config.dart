@@ -15,6 +15,7 @@ class ApiConfig {
   static String get branchesUrl => '$_baseUrl/branches/';
   static String get taxesUrl => '$_baseUrl/taxes/';
   static String get vatCategoriesUrl => '$_baseUrl/vat-categories/';
+  static String get fiscalDataUrl => '$_baseUrl/configuration/fiscal-data';
 
 
   static void updateCompanyConfig(String companyId, String? baseUrl) {

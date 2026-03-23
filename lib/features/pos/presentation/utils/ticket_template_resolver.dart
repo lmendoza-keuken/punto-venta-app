@@ -1,7 +1,7 @@
 import 'package:punto_venta_app/core/constants/ticket_template_types.dart';
 
 class TicketTemplateResolver {
-  /// Determina el template a usar según:
+  /// Determina el template:
   /// - Sucursal (branchAfipAvailable): true=whiteMarket (blanco), false=blackMarket (negro)
   /// - Cliente (clientTaxDetails): controla si whiteMarket muestra desglose
   static TicketTemplateType resolveTemplate({

@@ -17,6 +17,7 @@ class ProductLabelsPage extends StatelessWidget {
         getProductsUsecase: di.sl(),
         priceListLocalDataSource: di.sl(),
         printerDataSource: di.sl(),
+        printerLocalDataSource: di.sl(),
       )..add(const LoadProducts()),
       child: const _ProductLabelsPageContent(),
     );

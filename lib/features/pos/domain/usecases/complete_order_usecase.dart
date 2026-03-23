@@ -1,3 +1,4 @@
+import 'package:punto_venta_app/core/constants/ticket_template_types.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/payment_method.dart';
 
@@ -21,6 +22,7 @@ class CompleteOrderUsecase {
     bool showPricesWithTax = true,
     double? receivedAmount,
     double? change,
+    TicketTemplateType templateType = TicketTemplateType.standard,
   }) async {
     if (items.isEmpty) {
       throw Exception('No se puede completar una orden vacía');
@@ -62,6 +64,7 @@ class CompleteOrderUsecase {
       showPricesWithTax: showPricesWithTax,
       receivedAmount: receivedAmount,
       change: change,
+      templateType: templateType,
     );
 
     await repository.saveCompletedOrder(order);
