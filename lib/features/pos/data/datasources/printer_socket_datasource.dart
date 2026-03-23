@@ -115,6 +115,9 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
       case TicketCommandType.doubleHeight:
         await _setDoubleHeight(command.value as bool);
         break;
+      case TicketCommandType.doubleWidth:
+        await _setDoubleWidth(command.value as bool);
+        break;
       case TicketCommandType.barcode:
         await _printBarcode(69, command.value as String);
         break;
@@ -199,6 +202,11 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
   Future<bool> _setDoubleHeight(bool enable) async {
     return await _sendData(
         Uint8List.fromList([0x1B, 0x21, enable ? 0x10 : 0x00]));
+  }
+
+  Future<bool> _setDoubleWidth(bool enable) async {
+    return await _sendData(
+        Uint8List.fromList([0x1B, 0x21, enable ? 0x20 : 0x00]));
   }
 
   Future<bool> _setBarcodeWidth(int width) async {

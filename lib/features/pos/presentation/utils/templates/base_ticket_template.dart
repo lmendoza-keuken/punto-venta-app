@@ -408,6 +408,8 @@ class TicketCommand {
       TicketCommand._(TicketCommandType.bold, enable);
   factory TicketCommand.doubleHeight(bool enable) =>
       TicketCommand._(TicketCommandType.doubleHeight, enable);
+  factory TicketCommand.doubleWidth(bool enable) =>
+      TicketCommand._(TicketCommandType.doubleWidth, enable);
   factory TicketCommand.barcode(String code) =>
       TicketCommand._(TicketCommandType.barcode, code);
   factory TicketCommand.barcodeWithType(String code, int barcodeType) =>
@@ -431,6 +433,7 @@ enum TicketCommandType {
   alignment,
   bold,
   doubleHeight,
+  doubleWidth,
   barcode,
   barcodeWithType,
   setBarcodeHeight,

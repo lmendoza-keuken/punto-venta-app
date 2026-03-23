@@ -1,3 +1,4 @@
+import 'package:punto_venta_app/core/utils/extensions.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/templates/base_ticket_template.dart';
 
@@ -28,8 +29,9 @@ class LabelTemplateBuilder {
     
     commands.add(TicketCommand.bold(true));
     commands.add(TicketCommand.doubleHeight(true));
-    final priceText = priceWithVat.toStringAsFixed(2);
-    commands.add(TicketCommand.text("\$ $priceText"));
+    commands.add(TicketCommand.doubleWidth(true));
+    commands.add(TicketCommand.text(priceWithVat.formatToCurrency()));
+    commands.add(TicketCommand.doubleWidth(false));
     commands.add(TicketCommand.doubleHeight(false));
     commands.add(TicketCommand.bold(false));
     commands.add(TicketCommand.feedLine());
