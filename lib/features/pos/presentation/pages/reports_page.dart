@@ -233,7 +233,14 @@ class _ReportsPageState extends State<ReportsPage>
                         .add(const LoadAllReports(onlySales: false));
                   }
                 },
-                
+                selectedColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(
+                    color: Colors.grey.shade300,
+                    width: 1.0,
+                  ),
+                ),
               ),
               const SizedBox(width: AppDimensions.paddingS),
               FilterChip(
@@ -247,6 +254,14 @@ class _ReportsPageState extends State<ReportsPage>
                         .add(const LoadAllReports(onlySales: true));
                   }
                 },
+                selectedColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(
+                    color: Colors.grey.shade300,
+                    width: 1.0,
+                  ),
+                ),
               ),
               const SizedBox(width: AppDimensions.paddingS),
               FilterChip(
@@ -260,6 +275,14 @@ class _ReportsPageState extends State<ReportsPage>
                         .add(const LoadAllReports(onlySales: false));
                   }
                 },
+                selectedColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(
+                    color: Colors.grey.shade300,
+                    width: 1.0,
+                  ),
+                ),
               ),
             ],
           ),
