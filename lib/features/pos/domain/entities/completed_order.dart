@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:punto_venta_app/core/constants/ticket_template_types.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/payment_method.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/client.dart';
 import 'cart_item.dart';
 
 class CompletedOrder extends Equatable {
@@ -12,7 +13,9 @@ class CompletedOrder extends Equatable {
   final double total;
   final DateTime completedAt;
   final String? clientName;
+  final Client? client;
   final String cashierName;
+  final int? cashierId;
   final PaymentMethod? paymentMethod;
   final double totalTax;
   final int totalItems;
@@ -23,6 +26,16 @@ class CompletedOrder extends Equatable {
   final String? typeCode;
   final String? description;
   final TicketTemplateType templateType;
+  final double iibbTax;
+  final double? iibbTaxPercentage;
+  final double vatPerception;
+  final Map<String, double>? vatPerceptionByRate; 
+  final double internalTax;
+  final double? internalTaxRate;
+  final int? priceListId;
+  final String? branchNumber;
+  final int? branchId;
+  final int? externalId;
 
   const CompletedOrder({
     required this.id,
@@ -32,7 +45,9 @@ class CompletedOrder extends Equatable {
     required this.total,
     required this.completedAt,
     this.clientName,
+    this.client,
     required this.cashierName,
+    this.cashierId,
     required this.paymentMethod,
     required this.totalTax,
     required this.totalItems,
@@ -43,6 +58,16 @@ class CompletedOrder extends Equatable {
     this.typeCode,
     this.description,
     this.templateType = TicketTemplateType.standard,
+    this.iibbTax = 0.0,
+    this.iibbTaxPercentage,
+    this.vatPerception = 0.0,
+    this.vatPerceptionByRate,
+    this.internalTax = 0.0,
+    this.internalTaxRate,
+    this.priceListId,
+    this.branchNumber,
+    this.branchId,
+    this.externalId,
   });
 
   CompletedOrder copyWith({
@@ -53,7 +78,9 @@ class CompletedOrder extends Equatable {
     double? total,
     DateTime? completedAt,
     String? clientName,
+    Client? client,
     String? cashierName,
+    int? cashierId,
     PaymentMethod? paymentMethod,
     double? totalTax,
     int? totalItems,
@@ -61,7 +88,19 @@ class CompletedOrder extends Equatable {
     bool? showPricesWithTax,
     double? receivedAmount,
     double? change,
-    String? typeCode,    String? description,    TicketTemplateType? templateType,
+    String? typeCode,
+    String? description,
+    TicketTemplateType? templateType,
+    double? iibbTax,
+    double? iibbTaxPercentage,
+    double? vatPerception,
+    Map<String, double>? vatPerceptionByRate,
+    double? internalTax,
+    double? internalTaxRate,
+    int? priceListId,
+    String? branchNumber,
+    int? branchId,
+    int? externalId,
   }) {
     return CompletedOrder(
       id: id ?? this.id,
@@ -71,7 +110,9 @@ class CompletedOrder extends Equatable {
       total: total ?? this.total,
       completedAt: completedAt ?? this.completedAt,
       clientName: clientName ?? this.clientName,
+      client: client ?? this.client,
       cashierName: cashierName ?? this.cashierName,
+      cashierId: cashierId ?? this.cashierId,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       totalTax: totalTax ?? this.totalTax,
       totalItems: totalItems ?? this.totalItems,
@@ -82,6 +123,16 @@ class CompletedOrder extends Equatable {
       typeCode: typeCode ?? this.typeCode,
       description: description ?? this.description,
       templateType: templateType ?? this.templateType,
+      iibbTax: iibbTax ?? this.iibbTax,
+      iibbTaxPercentage: iibbTaxPercentage ?? this.iibbTaxPercentage,
+      vatPerception: vatPerception ?? this.vatPerception,
+      vatPerceptionByRate: vatPerceptionByRate ?? this.vatPerceptionByRate,
+      internalTax: internalTax ?? this.internalTax,
+      internalTaxRate: internalTaxRate ?? this.internalTaxRate,
+      priceListId: priceListId ?? this.priceListId,
+      branchNumber: branchNumber ?? this.branchNumber,
+      branchId: branchId ?? this.branchId,
+      externalId: externalId ?? this.externalId,
     );
   }
 
@@ -94,7 +145,9 @@ class CompletedOrder extends Equatable {
         total,
         completedAt,
         clientName,
+        client,
         cashierName,
+        cashierId,
         paymentMethod,
         totalTax,
         totalItems,
@@ -105,5 +158,15 @@ class CompletedOrder extends Equatable {
         typeCode,
         description,
         templateType,
+        iibbTax,
+        iibbTaxPercentage,
+        vatPerception,
+        vatPerceptionByRate,
+        internalTax,
+        internalTaxRate,
+        priceListId,
+        branchNumber,
+        branchId,
+        externalId,
       ];
 }

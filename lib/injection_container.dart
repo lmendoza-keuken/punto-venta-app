@@ -245,6 +245,11 @@ Future<void> init() async {
     () => CompletedOrdersRepositoryImpl(
       localDataSource: sl(),
       remoteDataSource: sl(),
+      branchLocalDataSource: sl(),
+      vatCategoryLocalDataSource: sl(),
+      clientLocalDataSource: sl(),
+      taxLocalDataSource: sl(),
+      paymentMethodRepository: sl(),
     ),
   );
   sl.registerLazySingleton<ClientRepository>(

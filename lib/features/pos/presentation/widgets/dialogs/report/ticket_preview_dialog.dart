@@ -7,11 +7,7 @@ import 'package:punto_venta_app/core/constants/ticket_template_types.dart';
 import 'package:punto_venta_app/core/constants/ticket_types.dart';
 import 'package:punto_venta_app/core/utils/extensions.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
-import 'package:punto_venta_app/features/pos/data/datasources/pdv_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
-import 'package:punto_venta_app/features/pos/data/datasources/completed_orders_remote_datasource.dart';
-import 'package:punto_venta_app/features/pos/data/datasources/branch_local_datasource.dart';
-import 'package:punto_venta_app/features/pos/data/models/tax_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/fiscal_issuer_data.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/fiscal_issuer_data_repository.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/payment_method_repository.dart';
@@ -54,6 +50,7 @@ class _TicketPreviewContent extends StatefulWidget {
 
 class _TicketPreviewContentState extends State<_TicketPreviewContent> {
   PrintJob? _printJob;
+  CompletedOrder? _recalculatedTicket;
   String _paymentMethodName = 'Desconocido';
 
   @override
@@ -85,98 +82,69 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
   Future<void> _initializePrintJob() async {
     final localDs = di.sl<AuthLocalDataSource>();
     final enterprise = await localDs.getCachedEnterprise();
-    final config = await di.sl<PdvLocalDataSource>().getPdvConfig();
-    final branchNumber = config?.branchNumber;
+    CompletedOrder ticketToUse = widget.ticket;
+    
+    final iibbAmount = ticketToUse.iibbTax;
+    final iibbPercentage = ticketToUse.iibbTaxPercentage;
+    final vatPerceptionAmount = ticketToUse.vatPerception;
+    final vatPerceptionByRate = ticketToUse.vatPerceptionByRate;
+    final internalTaxAmount = ticketToUse.internalTax;
+    final internalTaxRate = ticketToUse.internalTaxRate;
+    final ivaAmount = ticketToUse.totalTax;
+    final branchNumber = ticketToUse.branchNumber;
+    final branchId = ticketToUse.branchId;
+    final priceListId = ticketToUse.priceListId;
+    final cashierId = ticketToUse.cashierId;
+    final client = ticketToUse.client;
 
-    double iibbAmount = 0.0;
-    double iibbPercentage = 0.0;
-    double vatPerceptionAmount = 0.0;
-    double internalTaxAmount = 0.0;
-    double? internalTaxRate;
-    double ivaAmount = 0.0;
+    final templateType = ticketToUse.templateType;
 
-    try {
-      final remoteDataSource = di.sl<CompletedOrdersRemoteDataSource>();
-      final invoicePayload =
-          await remoteDataSource.getTicketById(widget.ticket.id);
-
-      if (invoicePayload != null && invoicePayload.totalTax.isNotEmpty) {
-        // Extraer IVA (id: 1, 2, 3)
-        ivaAmount = invoicePayload.totalTax
-            .where((tax) => tax.id >= 0 && tax.id <= 3)
-            .fold(0.0, (sum, tax) => sum + (tax.amount ?? 0.0));
-
-        // Extraer IIBB (id: 4)
-        final iibbTax = invoicePayload.totalTax.firstWhere(
-          (tax) => tax.id == 4,
-          orElse: () => const TaxModel(id: 4, amount: 0.0),
-        );
-        iibbAmount = iibbTax.amount ?? 0.0;
-        iibbPercentage = iibbTax.percentage ?? 0.0;
-
-        // Extraer VAT Perception (id: 6)
-        final vatPercepTax = invoicePayload.totalTax.firstWhere(
-          (tax) => tax.id == 6,
-          orElse: () => const TaxModel(id: 6, amount: 0.0),
-        );
-        vatPerceptionAmount = vatPercepTax.amount ?? 0.0;
-
-        // Extraer Impuesto Interno (id: 7)
-        final internalTax = invoicePayload.totalTax.firstWhere(
-          (tax) => tax.id == 7,
-          orElse: () => const TaxModel(id: 7, amount: 0.0),
-        );
-        internalTaxAmount = internalTax.amount ?? 0.0;
-        internalTaxRate = internalTax.percentage;
-      }
-    } catch (e) {
-      ivaAmount = widget.ticket.totalTax;
-    }
-
-    // Usar el templateType de la orden guardada
-    final templateType = widget.ticket.templateType;
-
-    // Obtener datos fiscales si es whiteMarket
     FiscalIssuerData? fiscalData;
-    if (templateType == TicketTemplateType.whiteMarket && config?.branchId != null) {
+    if (templateType == TicketTemplateType.whiteMarket && branchId != null) {
       try {
         final fiscalRepo = di.sl<FiscalIssuerDataRepository>();
-        fiscalData = await fiscalRepo.getFiscalIssuerData(config!.branchId!);
+        fiscalData = await fiscalRepo.getFiscalIssuerData(branchId);
       } catch (e) {
         print('Error al obtener datos fiscales para reimpresión: $e');
       }
     }
 
     final printJob = PrintJob(
-      items: widget.ticket.items,
-      logItems: widget.ticket.logs,
-      total: widget.ticket.total,
-      clientName: widget.ticket.clientName,
+      items: ticketToUse.items,
+      logItems: ticketToUse.logs,
+      total: ticketToUse.total,
+      clientName: ticketToUse.clientName,
+      client: client,
+      priceListId: priceListId,
       totalTax: ivaAmount,
       iibbTax: iibbAmount,
       iibbTaxPercentage: iibbPercentage,
       vatPerception: vatPerceptionAmount,
+      vatPerceptionByRate: vatPerceptionByRate,
       internalTax: internalTaxAmount,
       internalTaxRate: internalTaxRate,
-      paymentMethod: widget.ticket.paymentMethod,
-      cashierName: widget.ticket.cashierName,
-      timestamp: widget.ticket.completedAt,
-      ticketId: widget.ticket.id,
+      paymentMethod: ticketToUse.paymentMethod,
+      cashierName: ticketToUse.cashierName,
+      cashierId: cashierId,
+      timestamp: ticketToUse.completedAt,
+      ticketId: ticketToUse.id,
       enterprise: enterprise,
       fiscalIssuerData: fiscalData,
-      showSubtotalAndTax: widget.ticket.showSubtotalAndTax,
-      showPricesWithTax: widget.ticket.showPricesWithTax,
-      change: widget.ticket.change,
-      receivedAmount: widget.ticket.receivedAmount,
+      showSubtotalAndTax: ticketToUse.showSubtotalAndTax,
+      showPricesWithTax: ticketToUse.showPricesWithTax,
+      change: ticketToUse.change,
+      receivedAmount: ticketToUse.receivedAmount,
       branchNumber: branchNumber ?? '',
-      description: widget.ticket.description,
+      branchId: branchId,
+      description: ticketToUse.description,
       templateType: templateType,
-      isCopy: false, // Por defecto, pero se cambiará al imprimir
+      isCopy: false, 
     );
 
     if (mounted) {
       setState(() {
         _printJob = printJob;
+        _recalculatedTicket = ticketToUse;
       });
     }
   }
@@ -376,26 +344,27 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                           ),
                         if (!isCreditNote)
                           const SizedBox(width: AppDimensions.paddingS),
-                        ElevatedButton.icon(
-                          onPressed:
-                              isLoading ? null : () => _handlePrint(context),
-                          icon: isLoading
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white),
+                        if (!isCreditNote)
+                          ElevatedButton.icon(
+                            onPressed:
+                                isLoading ? null : () => _handlePrint(context),
+                            icon: isLoading
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          Colors.white),
+                                    ),
+                                  )
+                                : const Icon(
+                                    Icons.print,
+                                    color: Colors.white,
                                   ),
-                                )
-                              : const Icon(
-                                  Icons.print,
-                                  color: Colors.white,
-                                ),
-                          label:
-                              Text(isLoading ? 'Imprimiendo...' : 'Imprimir'),
-                        ),
+                            label:
+                                Text(isLoading ? 'Imprimiendo...' : 'Imprimir'),
+                          ),
                       ],
                     );
                   },
@@ -466,7 +435,7 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
   }
 
   void _handleConvertToCreditNote(BuildContext context) {
-    context.read<ReportsBloc>().add(GenerateCreditNote(widget.ticket.id ?? ""));
+    context.read<ReportsBloc>().add(GenerateCreditNote(widget.ticket.id));
   }
 
   Widget _buildTicketContent(BuildContext context) {
@@ -481,21 +450,52 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header del negocio
             Center(
               child: Column(
                 children: [
-                  Text(
-                    _printJob!.enterprise?.name ?? '',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                  // Si es whiteMarket con datos fiscales, mostrar header completo
+                  if (_printJob!.templateType == TicketTemplateType.whiteMarket &&
+                      _printJob!.fiscalIssuerData != null) ...[
+                    if (_printJob!.fiscalIssuerData!.fiscalName != null)
+                      Text(
+                        _printJob!.fiscalIssuerData!.fiscalName!,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    const SizedBox(height: 4),
+                    if (_printJob!.fiscalIssuerData!.cuit != null)
+                      Text('C.U.I.T. Nro.: ${_printJob!.fiscalIssuerData!.cuit}'),
+                    if (_printJob!.fiscalIssuerData!.iibbCuit != null)
+                      Text('Ing. Brutos: ${_printJob!.fiscalIssuerData!.iibbCuit}'),
+                    if (_printJob!.fiscalIssuerData!.address != null)
+                      Text('Domicilio: ${_printJob!.fiscalIssuerData!.address}'),
+                    if (_printJob!.fiscalIssuerData!.postalCode != null)
+                      Text(_printJob!.fiscalIssuerData!.postalCode!),
+                    if (_printJob!.fiscalIssuerData!.activityStartDate != null)
+                      Text('Inicio de Actividades: ${_printJob!.fiscalIssuerData!.activityStartDate}'),
+                    if (_printJob!.fiscalIssuerData!.vatCondition != null)
+                      Text(_printJob!.fiscalIssuerData!.vatCondition!),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'DOCUMENTO VALIDO COMO FACTURA',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
                     ),
-                  ),
-
-                  const Text('Sistema de Punto de Venta'),
-                  const Text('comprobante no valido como factura'),
-                  // const Text('Tel: (555) 123-4567'),
+                  ] else ...[
+                    Text(
+                      _printJob!.enterprise?.name ?? '',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Text('Sistema de Punto de Venta'),
+                    const Text('comprobante no valido como factura'),
+                  ],
+                  
                   const SizedBox(height: 16),
                   Container(
                     height: 1,
@@ -523,8 +523,12 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
             ),
             Text('Cajero: ${widget.ticket.cashierName}'),
             if (widget.ticket.clientName != null &&
-                widget.ticket.clientName!.isNotEmpty)
+                widget.ticket.clientName!.isNotEmpty) ...[
               Text('Cliente: ${widget.ticket.clientName}'),
+              if (widget.ticket.client?.document != null &&
+                  widget.ticket.client!.document!.isNotEmpty)
+                Text('Documento: ${widget.ticket.client!.document}'),
+            ],
 
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 12),
@@ -534,7 +538,7 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
             ),
 
             // Items
-            ...widget.ticket.items.map((item) {
+            ...(_recalculatedTicket ?? widget.ticket).items.map((item) {
               final basePrice = item.pricePerKg ?? item.product.price ?? 0.0;
               final displayPrice = _printJob!.showPricesWithTax
                   ? _calculatePriceWithTax(basePrice, item.product.vat)
@@ -597,7 +601,7 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('Subtotal:'),
-                Text((widget.ticket.total -
+                Text(((_recalculatedTicket ?? widget.ticket).total -
                         _printJob!.totalTax -
                         _printJob!.iibbTax -
                         _printJob!.vatPerception -
@@ -710,7 +714,7 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
             // Información adicional
             Text('Método de pago: $_paymentMethodName'),
             Text(
-                'Total de artículos: ${widget.ticket.items?.fold(0, (previousValue, element) => previousValue + (element.quantity ?? 0)) ?? 0}'),
+                'Total de artículos: ${widget.ticket.items.fold(0, (previousValue, element) => previousValue + element.quantity)}'),
 
             const SizedBox(height: 16),
             const Center(

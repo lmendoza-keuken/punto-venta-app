@@ -54,12 +54,15 @@ class CartLogItemWidget extends StatelessWidget {
                             color: Colors.grey.shade600,
                             fontWeight: FontWeight.bold),
                       ),
-                      Text(
-                        '  •  ${(((entry.item.product.price ?? 0) * (entry.item.product.vat / 100)) + (entry.item.product.price ?? 0)).formatToCurrency()}  •  ${entry.timestamp.hour.toString().padLeft(2, '0')}:${entry.timestamp.minute.toString().padLeft(2, '0')}',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.copyWith(color: Colors.grey.shade600),
+                      Flexible(
+                        child: Text(
+                          '  • ${(((entry.item.product.price ?? 0) * (entry.item.product.vat / 100)) + (entry.item.product.price ?? 0)).formatToCurrency()}  • ${entry.timestamp.hour.toString().padLeft(2, '0')}:${entry.timestamp.minute.toString().padLeft(2, '0')}',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(color: Colors.grey.shade600),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),

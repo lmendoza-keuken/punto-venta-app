@@ -15,7 +15,7 @@ class PrintJob {
   final double iibbTax;
   final double? iibbTaxPercentage;
   final double vatPerception;
-  final Map<double, double>? vatPerceptionByRate;
+  final Map<String, double>? vatPerceptionByRate; 
   final double internalTax;
   final double? internalTaxRate;
   final String? clientName;

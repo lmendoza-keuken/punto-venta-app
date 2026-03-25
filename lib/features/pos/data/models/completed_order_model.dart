@@ -3,6 +3,7 @@ import 'package:punto_venta_app/core/constants/ticket_template_types.dart';
 import 'package:punto_venta_app/features/pos/data/models/cart_log_entry_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/payment_method.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/client.dart';
 import 'cart_item_model.dart';
 
 part 'completed_order_model.g.dart';
@@ -19,8 +20,16 @@ class CompletedOrderModel {
   final DateTime completedAt;
   @JsonKey(name: 'client_name')
   final String? clientName;
+  @JsonKey(
+    name: 'client',
+    fromJson: _clientFromJson,
+    toJson: _clientToJson,
+  )
+  final Client? client;
   @JsonKey(name: 'cashier_name')
   final String cashierName;
+  @JsonKey(name: 'cashier_id')
+  final int? cashierId;
   @JsonKey(
     name: 'payment_method',
     fromJson: _paymentMethodFromJson,
@@ -39,6 +48,8 @@ class CompletedOrderModel {
   final double? receivedAmount;
   @JsonKey(name: 'change')
   final double? change;
+  @JsonKey(name: 'type_code')
+  final String? typeCode;
   @JsonKey(name: 'description')
   final String? description;
   @JsonKey(
@@ -47,6 +58,26 @@ class CompletedOrderModel {
     toJson: _templateTypeToJson,
   )
   final TicketTemplateType templateType;
+  @JsonKey(name: 'iibb_tax')
+  final double iibbTax;
+  @JsonKey(name: 'iibb_tax_percentage')
+  final double? iibbTaxPercentage;
+  @JsonKey(name: 'vat_perception')
+  final double vatPerception;
+  @JsonKey(name: 'vat_perception_by_rate')
+  final Map<String, double>? vatPerceptionByRate;
+  @JsonKey(name: 'internal_tax')
+  final double internalTax;
+  @JsonKey(name: 'internal_tax_rate')
+  final double? internalTaxRate;
+  @JsonKey(name: 'price_list_id')
+  final int? priceListId;
+  @JsonKey(name: 'branch_number')
+  final String? branchNumber;
+  @JsonKey(name: 'branch_id')
+  final int? branchId;
+  @JsonKey(name: 'external_id')
+  final int? externalId;
 
   const CompletedOrderModel({
     required this.id,
@@ -56,7 +87,9 @@ class CompletedOrderModel {
     required this.total,
     required this.completedAt,
     this.clientName,
+    this.client,
     required this.cashierName,
+    this.cashierId,
     this.paymentMethod,
     required this.totalTax,
     required this.totalItems,
@@ -64,8 +97,19 @@ class CompletedOrderModel {
     this.showPricesWithTax = true,
     this.receivedAmount,
     this.change,
+    this.typeCode,
     this.description,
     this.templateType = TicketTemplateType.standard,
+    this.iibbTax = 0.0,
+    this.iibbTaxPercentage,
+    this.vatPerception = 0.0,
+    this.vatPerceptionByRate,
+    this.internalTax = 0.0,
+    this.internalTaxRate,
+    this.priceListId,
+    this.branchNumber,
+    this.branchId,
+    this.externalId,
   });
 
   factory CompletedOrderModel.fromJson(Map<String, dynamic> json) =>
@@ -82,16 +126,29 @@ class CompletedOrderModel {
       total: total,
       completedAt: completedAt,
       clientName: clientName,
+      client: client,
       cashierName: cashierName,
+      cashierId: cashierId,
       paymentMethod: paymentMethod,
       totalTax: totalTax,
       totalItems: totalItems,
       showSubtotalAndTax: showSubtotalAndTax,
       showPricesWithTax: showPricesWithTax,
-      change: change,
       receivedAmount: receivedAmount,
+      change: change,
+      typeCode: typeCode,
       description: description,
       templateType: templateType,
+      iibbTax: iibbTax,
+      iibbTaxPercentage: iibbTaxPercentage,
+      vatPerception: vatPerception,
+      vatPerceptionByRate: vatPerceptionByRate,
+      internalTax: internalTax,
+      internalTaxRate: internalTaxRate,
+      priceListId: priceListId,
+      branchNumber: branchNumber,
+      branchId: branchId,
+      externalId: externalId,
     );
   }
 
@@ -104,16 +161,29 @@ class CompletedOrderModel {
       total: order.total,
       completedAt: order.completedAt,
       clientName: order.clientName,
+      client: order.client,
       cashierName: order.cashierName,
+      cashierId: order.cashierId,
       paymentMethod: order.paymentMethod,
       totalTax: order.totalTax,
       totalItems: order.totalItems,
       showSubtotalAndTax: order.showSubtotalAndTax,
       showPricesWithTax: order.showPricesWithTax,
-      change: order.change,
       receivedAmount: order.receivedAmount,
+      change: order.change,
+      typeCode: order.typeCode,
       description: order.description,
       templateType: order.templateType,
+      iibbTax: order.iibbTax,
+      iibbTaxPercentage: order.iibbTaxPercentage,
+      vatPerception: order.vatPerception,
+      vatPerceptionByRate: order.vatPerceptionByRate,
+      internalTax: order.internalTax,
+      internalTaxRate: order.internalTaxRate,
+      priceListId: order.priceListId,
+      branchNumber: order.branchNumber,
+      branchId: order.branchId,
+      externalId: order.externalId,
     );
   }
 }
@@ -136,6 +206,16 @@ Map<String, dynamic>? _paymentMethodToJson(PaymentMethod? paymentMethod) {
     'short_description': paymentMethod.shortDescription,
     'delete_at': paymentMethod.deleteAt,
   };
+}
+
+Client? _clientFromJson(Map<String, dynamic>? json) {
+  if (json == null) return null;
+  return Client.fromJson(json);
+}
+
+Map<String, dynamic>? _clientToJson(Client? client) {
+  if (client == null) return null;
+  return client.toJson();
 }
 
 TicketTemplateType _templateTypeFromJson(String? json) {

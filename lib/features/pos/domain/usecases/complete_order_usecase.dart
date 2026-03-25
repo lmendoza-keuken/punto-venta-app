@@ -1,6 +1,7 @@
 import 'package:punto_venta_app/core/constants/ticket_template_types.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/payment_method.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
 
 import '../entities/completed_order.dart';
 import '../entities/cart_item.dart';
@@ -10,6 +11,48 @@ class CompleteOrderUsecase {
   final CompletedOrdersRepository repository;
 
   CompleteOrderUsecase(this.repository);
+
+  Future<CompletedOrder> fromPrintJob(PrintJob printJob) async {
+    if (printJob.items.isEmpty) {
+      throw Exception('No se puede completar una orden vacía');
+    }
+
+    final order = CompletedOrder(
+      id: printJob.ticketId ?? printJob.timestamp.millisecondsSinceEpoch.toString(),
+      orderNumber: printJob.description ?? _generateOrderNumber(printJob.timestamp),
+      items: printJob.items,
+      logs: printJob.logItems,
+      total: printJob.total,
+      completedAt: printJob.timestamp,
+      clientName: printJob.clientName,
+      client: printJob.client,
+      cashierName: printJob.cashierName ?? 'Desconocido',
+      cashierId: printJob.cashierId,
+      paymentMethod: printJob.paymentMethod,
+      totalTax: printJob.totalTax,
+      totalItems: printJob.items.fold(0, (sum, item) => sum + item.quantity),
+      showSubtotalAndTax: printJob.showSubtotalAndTax,
+      showPricesWithTax: printJob.showPricesWithTax,
+      receivedAmount: printJob.receivedAmount,
+      change: printJob.change,
+      typeCode: printJob.description?.split(' ').first, 
+      description: printJob.description,
+      templateType: printJob.templateType,
+      iibbTax: printJob.iibbTax,
+      iibbTaxPercentage: printJob.iibbTaxPercentage,
+      vatPerception: printJob.vatPerception,
+      vatPerceptionByRate: printJob.vatPerceptionByRate,
+      internalTax: printJob.internalTax,
+      internalTaxRate: printJob.internalTaxRate,
+      priceListId: printJob.priceListId,
+      branchNumber: printJob.branchNumber,
+      branchId: printJob.branchId,
+    );
+
+    await repository.saveCompletedOrder(order);
+
+    return order;
+  }
 
   Future<CompletedOrder> call({
     required List<CartItem> items,

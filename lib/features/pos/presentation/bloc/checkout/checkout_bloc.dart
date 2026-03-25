@@ -96,7 +96,10 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
       );
 
       final vatPerceptionAmount = vatPerceptionResult['total'] ?? 0.0;
-      final vatPerceptionByRate = vatPerceptionResult['byPerception'] as Map<double, double>?;
+      final vatPerceptionByRateDouble = vatPerceptionResult['byPerception'] as Map<double, double>?;
+      final vatPerceptionByRate = vatPerceptionByRateDouble?.map(
+        (key, value) => MapEntry(key.toString(), value),
+      );
 
       // Calcular impuesto interno
       final internalTaxResult = InternalTaxCalculator.calculateInternalTax(
@@ -142,21 +145,6 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
           print('Error al obtener datos fiscales: $e');
         }
       }
-
-      // Guardar orden completada
-      await completeOrderUsecase(
-        items: event.items,
-        logItems: event.logItems,
-        total: totalWithIibb,
-        clientName: event.client?.name,
-        paymentMethod: event.paymentMethod,
-        cashierName: user?.name ?? 'Desconocido',
-        showSubtotalAndTax: showSubtotalAndTax,
-        showPricesWithTax: showPricesWithTax,
-        receivedAmount: event.receivedAmount,
-        change: event.change,
-        templateType: templateType,
-      );
 
       // Crear PrintJob (sin ticketId definitivo)
       final tempPrintJob = PrintJob(
@@ -224,6 +212,8 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         description: description,
         templateType: templateType,
       );
+
+      await completeOrderUsecase.fromPrintJob(finalPrintJob);
 
       emit(CheckoutSuccess(printJob: finalPrintJob));
     } catch (e) {

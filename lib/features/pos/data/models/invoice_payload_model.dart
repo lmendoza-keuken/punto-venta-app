@@ -18,6 +18,7 @@ class InvoicePayload {
   final int branchId;
   final int? externalId;
   final String? typeCode;
+  final String? description;
 
   InvoicePayload({
     this.ticketId,
@@ -32,6 +33,7 @@ class InvoicePayload {
     required this.branchId,
     this.externalId,
     this.typeCode,
+    this.description,
   });
 
   static Map<String, dynamic> _serializeTax(TaxModel t) {
@@ -75,6 +77,7 @@ class InvoicePayload {
       branchId: json['branch_id'] as int? ?? 0,
       externalId: json['external_id'] as int?,
       typeCode: json['type_code'] as String?,
+      description: json['description'] as String?,
     );
   }
 

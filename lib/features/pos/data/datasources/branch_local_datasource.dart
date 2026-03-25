@@ -36,22 +36,11 @@ class BranchLocalDataSourceImpl implements BranchLocalDataSource {
   @override
   Future<BranchResponseModel?> getBranchById(int branchId) async {
     final branches = await getCachedBranches();
-    print('[BRANCH_DS] 🔍 Buscando branch_id=$branchId');
-    print('[BRANCH_DS] 📋 Branches en caché: ${branches?.length ?? 0}');
-    
-    if (branches == null) {
-      print('[BRANCH_DS] ❌ No hay branches en caché');
-      return null;
-    }
-    
-    print('[BRANCH_DS] IDs disponibles: ${branches.map((b) => b.branchId).join(', ')}');
+    if (branches == null) return null;
     
     try {
-      final found = branches.firstWhere((b) => b.branchId == branchId);
-      print('[BRANCH_DS] ✅ Branch encontrada: ${found.name} (id: ${found.branchId})');
-      return found;
+      return branches.firstWhere((b) => b.branchId == branchId);
     } catch (e) {
-      print('[BRANCH_DS] ❌ Branch no encontrada con id=$branchId');
       return null;
     }
   }

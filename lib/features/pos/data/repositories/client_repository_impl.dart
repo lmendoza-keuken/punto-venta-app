@@ -16,6 +16,11 @@ class ClientRepositoryImpl implements ClientRepository {
   Future<List<Client>> getClients() async {
     try {
       final clients = await remoteDataSource.getClients();
+      
+      for (final client in clients) {
+        await localDataSource.saveClient(client);
+      }
+      
       return clients;
     } catch (e) {
       print('Error al cargar clientes del backend: $e');
