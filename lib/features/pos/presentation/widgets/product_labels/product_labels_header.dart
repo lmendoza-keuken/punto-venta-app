@@ -35,6 +35,8 @@ class ProductLabelsHeader extends StatelessWidget {
                 ),
               ),
               const Spacer(),
+              _buildSelectAllButton(),
+              const SizedBox(width: 8),
               _buildActionButtons(),
             ],
           ),
@@ -42,6 +44,29 @@ class ProductLabelsHeader extends StatelessWidget {
           const ProductLabelsSearchBar(),
         ],
       ),
+    );
+  }
+
+  Widget _buildSelectAllButton() {
+    return BlocBuilder<ProductLabelsBloc, ProductLabelsState>(
+      builder: (context, state) {
+        if (state is ProductLabelsLoaded && state.products.isNotEmpty) {
+          final allSelected = state.selectedProducts.length == state.products.length;
+          return TextButton.icon(
+            icon: Icon(allSelected ? Icons.check_box : Icons.check_box_outline_blank),
+            label: Text(allSelected ? 'Deseleccionar todas' : 'Seleccionar todas'),
+            onPressed: () {
+              final bloc = context.read<ProductLabelsBloc>();
+              if (allSelected) {
+                bloc.add(ClearSelection());
+              } else {
+                bloc.add(SelectAllVisibleProducts());
+              }
+            },
+          );
+        }
+        return const SizedBox.shrink();
+      },
     );
   }
 

@@ -1,3 +1,4 @@
+
 import 'package:equatable/equatable.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
 
@@ -45,4 +46,8 @@ class ClearSelection extends ProductLabelsEvent {
 
 class PrintSelectedLabels extends ProductLabelsEvent {
   const PrintSelectedLabels();
+}
+
+class SelectAllVisibleProducts extends ProductLabelsEvent {
+  const SelectAllVisibleProducts();
 }

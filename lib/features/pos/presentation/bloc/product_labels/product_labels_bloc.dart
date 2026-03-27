@@ -26,7 +26,18 @@ class ProductLabelsBloc extends Bloc<ProductLabelsEvent, ProductLabelsState> {
     on<ToggleProductSelection>(_onToggleProductSelection);
     on<ClearSelection>(_onClearSelection);
     on<PrintSelectedLabels>(_onPrintSelectedLabels);
+    on<SelectAllVisibleProducts>(_onSelectAllVisibleProducts);
   }
+
+    Future<void> _onSelectAllVisibleProducts(
+      SelectAllVisibleProducts event,
+      Emitter<ProductLabelsState> emit,
+    ) async {
+      if (state is! ProductLabelsLoaded) return;
+      final currentState = state as ProductLabelsLoaded;
+      emit(currentState.copyWith(selectedProducts: List<Product>.from(currentState.products)));
+    }
+
 
   Future<void> _onLoadProducts(
     LoadProducts event,

@@ -4,61 +4,71 @@ import 'package:punto_venta_app/features/pos/presentation/utils/templates/base_t
 
 /// Builder para etiquetas de góndola de productos
 class LabelTemplateBuilder {
-  static const int lineWidth = 48;
+  // Para dejar un margen derecho de ~2cm (en impresora 80mm, 48 chars, 2cm ≈ 14 chars)
+  static const int _maxLineChars = 34;
+
+  static String _truncateLine(String text) {
+    if (text.length > _maxLineChars) {
+      return text.substring(0, _maxLineChars);
+    }
+    return text;
+  }
+
+  static const int _nameMaxChars = 28;
 
   /// Construye una etiqueta para un producto
   static List<TicketCommand> buildProductLabel(Product product) {
     final commands = <TicketCommand>[];
 
+    final basePrice = product.price ?? 0.0;
+    final vatPercent = product.vat;
+    final priceWithVat = basePrice + (basePrice * (vatPercent / 100));
 
-    // === NOMBRE DEL PRODUCTO ===
-    commands.add(TicketCommand.alignment(TicketAlignment.center));
+    final date = _formatDate(DateTime.now());
+
+
+    // ===== NOMBRE PRODUCTO =====
+    commands.add(TicketCommand.alignment(TicketAlignment.left));
     commands.add(TicketCommand.bold(true));
-    final productName = product.name;
-    final nameLines = _wrapText(productName, lineWidth);
+
+    final normalizedName =
+        product.name.toUpperCase().replaceAll(RegExp(r'\s+'), ' ').trim();
+    final nameLines = _wrapText(normalizedName, _nameMaxChars).take(2).toList();
+
     for (final line in nameLines) {
-      commands.add(TicketCommand.text(line));
+      commands.add(TicketCommand.text(_truncateLine(line)));
       commands.add(TicketCommand.feedLine());
     }
     commands.add(TicketCommand.bold(false));
-    commands.add(TicketCommand.feedLine());
 
-    // === PRECIO ===
-    // Calcular precio con IVA
-    final priceWithVat = ((product.price ?? 0) * (product.vat / 100)) + (product.price ?? 0);
-    
+    // ===== FILA PRECIO =====
+    commands.add(TicketCommand.alignment(TicketAlignment.left));
     commands.add(TicketCommand.bold(true));
-    commands.add(TicketCommand.doubleHeight(true));
-    commands.add(TicketCommand.doubleWidth(true));
+    commands.add(TicketCommand.textSize(width: 3, height: 4));
     commands.add(TicketCommand.text(priceWithVat.formatToCurrency()));
-    commands.add(TicketCommand.doubleWidth(false));
-    commands.add(TicketCommand.doubleHeight(false));
+    commands.add(TicketCommand.textSize(width: 1, height: 1));
+    commands.add(TicketCommand.feedLine());
     commands.add(TicketCommand.bold(false));
-    commands.add(TicketCommand.feedLine());
+
+    // ===== PIE =====
+    commands.add(TicketCommand.alignment(TicketAlignment.left));
+    commands.add(TicketCommand.text(_truncateLine('Cod: ${product.id}  $date')));
     commands.add(TicketCommand.feedLine());
 
-    // === CÓDIGO DE BARRAS ===
+
+    // ===== CODIGO DE BARRAS =====
     if (product.barcodes != null && product.barcodes!.isNotEmpty) {
-      final firstBarcode = product.barcodes!.first.barcode.toString();
-      
-      // Configurar código de barras
-      commands.add(TicketCommand.setBarcodeHeight(60));
-      commands.add(TicketCommand.setBarcodeHRIPosition(0));
+      final barcode = product.barcodes!.first.barcode.toString().trim();
 
-      final barcodeType = firstBarcode.length == 13 ? 67 : 69;
-      commands.add(TicketCommand.barcodeWithType(firstBarcode, barcodeType));
-      commands.add(TicketCommand.feedLine());
-      
-      // Código de barras y código de producto en la misma línea
-      commands.add(TicketCommand.alignment(TicketAlignment.center));
-      commands.add(TicketCommand.text("$firstBarcode  Cod: ${product.id}"));
-      commands.add(TicketCommand.feedLine());
+      commands.add(TicketCommand.alignment(TicketAlignment.left));
+      commands.add(TicketCommand.setBarcodeWidth(4)); // ancho 
+      commands.add(TicketCommand.setBarcodeHeight(32)); // altura 
+      commands.add(TicketCommand.setBarcodeHRIPosition(2)); // texto debajo
+      commands.add(
+          TicketCommand.barcodeWithType(barcode, 67)); // EAN-13 por defecto
     }
 
     commands.add(TicketCommand.feedLine());
-    commands.add(TicketCommand.feedLine());
-
-    // === CORTE DE PAPEL ===
     commands.add(TicketCommand.cutPaper());
 
     return commands;
@@ -66,9 +76,7 @@ class LabelTemplateBuilder {
 
   /// Divide un texto largo en líneas que caben en el ancho especificado
   static List<String> _wrapText(String text, int maxWidth) {
-    if (text.length <= maxWidth) {
-      return [text];
-    }
+    if (text.length <= maxWidth) return [text];
 
     final lines = <String>[];
     var currentLine = '';
@@ -77,18 +85,22 @@ class LabelTemplateBuilder {
     for (final word in words) {
       if (currentLine.isEmpty) {
         currentLine = word;
-      } else if ((currentLine.length + word.length + 1) <= maxWidth) {
+      } else if ((currentLine.length + 1 + word.length) <= maxWidth) {
         currentLine += ' $word';
       } else {
-        lines.add(currentLine);
+        lines.add(currentLine.trim());
         currentLine = word;
       }
     }
 
-    if (currentLine.isNotEmpty) {
-      lines.add(currentLine);
-    }
-
+    if (currentLine.isNotEmpty) lines.add(currentLine.trim());
     return lines;
+  }
+
+  static String _formatDate(DateTime d) {
+    final dd = d.day.toString().padLeft(2, '0');
+    final mm = d.month.toString().padLeft(2, '0');
+    final yyyy = d.year.toString();
+    return '$dd/$mm/$yyyy';
   }
 }

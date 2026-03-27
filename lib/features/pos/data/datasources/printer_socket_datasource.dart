@@ -15,11 +15,19 @@ abstract class PrinterSocketDatasource {
 }
 
 class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
+    /// Cambia el tamaño del texto ESC/POS (1-8x)
+    Future<bool> _setTextSize({int width = 1, int height = 1}) async {
+      // width y height: 1 a 8
+      int n = ((width - 1) << 4) | (height - 1);
+      return await _sendData(Uint8List.fromList([0x1D, 0x21, n]));
+    }
   Socket? _socket;
   bool _isConnected = false;
 
   // 58mm = 32 caracteres, 80mm = 48 caracteres
   static const int _lineWidth = 48;
+
+  int _textSizeMode = 0x00;
 
   @override
   Future<bool> connect(PrinterConfig config) async {
@@ -95,6 +103,10 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
   /// Ejecuta un comando individual del ticket
   Future<void> _executeCommand(TicketCommand command) async {
     switch (command.type) {
+            case TicketCommandType.textSize:
+              final data = command.value as Map<String, dynamic>;
+              await _setTextSize(width: data['width'] as int, height: data['height'] as int);
+              break;
       case TicketCommandType.text:
         await _printText(command.value as String);
         break;
@@ -123,7 +135,8 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
         break;
       case TicketCommandType.barcodeWithType:
         final barcodeData = command.value as Map<String, dynamic>;
-        await _printBarcode(barcodeData['type'] as int, barcodeData['code'] as String);
+        await _printBarcode(
+            barcodeData['type'] as int, barcodeData['code'] as String);
         break;
       case TicketCommandType.setBarcodeHeight:
         await _setBarcodeHeight(command.value as int);
@@ -141,6 +154,7 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
         final data = command.value as Map<String, String>;
         await _printLineWithValue(data['label']!, data['value']!);
         break;
+      
     }
   }
 
@@ -156,6 +170,7 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
   Future<bool> _initPrinter() async {
     try {
       await _sendData(Uint8List.fromList([0x1B, 0x40]));
+      _textSizeMode = 0x00;
 
       await _selectHRICharacterPrintPosition(2);
       await _setBarcodeWidth(3);

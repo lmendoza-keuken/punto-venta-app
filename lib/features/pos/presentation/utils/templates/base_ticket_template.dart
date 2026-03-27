@@ -348,7 +348,7 @@ abstract class BaseTicketTemplate {
   /// Construye el código de barras
   List<TicketCommand> buildBarcode() {
     final barcodeValue = printJob.ticketId?.padLeft(8, '0') ?? '00000000';
-    
+
     return [
       TicketCommand.alignment(TicketAlignment.center),
       TicketCommand.barcode(barcodeValue),
@@ -393,6 +393,8 @@ abstract class BaseTicketTemplate {
 enum TicketAlignment { left, center, right }
 
 class TicketCommand {
+    factory TicketCommand.textSize({int width = 1, int height = 1}) =>
+        TicketCommand._(TicketCommandType.textSize, {'width': width, 'height': height});
   final TicketCommandType type;
   final dynamic value;
 
@@ -413,7 +415,8 @@ class TicketCommand {
   factory TicketCommand.barcode(String code) =>
       TicketCommand._(TicketCommandType.barcode, code);
   factory TicketCommand.barcodeWithType(String code, int barcodeType) =>
-      TicketCommand._(TicketCommandType.barcodeWithType, {'code': code, 'type': barcodeType});
+      TicketCommand._(TicketCommandType.barcodeWithType,
+          {'code': code, 'type': barcodeType});
   factory TicketCommand.setBarcodeHeight(int height) =>
       TicketCommand._(TicketCommandType.setBarcodeHeight, height);
   factory TicketCommand.setBarcodeWidth(int width) =>
@@ -428,6 +431,7 @@ class TicketCommand {
 }
 
 enum TicketCommandType {
+    textSize,
   text,
   feedLine,
   alignment,
