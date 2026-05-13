@@ -2,6 +2,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_products_usecase.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/label_template_builder.dart';
+import 'package:punto_venta_app/features/pos/presentation/utils/label_image_builder.dart';
+import 'package:punto_venta_app/features/pos/presentation/utils/templates/base_ticket_template.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/printer_socket_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/price_list_local_datasource.dart';
@@ -174,7 +176,15 @@ class ProductLabelsBloc extends Bloc<ProductLabelsEvent, ProductLabelsState> {
 
       // Imprimir etiquetas
       for (final product in selectedProducts) {
-        final commands = LabelTemplateBuilder.buildProductLabel(product);
+        // Generar imagen de la etiqueta
+        final imageBytes = await LabelImageBuilder.buildProductLabelImage(product);
+        
+        final commands = [
+          TicketCommand.image(imageBytes),
+          TicketCommand.feedLine(),
+          TicketCommand.cutPaper(),
+        ];
+        
         final success = await printerDataSource!.printCommands(commands);
         if (!success) {
           throw Exception('Error al imprimir etiqueta de ${product.name}');

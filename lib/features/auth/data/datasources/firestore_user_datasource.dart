@@ -36,7 +36,7 @@ class Company {
 
 abstract class FirestoreUserDataSource {
   Future<List<Company>> getCompaniesByEmail(String email);
-  Future<String?> getPdvBaseUrl(int enterpriseId);
+  Future<String?> getEnterpriseLicenseBaseUrl(int enterpriseId);
 }
 
 class FirestoreUserDataSourceImpl implements FirestoreUserDataSource {
@@ -85,7 +85,7 @@ class FirestoreUserDataSourceImpl implements FirestoreUserDataSource {
   }
 
   @override
-  Future<String?> getPdvBaseUrl(int enterpriseId) async {
+  Future<String?> getEnterpriseLicenseBaseUrl(int enterpriseId) async {
     try {
       final licenseDoc = await _firestore
           .collection('enterprisesLicense')

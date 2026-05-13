@@ -1,0 +1,41 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Flutter Pub: GET",
+            "type": "shell",
+            "command": "fvm flutter pub get",
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "Build Runner: Build",
+            "type": "shell",
+            "command": "fvm flutter pub run build_runner build --delete-conflicting-outputs",
+            "problemMatcher": [
+                "$dart-build_runner"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "Build Runner: Watch",
+            "type": "shell",
+            "command": "fvm flutter pub run build_runner watch --delete-conflicting-outputs",
+            "problemMatcher": [
+                "$dart-build_runner"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        }
+    ]
+}

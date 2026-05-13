@@ -5,6 +5,7 @@ import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/printer_config.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/templates/base_ticket_template.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/ticket_template_builder.dart';
+import 'package:image/image.dart' as img_lib;
 
 abstract class PrinterSocketDatasource {
   Future<bool> connect(PrinterConfig config);
@@ -103,7 +104,10 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
   /// Ejecuta un comando individual del ticket
   Future<void> _executeCommand(TicketCommand command) async {
     switch (command.type) {
-            case TicketCommandType.textSize:
+      case TicketCommandType.image:
+        await _printImage(command.value as Uint8List);
+        break;
+      case TicketCommandType.textSize:
               final data = command.value as Map<String, dynamic>;
               await _setTextSize(width: data['width'] as int, height: data['height'] as int);
               break;
@@ -159,6 +163,58 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
   }
 
   // === MÉTODOS AUXILIARES ===
+
+  Future<void> _printImage(Uint8List imageBytes) async {
+    final decodedImage = img_lib.decodeImage(imageBytes);
+    if (decodedImage == null) return;
+
+    // Redimensionar si es necesario (ej. máximo ancho de la impresora)
+    // Para 80mm suele ser 576 puntos
+    img_lib.Image image = decodedImage;
+    if (image.width > 576) {
+      image = img_lib.copyResize(image, width: 576);
+    }
+
+    final width = image.width;
+    final height = image.height;
+    
+    // El ancho debe ser múltiplo de 8 para el comando GS v 0
+    final widthBytes = (width + 7) ~/ 8;
+    final actualWidth = widthBytes * 8;
+    
+    final xL = widthBytes % 256;
+    final xH = widthBytes ~/ 256;
+    final yL = height % 256;
+    final yH = height ~/ 256;
+
+    // GS v 0 m xL xH yL yH d1...dk
+    final header = Uint8List.fromList([
+      0x1D, 0x76, 0x30, 0x00, xL, xH, yL, yH
+    ]);
+    
+    final pixels = Uint8List(widthBytes * height);
+    
+    for (int y = 0; y < height; y++) {
+      for (int x = 0; x < width; x++) {
+        final pixel = image.getPixel(x, y);
+        // Calculamos luminancia básica: 0.299R + 0.587G + 0.114B
+        // En image 4.x, pixel.r, pixel.g, pixel.b son accesibles
+        final r = pixel.r;
+        final g = pixel.g;
+        final b = pixel.b;
+        final luminance = (0.299 * r + 0.587 * g + 0.114 * b);
+        
+        if (luminance < 128) {
+          final byteIndex = (y * widthBytes) + (x ~/ 8);
+          final bitIndex = 7 - (x % 8);
+          pixels[byteIndex] |= (1 << bitIndex);
+        }
+      }
+    }
+    
+    await _sendData(header);
+    await _sendData(pixels);
+  }
 
   Future<void> _printLineWithValue(String label, String value) async {
     final totalSpaces = _lineWidth - label.length - value.length;

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:punto_venta_app/core/constants/ticket_template_types.dart';
 import 'package:punto_venta_app/core/utils/extensions.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
@@ -400,6 +402,9 @@ class TicketCommand {
 
   TicketCommand._(this.type, [this.value]);
 
+  factory TicketCommand.image(Uint8List bytes) =>
+      TicketCommand._(TicketCommandType.image, bytes);
+
   factory TicketCommand.text(String text) =>
       TicketCommand._(TicketCommandType.text, text);
   factory TicketCommand.feedLine() =>
@@ -431,6 +436,7 @@ class TicketCommand {
 }
 
 enum TicketCommandType {
+  image,
     textSize,
   text,
   feedLine,

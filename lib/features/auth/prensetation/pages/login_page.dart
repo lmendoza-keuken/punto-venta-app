@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:punto_venta_app/app/routes/route_paths.dart';
+import 'package:punto_venta_app/core/config/api_config.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/core/constants/app_string.dart';
@@ -25,6 +26,8 @@ class LoginPage extends StatelessWidget {
       if (!context.mounted) return;
 
       if (enterprise != null && email != null) {
+
+        ApiConfig.updateCompanyConfig(enterprise.id.toString(), enterprise.baseUrl);
         context.go(
           RoutePaths.credentials,
           extra: {

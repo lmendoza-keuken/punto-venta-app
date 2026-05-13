@@ -1,6 +1,6 @@
 class ApiConfig {
-  static String _companyId = '99999999';
-  static String _baseUrl = 'http://192.168.0.12:8000';
+  static String _companyId = '';
+  static String _baseUrl = '';
 
   static String get productosUrl => '$_baseUrl/articles/';
   static String get preciosArticulosUrl => '$_baseUrl/prices_list/';
@@ -24,10 +24,7 @@ class ApiConfig {
     if (baseUrl != null && baseUrl.isNotEmpty) {
       _baseUrl = baseUrl;
     } else {
-      _baseUrl =
-      // enterprisesLicense/ base url 
-          // 'http://orders0.epekuen.com.ar/produccion/$companyId/test/puntoVenta';
-          'http://192.168.0.12:8000';
+      throw Exception('No hay url configurada para esta empresa');
     }
   }
 

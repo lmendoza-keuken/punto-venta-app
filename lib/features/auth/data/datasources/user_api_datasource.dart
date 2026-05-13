@@ -12,7 +12,8 @@ class UserApiDataSourceImpl implements UserApiDataSource {
   UserApiDataSourceImpl({Dio? dio}) : _dio = dio ?? DioClient.instance;
 
   String _encode(String s) {
-    return String.fromCharCodes(s.runes.map((r) => r - 9));
+    int length = s.length;
+    return String.fromCharCodes(s.runes.map((r) => r - length));
   }
 
   @override
