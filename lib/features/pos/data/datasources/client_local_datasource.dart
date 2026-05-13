@@ -7,6 +7,7 @@ abstract class ClientLocalDataSource {
   Future<void> saveClient(Client client);
   Future<void> deleteClient(String clientId);
   Future<Client?> getClientById(String clientId);
+  Future<void> saveClients(List<Client> clients);
 }
 
 class ClientLocalDataSourceImpl implements ClientLocalDataSource {
@@ -35,6 +36,13 @@ class ClientLocalDataSourceImpl implements ClientLocalDataSource {
     }
     final jsonString = json.encode(clients.map((c) => c.toJson()).toList());
     await sharedPreferences.setString(clientsKey, jsonString);
+  }
+
+  @override
+  Future<void> saveClients(List<Client> clients) async {
+    final jsonString = json.encode(clients.map((c) => c.toJson()).toList());
+    await sharedPreferences.setString(clientsKey, jsonString);
+
   }
 
   @override

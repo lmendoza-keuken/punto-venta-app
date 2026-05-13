@@ -15,7 +15,7 @@ class ClientRemoteDataSourceImpl implements ClientRemoteDataSource {
 
   ClientRemoteDataSourceImpl({
     Dio? dio,
-    this.timeout = const Duration(seconds: 15),
+    this.timeout = const Duration(seconds: 30),
   }) : _dio = dio ?? DioClient.instance;
 
   @override
@@ -36,6 +36,7 @@ class ClientRemoteDataSourceImpl implements ClientRemoteDataSource {
     try {
       final response = await _dio.get(
         url,
+        queryParameters: {'skip': 0, 'limit': 10000},
         options: Options(
           headers: {
             'Content-Type': 'application/json; charset=utf-8',

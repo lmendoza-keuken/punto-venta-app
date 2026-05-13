@@ -138,8 +138,8 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
 
     try {
       final response = await _dio.get(
-        ApiConfig.preciosArticulosUrl,
-        queryParameters: {'limit': 3500},
+        ApiConfig.pricesListUrl,
+        queryParameters: {'skip': 0, 'limit': 10000},
         options: Options(
           responseType: ResponseType.json,
         ),
@@ -313,6 +313,7 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
     try {
       final response = await _dio.get(
         ApiConfig.categoriesUrl,
+        queryParameters: {'skip': 0, 'limit': 10000},
         options: Options(
           responseType: ResponseType.json,
         ),

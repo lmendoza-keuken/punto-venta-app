@@ -2,21 +2,28 @@ class ApiConfig {
   static String _companyId = '';
   static String _baseUrl = '';
 
-  static String get productosUrl => '$_baseUrl/articles/';
-  static String get preciosArticulosUrl => '$_baseUrl/prices_list/';
-  static String get loginUrl => '$_baseUrl/users/login-cashier';
-  static String get barcodeUrl => '$_baseUrl/barcodes/';
-  static String get categoriesUrl => '$_baseUrl/categories/';
-  static String get invoiceUrl => '$_baseUrl/tickets/';
-  static String get pdvUrl => '$_baseUrl/pdv/';
-  static String get ticketConfigUrl => '$_baseUrl/ticket_config/';
-  static String get paymentMethodsUrl => '$_baseUrl/payment_methods/';
-  static String get configPdvUrl => '$_baseUrl/configuration/';
-  static String get branchesUrl => '$_baseUrl/branches/';
-  static String get taxesUrl => '$_baseUrl/taxes/';
-  static String get vatCategoriesUrl => '$_baseUrl/vat-categories/';
-  static String get fiscalDataUrl => '$_baseUrl/configuration/fiscal-data';
+  static String get _validatedBaseUrl {
+    if (_baseUrl.isEmpty) {
+      throw Exception('No hay una URL configurada');
+    }
+    return _baseUrl;
+  }
 
+  static String get productosUrl => '$_validatedBaseUrl/articles/';
+  static String get pricesListUrl => '$_validatedBaseUrl/prices_list/';
+  static String get loginUrl => '$_validatedBaseUrl/users/login-cashier';
+  static String get barcodeUrl => '$_validatedBaseUrl/barcodes/';
+  static String get categoriesUrl => '$_validatedBaseUrl/categories/';
+  static String get invoiceUrl => '$_validatedBaseUrl/tickets/';
+  static String get pdvUrl => '$_validatedBaseUrl/pdv/';
+  static String get ticketConfigUrl => '$_validatedBaseUrl/ticket_config/';
+  static String get paymentMethodsUrl => '$_validatedBaseUrl/payment_methods/';
+  static String get configPdvUrl => '$_validatedBaseUrl/configuration/';
+  static String get branchesUrl => '$_validatedBaseUrl/branches/';
+  static String get taxesUrl => '$_validatedBaseUrl/taxes/';
+  static String get vatCategoriesUrl => '$_validatedBaseUrl/vat-categories/';
+  static String get fiscalDataUrl =>
+      '$_validatedBaseUrl/configuration/fiscal-data';
 
   static void updateCompanyConfig(String companyId, String? baseUrl) {
     _companyId = companyId;
