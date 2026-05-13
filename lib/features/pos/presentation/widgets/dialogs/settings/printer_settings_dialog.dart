@@ -27,6 +27,8 @@ Future<void> showPrinterSettingsDialog(BuildContext context) async {
     builder: (ctx) {
       final formKey = GlobalKey<FormState>();
 
+      int selectedLabelType = config.labelType;
+
       return BlocConsumer<PrinterBloc, PrinterState>(
         listener: (context, state) {
           if (state is PrinterSuccess) {
@@ -51,15 +53,17 @@ Future<void> showPrinterSettingsDialog(BuildContext context) async {
 
           return AlertDialog(
             title: const Text('Configuración de Impresora'),
-            content: SingleChildScrollView(
-              child: Form(
-                key: formKey,
-                child: SizedBox(
-                  width: 420,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Banner de información
+            content: StatefulBuilder(
+              builder: (context, setDialogState) {
+                return SingleChildScrollView(
+                  child: Form(
+                    key: formKey,
+                    child: SizedBox(
+                      width: 420,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Banner de información
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
@@ -207,10 +211,40 @@ Future<void> showPrinterSettingsDialog(BuildContext context) async {
                           return null;
                         },
                       ),
-                    ],
+                          const SizedBox(height: AppDimensions.paddingM),
+
+                          DropdownButtonFormField<int>(
+                            value: selectedLabelType,
+                            // enabled: !isLoading,
+                            decoration: const InputDecoration(
+                              labelText: 'Tamaño de etiqueta de Góndola',
+                              prefixIcon: Icon(Icons.straighten),
+                              border: OutlineInputBorder(),
+                            ),
+                            items: const [
+                              DropdownMenuItem(
+                                value: 0,
+                                child: Text('70x38mm (Grande)'),
+                              ),
+                              DropdownMenuItem(
+                                value: 1,
+                                child: Text('55x30mm (Estándar)'),
+                              ),
+                            ],
+                            onChanged: (value) {
+                              if (value != null) {
+                                setDialogState(() {
+                                  selectedLabelType = value;
+                                });
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
             actions: [
               TextButton(
@@ -238,6 +272,7 @@ Future<void> showPrinterSettingsDialog(BuildContext context) async {
                           timeout:
                               int.tryParse(timeoutController.text.trim()) ??
                                   config.timeout,
+                          labelType: selectedLabelType,
                         );
 
                         final testJob = PrintJob(
@@ -284,6 +319,7 @@ Future<void> showPrinterSettingsDialog(BuildContext context) async {
                           ip: ipController.text.trim(),
                           port: int.parse(portController.text.trim()),
                           timeout: int.parse(timeoutController.text.trim()),
+                          labelType: selectedLabelType,
                         );
 
                         await ds.savePrinterConfig(newConfig);

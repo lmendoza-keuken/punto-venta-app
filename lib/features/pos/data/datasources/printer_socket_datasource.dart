@@ -7,6 +7,8 @@ import 'package:punto_venta_app/features/pos/presentation/utils/templates/base_t
 import 'package:punto_venta_app/features/pos/presentation/utils/ticket_template_builder.dart';
 import 'package:image/image.dart' as img_lib;
 
+const int maxImageWidth = 8*52;//576 = 8*72;
+
 abstract class PrinterSocketDatasource {
   Future<bool> connect(PrinterConfig config);
   Future<bool> disconnect();
@@ -105,7 +107,8 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
   Future<void> _executeCommand(TicketCommand command) async {
     switch (command.type) {
       case TicketCommandType.image:
-        await _printImage(command.value as Uint8List);
+        PrintImageData printImageData = command.value as PrintImageData;
+        await _printImage(printImageData.bytes, maxImageWidth: printImageData.imageSize);
         break;
       case TicketCommandType.textSize:
               final data = command.value as Map<String, dynamic>;
@@ -164,15 +167,15 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
 
   // === MÉTODOS AUXILIARES ===
 
-  Future<void> _printImage(Uint8List imageBytes) async {
+  Future<void> _printImage(Uint8List imageBytes, {int maxImageWidth = maxImageWidth}) async {
     final decodedImage = img_lib.decodeImage(imageBytes);
     if (decodedImage == null) return;
 
     // Redimensionar si es necesario (ej. máximo ancho de la impresora)
     // Para 80mm suele ser 576 puntos
     img_lib.Image image = decodedImage;
-    if (image.width > 576) {
-      image = img_lib.copyResize(image, width: 576);
+    if (image.width > maxImageWidth) {
+      image = img_lib.copyResize(image, width: maxImageWidth);
     }
 
     final width = image.width;

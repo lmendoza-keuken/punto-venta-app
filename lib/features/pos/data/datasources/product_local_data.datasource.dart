@@ -50,6 +50,7 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
     try {
       final response = await _dio.get(
         ApiConfig.barcodeUrl,
+        queryParameters: {'skip': 0, 'limit': 10000},
         options: Options(
           responseType: ResponseType.json,
         ),
@@ -87,7 +88,7 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
     try {
       final response = await _dio.get(
         ApiConfig.productosUrl,
-        queryParameters: {'limit': 500},
+        queryParameters: {'skip': 0, 'limit': 10000},
         options: Options(
           responseType: ResponseType.json,
         ),

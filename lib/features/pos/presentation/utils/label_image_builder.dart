@@ -1,9 +1,13 @@
+import 'dart:io';
 import 'dart:ui' as ui;
-import 'package:flutter/material.dart';
+
 import 'package:barcode/barcode.dart';
-import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:punto_venta_app/core/utils/extensions.dart';
-import 'dart:typed_data';
+import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
 
 class LabelImageBuilder {
   static Future<Uint8List> buildProductLabelImage(Product product) async {
@@ -14,7 +18,7 @@ class LabelImageBuilder {
     // Ajustado para coincidir con la proporción del script de python (700x205)
     // 576 / (700/205) = 168.
     const double width = 576;
-    const double height = 180;
+    const double height = 314;
     
     // Fondo blanco
     canvas.drawRect(
@@ -30,12 +34,12 @@ class LabelImageBuilder {
     
     const textStyleSmall = TextStyle(
       color: Colors.black,
-      fontSize: 22,
+      fontSize: 18,
     );
     
     const textStylePrice = TextStyle(
       color: Colors.black,
-      fontSize: 58,
+      fontSize: 96,
       fontWeight: ui.FontWeight.bold,
     );
 
@@ -53,8 +57,7 @@ class LabelImageBuilder {
     textPainter.layout(maxWidth: width - 20);
     textPainter.paint(canvas, const Offset(10, 5));
     
-    double yPrice = 5 + textPainter.height + 10;
-    if (yPrice < 70) yPrice = 70; // Asegurar espacio si el nombre es corto
+    double yPrice = textPainter.height + 10;
 
     // 2. Precio
     final basePrice = product.price ?? 0.0;
@@ -62,23 +65,31 @@ class LabelImageBuilder {
     final priceWithVat = basePrice + (basePrice * (vatPercent / 100));
     
     final pricePainter = TextPainter(
-      text: TextSpan(text: priceWithVat.formatToCurrency(), style: textStylePrice),
+      text: TextSpan(text: priceWithVat.formatToCurrency().replaceAll('\$ ',''), style: textStylePrice),
       textDirection: TextDirection.ltr,
     );
     pricePainter.layout();
-    pricePainter.paint(canvas, Offset(10, yPrice));
+    pricePainter.paint(canvas, Offset((width - pricePainter.width)/2, yPrice));
+
+    // Imprimo el símbolo de la moneda
+    final currencyPainter = TextPainter(
+      text: const TextSpan(text: '\$', style: textStyleBig),
+      textDirection: TextDirection.ltr,
+    );
+    currencyPainter.layout();
+    currencyPainter.paint(canvas, Offset((width - pricePainter.width)/2 - 10 - currencyPainter.width, yPrice + 20));
 
     // 3. Código de barras
     if (product.barcodes != null && product.barcodes!.isNotEmpty) {
-      final barcodeString = product.barcodes!.first.barcode.toString();
+      final barcodeString = product.barcodes!.where((b)=>b.type == 1).first.barcode.toString();
       try {
         final bc = Barcode.code128();
         
         // Dibujar barras del código
-        const bcWidth = 280.0;
-        const bcHeight = 70.0;
-        final bcX = width - bcWidth - 10;
-        final bcY = yPrice + 5;
+        const bcWidth = 250.0;
+        const bcHeight = 40.0;
+        final bcX = 10;
+        final bcY = yPrice + pricePainter.height + 10;
         
         // Usamos bc.make para obtener los elementos y dibujarlos
         for (var element in bc.make(barcodeString, width: bcWidth, height: bcHeight)) {
@@ -89,7 +100,7 @@ class LabelImageBuilder {
             );
           }
         }
-        
+
         // Texto del código de barras (opcional, el script lo pone abajo)
         final bcTextPainter = TextPainter(
           text: TextSpan(text: barcodeString, style: textStyleSmall.copyWith(fontSize: 16)),
@@ -98,26 +109,31 @@ class LabelImageBuilder {
         bcTextPainter.layout();
         bcTextPainter.paint(canvas, Offset(bcX + (bcWidth - bcTextPainter.width) / 2, bcY + bcHeight + 2));
       } catch (e) {
+        print('Error al imprimir código de barras $e');
         // Ignorar errores de código de barras
       }
     }
 
     // 4. Info inferior (ID y Precio sin impuestos)
-    final footerY = height - 55;
+    final footerY = yPrice + pricePainter.height + 10;
     
-    final idPainter = TextPainter(
-      text: TextSpan(text: "Cod: ${product.id}", style: textStyleSmall),
-      textDirection: TextDirection.ltr,
-    );
-    idPainter.layout();
-    idPainter.paint(canvas, Offset(10, footerY));
+    // final idPainter = TextPainter(
+    //   text: TextSpan(text: "Cod: ${product.id}", style: textStyleSmall),
+    //   textDirection: TextDirection.ltr,
+    // );
+    // idPainter.layout();
+    // idPainter.paint(canvas, Offset(width - 10 - idPainter.width, footerY));
 
+    double spaceBetweenSmallTexts = 2.5;
+
+    // double yPriceWithoutTaxes = footerY + idPainter.height + spaceBetweenSmallTexts;
+    double yPriceWithoutTaxes = footerY + spaceBetweenSmallTexts;
     final sinImpPainter = TextPainter(
       text: TextSpan(text: "Precio sin imp: ${basePrice.formatToCurrency()}", style: textStyleSmall),
       textDirection: TextDirection.ltr,
     );
     sinImpPainter.layout();
-    sinImpPainter.paint(canvas, Offset(10, footerY + 25));
+    sinImpPainter.paint(canvas, Offset(width - 10 - sinImpPainter.width, yPriceWithoutTaxes));
 
     // 5. Fecha
     final dateStr = _formatDate(DateTime.now());
@@ -126,13 +142,29 @@ class LabelImageBuilder {
       textDirection: TextDirection.ltr,
     );
     datePainter.layout();
-    datePainter.paint(canvas, Offset(width - datePainter.width - 10, footerY + 25));
+    datePainter.paint(canvas, Offset(width - 10 - datePainter.width, yPriceWithoutTaxes + sinImpPainter.height + spaceBetweenSmallTexts));
 
     final picture = recorder.endRecording();
     final img = await picture.toImage(width.toInt(), height.toInt());
-    final pngBytes = await img.toByteData(format: ui.ImageByteFormat.png);
     
-    return pngBytes!.buffer.asUint8List();
+    final pngBytes = await img.toByteData(format: ui.ImageByteFormat.png);
+    final buffer = pngBytes!.buffer.asUint8List();
+
+    // Debug: Guardar imagen en el dispositivo para inspección
+    if (kDebugMode) {
+      try {
+        final directory = await getApplicationDocumentsDirectory();
+        final filePath = p.join(
+            directory.path, 'debug_label_${product.id}.png');
+        final file = File(filePath);
+        await file.writeAsBytes(buffer);
+        debugPrint('DEBUG: Imagen de etiqueta guardada en: $filePath');
+      } catch (e) {
+        debugPrint('DEBUG: Error al guardar imagen de etiqueta: $e');
+      }
+    }
+
+    return buffer;
   }
 
   static String _formatDate(DateTime d) {

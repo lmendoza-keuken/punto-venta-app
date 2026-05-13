@@ -394,6 +394,12 @@ abstract class BaseTicketTemplate {
 
 enum TicketAlignment { left, center, right }
 
+class PrintImageData {
+  Uint8List bytes;
+  int imageSize;
+  PrintImageData(this.bytes, this.imageSize);
+}
+
 class TicketCommand {
     factory TicketCommand.textSize({int width = 1, int height = 1}) =>
         TicketCommand._(TicketCommandType.textSize, {'width': width, 'height': height});
@@ -402,8 +408,8 @@ class TicketCommand {
 
   TicketCommand._(this.type, [this.value]);
 
-  factory TicketCommand.image(Uint8List bytes) =>
-      TicketCommand._(TicketCommandType.image, bytes);
+  factory TicketCommand.image(Uint8List bytes, int imageSize) =>
+      TicketCommand._(TicketCommandType.image, PrintImageData(bytes, imageSize));
 
   factory TicketCommand.text(String text) =>
       TicketCommand._(TicketCommandType.text, text);
@@ -437,7 +443,7 @@ class TicketCommand {
 
 enum TicketCommandType {
   image,
-    textSize,
+  textSize,
   text,
   feedLine,
   alignment,

@@ -168,11 +168,17 @@ class ProductLabelsBloc extends Bloc<ProductLabelsEvent, ProductLabelsState> {
       // Obtener configuración de la impresora
       final config = await printerLocalDataSource.getPrinterConfig();
 
+      if(config.ip.isEmpty) {
+        throw Exception('No hay una dirección IP configurada para la impresora');
+      }
+
       // Conectar a la impresora
       final connected = await printerDataSource!.connect(config);
       if (!connected) {
         throw Exception('No se pudo conectar con la impresora');
       }
+
+      int labelSize = config.labelType == 0 ? 8*72 : 8*52;
 
       // Imprimir etiquetas
       for (final product in selectedProducts) {
@@ -180,7 +186,7 @@ class ProductLabelsBloc extends Bloc<ProductLabelsEvent, ProductLabelsState> {
         final imageBytes = await LabelImageBuilder.buildProductLabelImage(product);
         
         final commands = [
-          TicketCommand.image(imageBytes),
+          TicketCommand.image(imageBytes, labelSize),
           TicketCommand.feedLine(),
           TicketCommand.cutPaper(),
         ];
