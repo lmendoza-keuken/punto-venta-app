@@ -38,8 +38,6 @@ class TicketConfigRemoteDataSourceImpl implements TicketConfigRemoteDataSource {
             'Content-Type': 'application/json; charset=utf-8',
             'Authorization': 'Bearer $token',
           },
-          sendTimeout: timeout,
-          receiveTimeout: timeout,
         ),
       );
 
@@ -86,8 +84,6 @@ class TicketConfigRemoteDataSourceImpl implements TicketConfigRemoteDataSource {
             'Content-Type': 'application/json; charset=utf-8',
             'Authorization': 'Bearer $token',
           },
-          sendTimeout: timeout,
-          receiveTimeout: timeout,
         ),
       );
 

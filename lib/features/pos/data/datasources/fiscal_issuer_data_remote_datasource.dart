@@ -42,8 +42,6 @@ class FiscalIssuerDataRemoteDatasourceImpl
             'Content-Type': 'application/json; charset=utf-8',
             'Authorization': 'Bearer $token',
           },
-          sendTimeout: timeout,
-          receiveTimeout: timeout,
           validateStatus: (status) => status != null && status < 500,
         ),
       );

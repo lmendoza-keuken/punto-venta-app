@@ -59,13 +59,13 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
       final config = await pdvLocalDataSource.getPdvConfig();
 
       // Validar número de sucursal
-      final branchNumber = config?.branchNumber;
-      if (branchNumber == null || branchNumber.trim().isEmpty) {
-        emit(const CheckoutError(
-          message: 'Configure el número de sucursal antes de realizar cobros.',
-        ));
-        return;
-      }
+      final branchNumber = config?.branchNumber ?? '';
+      // if (branchNumber == null || branchNumber.trim().isEmpty) {
+      //   emit(const CheckoutError(
+      //     message: 'Configure el número de sucursal antes de realizar cobros.',
+      //   ));
+      //   return;
+      // }
 
       // Obtener información de la sucursal y categoría IVA para calcular IIBB
       final branch = config?.branchId != null

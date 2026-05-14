@@ -53,14 +53,14 @@ class PdvConfigRepositoryImpl implements PdvConfigRepository {
 
   @override
   Future<void> savePdvConfig(PdvConfig config) async {
-    await localDataSource.savePdvConfig(config);
     await remoteDataSource.updatePdvConfig(config);
+    await localDataSource.savePdvConfig(config);
   }
 
   @override
   Future<void> updateOfflineMode(PdvConfig config) async {
-    await localDataSource.savePdvConfig(config);
     await remoteDataSource.updateOfflineMode(config);
+    await localDataSource.savePdvConfig(config);
   }
 
   @override

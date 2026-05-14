@@ -5,6 +5,7 @@ import 'package:punto_venta_app/features/auth/data/datasources/auth_local_dataso
 import 'package:punto_venta_app/features/pos/data/models/pdv_config_response_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/branch_response_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/pdv_config.dart';
+import 'package:punto_venta_app/core/network/error_handler.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 abstract class PdvRemoteDataSource {
@@ -46,8 +47,6 @@ class PdvRemoteDataSourceImpl implements PdvRemoteDataSource {
             'Content-Type': 'application/json; charset=utf-8',
             'Authorization': 'Bearer $token',
           },
-          sendTimeout: timeout,
-          receiveTimeout: timeout,
           validateStatus: (status) => status != null && status < 500,
         ),
       );
@@ -59,18 +58,11 @@ class PdvRemoteDataSourceImpl implements PdvRemoteDataSource {
             'Error al obtener configuración del PDV: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout) {
-        throw Exception(
-            'Timeout al conectar con el servidor. Verifica tu conexión.');
-      } else if (e.type == DioExceptionType.unknown) {
-        throw Exception(
-            'Error de red. Verifica que el servidor esté disponible.');
-      } else {
-        throw Exception('Error al obtener configuración del PDV: ${e.message}');
-      }
+      throw Exception(ErrorHandler.handleError(e,
+          defaultMessage: 'Error al obtener configuración del PDV: ${e.message}'));
     } catch (e) {
-      throw Exception('Error inesperado al obtener PDV: $e');
+      throw Exception(ErrorHandler.handleError(e,
+          defaultMessage: 'Error inesperado al obtener PDV: $e'));
     }
   }
 
@@ -100,8 +92,6 @@ class PdvRemoteDataSourceImpl implements PdvRemoteDataSource {
             'Content-Type': 'application/json; charset=utf-8',
             'Authorization': 'Bearer $token',
           },
-          sendTimeout: timeout,
-          receiveTimeout: timeout,
         ),
       );
 
@@ -112,18 +102,11 @@ class PdvRemoteDataSourceImpl implements PdvRemoteDataSource {
             'Error al obtener configuración del PDV: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout) {
-        throw Exception(
-            'Timeout al conectar con el servidor. Verifica tu conexión.');
-      } else if (e.type == DioExceptionType.unknown) {
-        throw Exception(
-            'Error de red. Verifica que el servidor esté disponible.');
-      } else {
-        throw Exception('Error al obtener configuración del PDV: ${e.message}');
-      }
+      throw Exception(ErrorHandler.handleError(e,
+          defaultMessage: 'Error al actualizar configuración del PDV: ${e.message}'));
     } catch (e) {
-      throw Exception('Error inesperado al obtener PDV: $e');
+      throw Exception(ErrorHandler.handleError(e,
+          defaultMessage: 'Error inesperado al actualizar PDV: $e'));
     }
   }
 
@@ -153,8 +136,6 @@ class PdvRemoteDataSourceImpl implements PdvRemoteDataSource {
             'Content-Type': 'application/json; charset=utf-8',
             'Authorization': 'Bearer $token',
           },
-          sendTimeout: timeout,
-          receiveTimeout: timeout,
         ),
       );
 
@@ -166,18 +147,11 @@ class PdvRemoteDataSourceImpl implements PdvRemoteDataSource {
             'Error al actualizar modo offline: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout) {
-        throw Exception(
-            'Timeout al conectar con el servidor. Verifica tu conexión.');
-      } else if (e.type == DioExceptionType.unknown) {
-        throw Exception(
-            'Error de red. Verifica que el servidor esté disponible.');
-      } else {
-        throw Exception('Error al actualizar modo offline: ${e.message}');
-      }
+      throw Exception(ErrorHandler.handleError(e,
+          defaultMessage: 'Error al actualizar modo offline: ${e.message}'));
     } catch (e) {
-      throw Exception('Error inesperado al actualizar modo offline: $e');
+      throw Exception(ErrorHandler.handleError(e,
+          defaultMessage: 'Error inesperado al actualizar modo offline: $e'));
     }
   }
 
@@ -208,8 +182,6 @@ class PdvRemoteDataSourceImpl implements PdvRemoteDataSource {
             'Content-Type': 'application/json; charset=utf-8',
             'Authorization': 'Bearer $token',
           },
-          sendTimeout: timeout,
-          receiveTimeout: timeout,
           validateStatus: (status) => status != null && status < 500,
         ),
       );
@@ -223,18 +195,11 @@ class PdvRemoteDataSourceImpl implements PdvRemoteDataSource {
         throw Exception('Error al obtener sucursales: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout) {
-        throw Exception(
-            'Timeout al conectar con el servidor. Verifica tu conexión.');
-      } else if (e.type == DioExceptionType.unknown) {
-        throw Exception(
-            'Error de red. Verifica que el servidor esté disponible.');
-      } else {
-        throw Exception('Error al obtener sucursales: ${e.message}');
-      }
+      throw Exception(ErrorHandler.handleError(e,
+          defaultMessage: 'Error al obtener sucursales: ${e.message}'));
     } catch (e) {
-      throw Exception('Error inesperado al obtener sucursales: $e');
+      throw Exception(ErrorHandler.handleError(e,
+          defaultMessage: 'Error inesperado al obtener sucursales: $e'));
     }
   }
 }

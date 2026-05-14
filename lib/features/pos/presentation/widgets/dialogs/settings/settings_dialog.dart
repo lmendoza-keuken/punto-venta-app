@@ -60,19 +60,19 @@ class _SettingsDialogState extends State<SettingsDialog> {
                           navigatorContext, currentList);
                     },
                   ),
-                  ActionCard(
-                    icon: Icons.receipt_long,
-                    iconColor: Colors.purple,
-                    backgroundColor: Colors.purple.withOpacity(0.1),
-                    title: 'Configuración de Tickets',
-                    subtitle:
-                        'Configurar visualización de subtotal, IVA y precios',
-                    onTap: () {
-                      final navigatorContext = Navigator.of(context).context;
-                      Navigator.of(context).pop();
-                      showTicketSettingsDialog(navigatorContext);
-                    },
-                  ),
+                  // ActionCard(
+                  //   icon: Icons.receipt_long,
+                  //   iconColor: Colors.purple,
+                  //   backgroundColor: Colors.purple.withOpacity(0.1),
+                  //   title: 'Configuración de Tickets',
+                  //   subtitle:
+                  //       'Configurar visualización de subtotal, IVA y precios',
+                  //   onTap: () {
+                  //     final navigatorContext = Navigator.of(context).context;
+                  //     Navigator.of(context).pop();
+                  //     showTicketSettingsDialog(navigatorContext);
+                  //   },
+                  // ),
                   ActionCard(
                     icon: Icons.point_of_sale,
                     iconColor: Colors.teal,
@@ -82,21 +82,21 @@ class _SettingsDialogState extends State<SettingsDialog> {
                     onTap: () {
                       final navigatorContext = Navigator.of(context).context;
                       Navigator.of(context).pop();
-                      showPdvSettingsDialog(navigatorContext);
+                      showPdvSettingsDialog(navigatorContext, true);
                     },
                   ),
-                  ActionCard(
-                    icon: Icons.app_registration_sharp,
-                    iconColor: Colors.blueAccent,
-                    backgroundColor: Colors.blueAccent.withOpacity(0.1),
-                    title: 'Configurar Modo de la App',
-                    subtitle: 'Configurar Modo En linea / Modo Offline',
-                    onTap: () {
-                      final navigatorContext = Navigator.of(context).context;
-                      Navigator.of(context).pop();
-                      showAppModeSettingsDialog(navigatorContext);
-                    },
-                  ),
+                  // ActionCard(
+                  //   icon: Icons.app_registration_sharp,
+                  //   iconColor: Colors.blueAccent,
+                  //   backgroundColor: Colors.blueAccent.withOpacity(0.1),
+                  //   title: 'Configurar Modo de la App',
+                  //   subtitle: 'Configurar Modo En linea / Modo Offline',
+                  //   onTap: () {
+                  //     final navigatorContext = Navigator.of(context).context;
+                  //     Navigator.of(context).pop();
+                  //     showAppModeSettingsDialog(navigatorContext);
+                  //   },
+                  // ),
                 ],
               ),
             ),

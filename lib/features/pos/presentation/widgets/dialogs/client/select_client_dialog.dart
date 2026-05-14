@@ -50,7 +50,7 @@ class _SelectClientDialogState extends State<SelectClientDialog> {
         TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('Cancelar')),
-        const Spacer(),
+
         ElevatedButton(
           onPressed: _selected != null
               ? () => Navigator.of(context).pop(_selected)

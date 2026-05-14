@@ -51,6 +51,7 @@ class PdvConfigBloc extends Bloc<PdvConfigEvent, PdvConfigState> {
 
   Future<void> _onSavePdvConfig(
       SavePdvConfigEvent event, Emitter<PdvConfigState> emit) async {
+    emit(PdvConfigLoading());
     try {
       await repository.savePdvConfig(event.config);
       emit(PdvConfigSaved(event.config));

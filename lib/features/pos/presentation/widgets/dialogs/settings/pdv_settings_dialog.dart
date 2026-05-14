@@ -16,7 +16,7 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/pdv_config/pdv_co
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 Future<({int pdvId, int sucursalId})?> showPdvSettingsDialog(
-    BuildContext context) async {
+    BuildContext context, bool isAdmin) async {
   return await showDialog<({int pdvId, int sucursalId})>(
     context: context,
     builder: (ctx) => BlocProvider(
@@ -26,13 +26,14 @@ Future<({int pdvId, int sucursalId})?> showPdvSettingsDialog(
         getVatCategoriesUsecase: di.sl<GetVatCategoriesUsecase>(),
         repository: di.sl<PdvConfigRepository>(),
       )..add(FetchPdvConfigEvent()),
-      child: const _PdvSettingsDialogContent(),
+      child: _PdvSettingsDialogContent(isAdmin),
     ),
   );
 }
 
 class _PdvSettingsDialogContent extends StatefulWidget {
-  const _PdvSettingsDialogContent();
+  final bool isAdmin;
+  const _PdvSettingsDialogContent(this.isAdmin);
 
   @override
   State<_PdvSettingsDialogContent> createState() =>
@@ -43,7 +44,7 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
   final formKey = GlobalKey<FormState>();
   late TextEditingController pdvIdController;
   late TextEditingController branchIdController;
-  late TextEditingController branchNumberController;
+  // late TextEditingController branchNumberController;
   final TextEditingController _clientSearchController = TextEditingController();
   
   List<Branch> _branches = [];
@@ -52,13 +53,14 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
   List<Client> _clients = [];
   Client? _selectedClient;
   String _clientSearchQuery = '';
+  String? _localError;
 
   @override
   void initState() {
     super.initState();
     pdvIdController = TextEditingController();
     branchIdController = TextEditingController();
-    branchNumberController = TextEditingController();
+    // branchNumberController = TextEditingController();
     _loadClients();
   }
 
@@ -78,7 +80,7 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
   void dispose() {
     pdvIdController.dispose();
     branchIdController.dispose();
-    branchNumberController.dispose();
+    // branchNumberController.dispose();
     _clientSearchController.dispose();
     super.dispose();
   }
@@ -87,7 +89,7 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
     setState(() {
       pdvIdController.text = config.pdvId?.toString() ?? '';
       branchIdController.text = config.branchId?.toString() ?? '';
-      branchNumberController.text = config.branchNumber ?? "";
+      // branchNumberController.text = config.branchNumber ?? "";
       
       _branches = branches;
       
@@ -104,7 +106,7 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
       }
 
       // Seleccionar el cliente default (pdvId = delivery_location_id = client id)
-      if (config.pdvId != null) {
+      if (config.pdvId != null && _clients.isNotEmpty) {
         Client? matchedClient;
         for (final client in _clients) {
           if (client.id == config.pdvId.toString()) {
@@ -171,19 +173,9 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
             ),
           );
         } else if (state is PdvConfigError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.error_outline, color: Colors.white),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(state.message)),
-                ],
-              ),
-              backgroundColor: AppColors.error,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          setState(() {
+            _localError = null; // Clear local error if we got a bloc error
+          });
         }
       },
       builder: (context, state) {
@@ -200,28 +192,58 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     // Banner de información
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.blue.shade200),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.info_outline,
-                              size: 20, color: Colors.blue),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              isLoading
-                                  ? 'Cargando configuración...'
-                                  : 'Configura los datos de tu punto de venta',
-                              style: const TextStyle(fontSize: 13),
-                            ),
+                    // Banner de información o Error
+                    Builder(
+                      builder: (context) {
+                        final String message;
+                        final Color bgColor;
+                        final Color borderColor;
+                        final IconData icon;
+                        final Color accentColor;
+
+                        if (state is PdvConfigError || _localError != null) {
+                          message = (state is PdvConfigError) ? state.message : _localError!;
+                          bgColor = Colors.red.shade50;
+                          borderColor = Colors.red.shade200;
+                          icon = Icons.error_outline;
+                          accentColor = Colors.red;
+                        } else {
+                          message = isLoading
+                              ? 'Cargando configuración...'
+                              : 'Configura los datos de tu punto de venta';
+                          bgColor = Colors.blue.shade50;
+                          borderColor = Colors.blue.shade200;
+                          icon = Icons.info_outline;
+                          accentColor = Colors.blue;
+                        }
+
+                        return Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: bgColor,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: borderColor),
                           ),
-                        ],
-                      ),
+                          child: Row(
+                            children: [
+                              Icon(icon, size: 20, color: accentColor),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  message,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: accentColor.withValues(alpha: 0.9),
+                                    fontWeight: (state is PdvConfigError || _localError != null) 
+                                        ? FontWeight.w500 
+                                        : FontWeight.normal,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(height: AppDimensions.paddingM),
 
@@ -245,88 +267,90 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          TextFormField(
-                            controller: _clientSearchController,
-                            decoration: InputDecoration(
-                              labelText: 'Buscar cliente',
-                              hintText: 'Nombre, ID o documento',
-                              prefixIcon: const Icon(Icons.search),
-                              border: const OutlineInputBorder(),
-                              suffixIcon: _clientSearchQuery.isNotEmpty
-                                  ? IconButton(
-                                      icon: const Icon(Icons.clear),
-                                      onPressed: () {
-                                        setState(() {
-                                          _clientSearchController.clear();
-                                          _clientSearchQuery = '';
-                                        });
-                                      },
+                          if (widget.isAdmin) ...[
+                            TextFormField(
+                              controller: _clientSearchController,
+                              decoration: InputDecoration(
+                                labelText: 'Buscar cliente',
+                                hintText: 'Nombre, ID o documento',
+                                prefixIcon: const Icon(Icons.search),
+                                border: const OutlineInputBorder(),
+                                suffixIcon: _clientSearchQuery.isNotEmpty
+                                    ? IconButton(
+                                        icon: const Icon(Icons.clear),
+                                        onPressed: () {
+                                          setState(() {
+                                            _clientSearchController.clear();
+                                            _clientSearchQuery = '';
+                                          });
+                                        },
+                                      )
+                                    : null,
+                              ),
+                              onChanged: (value) {
+                                setState(() {
+                                  _clientSearchQuery = value;
+                                });
+                              },
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey.shade300),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              height: 200,
+                              child: _filteredClients.isEmpty
+                                  ? const Center(
+                                      child: Text(
+                                        'No se encontraron clientes',
+                                        style: TextStyle(color: Colors.grey),
+                                      ),
                                     )
-                                  : null,
-                            ),
-                            onChanged: (value) {
-                              setState(() {
-                                _clientSearchQuery = value;
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey.shade300),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            height: 200,
-                            child: _filteredClients.isEmpty
-                                ? const Center(
-                                    child: Text(
-                                      'No se encontraron clientes',
-                                      style: TextStyle(color: Colors.grey),
-                                    ),
-                                  )
-                                : ListView.builder(
-                                    itemCount: _filteredClients.length,
-                                    itemBuilder: (context, index) {
-                                      final client = _filteredClients[index];
-                                      final isSelected =
-                                          _selectedClient?.id == client.id;
+                                  : ListView.builder(
+                                      itemCount: _filteredClients.length,
+                                      itemBuilder: (context, index) {
+                                        final client = _filteredClients[index];
+                                        final isSelected =
+                                            _selectedClient?.id == client.id;
 
-                                      return ListTile(
-                                        selected: isSelected,
-                                        selectedTileColor:
-                                            AppColors.primary.withValues(alpha: 0.1),
-                                        leading: CircleAvatar(
-                                          backgroundColor: isSelected
-                                              ? AppColors.primary
-                                              : Colors.grey.shade300,
-                                          child: Icon(
-                                            Icons.person,
-                                            color: isSelected
-                                                ? Colors.white
-                                                : Colors.grey.shade600,
+                                        return ListTile(
+                                          selected: isSelected,
+                                          selectedTileColor:
+                                              AppColors.primary.withValues(alpha: 0.1),
+                                          leading: CircleAvatar(
+                                            backgroundColor: isSelected
+                                                ? AppColors.primary
+                                                : Colors.grey.shade300,
+                                            child: Icon(
+                                              Icons.person,
+                                              color: isSelected
+                                                  ? Colors.white
+                                                  : Colors.grey.shade600,
+                                            ),
                                           ),
-                                        ),
-                                        title: Text(
-                                          client.name,
-                                          style: TextStyle(
-                                            fontWeight: isSelected
-                                                ? FontWeight.bold
-                                                : FontWeight.normal,
+                                          title: Text(
+                                            client.name,
+                                            style: TextStyle(
+                                              fontWeight: isSelected
+                                                  ? FontWeight.bold
+                                                  : FontWeight.normal,
+                                            ),
                                           ),
-                                        ),
-                                        subtitle: Text('ID: ${client.id}${client.document != null ? ' - ${client.document}' : ''}'),
-                                        trailing: isSelected
-                                            ? const Icon(
-                                                Icons.check_circle,
-                                                color: AppColors.primary,
-                                              )
-                                            : null,
-                                        onTap: () => _onClientSelected(client),
-                                      );
-                                    },
-                                  ),
-                          ),
-                          const SizedBox(height: 8),
+                                          subtitle: Text('ID: ${client.id}${client.document != null ? ' - ${client.document}' : ''}'),
+                                          trailing: isSelected
+                                              ? const Icon(
+                                                  Icons.check_circle,
+                                                  color: AppColors.primary,
+                                                )
+                                              : null,
+                                          onTap: () => _onClientSelected(client),
+                                        );
+                                      },
+                                    ),
+                            ),
+                            const SizedBox(height: 8),
+                          ],
                           if (_selectedClient != null)
                             Container(
                               padding: const EdgeInsets.all(12),
@@ -349,7 +373,7 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                                 ],
                               ),
                             )
-                          else
+                          else if (widget.isAdmin)
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
@@ -416,26 +440,27 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                         },
                       ),
                       const SizedBox(height: AppDimensions.paddingM),
-                      TextFormField(
-                        controller: branchNumberController,
-                        decoration: const InputDecoration(
-                          labelText: 'Número de Sucursal',
-                          hintText: 'Sucursal Centro',
-                          prefixIcon: Icon(Icons.tag),
-                          border: OutlineInputBorder(),
-                          filled: true,
-                          fillColor: Color(0xFFF5F5F5),
-                        ),
-                        inputFormatters: [
-                          LengthLimitingTextInputFormatter(4),
-                        ],
-                        validator: (v) {
-                          if (v == null || v.isEmpty) {
-                            return 'Ingresa el número de sucursal';
-                          }
-                          return null;
-                        },
-                      ),
+                      // TextFormField(
+                      //   controller: branchNumberController,
+                      //   readOnly: !widget.isAdmin,
+                      //   decoration: const InputDecoration(
+                      //     labelText: 'Número de Sucursal',
+                      //     hintText: 'Sucursal Centro',
+                      //     prefixIcon: Icon(Icons.tag),
+                      //     border: OutlineInputBorder(),
+                      //     filled: true,
+                      //     fillColor: Color(0xFFF5F5F5),
+                      //   ),
+                      //   inputFormatters: [
+                      //     LengthLimitingTextInputFormatter(4),
+                      //   ],
+                      //   validator: (v) {
+                      //     if (v == null || v.isEmpty) {
+                      //       return 'Ingresa el número de sucursal';
+                      //     }
+                      //     return null;
+                      //   },
+                      // ),
                     ],
                   ],
                 ),
@@ -459,21 +484,21 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
 
                       // Validar que se haya seleccionado un cliente default
                       if (_selectedClient == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Debes seleccionar un cliente default'),
-                            backgroundColor: AppColors.error,
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
+                        setState(() {
+                          _localError = 'Debes seleccionar un cliente default';
+                        });
                         return;
                       }
+
+                      setState(() {
+                        _localError = null;
+                      });
 
                       // El pdvId es el ID del cliente seleccionado (delivery_location_id)
                       final pdvId = int.parse(_selectedClient!.id);
                       final branchId =
                           int.parse(branchIdController.text.trim());
-                      final branchNumber = branchNumberController.text.trim();
+                      final branchNumber = "";//branchNumberController.text.trim();
 
                       final newConfig = PdvConfig(
                         pdvId: pdvId,

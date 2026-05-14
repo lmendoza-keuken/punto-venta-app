@@ -29,7 +29,7 @@ class PrinterLocalDataSourceImpl implements PrinterLocalDataSource {
           : int.tryParse(data['port']?.toString() ?? '') ?? 9100,
       timeout: (data['timeout'] is int)
           ? data['timeout'] as int
-          : int.tryParse(data['timeout']?.toString() ?? '') ?? 10000,
+          : int.tryParse(data['timeout']?.toString() ?? '') ?? 20000,
       labelType: (data['labelType'] is int)
           ? data['labelType'] as int
           : int.tryParse(data['labelType']?.toString() ?? '') ?? 0,
