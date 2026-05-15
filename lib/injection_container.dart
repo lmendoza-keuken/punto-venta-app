@@ -30,7 +30,7 @@ import 'package:punto_venta_app/features/pos/data/datasources/printer_local_data
 import 'package:punto_venta_app/features/pos/data/datasources/pdv_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/pdv_remote_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/printer_socket_datasource.dart';
-import 'package:punto_venta_app/features/pos/data/datasources/product_local_data.datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/product_local_data_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/saved_orders_local_dasource.dart';
 import 'package:punto_venta_app/features/pos/data/repositories/client_repository_impl.dart';
 import 'package:punto_venta_app/features/pos/data/repositories/tax_repository_impl.dart';
@@ -342,6 +342,9 @@ Future<void> init() async {
   );
 
   // Data sources
+  sl.registerLazySingleton<ProductService>(
+    () => ProductService(sl()),
+  );
   sl.registerLazySingleton<ProductLocalDataSource>(
     () => ProductLocalDataSourceImpl(),
   );
@@ -395,6 +398,9 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<TicketConfigLocalDataSource>(
     () => TicketConfigLocalDataSourceImpl(dbHelper: sl()),
+  );
+  sl.registerLazySingleton<TicketConfigService>(
+    () => TicketConfigService(sl()),
   );
   sl.registerLazySingleton<TicketConfigRemoteDataSource>(
     () => TicketConfigRemoteDataSourceImpl(),

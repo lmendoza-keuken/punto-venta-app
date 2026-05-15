@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:punto_venta_app/features/pos/data/datasources/product_local_data.datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/product_local_data_datasource.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/product_repository.dart';
 

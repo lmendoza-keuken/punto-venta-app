@@ -1,12 +1,34 @@
-import 'dart:convert';
 import 'package:dio/dio.dart';
-import 'package:punto_venta_app/core/config/api_config.dart';
-import 'package:punto_venta_app/core/network/dio_client.dart';
+import 'package:retrofit/retrofit.dart';
 import 'package:punto_venta_app/features/pos/data/models/category_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/product_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/precio_articulo_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/barcode_model.dart';
+import 'package:punto_venta_app/core/network/error_handler.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
+
+part 'product_local_data_datasource.g.dart';
+
+@RestApi()
+abstract class ProductService {
+  factory ProductService(Dio dio, {String baseUrl}) = _ProductService;
+
+  @GET('/articles/')
+  Future<List<ProductModel>> getProducts(
+      {@Query('skip') int skip = 0, @Query('limit') int limit = 10000});
+
+  @GET('/barcodes/')
+  Future<List<BarcodeModel>> getBarcodes(
+      {@Query('skip') int skip = 0, @Query('limit') int limit = 10000});
+
+  @GET('/prices_list/')
+  Future<List<PrecioArticuloModel>> getPricesList(
+      {@Query('skip') int skip = 0, @Query('limit') int limit = 10000});
+
+  @GET('/categories/')
+  Future<List<CategoryModel>> getCategories(
+      {@Query('skip') int skip = 0, @Query('limit') int limit = 10000});
+}
 
 abstract class ProductLocalDataSource {
   Future<List<ProductModel>> getProducts();
@@ -21,7 +43,7 @@ abstract class ProductLocalDataSource {
 }
 
 class ProductLocalDataSourceImpl implements ProductLocalDataSource {
-  Dio get _dio => di.sl<Dio>();
+  ProductService get _apiService => di.sl<ProductService>();
   List<ProductModel>? _cachedProducts;
   List<PrecioArticuloModel>? _cachedPrecios;
   List<BarcodeModel>? _cachedBarcodes;
@@ -47,31 +69,8 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
     }
 
     try {
-      final response = await _dio.get(
-        ApiConfig.barcodeUrl,
-        queryParameters: {'skip': 0, 'limit': 10000},
-        options: Options(
-          responseType: ResponseType.json,
-        ),
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> jsonData = response.data is String
-            ? json.decode(response.data)
-            : response.data;
-
-        _cachedBarcodes = jsonData
-            .map((json) => BarcodeModel.fromJson(json as Map<String, dynamic>))
-            .toList();
-
-        return _cachedBarcodes!;
-      } else {
-        throw DioException(
-          requestOptions: response.requestOptions,
-          response: response,
-          message: 'Error al cargar códigos de barras: ${response.statusCode}',
-        );
-      }
+      _cachedBarcodes = await _apiService.getBarcodes();
+      return _cachedBarcodes!;
     } catch (e) {
       _cachedBarcodes = [];
       return _cachedBarcodes!;
@@ -85,46 +84,16 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
     }
 
     try {
-      final response = await _dio.get(
-        ApiConfig.productosUrl,
-        queryParameters: {'skip': 0, 'limit': 10000},
-        options: Options(
-          responseType: ResponseType.json,
-        ),
-      );
+      final products = await _apiService.getProducts();
 
-      if (response.statusCode == 200) {
-        final List<dynamic> jsonData = response.data is String
-            ? json.decode(response.data)
-            : response.data;
+      // se filtran los productos no suspendidos para la venta (suspendedForSale == 'N')
+      _cachedProducts =
+          products.where((product) => product.suspendedForSale == 'N').toList();
 
-        // se filtran los productos no suspendidos para la venta (suspendedForSale == 'N')
-        _cachedProducts = jsonData
-            .map((json) => ProductModel.fromJson(json as Map<String, dynamic>))
-            .where((product) => product.suspendedForSale == 'N')
-            .toList();
-
-        return _cachedProducts!;
-      } else {
-        throw DioException(
-          requestOptions: response.requestOptions,
-          response: response,
-          message: 'Error al cargar productos: ${response.statusCode}',
-        );
-      }
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionTimeout) {
-        throw Exception('Tiempo de conexión agotado');
-      } else if (e.type == DioExceptionType.receiveTimeout) {
-        throw Exception('Tiempo de respuesta agotado');
-      } else if (e.response != null) {
-        throw Exception(
-            'Error del servidor: ${e.response?.statusCode} - ${e.response?.statusMessage}');
-      } else {
-        throw Exception('Error de conexión: ${e.message}');
-      }
+      return _cachedProducts!;
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw Exception(ErrorHandler.handleError(e,
+          defaultMessage: 'Error al cargar productos'));
     }
   }
 
@@ -136,45 +105,11 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
     }
 
     try {
-      final response = await _dio.get(
-        ApiConfig.pricesListUrl,
-        queryParameters: {'skip': 0, 'limit': 10000},
-        options: Options(
-          responseType: ResponseType.json,
-        ),
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> jsonData = response.data is String
-            ? json.decode(response.data)
-            : response.data;
-
-        _cachedPrecios = jsonData
-            .map((json) =>
-                PrecioArticuloModel.fromJson(json as Map<String, dynamic>))
-            .toList();
-
-        return _cachedPrecios!;
-      } else {
-        throw DioException(
-          requestOptions: response.requestOptions,
-          response: response,
-          message: 'Error al cargar precios: ${response.statusCode}',
-        );
-      }
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionTimeout) {
-        throw Exception('Tiempo de conexión agotado');
-      } else if (e.type == DioExceptionType.receiveTimeout) {
-        throw Exception('Tiempo de respuesta agotado');
-      } else if (e.response != null) {
-        throw Exception(
-            'Error del servidor: ${e.response?.statusCode} - ${e.response?.statusMessage}');
-      } else {
-        throw Exception('Error de conexión: ${e.message}');
-      }
+      _cachedPrecios = await _apiService.getPricesList();
+      return _cachedPrecios!;
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw Exception(ErrorHandler.handleError(e,
+          defaultMessage: 'Error al cargar precios'));
     }
   }
 
@@ -310,31 +245,8 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
     }
 
     try {
-      final response = await _dio.get(
-        ApiConfig.categoriesUrl,
-        queryParameters: {'skip': 0, 'limit': 10000},
-        options: Options(
-          responseType: ResponseType.json,
-        ),
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> jsonData = response.data is String
-            ? json.decode(response.data)
-            : response.data;
-
-        _cachedCategories = jsonData
-            .map((json) => CategoryModel.fromJson(json as Map<String, dynamic>))
-            .toList();
-
-        return _cachedCategories!;
-      } else {
-        throw DioException(
-          requestOptions: response.requestOptions,
-          response: response,
-          message: 'Error al cargar categorías: ${response.statusCode}',
-        );
-      }
+      _cachedCategories = await _apiService.getCategories();
+      return _cachedCategories!;
     } catch (e) {
       _cachedCategories = [];
       return _cachedCategories!;

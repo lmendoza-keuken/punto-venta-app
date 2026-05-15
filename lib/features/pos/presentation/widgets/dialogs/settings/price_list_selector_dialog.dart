@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product/product_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product/product_event.dart';
-import 'package:punto_venta_app/features/pos/data/datasources/product_local_data.datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/product_local_data_datasource.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 class PriceListSelectorDialog extends StatefulWidget {
