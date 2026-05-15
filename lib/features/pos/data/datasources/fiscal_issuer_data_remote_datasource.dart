@@ -11,13 +11,12 @@ abstract class FiscalIssuerDataRemoteDatasource {
 
 class FiscalIssuerDataRemoteDatasourceImpl
     implements FiscalIssuerDataRemoteDatasource {
-  final Dio _dio;
+  Dio get _dio => di.sl<Dio>();
   final Duration timeout;
 
   FiscalIssuerDataRemoteDatasourceImpl({
-    Dio? dio,
     this.timeout = const Duration(seconds: 15),
-  }) : _dio = dio ?? DioClient.instance;
+  });
 
   @override
   Future<FiscalIssuerDataModel> getFiscalIssuerData(int branchId) async {

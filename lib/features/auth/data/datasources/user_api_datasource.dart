@@ -1,15 +1,28 @@
 import 'package:dio/dio.dart';
+import 'package:retrofit/retrofit.dart';
 import 'package:punto_venta_app/core/config/api_config.dart';
 import 'package:punto_venta_app/core/network/dio_client.dart';
+import 'package:punto_venta_app/core/network/error_handler.dart';
+import 'package:punto_venta_app/injection_container.dart' as di;
+
+part 'user_api_datasource.g.dart';
+
+@RestApi()
+abstract class UserApiService {
+  factory UserApiService(Dio dio, {String baseUrl}) = _UserApiService;
+
+  @POST('/users/login-cashier')
+  Future<dynamic> authenticateUser(@Body() Map<String, dynamic> body);
+}
 
 abstract class UserApiDataSource {
   Future<Map<String, dynamic>> authenticateUser(String userId, String password);
 }
 
 class UserApiDataSourceImpl implements UserApiDataSource {
-  final Dio _dio;
+  UserApiService get _apiService => di.sl<UserApiService>();
 
-  UserApiDataSourceImpl({Dio? dio}) : _dio = dio ?? DioClient.instance;
+  UserApiDataSourceImpl();
 
   String _encode(String s) {
     int length = s.length;
@@ -21,58 +34,18 @@ class UserApiDataSourceImpl implements UserApiDataSource {
       String userId, String password) async {
     try {
       final encodedPassword = _encode(password);
+      final Map<String, dynamic> response = await _apiService.authenticateUser({
+        'id': userId,
+        'password': encodedPassword,
+      });
 
-      final response = await _dio.post(
-        ApiConfig.loginUrl,
-        data: {
-          'id': userId,
-          'password': encodedPassword,
-        },
-        options: Options(
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          responseType: ResponseType.json,
-        ),
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = response.data as Map<String, dynamic>;
-
-        return {
-          'token': data['token'],
-          'user': data['user'],
-        };
-      } else {
-        throw DioException(
-          requestOptions: response.requestOptions,
-          response: response,
-          message: 'Error al autenticar: ${response.statusCode}',
-        );
-      }
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionTimeout) {
-        throw Exception('Tiempo de conexión agotado');
-      } else if (e.type == DioExceptionType.receiveTimeout) {
-        throw Exception('Tiempo de respuesta agotado');
-      } else if (e.response?.statusCode == 401 ||
-          e.response?.statusCode == 403) {
-        throw Exception('Credenciales inválidas');
-      } else if (e.response != null) {
-        throw Exception(
-            'Error del servidor: ${e.response?.statusCode} - ${e.response?.data}');
-      } else if ((e.message?.contains('No route to host') ?? false) ||
-          (e.error?.toString().contains('No route to host') ?? false)) {
-        throw Exception(
-            'No se puede conectar al servidor. Verifica que la dirección IP sea correcta y que el servidor esté disponible.');
-      } else if (e.type == DioExceptionType.unknown) {
-        throw Exception(
-            'Error de red. Verifica que el servidor esté disponible y que tengas conexión a internet.');
-      } else {
-        throw Exception('Error de conexión: ${e.message}');
-      }
+      return {
+        'token': response['token'],
+        'user': response['user'],
+      };
     } catch (e) {
-      throw Exception('Error al autenticar usuario: $e');
+      throw Exception(ErrorHandler.handleError(e,
+          defaultMessage: 'Error al autenticar usuario'));
     }
   }
 }

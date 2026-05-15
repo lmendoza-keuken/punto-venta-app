@@ -6,6 +6,7 @@ import 'package:punto_venta_app/features/pos/data/models/category_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/product_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/precio_articulo_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/barcode_model.dart';
+import 'package:punto_venta_app/injection_container.dart' as di;
 
 abstract class ProductLocalDataSource {
   Future<List<ProductModel>> getProducts();
@@ -20,7 +21,7 @@ abstract class ProductLocalDataSource {
 }
 
 class ProductLocalDataSourceImpl implements ProductLocalDataSource {
-  final Dio _dio;
+  Dio get _dio => di.sl<Dio>();
   List<ProductModel>? _cachedProducts;
   List<PrecioArticuloModel>? _cachedPrecios;
   List<BarcodeModel>? _cachedBarcodes;
@@ -28,10 +29,8 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
   int _listaActual;
 
   ProductLocalDataSourceImpl({
-    Dio? dio,
     int listaInicial = 1,
-  })  : _dio = dio ?? DioClient.instance,
-        _listaActual = listaInicial;
+  })  : _listaActual = listaInicial;
 
   @override
   int getListaPrecio() => _listaActual;

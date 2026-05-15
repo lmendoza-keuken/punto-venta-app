@@ -158,8 +158,11 @@ Future<void> init() async {
   sl.registerLazySingleton<AuthLocalDataSource>(
     () => AuthLocalDataSourceImpl(sharedPreferences: sl()),
   );
+  sl.registerLazySingleton<UserApiService>(
+    () => UserApiService(sl()),
+  );
   sl.registerLazySingleton<UserApiDataSource>(
-    () => UserApiDataSourceImpl(dio: sl()),
+    () => UserApiDataSourceImpl(),
   );
   sl.registerLazySingleton<PrinterLocalDataSource>(
     () => PrinterLocalDataSourceImpl(sharedPreferences: sl()),
@@ -167,8 +170,11 @@ Future<void> init() async {
   sl.registerLazySingleton<PdvLocalDataSource>(
     () => PdvLocalDataSourceImpl(sharedPreferences: sl()),
   );
+  sl.registerLazySingleton<PdvService>(
+    () => PdvService(sl()),
+  );
   sl.registerLazySingleton<PdvRemoteDataSource>(
-    () => PdvRemoteDataSourceImpl(dio: sl()),
+    () => PdvRemoteDataSourceImpl(),
   );
 
   //! Features - POS
@@ -337,7 +343,7 @@ Future<void> init() async {
 
   // Data sources
   sl.registerLazySingleton<ProductLocalDataSource>(
-    () => ProductLocalDataSourceImpl(dio: sl()),
+    () => ProductLocalDataSourceImpl(),
   );
   sl.registerLazySingleton<SavedOrdersLocalDataSource>(
     () => SavedOrdersLocalDataSourceImpl(sharedPreferences: sl()),
@@ -345,41 +351,59 @@ Future<void> init() async {
   sl.registerLazySingleton<CompletedOrdersLocalDataSource>(
     () => CompletedOrdersLocalDataSourceImpl(sharedPreferences: sl()),
   );
+  sl.registerLazySingleton<CompletedOrdersService>(
+    () => CompletedOrdersService(sl()),
+  );
   sl.registerLazySingleton<CompletedOrdersRemoteDataSource>(
-    () => CompletedOrdersRemoteDataSourceImpl(dio: sl()),
+    () => CompletedOrdersRemoteDataSourceImpl(),
   );
   sl.registerLazySingleton<ClientLocalDataSource>(
       () => ClientLocalDataSourceImpl(sharedPreferences: sl()));
+  sl.registerLazySingleton<ClientService>(
+    () => ClientService(sl()),
+  );
   sl.registerLazySingleton<ClientRemoteDataSource>(
-      () => ClientRemoteDataSourceImpl(dio: sl()));
+    () => ClientRemoteDataSourceImpl(),
+  );
   sl.registerLazySingleton<TaxLocalDataSource>(
       () => TaxLocalDataSourceImpl(sharedPreferences: sl()));
+  sl.registerLazySingleton<TaxService>(
+    () => TaxService(sl()),
+  );
   sl.registerLazySingleton<TaxRemoteDataSource>(
-      () => TaxRemoteDataSourceImpl(dio: sl()));
+    () => TaxRemoteDataSourceImpl(),
+  );
   sl.registerLazySingleton<VatCategoryLocalDataSource>(
       () => VatCategoryLocalDataSourceImpl(sharedPreferences: sl()));
+  sl.registerLazySingleton<VatCategoryService>(
+    () => VatCategoryService(sl()),
+  );
   sl.registerLazySingleton<VatCategoryRemoteDataSource>(
-      () => VatCategoryRemoteDataSourceImpl(dio: sl()));
+    () => VatCategoryRemoteDataSourceImpl(),
+  );
   sl.registerLazySingleton<FiscalIssuerDataLocalDatasource>(
       () => FiscalIssuerDataLocalDatasourceImpl(sharedPreferences: sl()));
   sl.registerLazySingleton<FiscalIssuerDataRemoteDatasource>(
-      () => FiscalIssuerDataRemoteDatasourceImpl(dio: sl()));
+      () => FiscalIssuerDataRemoteDatasourceImpl());
   sl.registerLazySingleton<BranchLocalDataSource>(
       () => BranchLocalDataSourceImpl(sharedPreferences: sl()));
+  sl.registerLazySingleton<InvoiceService>(
+    () => InvoiceService(sl()),
+  );
   sl.registerLazySingleton<InvoiceRemoteDataSource>(
-    () => InvoiceRemoteDataSourceImpl(dio: sl(), taxRepository: sl()),
+    () => InvoiceRemoteDataSourceImpl(taxRepository: sl()),
   );
   sl.registerLazySingleton<TicketConfigLocalDataSource>(
     () => TicketConfigLocalDataSourceImpl(dbHelper: sl()),
   );
   sl.registerLazySingleton<TicketConfigRemoteDataSource>(
-    () => TicketConfigRemoteDataSourceImpl(dio: sl()),
+    () => TicketConfigRemoteDataSourceImpl(),
   );
   sl.registerLazySingleton<PriceListLocalDataSource>(
     () => PriceListLocalDataSourceImpl(sharedPreferences: sl()),
   );
   sl.registerLazySingleton<PaymentMethodRemoteDatasource>(
-    () => PaymentMethodRemoteDatasourceImpl(dio: sl()),
+    () => PaymentMethodRemoteDatasourceImpl(),
   );
 
   //! Features - Stock

@@ -4,7 +4,7 @@ import 'package:punto_venta_app/core/network/interceptors.dart';
 class DioClient {
   static Dio? _instance;
 
-  static final Dio instance = _createInstance();
+  static final Dio instance = _instance ?? _createInstance();
 
   static Dio _createInstance() {
     final d = Dio(
@@ -23,6 +23,7 @@ class DioClient {
 
     configureDioWithInterceptors(d, injectToken: true);
 
+    _instance = d;
     return d;
   }
 

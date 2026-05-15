@@ -11,13 +11,12 @@ abstract class TicketConfigRemoteDataSource {
 }
 
 class TicketConfigRemoteDataSourceImpl implements TicketConfigRemoteDataSource {
-  final Dio _dio;
+  Dio get _dio => di.sl<Dio>();
   final Duration timeout;
 
   TicketConfigRemoteDataSourceImpl({
-    Dio? dio,
     this.timeout = const Duration(seconds: 10),
-  }) : _dio = dio ?? DioClient.instance;
+  });
 
   @override
   Future<TicketConfigModel> fetchAppConfig() async {

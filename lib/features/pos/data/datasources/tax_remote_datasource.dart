@@ -1,81 +1,38 @@
 import 'package:dio/dio.dart';
+import 'package:retrofit/retrofit.dart';
 import 'package:punto_venta_app/core/config/api_config.dart';
 import 'package:punto_venta_app/core/network/dio_client.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
+import 'package:punto_venta_app/core/network/error_handler.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 import '../models/tax_model.dart';
+
+part 'tax_remote_datasource.g.dart';
+
+@RestApi()
+abstract class TaxService {
+  factory TaxService(Dio dio, {String baseUrl}) = _TaxService;
+
+  @GET('/taxes/')
+  Future<List<TaxModel>> getTaxes();
+}
 
 abstract class TaxRemoteDataSource {
   Future<List<TaxModel>> getTaxes();
 }
 
 class TaxRemoteDataSourceImpl implements TaxRemoteDataSource {
-  final Dio _dio;
-  final Duration timeout;
+  TaxService get _apiService => di.sl<TaxService>();
 
-  TaxRemoteDataSourceImpl({
-    Dio? dio,
-    this.timeout = const Duration(seconds: 15),
-  }) : _dio = dio ?? DioClient.instance;
+  TaxRemoteDataSourceImpl();
 
   @override
   Future<List<TaxModel>> getTaxes() async {
-    final url = ApiConfig.taxesUrl;
-
-    if (url.isEmpty) {
-      throw Exception('URL del endpoint de taxes no configurada');
-    }
-
-    final localDs = di.sl<AuthLocalDataSource>();
-    final token = await localDs.getToken();
-
-    if (token == null || token.isEmpty) {
-      throw Exception('No hay token de autenticación disponible');
-    }
-
     try {
-      final response = await _dio.get(
-        url,
-        options: Options(
-          headers: {
-            'Content-Type': 'application/json; charset=utf-8',
-            'Authorization': 'Bearer $token',
-          },
-          validateStatus: (status) => status != null && status < 500,
-        ),
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = response.data as List<dynamic>;
-        return data
-            .map((json) => TaxModel.fromJson(json as Map<String, dynamic>))
-            .toList();
-      } else {
-        throw DioException(
-          requestOptions: response.requestOptions,
-          response: response,
-          message: 'Error al obtener impuestos: ${response.statusCode} ${response.data}',
-        );
-      }
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.sendTimeout ||
-          e.type == DioExceptionType.receiveTimeout) {
-        throw Exception(
-            'Timeout al obtener impuestos después de ${timeout.inSeconds}s');
-      } else if (e.type == DioExceptionType.connectionTimeout) {
-        throw Exception(
-            'Tiempo de conexión agotado. Verifica que el servidor esté activo en $url');
-      } else if (e.type == DioExceptionType.connectionError) {
-        throw Exception(
-            'Error de conexión. Verifica la red y que el servidor esté disponible');
-      } else if (e.response != null) {
-        throw Exception(
-            'Error al obtener impuestos: ${e.response?.statusCode} - ${e.response?.data}');
-      } else {
-        throw Exception('Error desconocido al obtener impuestos: ${e.message}');
-      }
+      return await _apiService.getTaxes();
     } catch (e) {
-      throw Exception('Error al procesar respuesta de impuestos: $e');
+      throw Exception(ErrorHandler.handleError(e,
+          defaultMessage: 'Error al obtener impuestos'));
     }
   }
 }

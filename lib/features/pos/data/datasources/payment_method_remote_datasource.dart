@@ -11,13 +11,12 @@ abstract class PaymentMethodRemoteDatasource {
 
 class PaymentMethodRemoteDatasourceImpl
     implements PaymentMethodRemoteDatasource {
-  final Dio _dio;
+  Dio get _dio => di.sl<Dio>();
   final Duration timeout;
 
   PaymentMethodRemoteDatasourceImpl({
-    Dio? dio,
     this.timeout = const Duration(seconds: 15),
-  }) : _dio = dio ?? DioClient.instance;
+  });
 
   @override
   Future<List<PaymentMethodModel>> getPaymentMethods() async {

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:retrofit/retrofit.dart';
 import 'package:punto_venta_app/core/config/api_config.dart';
 import 'package:punto_venta_app/core/network/dio_client.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
@@ -6,65 +7,33 @@ import 'package:punto_venta_app/core/network/error_handler.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 import '../../domain/entities/client.dart';
 
+part 'client_remote_datasource.g.dart';
+
+@RestApi()
+abstract class ClientService {
+  factory ClientService(Dio dio, {String baseUrl}) = _ClientService;
+
+  @GET('/pdv/')
+  Future<List<Client>> getClients(
+      {@Query('skip') int skip = 0, @Query('limit') int limit = 10000});
+}
+
 abstract class ClientRemoteDataSource {
   Future<List<Client>> getClients();
 }
 
 class ClientRemoteDataSourceImpl implements ClientRemoteDataSource {
-  final Dio _dio;
-  final Duration timeout;
+  ClientService get _apiService => di.sl<ClientService>();
 
-  ClientRemoteDataSourceImpl({
-    Dio? dio,
-    this.timeout = const Duration(seconds: 30),
-  }) : _dio = dio ?? DioClient.instance;
+  ClientRemoteDataSourceImpl();
 
   @override
   Future<List<Client>> getClients() async {
-    final url = ApiConfig.pdvUrl;
-
-    if (url.isEmpty) {
-      throw Exception('URL del endpoint de clientes no configurada');
-    }
-
-    final localDs = di.sl<AuthLocalDataSource>();
-    final token = await localDs.getToken();
-
-    if (token == null || token.isEmpty) {
-      throw Exception('No hay token de autenticación disponible');
-    }
-
     try {
-      final response = await _dio.get(
-        url,
-        queryParameters: {'skip': 0, 'limit': 10000},
-        options: Options(
-          headers: {
-            'Content-Type': 'application/json; charset=utf-8',
-            'Authorization': 'Bearer $token',
-          },
-          validateStatus: (status) => status != null && status < 500,
-        ),
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = response.data as List<dynamic>;
-        return data
-            .map((json) => Client.fromBackendJson(json as Map<String, dynamic>))
-            .toList();
-      } else {
-        throw DioException(
-          requestOptions: response.requestOptions,
-          response: response,
-          message: 'Error al obtener clientes: ${response.statusCode} ${response.data}',
-        );
-      }
-    } on DioException catch (e) {
-      throw Exception(ErrorHandler.handleError(e,
-          defaultMessage: 'Error al obtener clientes: ${e.message}'));
+      return await _apiService.getClients();
     } catch (e) {
       throw Exception(ErrorHandler.handleError(e,
-          defaultMessage: 'Error al procesar respuesta de clientes: $e'));
+          defaultMessage: 'Error al obtener clientes'));
     }
   }
 }

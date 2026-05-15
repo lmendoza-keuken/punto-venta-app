@@ -1,10 +1,38 @@
 import 'package:dio/dio.dart';
+import 'package:retrofit/retrofit.dart';
 import 'package:punto_venta_app/core/config/api_config.dart';
-import 'package:punto_venta_app/core/constants/ticket_types.dart';
 import 'package:punto_venta_app/core/network/dio_client.dart';
+import 'package:punto_venta_app/core/network/error_handler.dart';
 import 'package:punto_venta_app/features/pos/data/models/invoice_payload_model.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
+
+part 'completed_orders_remote_datasource.g.dart';
+
+@RestApi()
+abstract class CompletedOrdersService {
+  factory CompletedOrdersService(Dio dio, {String baseUrl}) = _CompletedOrdersService;
+
+  @GET('/tickets/')
+  Future<List<InvoicePayload>> getAllTickets(
+      {@Query('skip') int skip = 0,
+      @Query('limit') int limit = 10,
+      @Query('only_sales') bool? onlySales});
+
+  @GET('/tickets/')
+  Future<List<InvoicePayload>> getTicketsByDateRange(
+      {@Query('start_date') required String startDate,
+      @Query('end_date') String? endDate,
+      @Query('skip') int skip = 0,
+      @Query('limit') int limit = 10,
+      @Query('only_sales') bool? onlySales});
+
+  @GET('/tickets/{id}')
+  Future<InvoicePayload> getTicketById(@Path('id') String id);
+
+  @POST('/tickets/{id}/nota-credito')
+  Future<InvoicePayload> convertToCreditNote(@Path('id') String id);
+}
 
 abstract class CompletedOrdersRemoteDataSource {
   Future<List<InvoicePayload>> getAllTickets(
@@ -17,86 +45,19 @@ abstract class CompletedOrdersRemoteDataSource {
 
 class CompletedOrdersRemoteDataSourceImpl
     implements CompletedOrdersRemoteDataSource {
-  final Dio _dio;
-  final Duration timeout;
+  CompletedOrdersService get _apiService => di.sl<CompletedOrdersService>();
 
-  CompletedOrdersRemoteDataSourceImpl({
-    Dio? dio,
-    this.timeout = const Duration(seconds: 15),
-  }) : _dio = dio ?? DioClient.instance;
+  CompletedOrdersRemoteDataSourceImpl();
 
   @override
   Future<List<InvoicePayload>> getAllTickets(
       {int skip = 0, int limit = 10, bool? onlySales}) async {
-    final url = ApiConfig.invoiceUrl;
-
-    if (url.isEmpty || ApiConfig.invoiceUrl.isEmpty) {
-      print('⚠️ [ORDERS] URL vacía, retornando lista vacía');
-      return [];
-    }
-
-    final localDs = di.sl<AuthLocalDataSource>();
-    final token = await localDs.getToken();
-
-    if (token == null || token.isEmpty) {
-      throw Exception('No hay token de autenticación disponible');
-    }
-
     try {
-      final queryParams = <String, dynamic>{
-        'skip': skip,
-        'limit': limit,
-      };
-      if (onlySales != null) {
-        queryParams['only_sales'] = onlySales;
-      }
-
-      final response = await _dio.get(
-        url,
-        queryParameters: queryParams,
-        options: Options(
-          headers: {
-            'Content-Type': 'application/json; charset=utf-8',
-            'Authorization': 'Bearer $token',
-          },
-          receiveTimeout: timeout,
-          validateStatus: (status) => status != null && status < 500,
-        ),
-      );
-
-      if (response.statusCode == 200) {
-        final data = response.data as List;
-        final tickets = data
-            .map(
-                (json) => InvoicePayload.fromJson(json as Map<String, dynamic>))
-            .toList();
-
-        return tickets;
-      } else {
-        throw DioException(
-          requestOptions: response.requestOptions,
-          response: response,
-          message: 'Orders API error: ${response.statusCode} ${response.data}',
-        );
-      }
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.receiveTimeout) {
-        throw Exception(
-            'Timeout al obtener órdenes después de ${timeout.inSeconds}s');
-      } else if (e.type == DioExceptionType.connectionTimeout) {
-        throw Exception(
-            'Tiempo de conexión agotado. Verifica que el servidor esté activo en $url');
-      } else if (e.type == DioExceptionType.connectionError) {
-        throw Exception(
-            'Error de conexión. Verifica la red y que el servidor esté disponible');
-      } else if (e.response != null) {
-        throw Exception(
-            'Error al obtener órdenes: ${e.response?.statusCode} - ${e.response?.data}');
-      } else {
-        throw Exception('Error de conexión al obtener órdenes: ${e.message}');
-      }
+      return await _apiService.getAllTickets(
+          skip: skip, limit: limit, onlySales: onlySales);
     } catch (e) {
-      throw Exception('Error inesperado al obtener órdenes: $e');
+      throw Exception(ErrorHandler.handleError(e,
+          defaultMessage: 'Error al obtener órdenes'));
     }
   }
 
@@ -106,205 +67,40 @@ class CompletedOrdersRemoteDataSourceImpl
       int skip = 0,
       int limit = 10,
       bool? onlySales}) async {
-    final url = ApiConfig.invoiceUrl;
-
-    if (url.isEmpty || ApiConfig.invoiceUrl.isEmpty) {
-      print('⚠️ [ORDERS] URL vacía, retornando lista vacía');
-      return [];
-    }
-
-    final localDs = di.sl<AuthLocalDataSource>();
-    final token = await localDs.getToken();
-
-    if (token == null || token.isEmpty) {
-      throw Exception('No hay token de autenticación disponible');
-    }
-
-    final queryParams = <String, dynamic>{
-      'start_date': _formatDateYYYYMMDD(startDate),
-      'skip': skip,
-      'limit': limit,
-    };
-    if (endDate != null) {
-      queryParams['end_date'] = _formatDateYYYYMMDD(endDate);
-    }
-    if (onlySales != null) {
-      queryParams['only_sales'] = onlySales;
-    }
-
     try {
-      final response = await _dio.get(
-        url,
-        queryParameters: queryParams,
-        options: Options(
-          headers: {
-            'Content-Type': 'application/json; charset=utf-8',
-            'Authorization': 'Bearer $token',
-          },
-          receiveTimeout: timeout,
-          validateStatus: (status) => status != null && status < 500,
-        ),
+      return await _apiService.getTicketsByDateRange(
+        startDate: _formatDateYYYYMMDD(startDate),
+        endDate: endDate != null ? _formatDateYYYYMMDD(endDate) : null,
+        skip: skip,
+        limit: limit,
+        onlySales: onlySales,
       );
-
-      if (response.statusCode == 200) {
-        final data = response.data as List;
-        final tickets = data
-            .map(
-                (json) => InvoicePayload.fromJson(json as Map<String, dynamic>))
-            .toList();
-
-        return tickets;
-      } else {
-        throw DioException(
-          requestOptions: response.requestOptions,
-          response: response,
-          message: 'Orders API error: ${response.statusCode} ${response.data}',
-        );
-      }
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.receiveTimeout) {
-        throw Exception(
-            'Timeout al obtener órdenes después de ${timeout.inSeconds}s');
-      } else if (e.type == DioExceptionType.connectionTimeout) {
-        throw Exception(
-            'Tiempo de conexión agotado. Verifica que el servidor esté activo en $url');
-      } else if (e.type == DioExceptionType.connectionError) {
-        throw Exception(
-            'Error de conexión. Verifica la red y que el servidor esté disponible');
-      } else if (e.response != null) {
-        throw Exception(
-            'Error al obtener órdenes: ${e.response?.statusCode} - ${e.response?.data}');
-      } else {
-        throw Exception('Error de conexión al obtener órdenes: ${e.message}');
-      }
     } catch (e) {
-      throw Exception('Error inesperado al obtener órdenes: $e');
+      throw Exception(ErrorHandler.handleError(e,
+          defaultMessage: 'Error al obtener órdenes por fecha'));
     }
   }
 
   @override
   Future<InvoicePayload?> getTicketById(String orderId) async {
-    final url = '${ApiConfig.invoiceUrl}$orderId';
-
-    if (url.isEmpty || ApiConfig.invoiceUrl.isEmpty) {
-      print('⚠️ [ORDERS] URL vacía, retornando null');
-      return null;
-    }
-
-    final localDs = di.sl<AuthLocalDataSource>();
-    final token = await localDs.getToken();
-
-    if (token == null || token.isEmpty) {
-      throw Exception('No hay token de autenticación disponible');
-    }
-
     try {
-      final response = await _dio.get(
-        url,
-        options: Options(
-          headers: {
-            'Content-Type': 'application/json; charset=utf-8',
-            'Authorization': 'Bearer $token',
-          },
-          receiveTimeout: timeout,
-          validateStatus: (status) => status != null && status < 500,
-        ),
-      );
-
-      if (response.statusCode == 200) {
-        return InvoicePayload.fromJson(response.data as Map<String, dynamic>);
-      } else if (response.statusCode == 404) {
-        return null;
-      } else {
-        throw DioException(
-          requestOptions: response.requestOptions,
-          response: response,
-          message: 'Orders API error: ${response.statusCode} ${response.data}',
-        );
-      }
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.receiveTimeout) {
-        throw Exception(
-            'Timeout al obtener orden después de ${timeout.inSeconds}s');
-      } else if (e.type == DioExceptionType.connectionTimeout) {
-        throw Exception(
-            'Tiempo de conexión agotado. Verifica que el servidor esté activo en $url');
-      } else if (e.type == DioExceptionType.connectionError) {
-        throw Exception(
-            'Error de conexión. Verifica la red y que el servidor esté disponible');
-      } else if (e.response != null) {
-        throw Exception(
-            'Error al obtener orden: ${e.response?.statusCode} - ${e.response?.data}');
-      } else {
-        throw Exception('Error de conexión al obtener orden: ${e.message}');
-      }
+      return await _apiService.getTicketById(orderId);
     } catch (e) {
-      throw Exception('Error inesperado al obtener orden: $e');
+      if (e is DioException && e.response?.statusCode == 404) {
+        return null;
+      }
+      throw Exception(ErrorHandler.handleError(e,
+          defaultMessage: 'Error al obtener orden'));
     }
   }
 
   @override
   Future<InvoicePayload?> convertToCreditNote(String ticketId) async {
-    final url = '${ApiConfig.invoiceUrl}$ticketId/nota-credito';
-
-    if (url.isEmpty || ApiConfig.invoiceUrl.isEmpty) {
-      print(
-          '⚠️ [CREDIT NOTE] URL vacía, no se puede convertir a nota de crédito');
-      return null;
-    }
-
-    final localDs = di.sl<AuthLocalDataSource>();
-    final token = await localDs.getToken();
-
-    if (token == null || token.isEmpty) {
-      throw Exception('No hay token de autenticación disponible');
-    }
-
     try {
-      final response = await _dio.post(
-        url,
-        options: Options(
-          headers: {
-            'Content-Type': 'application/json; charset=utf-8',
-            'Authorization': 'Bearer $token',
-          },
-          receiveTimeout: timeout,
-          validateStatus: (status) => status != null && status < 500,
-        ),
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        print(
-            '✅ [CREDIT NOTE] Nota de crédito generada correctamente para el ticket $ticketId');
-        print('✅ [CREDIT NOTE] Response: ${response.data}');
-        return InvoicePayload.fromJson(response.data as Map<String, dynamic>);
-      } else {
-        throw DioException(
-          requestOptions: response.requestOptions,
-          response: response,
-          message:
-              'Credit Note API error: ${response.statusCode} ${response.data}',
-        );
-      }
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.receiveTimeout) {
-        throw Exception(
-            'Timeout al convertir a nota de crédito después de ${timeout.inSeconds}s');
-      } else if (e.type == DioExceptionType.connectionTimeout) {
-        throw Exception(
-            'Tiempo de conexión agotado. Verifica que el servidor esté activo en $url');
-      } else if (e.type == DioExceptionType.connectionError) {
-        throw Exception(
-            'Error de conexión. Verifica la red y que el servidor esté disponible');
-      } else if (e.response != null) {
-        throw Exception(
-            'Error al convertir a nota de crédito: ${e.response?.statusCode} - ${e.response?.data}');
-      } else {
-        throw Exception(
-            'Error de conexión al convertir a nota de crédito: ${e.message}');
-      }
+      return await _apiService.convertToCreditNote(ticketId);
     } catch (e) {
-      throw Exception('Error inesperado al convertir a nota de crédito: $e');
+      throw Exception(ErrorHandler.handleError(e,
+          defaultMessage: 'Error al convertir a nota de crédito'));
     }
   }
 
