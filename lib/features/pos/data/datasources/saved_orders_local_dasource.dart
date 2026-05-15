@@ -7,6 +7,7 @@ abstract class SavedOrdersLocalDataSource {
   Future<void> saveOrder(SavedOrderModel order);
   Future<void> deleteOrder(String orderId);
   Future<SavedOrderModel?> getOrderById(String orderId);
+  Future<void> clearAllSavedOrders();
 }
 
 class SavedOrdersLocalDataSourceImpl implements SavedOrdersLocalDataSource {
@@ -61,5 +62,10 @@ class SavedOrdersLocalDataSourceImpl implements SavedOrdersLocalDataSource {
     } catch (e) {
       return null;
     }
+  }
+
+  @override
+  Future<void> clearAllSavedOrders() async {
+    await sharedPreferences.remove(savedOrdersKey);
   }
 }

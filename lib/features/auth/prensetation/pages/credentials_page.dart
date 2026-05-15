@@ -63,6 +63,8 @@ class _CredentialsPageState extends State<CredentialsPage> {
               behavior: SnackBarBehavior.floating,
             ),
           );
+        } else if(state is AuthUnauthenticated) {
+          context.go(RoutePaths.login);
         }
       },
       builder: (context, state) {
@@ -79,7 +81,6 @@ class _CredentialsPageState extends State<CredentialsPage> {
                   ? null
                   : () {
                       context.read<AuthBloc>().add(LogoutRequested());
-                      context.go(RoutePaths.login);
                     },
             ),
           ),

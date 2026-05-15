@@ -50,10 +50,11 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
   List<Branch> _branches = [];
   Branch? _selectedBranch;
   
-  List<Client> _clients = [];
+  List<Client>? _clients;
   Client? _selectedClient;
   String _clientSearchQuery = '';
   String? _localError;
+  PdvConfig? _pdvConfig;
 
   @override
   void initState() {
@@ -70,6 +71,9 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
       final clients = await getClientsUsecase();
       setState(() {
         _clients = clients;
+        if(_pdvConfig != null) {
+          _updateControllersFromConfig(_pdvConfig!, _branches);
+        }
       });
     } catch (e) {
       print('Error loading clients: $e');
@@ -92,6 +96,7 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
       // branchNumberController.text = config.branchNumber ?? "";
       
       _branches = branches;
+      _pdvConfig = config;
       
       // Seleccionar la sucursal actual
       if (config.branchId != null) {
@@ -106,9 +111,9 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
       }
 
       // Seleccionar el cliente default (pdvId = delivery_location_id = client id)
-      if (config.pdvId != null && _clients.isNotEmpty) {
+      if (config.pdvId != null && _clients?.isNotEmpty == true) {
         Client? matchedClient;
-        for (final client in _clients) {
+        for (final client in _clients!) {
           if (client.id == config.pdvId.toString()) {
             matchedClient = client;
             break;
@@ -139,9 +144,9 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
 
   List<Client> get _filteredClients {
     if (_clientSearchQuery.isEmpty) {
-      return _clients;
+      return _clients!;
     }
-    return _clients.where((client) {
+    return _clients!.where((client) {
       final query = _clientSearchQuery.toLowerCase();
       return client.name.toLowerCase().contains(query) ||
           client.id.toLowerCase().contains(query) ||
@@ -179,7 +184,7 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
         }
       },
       builder: (context, state) {
-        final isLoading = state is PdvConfigLoading || state is BranchesLoading;
+        final isLoading = state is PdvConfigLoading || state is BranchesLoading || _clients == null;
 
         return AlertDialog(
           title: const Text('Configuración del PDV'),
@@ -390,6 +395,32 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                                     child: Text(
                                       'Selecciona un cliente default',
                                       style: TextStyle(fontSize: 13),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          else
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.red.shade50,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.red.shade200),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.error_outline,
+                                      size: 20, color: Colors.red.shade700),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'No se ha guardado el Cliente Default. Por favor, pide a un Admin que lo configure.',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.red.shade700,
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                     ),
                                   ),
                                 ],

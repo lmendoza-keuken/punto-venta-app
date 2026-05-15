@@ -157,7 +157,7 @@ class AuthRepositoryImpl implements AuthRepository {
     await localDataSource.clearEnterprise();
     await localDataSource.clearEmail();
     await priceListLocalDataSource.clearPriceList();
-    ApiConfig.updateCompanyId("99999999");
+    ApiConfig.resetCompanyId();
   }
 
   @override

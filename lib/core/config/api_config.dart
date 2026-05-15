@@ -35,8 +35,9 @@ class ApiConfig {
     }
   }
 
-  static void updateCompanyId(String companyId) {
-    updateCompanyConfig(companyId, null);
+  static void resetCompanyId() {
+    _companyId = '';
+    _baseUrl = '';
   }
 
   static String get companyId => _companyId;
