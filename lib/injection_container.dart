@@ -12,6 +12,8 @@ import 'package:punto_venta_app/features/auth/domain/usecases/change_chashier_us
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/client_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/client_remote_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/price_list_types_local_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/price_list_types_remote_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/tax_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/tax_remote_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/vat_category_local_datasource.dart';
@@ -33,6 +35,7 @@ import 'package:punto_venta_app/features/pos/data/datasources/printer_socket_dat
 import 'package:punto_venta_app/features/pos/data/datasources/product_local_data_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/saved_orders_local_dasource.dart';
 import 'package:punto_venta_app/features/pos/data/repositories/client_repository_impl.dart';
+import 'package:punto_venta_app/features/pos/data/repositories/price_list_types_repository_impl.dart';
 import 'package:punto_venta_app/features/pos/data/repositories/tax_repository_impl.dart';
 import 'package:punto_venta_app/features/pos/data/repositories/vat_category_repository_impl.dart';
 import 'package:punto_venta_app/features/pos/data/repositories/fiscal_issuer_data_repository_impl.dart';
@@ -43,6 +46,7 @@ import 'package:punto_venta_app/features/pos/data/repositories/pdv_config_reposi
 import 'package:punto_venta_app/features/pos/data/repositories/payment_method_repository_impl.dart';
 import 'package:punto_venta_app/features/pos/data/repositories/printer_repository_impl.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/client_repository.dart';
+import 'package:punto_venta_app/features/pos/domain/repositories/price_list_types_repository.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/tax_repository.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/vat_category_repository.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/fiscal_issuer_data_repository.dart';
@@ -57,6 +61,7 @@ import 'package:punto_venta_app/features/pos/domain/usecases/add_client_usecase.
 import 'package:punto_venta_app/features/pos/domain/usecases/complete_order_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/delete_client_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_branches_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/fetch_price_list_types_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_ticket_config_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_pdv_config_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_payment_methods_usecase.dart';
@@ -74,6 +79,7 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/checkout/checkout
 import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/payment_methods_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/pdv_config/pdv_config_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/price_list_types/price_list_types_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_bloc.dart';
 import 'package:punto_venta_app/features/stock/data/datasources/stock_local_datasource.dart';
@@ -176,6 +182,16 @@ Future<void> init() async {
   sl.registerLazySingleton<PdvRemoteDataSource>(
     () => PdvRemoteDataSourceImpl(),
   );
+  sl.registerLazySingleton<PriceListTypesService>(
+    () => PriceListTypesService(sl()),
+  );
+  sl.registerLazySingleton<PriceListTypesRemoteDataSource>(
+    () => PriceListTypesRemoteDataSourceImpl(),
+  );
+  sl.registerLazySingleton<PriceListTypesLocalDataSource>(
+    () => PriceListTypesLocalDataSourceImpl(sharedPreferences: sl()),
+  );
+
 
   //! Features - POS
   // Bloc
@@ -197,6 +213,10 @@ Future<void> init() async {
         pdvLocalDataSource: sl(),
       ));
   sl.registerFactory(() => PaymentMethodsBloc(fetchPaymentMethods: sl()));
+  sl.registerLazySingleton(() => PriceListTypesBloc(
+        fetchPriceListTypesUsecase: sl(),
+        repository: sl(),
+      ));
   sl.registerLazySingleton(() => PdvConfigBloc(
         fetchPdvConfigUsecase: sl(),
         fetchBranchesUsecase: sl(),
@@ -235,6 +255,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => UpdateTicketConfigUsecase(sl()));
   sl.registerLazySingleton(() => FetchPaymentMethodsUsecase(sl()));
   sl.registerLazySingleton(() => FetchPdvConfigUsecase(sl()));
+  sl.registerLazySingleton(() => FetchPriceListTypesUsecase(sl()));
   sl.registerLazySingleton(() => FetchBranchesUsecase(sl()));  
   sl.registerLazySingleton(() => GenerateCreditNoteUsecase(sl()));
 
@@ -299,6 +320,12 @@ Future<void> init() async {
       localDataSource: sl(),
       remoteDataSource: sl(),
       branchLocalDataSource: sl(),
+    ),
+  );
+  sl.registerLazySingleton<PriceListTypesRepository>(
+    () => PriceListTypesRepositoryImpl(
+      localDataSource: sl(),
+      remoteDataSource: sl(),
     ),
   );
 
