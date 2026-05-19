@@ -235,7 +235,12 @@ class _LoadSavedOrdersDialogState extends State<LoadSavedOrdersDialog> {
           ),
           ElevatedButton(
             onPressed: selectedOrder != null
-                ? () => Navigator.of(context).pop(selectedOrder)
+                ? () {
+                    context
+                        .read<SavedOrdersBloc>()
+                        .add(DeleteSavedOrder(selectedOrder!.id));
+                    Navigator.of(context).pop(selectedOrder);
+                  }
                 : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
