@@ -371,7 +371,7 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
-                                      'Cliente seleccionado: ${_selectedClient!.name}',
+                                      'Cliente seleccionado: ${_selectedClient!.name} [${_selectedClient!.id}]',
                                       style: const TextStyle(fontSize: 13),
                                     ),
                                   ),

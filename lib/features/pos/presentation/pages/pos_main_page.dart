@@ -75,7 +75,7 @@ class _PosMainPageState extends State<PosMainPage> {
         final user = authState is AuthAuthenticated ? authState.user : null;
 
         return Scaffold(
-          resizeToAvoidBottomInset: false,
+          resizeToAvoidBottomInset: true,
           body: Row(
             children: [
               // Catálogo de productos

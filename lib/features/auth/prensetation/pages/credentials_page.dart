@@ -29,6 +29,8 @@ class _CredentialsPageState extends State<CredentialsPage> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _passwordFocusNode = FocusNode();
+
   bool _obscurePassword = true;
 
   @override
@@ -121,6 +123,8 @@ class _CredentialsPageState extends State<CredentialsPage> {
                                   TextFormField(
                                     controller: _usernameController,
                                     enabled: !isLoading,
+                                    textInputAction: TextInputAction.next,
+                                    onFieldSubmitted: (_) => _passwordFocusNode.requestFocus(),
                                     decoration: InputDecoration(
                                       labelText: 'Usuario',
                                       prefixIcon:
@@ -136,13 +140,13 @@ class _CredentialsPageState extends State<CredentialsPage> {
                                       }
                                       return null;
                                     },
-                                    onFieldSubmitted: (_) => _handleLogin(),
                                   ),
                                   const SizedBox(
                                       height: AppDimensions.paddingM),
 
                                   // Password Field
                                   TextFormField(
+                                    focusNode: _passwordFocusNode,
                                     controller: _passwordController,
                                     enabled: !isLoading,
                                     obscureText: _obscurePassword,

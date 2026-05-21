@@ -103,6 +103,8 @@ class _CashPaymentWidgetState extends State<CashPaymentWidget> {
         TextFormField(
           controller: _amountController,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          textInputAction: TextInputAction.done,
+          onFieldSubmitted: (_) => FocusScope.of(context).unfocus(),
           decoration: InputDecoration(
             prefixIcon: const Icon(
               Icons.attach_money,

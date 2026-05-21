@@ -337,9 +337,9 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                                   ),
                             label: Text(isLoading
                                 ? 'Convirtiendo...'
-                                : 'Pasar a nota de crédito'),
+                                : 'Anular Ticket'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.orange,
+                              backgroundColor: Colors.red,
                             ),
                           ),
                         if (!isCreditNote)
