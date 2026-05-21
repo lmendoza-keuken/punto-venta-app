@@ -28,18 +28,14 @@ class PdvConfigRepositoryImpl implements PdvConfigRepository {
         offlineMode: data.offlineMode,
       );
 
-      if (localConfig != null) {
-        final finalData = PdvConfig(
-          pdvId: localConfig.pdvId ?? remoteConfig.pdvId,
-          branchId: localConfig.branchId ?? remoteConfig.branchId,
-          branchNumber: localConfig.branchNumber,
-          offlineMode: remoteConfig.offlineMode ?? localConfig.offlineMode,
-        );
-        await localDataSource.savePdvConfig(finalData);
-        return finalData;
-      }
-
-      return remoteConfig;
+      final finalData = PdvConfig(
+        pdvId: localConfig?.pdvId ?? remoteConfig.pdvId,
+        branchId: localConfig?.branchId ?? remoteConfig.branchId,
+        branchNumber: localConfig?.branchNumber ?? remoteConfig.branchNumber,
+        offlineMode: localConfig?.offlineMode ?? remoteConfig.offlineMode,
+      );
+      await localDataSource.savePdvConfig(finalData);
+      return finalData;
     } catch (e) {
       if (localConfig != null) {
         return localConfig;

@@ -201,7 +201,7 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
         }
         
         client ??= Client(
-            id: ticket.client!['id'].toString(),
+            id: ticket.client!['id'],
             name: ticket.client!['name'] as String? ?? '',
             document: ticket.client!['document'] as String?,
             phone: ticket.client!['phone'] as String?,
@@ -212,7 +212,7 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
         print('Error obteniendo client: $e');
         try {
           client = Client(
-            id: ticket.client!['id'].toString(),
+            id: ticket.client!['id'],
             name: ticket.client!['name'] as String? ?? '',
             document: ticket.client!['document'] as String?,
             phone: ticket.client!['phone'] as String?,

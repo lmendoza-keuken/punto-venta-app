@@ -5,7 +5,7 @@ import '../../domain/entities/client.dart';
 abstract class ClientLocalDataSource {
   Future<List<Client>> getClients();
   Future<void> saveClient(Client client);
-  Future<void> deleteClient(String clientId);
+  Future<void> deleteClient(int clientId);
   Future<Client?> getClientById(String clientId);
   Future<void> saveClients(List<Client> clients);
 }
@@ -46,7 +46,7 @@ class ClientLocalDataSourceImpl implements ClientLocalDataSource {
   }
 
   @override
-  Future<void> deleteClient(String clientId) async {
+  Future<void> deleteClient(int clientId) async {
     final clients = await getClients();
     clients.removeWhere((c) => c.id == clientId);
     final jsonString = json.encode(clients.map((c) => c.toJson()).toList());

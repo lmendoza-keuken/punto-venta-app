@@ -370,7 +370,7 @@ class _SelectClientDialogState extends State<SelectClientDialog> {
           TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                context.read<ClientsBloc>().add(DeleteClientEvent(client.id));
+                context.read<ClientsBloc>().add(DeleteClientEvent(client.id.toString()));
               },
               child:
                   const Text('Eliminar', style: TextStyle(color: Colors.red))),

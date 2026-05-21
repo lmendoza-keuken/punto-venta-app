@@ -73,7 +73,7 @@ class ClientsBloc extends Bloc<ClientsEvent, ClientsState> {
   Future<void> _onDeleteClient(
       DeleteClientEvent event, Emitter<ClientsState> emit) async {
     try {
-      await deleteClient.call(event.clientId);
+      await deleteClient.call(int.parse(event.clientId));
       final clients = await getClients();
 
       // Si el cliente eliminado era el seleccionado, deseleccionar
@@ -83,11 +83,11 @@ class ClientsBloc extends Bloc<ClientsEvent, ClientsState> {
       final currentDefaultClient =
           currentState is ClientsLoaded ? currentState.defaultClient : null;
 
-      final selectedClient = currentSelectedClient?.id == event.clientId
+      final selectedClient = currentSelectedClient?.id.toString() == event.clientId
           ? null
           : currentSelectedClient;
 
-      final defaultClient = currentDefaultClient?.id == event.clientId
+      final defaultClient = currentDefaultClient?.id.toString() == event.clientId
           ? null
           : currentDefaultClient;
 

@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 enum UserRole {
   admin,
   ven,
+  caj,
   unknown,
 }
 
@@ -12,7 +13,9 @@ extension UserRoleX on UserRole {
       case UserRole.admin:
         return 'ADMIN';
       case UserRole.ven:
-        return 'VEN';
+        return 'VENDEDOR';
+      case UserRole.caj:
+        return 'CAJERO';
       case UserRole.unknown:
         return 'UNKNOWN';
     }
@@ -24,6 +27,8 @@ extension UserRoleX on UserRole {
         return UserRole.admin;
       case 'VEN':
         return UserRole.ven;
+      case 'CAJ':
+        return UserRole.caj;
       default:
         return UserRole.unknown;
     }

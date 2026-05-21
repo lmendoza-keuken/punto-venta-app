@@ -4,7 +4,7 @@ class DeleteClientUsecase {
   final ClientRepository repository;
   DeleteClientUsecase(this.repository);
 
-  Future<void> call(String clientId) async {
+  Future<void> call(int clientId) async {
     await repository.deleteClient(clientId);
   }
 }

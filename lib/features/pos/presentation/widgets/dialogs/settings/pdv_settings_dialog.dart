@@ -114,7 +114,7 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
       if (config.pdvId != null && _clients?.isNotEmpty == true) {
         Client? matchedClient;
         for (final client in _clients!) {
-          if (client.id == config.pdvId.toString()) {
+          if (client.id == config.pdvId) {
             matchedClient = client;
             break;
           }
@@ -137,7 +137,7 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
     setState(() {
       _selectedClient = client;
       if (client != null) {
-        pdvIdController.text = client.id;
+        pdvIdController.text = client.id.toString();
       }
     });
   }
@@ -149,7 +149,7 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
     return _clients!.where((client) {
       final query = _clientSearchQuery.toLowerCase();
       return client.name.toLowerCase().contains(query) ||
-          client.id.toLowerCase().contains(query) ||
+          client.id.toString().contains(query) ||
           (client.document?.toLowerCase().contains(query) ?? false);
     }).toList();
   }
@@ -526,7 +526,7 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                       });
 
                       // El pdvId es el ID del cliente seleccionado (delivery_location_id)
-                      final pdvId = int.parse(_selectedClient!.id);
+                      final pdvId = _selectedClient!.id;
                       final branchId =
                           int.parse(branchIdController.text.trim());
                       final branchNumber = "";//branchNumberController.text.trim();

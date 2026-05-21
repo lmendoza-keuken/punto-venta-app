@@ -1,6 +1,6 @@
 import 'dart:convert';
+import 'package:punto_venta_app/features/pos/data/models/price_list_type_response_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/price_list_type_response_model.dart';
 
 abstract class PriceListTypesLocalDataSource {
   Future<List<PriceListTypeResponseModel>?> getCachedPriceListTypes();

@@ -34,7 +34,7 @@ class ClientRepositoryImpl implements ClientRepository {
   }
 
   @override
-  Future<void> deleteClient(String clientId) async {
+  Future<void> deleteClient(int clientId) async {
     await localDataSource.deleteClient(clientId);
   }
 

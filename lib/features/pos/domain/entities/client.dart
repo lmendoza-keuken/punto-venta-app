@@ -29,7 +29,8 @@ class Client with _$Client {
   const Client._();
   
   const factory Client({
-    required String id,
+    required int id,
+    @JsonKey(name: 'business_name')
     required String name,
     String? document,
     String? phone,
@@ -46,42 +47,5 @@ class Client with _$Client {
   }) = _Client;
 
   factory Client.fromJson(Map<String, dynamic> json) => _$ClientFromJson(json);
-  
-  factory Client.fromBackendJson(Map<String, dynamic> json) {
-    final String? cuitValue = json['cuit'] as String?;
-    final String? dniValue = json['dni'] as String?;
-    
-    // Determinar el document basado en cuit o dni
-    String? document;
-    if (cuitValue != null && cuitValue.isNotEmpty) {
-      document = cuitValue;
-    } else if (dniValue != null && dniValue.isNotEmpty) {
-      document = dniValue;
-    }
 
-    // Mapear las tasas de IIBB
-    List<IibbTaxRate>? taxRates;
-    if (json['iibb_tax_rates'] != null) {
-      taxRates = (json['iibb_tax_rates'] as List)
-          .map((item) => IibbTaxRate.fromJson(item as Map<String, dynamic>))
-          .toList();
-    }
-
-    return Client(
-      id: json['id'].toString(),
-      name: json['business_name'] as String? ?? '',
-      document: document,
-      address: json['address'] as String?,
-      listId: json['list_id'] as int?,
-      vatCategoryId: json['vat_category_id'] as int?,
-      iibbCategoryId: json['iibb_category_id'] as String?,
-      provinceId: json['province_id'] as int?,
-      cityId: json['city_id'] as int?,
-      cuit: (cuitValue != null && cuitValue.isNotEmpty) ? cuitValue : null,
-      dni: (dniValue != null && dniValue.isNotEmpty) ? dniValue : null,
-      iibbTaxRates: taxRates,
-      phone: null,
-      email: null,
-    );
-  }
 }

@@ -32,7 +32,7 @@ class _AddClientDialogState extends State<AddClientDialog> {
 
   void _save() {
     if (!_formKey.currentState!.validate()) return;
-    final id = const Uuid().v4();
+    final id = -1;//const Uuid().v4();
 
     final client = Client(
       id: id,
