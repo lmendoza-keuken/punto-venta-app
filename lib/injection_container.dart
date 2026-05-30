@@ -435,6 +435,9 @@ Future<void> init() async {
   sl.registerLazySingleton<PriceListLocalDataSource>(
     () => PriceListLocalDataSourceImpl(sharedPreferences: sl()),
   );
+  sl.registerLazySingleton<PaymentMethodService>(
+    () => PaymentMethodService(sl()),
+  );
   sl.registerLazySingleton<PaymentMethodRemoteDatasource>(
     () => PaymentMethodRemoteDatasourceImpl(),
   );

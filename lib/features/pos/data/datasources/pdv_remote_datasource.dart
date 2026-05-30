@@ -3,6 +3,7 @@ import 'package:retrofit/retrofit.dart';
 import 'package:punto_venta_app/core/config/api_config.dart';
 import 'package:punto_venta_app/core/network/dio_client.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
+import 'package:punto_venta_app/core/network/exceptions.dart';
 import 'package:punto_venta_app/features/pos/data/models/pdv_config_response_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/branch_response_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/pdv_config.dart';
@@ -43,6 +44,9 @@ class PdvRemoteDataSourceImpl implements PdvRemoteDataSource {
     try {
       return await _apiService.fetchPdvConfig();
     } catch (e) {
+      if (e is DioException && e.response?.statusCode == 404) {
+        throw NotFoundException('Configuración del PDV no encontrada');
+      }
       throw Exception(ErrorHandler.handleError(e,
           defaultMessage: 'Error al obtener configuración del PDV'));
     }

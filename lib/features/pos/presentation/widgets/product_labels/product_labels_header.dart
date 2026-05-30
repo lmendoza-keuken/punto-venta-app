@@ -28,7 +28,7 @@ class ProductLabelsHeader extends StatelessWidget {
           Row(
             children: [
               const Text(
-                'Etiquetas para gondolas',
+                'Etiquetas para góndolas',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,

@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/pdv_config.dart';
+import 'package:punto_venta_app/core/network/exceptions.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_branches_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_pdv_config_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_vat_categories_usecase.dart';
@@ -29,7 +30,13 @@ class PdvConfigBloc extends Bloc<PdvConfigEvent, PdvConfigState> {
       FetchPdvConfigEvent event, Emitter<PdvConfigState> emit) async {
     emit(PdvConfigLoading());
     try {
-      final config = await fetchPdvConfigUsecase();
+      PdvConfig config;
+      try {
+        config = await fetchPdvConfigUsecase();
+      } on NotFoundException {
+        config = const PdvConfig();
+      }
+
       final branches = await fetchBranchesUsecase();
       await getVatCategoriesUsecase();
       emit(PdvConfigLoaded(config, branches: branches));

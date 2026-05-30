@@ -18,6 +18,7 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_s
 import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/payment_methods_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/payment_methods_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/payment_methods_state.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/payment_method.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_state.dart';
@@ -47,6 +48,143 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
   double _iibbAmount = 0.0;
   double _vatPerceptionAmount = 0.0;
   double _internalTaxAmount = 0.0;
+
+  IconData _getPaymentMethodIcon(String description, String shortDescription) {
+    final desc = description.toLowerCase();
+    final shortDesc = shortDescription.toLowerCase();
+    if (desc.contains('efectivo') || shortDesc.contains('efectivo')) {
+      return Icons.attach_money;
+    }
+    if (desc.contains('tarjeta') || shortDesc.contains('tarjeta') ||
+        desc.contains('debito') || shortDesc.contains('debito') ||
+        desc.contains('credito') || shortDesc.contains('credito') ||
+        desc.contains('posnet') || shortDesc.contains('posnet')) {
+      return Icons.credit_card;
+    }
+    if (desc.contains('transferencia') || shortDesc.contains('transferencia') ||
+        desc.contains('banco') || shortDesc.contains('banco')) {
+      return Icons.account_balance;
+    }
+    if (desc.contains('qr') || shortDesc.contains('qr') ||
+        desc.contains('mercado') || shortDesc.contains('mercado')) {
+      return Icons.qr_code;
+    }
+    return Icons.payment;
+  }
+
+  void _showPaymentMethodsSelector(
+    BuildContext context,
+    List<PaymentMethod> paymentMethods,
+    PaymentMethod? selectedPaymentMethod,
+  ) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text(
+            'Seleccionar Método de Pago',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: paymentMethods.map((pm) {
+                  final isSelected = selectedPaymentMethod?.id == pm.id;
+                  final icon = _getPaymentMethodIcon(pm.description, pm.shortDescription);
+                  
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: InkWell(
+                      onTap: () {
+                        context
+                            .read<PaymentMethodsBloc>()
+                            .add(SelectPaymentMethodEvent(pm));
+                        Navigator.of(dialogContext).pop();
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppColors.primary.withOpacity(0.1)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isSelected
+                                ? AppColors.primary
+                                : Colors.grey.shade300,
+                            width: isSelected ? 2 : 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? AppColors.primary.withOpacity(0.15)
+                                    : Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                icon,
+                                color: isSelected ? AppColors.primary : Colors.grey,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    pm.description,
+                                    style: TextStyle(
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                  Text(
+                                    pm.shortDescription,
+                                    style: const TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (isSelected)
+                              const Icon(
+                                Icons.check_circle,
+                                color: AppColors.primary,
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cerrar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   void initState() {
@@ -236,7 +374,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                     child: Row(
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.arrow_forward),
+                          icon: const Icon(Icons.arrow_back),
                           onPressed: isProcessing ? null : _handleClose,
                         ),
                         const SizedBox(width: AppDimensions.paddingS),
@@ -312,17 +450,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
 
                               if (pmState is PaymentMethodsLoaded) {
                                 final paymentMethods = pmState.paymentMethods;
-
-                                // Filtrar solo el método de efectivo (por ahora)
-                                final cashPayment = paymentMethods
-                                    .where((pm) =>
-                                        pm.description
-                                            .toLowerCase()
-                                            .contains('efectivo') ||
-                                        pm.shortDescription
-                                            .toLowerCase()
-                                            .contains('efectivo'))
-                                    .firstOrNull;
+                                final selected = pmState.selectedPaymentMethod;
 
                                 return Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -359,32 +487,84 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                                         ),
                                       )
                                     else
-                                      Wrap(
-                                        spacing: AppDimensions.paddingM,
-                                        runSpacing: AppDimensions.paddingM,
-                                        children: [
-                                          if (cashPayment != null)
-                                            SizedBox(
-                                              width: 120,
-                                              child: PaymentOptionWidget(
-                                                paymentMethod: cashPayment,
-                                                isSelected: pmState
-                                                        .selectedPaymentMethod
-                                                        ?.id ==
-                                                    cashPayment.id,
-                                                isEnabled: true,
-                                                onTap: () {
-                                                  context
-                                                      .read<
-                                                          PaymentMethodsBloc>()
-                                                      .add(
-                                                          SelectPaymentMethodEvent(
-                                                              cashPayment));
-                                                },
-                                                icon: Icons.attach_money,
-                                              ),
+                                      InkWell(
+                                        onTap: () => _showPaymentMethodsSelector(
+                                          context,
+                                          paymentMethods,
+                                          selected,
+                                        ),
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(
+                                              AppDimensions.paddingM),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.success
+                                                .withOpacity(0.05),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            border: Border.all(
+                                              color: AppColors.success
+                                                  .withOpacity(0.3),
                                             ),
-                                        ],
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.all(10),
+                                                decoration: BoxDecoration(
+                                                  color: AppColors.success
+                                                      .withOpacity(0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                                child: Icon(
+                                                  _getPaymentMethodIcon(
+                                                    selected?.description ?? '',
+                                                    selected?.shortDescription ?? '',
+                                                  ),
+                                                  color: AppColors.success,
+                                                  size: 24,
+                                                ),
+                                              ),
+                                              const SizedBox(
+                                                  width: AppDimensions
+                                                      .paddingM),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      selected?.description ??
+                                                          'Seleccionar método de pago',
+                                                      style: const TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 16,
+                                                      ),
+                                                    ),
+                                                    if (selected != null) ...[
+                                                      const SizedBox(
+                                                          height: 4),
+                                                      Text(
+                                                        selected.shortDescription,
+                                                        style: const TextStyle(
+                                                          color: Colors.grey,
+                                                          fontSize: 13,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ],
+                                                ),
+                                              ),
+                                              const Icon(
+                                                Icons.arrow_drop_down,
+                                                color: Colors.grey,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                       ),
                                   ],
                                 );

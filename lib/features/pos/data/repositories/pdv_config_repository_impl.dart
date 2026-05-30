@@ -3,6 +3,7 @@ import 'package:punto_venta_app/features/pos/data/datasources/pdv_remote_datasou
 import 'package:punto_venta_app/features/pos/data/datasources/branch_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/pdv_config.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/pdv_config_repository.dart';
+import 'package:punto_venta_app/core/network/exceptions.dart';
 
 class PdvConfigRepositoryImpl implements PdvConfigRepository {
   final PdvRemoteDataSource remoteDataSource;
@@ -37,6 +38,9 @@ class PdvConfigRepositoryImpl implements PdvConfigRepository {
       await localDataSource.savePdvConfig(finalData);
       return finalData;
     } catch (e) {
+      if (e is NotFoundException) {
+        rethrow;
+      }
       if (localConfig != null) {
         return localConfig;
       }

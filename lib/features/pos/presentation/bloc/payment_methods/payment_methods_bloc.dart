@@ -23,16 +23,18 @@ class PaymentMethodsBloc
 
     emit(PaymentMethodsLoading());
     try {
-      final paymentMethods = await fetchPaymentMethods();
+      final allPaymentMethods = await fetchPaymentMethods();
+      final paymentMethods = allPaymentMethods
+          .where((pm) => pm.deleteAt.isEmpty)
+          .toList();
 
       var selectedPaymentMethod = currentSelectedPaymentMethod;
-      if (selectedPaymentMethod == null && paymentMethods.isNotEmpty) {
-        selectedPaymentMethod = paymentMethods.firstWhere(
-          (pm) =>
-              pm.description.toLowerCase().contains('pagos en efectivo') ||
-              pm.shortDescription.toLowerCase().contains('efectivo'),
-          orElse: () => paymentMethods.first,
-        );
+      if ((selectedPaymentMethod == null ||
+              !paymentMethods.any((pm) => pm.id == selectedPaymentMethod!.id)) &&
+          paymentMethods.isNotEmpty) {
+        selectedPaymentMethod = paymentMethods.first;
+      } else if (paymentMethods.isEmpty) {
+        selectedPaymentMethod = null;
       }
 
       emit(PaymentMethodsLoaded(
