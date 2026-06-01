@@ -4,13 +4,14 @@ import 'package:punto_venta_app/features/pos/data/models/tax_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/client.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/payment_method.dart';
 
 class InvoicePayload {
   final String? ticketId;
   final String timestamp;
   final int? cashier;
   final Map<String, dynamic>? client;
-  final int paymentMethod;
+  final List<PaymentMethod> paymentMethods;
   final double total;
   final List<TaxModel> totalTax;
   final List<Map<String, dynamic>> logItems;
@@ -25,7 +26,7 @@ class InvoicePayload {
     required this.timestamp,
     this.cashier,
     required this.client,
-    required this.paymentMethod,
+    required this.paymentMethods,
     required this.total,
     required this.totalTax,
     required this.logItems,
@@ -45,12 +46,22 @@ class InvoicePayload {
     };
   }
 
+  static Map<String, dynamic> _serializePaymentMethod(PaymentMethod pm) {
+    return {
+      'id': pm.id,
+      'description': pm.description,
+      'short_description': pm.shortDescription,
+      'delete_at': pm.deleteAt,
+    };
+  }
+
   Map<String, dynamic> toJson() => {
         if (ticketId != null) 'ticketId': ticketId,
         'timestamp': timestamp,
         'cashier': cashier,
         'client': client,
-        'paymentMethod': paymentMethod,
+        'paymentMethods':
+            paymentMethods.map((pm) => InvoicePayload._serializePaymentMethod(pm)).toList(),
         'total': total,
         'branch_number': branchNumber,
         'branch_id': branchId,
@@ -65,7 +76,14 @@ class InvoicePayload {
       timestamp: json['timestamp'] as String,
       cashier: json['cashier'] as int?,
       client: json['client'] as Map<String, dynamic>?,
-      paymentMethod: json['paymentMethod'] as int,
+      paymentMethods: (json['paymentMethods'] as List)
+          .map((pm) => PaymentMethod(
+                id: pm['id'] as int,
+                description: pm['description'] as String,
+                shortDescription: pm['short_description'] as String,
+                deleteAt: pm['delete_at'] as String,
+              ))
+          .toList(),
       total: (json['total'] as num).toDouble(),
       totalTax: (json['totalTax'] as List)
           .map((t) => TaxModel.fromJson(t as Map<String, dynamic>))
@@ -291,7 +309,7 @@ class InvoicePayload {
       timestamp: job.timestamp.toIso8601String(),
       cashier: job.cashierId,
       client: serializeClient(job.client),
-      paymentMethod: job.paymentMethod?.id ?? 0,
+      paymentMethods: job.paymentMethod != null ? [job.paymentMethod!] : [],
       total: job.total,
       totalTax: totalTax,
       logItems: logItems,

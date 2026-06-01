@@ -420,22 +420,8 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
     // Calculate total items
     final totalItems = items.fold(0, (sum, item) => sum + item.quantity);
 
-    PaymentMethod? paymentMethod;
-    try {
-      final paymentMethods = await paymentMethodRepository.fetchPaymentMethods();
-      paymentMethod = paymentMethods.firstWhere(
-        (pm) => pm.id == ticket.paymentMethod,
-        orElse: () => paymentMethods.first,
-      );
-    } catch (e) {
-      print('Error obteniendo payment method: $e');
-      paymentMethod = PaymentMethod(
-        id: ticket.paymentMethod,
-        description: 'Desconocido',
-        shortDescription: 'Desconocido',
-        deleteAt: '',
-      );
-    }
+    //TODO Cambiar esto para manejar un listado
+    PaymentMethod? paymentMethod = ticket.paymentMethods.first;
 
     // Generate order number from ticketId or timestamp
     final orderNumber = ticket.ticketId ??
