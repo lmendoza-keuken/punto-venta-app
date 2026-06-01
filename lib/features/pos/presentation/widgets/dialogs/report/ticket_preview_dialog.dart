@@ -19,7 +19,10 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_s
 import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_state.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/fetch_return_reasons_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/fetch_returns_usecase.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/report/print_type_dialog.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/report/return_reason_dialog.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 class TicketPreviewDialog extends StatelessWidget {
@@ -52,12 +55,53 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
   PrintJob? _printJob;
   CompletedOrder? _recalculatedTicket;
   String _paymentMethodName = 'Desconocido';
+  bool _isGeneratingCreditNote = false;
+  int? _originalSaleId;
+  String? _returnReasonDescription;
+
+  bool get _isCreditNote =>
+      TicketType.isNotaCredito(widget.ticket.typeCode);
+
+  bool get _isAnnulledFactura =>
+      widget.ticket.isAnnulled &&
+      TicketType.isFactura(widget.ticket.typeCode);
 
   @override
   void initState() {
     super.initState();
     _initializePrintJob();
     _loadPaymentMethod();
+    if (TicketType.isNotaCredito(widget.ticket.typeCode)) {
+      _loadReturnMetadata();
+    }
+  }
+
+  Future<void> _loadReturnMetadata() async {
+    try {
+      final ticketId = int.tryParse(widget.ticket.id);
+      if (ticketId == null) return;
+
+      final returns = await di.sl<FetchReturnsUsecase>()(
+        date: widget.ticket.completedAt,
+      );
+      final matches =
+          returns.where((r) => r.ncSaleId == ticketId).toList();
+      if (matches.isEmpty || !mounted) return;
+      final match = matches.first;
+
+      final reasons = await di.sl<FetchReturnReasonsUsecase>()();
+      final reasonMatches =
+          reasons.where((r) => r.id == match.reasonId).toList();
+      final reasonDescription =
+          reasonMatches.isNotEmpty ? reasonMatches.first.description : null;
+
+      if (mounted) {
+        setState(() {
+          _originalSaleId = match.saleId;
+          _returnReasonDescription = reasonDescription;
+        });
+      }
+    } catch (_) {}
   }
 
   Future<void> _loadPaymentMethod() async {
@@ -190,6 +234,9 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
           listener: (context, state) {
             if (state is CreditNoteGenerated &&
                 state.ticketId == widget.ticket.id) {
+              if (mounted) {
+                setState(() => _isGeneratingCreditNote = false);
+              }
               Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -200,6 +247,9 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
               );
             } else if (state is CreditNoteGenerationError &&
                 state.ticketId == widget.ticket.id) {
+              if (mounted) {
+                setState(() => _isGeneratingCreditNote = false);
+              }
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.message),
@@ -214,9 +264,11 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
       child: Dialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppDimensions.borderRadiusL),
-          side: TicketType.isNotaCredito(widget.ticket.typeCode)
+          side: _isCreditNote
               ? const BorderSide(color: Colors.red, width: 2)
-              : BorderSide.none,
+              : _isAnnulledFactura
+                  ? BorderSide(color: Colors.grey.shade500, width: 2)
+                  : BorderSide.none,
         ),
         child: Container(
           width: 450,
@@ -226,9 +278,11 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
               Container(
                 padding: const EdgeInsets.all(AppDimensions.paddingM),
                 decoration: BoxDecoration(
-                  color: TicketType.isNotaCredito(widget.ticket.typeCode)
+                  color: _isCreditNote
                       ? Colors.red.shade50
-                      : null,
+                      : _isAnnulledFactura
+                          ? Colors.grey.shade100
+                          : null,
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(AppDimensions.borderRadiusL),
                     topRight: Radius.circular(AppDimensions.borderRadiusL),
@@ -237,15 +291,15 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                 child: Row(
                   children: [
                     Icon(
-                      TicketType.isNotaCredito(widget.ticket.typeCode)
-                          ? Icons.receipt_long
-                          : Icons.receipt,
-                      color: TicketType.isNotaCredito(widget.ticket.typeCode)
+                      _isCreditNote ? Icons.receipt_long : Icons.receipt,
+                      color: _isCreditNote
                           ? Colors.red.shade700
-                          : AppColors.primary,
+                          : _isAnnulledFactura
+                              ? Colors.grey.shade600
+                              : AppColors.primary,
                     ),
                     const SizedBox(width: AppDimensions.paddingS),
-                    if (TicketType.isNotaCredito(widget.ticket.typeCode))
+                    if (_isCreditNote)
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
@@ -264,15 +318,35 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                           ),
                         ),
                       ),
-                    if (TicketType.isNotaCredito(widget.ticket.typeCode))
+                    if (_isCreditNote)
+                      const SizedBox(width: AppDimensions.paddingS),
+                    if (_isAnnulledFactura)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade500,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          'ANULADA',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    if (_isAnnulledFactura)
                       const SizedBox(width: AppDimensions.paddingS),
                     Expanded(
                       child: Text(
                         'Ticket - ${widget.ticket.id}',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: TicketType.isNotaCredito(
-                                      widget.ticket.typeCode)
+                              color: _isCreditNote || _isAnnulledFactura
                                   ? Colors.grey.shade900
                                   : null,
                             ),
@@ -302,26 +376,27 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                 ),
                 child: BlocBuilder<PrinterBloc, PrinterState>(
                   builder: (context, state) {
-                    final isLoading = state is PrinterPrinting;
-                    final isCreditNote =
-                        TicketType.isNotaCredito(widget.ticket.typeCode);
+                    final isPrinting = state is PrinterPrinting;
+                    final isBusy = isPrinting || _isGeneratingCreditNote;
+                    final isCreditNote = _isCreditNote;
+                    final canAnnul = !isCreditNote && !widget.ticket.isAnnulled;
 
                     return Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         TextButton(
-                          onPressed: isLoading
+                          onPressed: isBusy
                               ? null
                               : () => Navigator.of(context).pop(),
                           child: const Text('Cerrar'),
                         ),
                         const Spacer(),
-                        if (!isCreditNote)
+                        if (canAnnul)
                           ElevatedButton.icon(
-                            onPressed: isLoading
+                            onPressed: isBusy
                                 ? null
                                 : () => _handleConvertToCreditNote(context),
-                            icon: isLoading
+                            icon: isBusy && _isGeneratingCreditNote
                                 ? const SizedBox(
                                     width: 16,
                                     height: 16,
@@ -335,20 +410,20 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                                     Icons.receipt,
                                     color: Colors.white,
                                   ),
-                            label: Text(isLoading
-                                ? 'Convirtiendo...'
+                            label: Text(_isGeneratingCreditNote
+                                ? 'Anulando...'
                                 : 'Anular Ticket'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.red,
                             ),
                           ),
-                        if (!isCreditNote)
+                        if (canAnnul)
                           const SizedBox(width: AppDimensions.paddingS),
                         if (!isCreditNote)
                           ElevatedButton.icon(
                             onPressed:
-                                isLoading ? null : () => _handlePrint(context),
-                            icon: isLoading
+                                isBusy ? null : () => _handlePrint(context),
+                            icon: isPrinting
                                 ? const SizedBox(
                                     width: 16,
                                     height: 16,
@@ -363,7 +438,7 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                                     color: Colors.white,
                                   ),
                             label:
-                                Text(isLoading ? 'Imprimiendo...' : 'Imprimir'),
+                                Text(isPrinting ? 'Imprimiendo...' : 'Imprimir'),
                           ),
                       ],
                     );
@@ -434,8 +509,52 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
         ));
   }
 
-  void _handleConvertToCreditNote(BuildContext context) {
-    context.read<ReportsBloc>().add(GenerateCreditNote(widget.ticket.id));
+  Future<void> _handleConvertToCreditNote(BuildContext context) async {
+    try {
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
+      );
+
+      final reasons = await di.sl<FetchReturnReasonsUsecase>()();
+
+      if (!context.mounted) return;
+      Navigator.of(context).pop();
+
+      if (reasons.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No hay motivos de devolución configurados'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      final selectedReasonId = await showDialog<int>(
+        context: context,
+        builder: (_) => ReturnReasonDialog(reasons: reasons),
+      );
+
+      if (selectedReasonId == null || !context.mounted) return;
+
+      setState(() => _isGeneratingCreditNote = true);
+      context.read<ReportsBloc>().add(
+            GenerateCreditNote(widget.ticket.id, selectedReasonId),
+          );
+    } catch (e) {
+      if (!context.mounted) return;
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al cargar motivos: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Widget _buildTicketContent(BuildContext context) {
@@ -522,6 +641,15 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
               ],
             ),
             Text('Cajero: ${widget.ticket.cashierName}'),
+            if (TicketType.isNotaCredito(widget.ticket.typeCode) &&
+                (_originalSaleId != null ||
+                    _returnReasonDescription != null)) ...[
+              const SizedBox(height: 8),
+              if (_originalSaleId != null)
+                Text('Factura original: #$_originalSaleId'),
+              if (_returnReasonDescription != null)
+                Text('Motivo: $_returnReasonDescription'),
+            ],
             if (widget.ticket.clientName != null &&
                 widget.ticket.clientName!.isNotEmpty) ...[
               Text('Cliente: ${widget.ticket.clientName}'),

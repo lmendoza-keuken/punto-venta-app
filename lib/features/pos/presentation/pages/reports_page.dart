@@ -55,6 +55,17 @@ class _ReportsPageState extends State<ReportsPage>
     }
   }
 
+  String? get _typeCodeForFilter {
+    switch (_ticketFilter) {
+      case 'invoices':
+        return TicketType.factura;
+      case 'credit_notes':
+        return TicketType.notaCredito;
+      default:
+        return null;
+    }
+  }
+
   void _onTabChanged(int index) {
     // Resetear posición del scroll al cambiar de tab
     if (_scrollController.hasClients) {
@@ -74,8 +85,8 @@ class _ReportsPageState extends State<ReportsPage>
       // Limpiar buscador y cargar todos los tickets
       _searchController.clear();
       setState(() {});
-      final onlySales = _ticketFilter == 'invoices' ? true : false;
-      context.read<ReportsBloc>().add(LoadAllReports(onlySales: onlySales));
+      final typeCode = _typeCodeForFilter;
+      context.read<ReportsBloc>().add(LoadAllReports(typeCode: typeCode));
     }
   }
 
@@ -230,7 +241,7 @@ class _ReportsPageState extends State<ReportsPage>
                     setState(() => _ticketFilter = 'all');
                     context
                         .read<ReportsBloc>()
-                        .add(const LoadAllReports(onlySales: false));
+                        .add(const LoadAllReports());
                   }
                 },
                 selectedColor: AppColors.primary,
@@ -249,9 +260,9 @@ class _ReportsPageState extends State<ReportsPage>
                 onSelected: (selected) {
                   if (selected) {
                     setState(() => _ticketFilter = 'invoices');
-                    context
-                        .read<ReportsBloc>()
-                        .add(const LoadAllReports(onlySales: true));
+                    context.read<ReportsBloc>().add(
+                          const LoadAllReports(typeCode: TicketType.factura),
+                        );
                   }
                 },
                 selectedColor: AppColors.primary,
@@ -270,9 +281,9 @@ class _ReportsPageState extends State<ReportsPage>
                 onSelected: (selected) {
                   if (selected) {
                     setState(() => _ticketFilter = 'credit_notes');
-                    context
-                        .read<ReportsBloc>()
-                        .add(const LoadAllReports(onlySales: false));
+                    context.read<ReportsBloc>().add(
+                          const LoadAllReports(typeCode: TicketType.notaCredito),
+                        );
                   }
                 },
                 selectedColor: AppColors.primary,
@@ -321,26 +332,13 @@ class _ReportsPageState extends State<ReportsPage>
               if (state is ReportsLoading) {
                 return const Center(child: CircularProgressIndicator());
               } else if (state is ReportsLoaded) {
-                var filteredTickets = _searchController.text.isEmpty
+                final filteredTickets = _searchController.text.isEmpty
                     ? state.tickets
                     : state.tickets
                         .where((ticket) => (ticket.id)
                             .toLowerCase()
                             .contains(_searchController.text.toLowerCase()))
                         .toList();
-
-                if (_ticketFilter == 'invoices') {
-                  filteredTickets = filteredTickets
-                      .where((ticket) =>
-                          TicketType.isFactura(ticket.typeCode) ||
-                          ticket.typeCode == null)
-                      .toList();
-                } else if (_ticketFilter == 'credit_notes') {
-                  filteredTickets = filteredTickets
-                      .where(
-                          (ticket) => TicketType.isNotaCredito(ticket.typeCode))
-                      .toList();
-                }
 
                 return _buildOrdersList(filteredTickets, showDate: true);
               } else if (state is ReportsError) {
@@ -395,6 +393,8 @@ class _ReportsPageState extends State<ReportsPage>
 
             final ticket = tickets[index];
             final isCreditNote = TicketType.isNotaCredito(ticket.typeCode);
+            final isAnnulled = ticket.isAnnulled &&
+                TicketType.isFactura(ticket.typeCode);
 
             // card del ticket
             return GestureDetector(
@@ -432,6 +432,27 @@ class _ReportsPageState extends State<ReportsPage>
                         ),
                       if (isCreditNote)
                         const SizedBox(width: AppDimensions.paddingS),
+                      if (isAnnulled)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade500,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text(
+                            'Anulada',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      if (isAnnulled)
+                        const SizedBox(width: AppDimensions.paddingS),
                       Expanded(
                         child: Text(
                           showDate
@@ -462,7 +483,7 @@ class _ReportsPageState extends State<ReportsPage>
                             : null,
                       ),
                       Text(
-                        'Pago: ${ticket.paymentMethod?.shortDescription.toLowerCase()}',
+                        'Pago: ${ticket.paymentMethod?.shortDescription.capitalize()}',
                         style: isCreditNote
                             ? TextStyle(color: Colors.grey.shade900)
                             : null,
@@ -520,10 +541,9 @@ class _ReportsPageState extends State<ReportsPage>
                       .add(LoadDailySummary(selectedDate));
                 }
               } else {
-                final onlySales = _ticketFilter == 'invoices' ? true : false;
                 context
                     .read<ReportsBloc>()
-                    .add(LoadAllReports(onlySales: onlySales));
+                    .add(LoadAllReports(typeCode: _typeCodeForFilter));
               }
             },
             child: const Text('Reintentar'),

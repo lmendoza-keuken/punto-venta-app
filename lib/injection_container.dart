@@ -23,6 +23,9 @@ import 'package:punto_venta_app/features/pos/data/datasources/fiscal_issuer_data
 import 'package:punto_venta_app/features/pos/data/datasources/branch_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/completed_orders_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/completed_orders_remote_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/returns_remote_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/repositories/returns_repository_impl.dart';
+import 'package:punto_venta_app/features/pos/domain/repositories/returns_repository.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/invoice_remote_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/ticket_config_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/ticket_config_remote_datasource.dart';
@@ -65,6 +68,8 @@ import 'package:punto_venta_app/features/pos/domain/usecases/fetch_price_list_ty
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_ticket_config_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_pdv_config_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_payment_methods_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/fetch_return_reasons_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/fetch_returns_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/generate_credit_note_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_clients_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_taxes_usecase.dart';
@@ -257,7 +262,12 @@ Future<void> init() async {
   sl.registerLazySingleton(() => FetchPdvConfigUsecase(sl()));
   sl.registerLazySingleton(() => FetchPriceListTypesUsecase(sl()));
   sl.registerLazySingleton(() => FetchBranchesUsecase(sl()));  
-  sl.registerLazySingleton(() => GenerateCreditNoteUsecase(sl()));
+  sl.registerLazySingleton(() => FetchReturnReasonsUsecase(sl()));
+  sl.registerLazySingleton(() => FetchReturnsUsecase(sl()));
+  sl.registerLazySingleton(() => GenerateCreditNoteUsecase(
+        returnsRepository: sl(),
+        completedOrdersRepository: sl(),
+      ));
 
   // sl.registerLazySingleton(() => PrintTicketUsecase(sl()));
 
@@ -267,6 +277,9 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<SavedOrdersRepository>(
     () => SavedOrdersRepositoryImpl(localDataSource: sl()),
+  );
+  sl.registerLazySingleton<ReturnsRepository>(
+    () => ReturnsRepositoryImpl(remoteDataSource: sl()),
   );
   sl.registerLazySingleton<CompletedOrdersRepository>(
     () => CompletedOrdersRepositoryImpl(
@@ -380,6 +393,12 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<CompletedOrdersLocalDataSource>(
     () => CompletedOrdersLocalDataSourceImpl(sharedPreferences: sl()),
+  );
+  sl.registerLazySingleton<ReturnsService>(
+    () => ReturnsService(sl()),
+  );
+  sl.registerLazySingleton<ReturnsRemoteDataSource>(
+    () => ReturnsRemoteDataSourceImpl(),
   );
   sl.registerLazySingleton<CompletedOrdersService>(
     () => CompletedOrdersService(sl()),

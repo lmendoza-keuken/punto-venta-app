@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../domain/entities/client.dart';
 import '../../domain/repositories/client_repository.dart';
 import '../datasources/client_local_datasource.dart';
@@ -17,8 +19,12 @@ class ClientRepositoryImpl implements ClientRepository {
     try {
       final clients = await remoteDataSource.getClients();
 
-      await localDataSource.saveClients(clients);
-      
+      unawaited(
+        localDataSource.saveClients(clients).catchError(
+          (Object e) => print('Error al guardar clientes en cache local: $e'),
+        ),
+      );
+
       return clients;
     } catch (e) {
       print('Error al cargar clientes del backend: $e');

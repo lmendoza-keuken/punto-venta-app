@@ -17,7 +17,7 @@ abstract class CompletedOrdersService {
   Future<List<InvoicePayload>> getAllTickets(
       {@Query('skip') int skip = 0,
       @Query('limit') int limit = 10,
-      @Query('only_sales') bool? onlySales});
+      @Query('type_code') String? typeCode});
 
   @GET('/tickets/')
   Future<List<InvoicePayload>> getTicketsByDateRange(
@@ -25,22 +25,18 @@ abstract class CompletedOrdersService {
       @Query('end_date') String? endDate,
       @Query('skip') int skip = 0,
       @Query('limit') int limit = 10,
-      @Query('only_sales') bool? onlySales});
+      @Query('type_code') String? typeCode});
 
   @GET('/tickets/{id}')
   Future<InvoicePayload> getTicketById(@Path('id') String id);
-
-  @POST('/tickets/{id}/nota-credito')
-  Future<InvoicePayload> convertToCreditNote(@Path('id') String id);
 }
 
 abstract class CompletedOrdersRemoteDataSource {
   Future<List<InvoicePayload>> getAllTickets(
-      {int skip = 0, int limit = 10, bool? onlySales});
+      {int skip = 0, int limit = 10, String? typeCode});
   Future<List<InvoicePayload>> getTicketsByDateRange(DateTime startDate,
-      {DateTime? endDate, int skip = 0, int limit = 10, bool? onlySales});
+      {DateTime? endDate, int skip = 0, int limit = 10, String? typeCode});
   Future<InvoicePayload?> getTicketById(String ticketId);
-  Future<InvoicePayload?> convertToCreditNote(String ticketId);
 }
 
 class CompletedOrdersRemoteDataSourceImpl
@@ -51,10 +47,10 @@ class CompletedOrdersRemoteDataSourceImpl
 
   @override
   Future<List<InvoicePayload>> getAllTickets(
-      {int skip = 0, int limit = 10, bool? onlySales}) async {
+      {int skip = 0, int limit = 10, String? typeCode}) async {
     try {
       return await _apiService.getAllTickets(
-          skip: skip, limit: limit, onlySales: onlySales);
+          skip: skip, limit: limit, typeCode: typeCode);
     } catch (e) {
       throw Exception(ErrorHandler.handleError(e,
           defaultMessage: 'Error al obtener órdenes'));
@@ -66,14 +62,14 @@ class CompletedOrdersRemoteDataSourceImpl
       {DateTime? endDate,
       int skip = 0,
       int limit = 10,
-      bool? onlySales}) async {
+      String? typeCode}) async {
     try {
       return await _apiService.getTicketsByDateRange(
         startDate: _formatDateYYYYMMDD(startDate),
         endDate: endDate != null ? _formatDateYYYYMMDD(endDate) : null,
         skip: skip,
         limit: limit,
-        onlySales: onlySales,
+        typeCode: typeCode,
       );
     } catch (e) {
       throw Exception(ErrorHandler.handleError(e,
@@ -91,16 +87,6 @@ class CompletedOrdersRemoteDataSourceImpl
       }
       throw Exception(ErrorHandler.handleError(e,
           defaultMessage: 'Error al obtener orden'));
-    }
-  }
-
-  @override
-  Future<InvoicePayload?> convertToCreditNote(String ticketId) async {
-    try {
-      return await _apiService.convertToCreditNote(ticketId);
-    } catch (e) {
-      throw Exception(ErrorHandler.handleError(e,
-          defaultMessage: 'Error al convertir a nota de crédito'));
     }
   }
 

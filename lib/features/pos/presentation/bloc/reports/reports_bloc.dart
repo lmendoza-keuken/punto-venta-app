@@ -15,7 +15,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
   DateTime? _currentStartDate;
   DateTime? _currentEndDate;
   bool _isAllReportsMode = false;
-  bool? _currentOnlySales;
+  String? _currentTypeCode;
 
   ReportsBloc(
       {required this.getReportsUsecase,
@@ -37,16 +37,15 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     _isAllReportsMode = true;
     _currentStartDate = null;
     _currentEndDate = null;
-    _currentOnlySales = event.onlySales;
+    _currentTypeCode = event.typeCode;
 
     try {
       // Se hace llamado a back si falla se usa local
       try {
         final skip = (_currentPage - 1) * _pageSize;
-        final limit = (event.onlySales == false) ? 50 : _pageSize;
         final orders = await getReportsUsecase.getAllCompletedOrdersFromRemote(
-            skip: skip, limit: limit, onlySales: event.onlySales);
-        emit(ReportsLoaded(orders, hasMoreData: orders.length >= limit));
+            skip: skip, limit: _pageSize, typeCode: event.typeCode);
+        emit(ReportsLoaded(orders, hasMoreData: orders.length >= _pageSize));
       } catch (remoteError) {
         // TODO: CAMBIAR PARA USAR EL MISMO MODELO TicketResponseModel
 
@@ -76,21 +75,20 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     try {
       List<CompletedOrder> newOrders;
       final skip = (_currentPage - 1) * _pageSize;
-      final limit = (_currentOnlySales == false) ? 50 : _pageSize;
 
       if (_isAllReportsMode) {
         newOrders = await getReportsUsecase.getAllCompletedOrdersFromRemote(
           skip: skip,
-          limit: limit,
-          onlySales: _currentOnlySales,
+          limit: _pageSize,
+          typeCode: _currentTypeCode,
         );
       } else if (_currentStartDate != null) {
         newOrders = await getReportsUsecase.getOrdersByDateRangeFromRemote(
           _currentStartDate!,
           endDate: _currentEndDate,
           skip: skip,
-          limit: limit,
-          onlySales: _currentOnlySales,
+          limit: _pageSize,
+          typeCode: _currentTypeCode,
         );
       } else {
         emit(currentState.copyWith(isLoadingMore: false));
@@ -103,7 +101,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
       emit(ReportsLoaded(
         updatedOrders,
         summary: currentState.summary,
-        hasMoreData: newOrders.length >= limit,
+        hasMoreData: newOrders.length >= _pageSize,
         isLoadingMore: false,
       ));
     } catch (e) {
@@ -121,20 +119,19 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     _isAllReportsMode = false;
     _currentStartDate = event.startDate;
     _currentEndDate = event.endDate;
-    _currentOnlySales = event.onlySales;
+    _currentTypeCode = event.typeCode;
 
     try {
       try {
         final skip = (_currentPage - 1) * _pageSize;
-        final limit = (event.onlySales == false) ? 50 : _pageSize;
 
         final orders = await getReportsUsecase.getOrdersByDateRangeFromRemote(
             event.startDate,
             endDate: event.endDate,
             skip: skip,
-            limit: limit,
-            onlySales: event.onlySales);
-        emit(ReportsLoaded(orders, hasMoreData: orders.length >= limit));
+            limit: _pageSize,
+            typeCode: event.typeCode);
+        emit(ReportsLoaded(orders, hasMoreData: orders.length >= _pageSize));
       } catch (remoteError) {
         // TODO: CAMBIAR PARA USAR EL MISMO MODELO TicketResponseModel
 
@@ -158,23 +155,22 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     _currentStartDate =
         DateTime(event.date.year, event.date.month, event.date.day);
     _currentEndDate = null;
-    _currentOnlySales = event.onlySales;
+    _currentTypeCode = event.typeCode;
 
     try {
       try {
         final skip = (_currentPage - 1) * _pageSize;
-        final limit = (event.onlySales == false) ? 50 : _pageSize;
 
         final summary = await getReportsUsecase.getDailySummaryFromRemote(
             event.date,
             skip: skip,
-            limit: limit,
-            onlySales: event.onlySales);
+            limit: _pageSize,
+            typeCode: event.typeCode);
 
         final orders = summary['orders'] as List<CompletedOrder>;
 
         emit(ReportsLoaded(orders,
-            summary: summary, hasMoreData: orders.length >= limit));
+            summary: summary, hasMoreData: orders.length >= _pageSize));
       } catch (remoteError) {
         // TODO: CAMBIAR PARA USAR EL MISMO MODELO TicketResponseModel
 
@@ -194,7 +190,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     final currentState = state;
 
     try {
-      await generateCreditNoteUsecase(event.ticketId);
+      await generateCreditNoteUsecase(event.ticketId, event.reasonId);
 
       emit(CreditNoteGenerated(
         ticketId: event.ticketId,

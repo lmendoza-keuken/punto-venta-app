@@ -104,14 +104,14 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
   // Remote methods  // TODO: cambiar el payload (al modelo de TicketResponseModel)
   @override
   Future<List<CompletedOrder>> getCompletedOrdersFromRemote(
-      {int skip = 0, int limit = 10, bool? onlySales}) async {
+      {int skip = 0, int limit = 10, String? typeCode}) async {
     if (remoteDataSource == null) {
       throw Exception('Remote data source not available');
     }
 
     try {
       final invoicePayloads = await remoteDataSource!
-          .getAllTickets(skip: skip, limit: limit, onlySales: onlySales);
+          .getAllTickets(skip: skip, limit: limit, typeCode: typeCode);
 
       final orders = await Future.wait(
         invoicePayloads.map((payload) => _convertInvoicePayloadToCompletedOrder(payload))
@@ -129,7 +129,7 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
       {DateTime? endDate,
       int skip = 0,
       int limit = 10,
-      bool? onlySales}) async {
+      String? typeCode}) async {
     if (remoteDataSource == null) {
       throw Exception('Remote data source not available');
     }
@@ -140,11 +140,10 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
           endDate: endDate,
           skip: skip,
           limit: limit,
-          onlySales: onlySales);
+          typeCode: typeCode);
       final orders = await Future.wait(
         invoicePayloads.map((payload) => _convertInvoicePayloadToCompletedOrder(payload))
       );
-      orders.sort((a, b) => b.completedAt.compareTo(a.completedAt));
 
       return orders;
     } catch (e) {
@@ -420,8 +419,9 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
     // Calculate total items
     final totalItems = items.fold(0, (sum, item) => sum + item.quantity);
 
-    //TODO Cambiar esto para manejar un listado
-    PaymentMethod? paymentMethod = ticket.paymentMethods.first;
+    final PaymentMethod? paymentMethod = ticket.paymentMethods.isNotEmpty
+        ? await _resolvePaymentMethod(ticket.paymentMethods.first.id)
+        : null;
 
     // Generate order number from ticketId or timestamp
     final orderNumber = ticket.ticketId ??
@@ -456,21 +456,34 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
       branchNumber: ticket.branchNumber,
       branchId: ticket.branchId,
       externalId: ticket.externalId,
+      isAnnulled: ticket.isAnnulled,
     );
   }
 
   @override
-  Future<CompletedOrder?> convertToCreditNote(String ticketId) async {
-    if (remoteDataSource == null) {
-      throw Exception('Remote data source not available');
-    }
+  Future<CompletedOrder> fromInvoicePayload(InvoicePayload payload) async {
+    return _convertInvoicePayloadToCompletedOrder(payload);
+  }
 
+  Future<PaymentMethod> _resolvePaymentMethod(int paymentMethodId) async {
     try {
-      final payload = await remoteDataSource!.convertToCreditNote(ticketId);
-      if (payload == null) return null;
-      return await _convertInvoicePayloadToCompletedOrder(payload);
-    } catch (e) {
-      throw Exception('Error al convertir a nota de crédito: $e');
+      final catalog = await paymentMethodRepository.fetchPaymentMethods();
+      return catalog.firstWhere(
+        (pm) => pm.id == paymentMethodId,
+        orElse: () => PaymentMethod(
+          id: paymentMethodId,
+          description: '',
+          shortDescription: '',
+          deleteAt: '',
+        ),
+      );
+    } catch (_) {
+      return PaymentMethod(
+        id: paymentMethodId,
+        description: '',
+        shortDescription: '',
+        deleteAt: '',
+      );
     }
   }
 }

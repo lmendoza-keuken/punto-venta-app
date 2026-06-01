@@ -24,6 +24,8 @@ class ApiConfig {
   static String get vatCategoriesUrl => '$validatedBaseUrl/vat-categories/';
   static String get fiscalDataUrl =>
       '$validatedBaseUrl/configuration/fiscal-data';
+  static String get returnsReasonsUrl => '$validatedBaseUrl/returns/reasons';
+  static String get returnsTotalUrl => '$validatedBaseUrl/returns/total';
 
   static void updateCompanyConfig(String companyId, String? baseUrl) {
     _companyId = companyId;

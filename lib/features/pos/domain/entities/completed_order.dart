@@ -36,6 +36,7 @@ class CompletedOrder extends Equatable {
   final String? branchNumber;
   final int? branchId;
   final int? externalId;
+  final bool isAnnulled;
 
   const CompletedOrder({
     required this.id,
@@ -68,6 +69,7 @@ class CompletedOrder extends Equatable {
     this.branchNumber,
     this.branchId,
     this.externalId,
+    this.isAnnulled = false,
   });
 
   CompletedOrder copyWith({
@@ -101,6 +103,7 @@ class CompletedOrder extends Equatable {
     String? branchNumber,
     int? branchId,
     int? externalId,
+    bool? isAnnulled,
   }) {
     return CompletedOrder(
       id: id ?? this.id,
@@ -133,6 +136,7 @@ class CompletedOrder extends Equatable {
       branchNumber: branchNumber ?? this.branchNumber,
       branchId: branchId ?? this.branchId,
       externalId: externalId ?? this.externalId,
+      isAnnulled: isAnnulled ?? this.isAnnulled,
     );
   }
 
@@ -168,5 +172,6 @@ class CompletedOrder extends Equatable {
         branchNumber,
         branchId,
         externalId,
+        isAnnulled,
       ];
 }

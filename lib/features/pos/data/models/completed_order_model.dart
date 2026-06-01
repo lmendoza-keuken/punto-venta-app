@@ -78,6 +78,8 @@ class CompletedOrderModel {
   final int? branchId;
   @JsonKey(name: 'external_id')
   final int? externalId;
+  @JsonKey(name: 'is_annulled')
+  final bool isAnnulled;
 
   const CompletedOrderModel({
     required this.id,
@@ -110,6 +112,7 @@ class CompletedOrderModel {
     this.branchNumber,
     this.branchId,
     this.externalId,
+    this.isAnnulled = false,
   });
 
   factory CompletedOrderModel.fromJson(Map<String, dynamic> json) =>
@@ -149,6 +152,7 @@ class CompletedOrderModel {
       branchNumber: branchNumber,
       branchId: branchId,
       externalId: externalId,
+      isAnnulled: isAnnulled,
     );
   }
 
@@ -184,6 +188,7 @@ class CompletedOrderModel {
       branchNumber: order.branchNumber,
       branchId: order.branchId,
       externalId: order.externalId,
+      isAnnulled: order.isAnnulled,
     );
   }
 }

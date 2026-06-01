@@ -1,25 +1,29 @@
+import 'package:punto_venta_app/core/constants/ticket_types.dart';
 import 'package:punto_venta_app/features/pos/data/models/cart_item_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/cart_log_entry_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/tax_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/payment_details.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/payment_method_input.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/client.dart';
-import 'package:punto_venta_app/features/pos/domain/entities/payment_method.dart';
 
 class InvoicePayload {
   final String? ticketId;
   final String timestamp;
   final int? cashier;
   final Map<String, dynamic>? client;
-  final List<PaymentMethod> paymentMethods;
+  final List<PaymentMethodInput> paymentMethods;
   final double total;
   final List<TaxModel> totalTax;
   final List<Map<String, dynamic>> logItems;
   final String branchNumber;
   final int branchId;
   final int? externalId;
+  final String? saleType;
   final String? typeCode;
   final String? description;
+  final bool isAnnulled;
 
   InvoicePayload({
     this.ticketId,
@@ -33,8 +37,10 @@ class InvoicePayload {
     required this.branchNumber,
     required this.branchId,
     this.externalId,
+    this.saleType,
     this.typeCode,
     this.description,
+    this.isAnnulled = false,
   });
 
   static Map<String, dynamic> _serializeTax(TaxModel t) {
@@ -46,45 +52,54 @@ class InvoicePayload {
     };
   }
 
-  static Map<String, dynamic> _serializePaymentMethod(PaymentMethod pm) {
-    return {
-      'id': pm.id,
-      'description': pm.description,
-      'short_description': pm.shortDescription,
-      'delete_at': pm.deleteAt,
-    };
+  static List<PaymentMethodInput> _parsePaymentMethods(
+    List<dynamic> list,
+    double ticketTotal,
+  ) {
+    return list.map((pm) {
+      final map = pm as Map<String, dynamic>;
+      if (map.containsKey('amount')) {
+        return PaymentMethodInput.fromJson(map);
+      }
+      return PaymentMethodInput(
+        id: map['id'] as int,
+        amount: ticketTotal,
+        details: PaymentDetails.empty(),
+      );
+    }).toList();
   }
 
-  Map<String, dynamic> toJson() => {
-        if (ticketId != null) 'ticketId': ticketId,
-        'timestamp': timestamp,
-        'cashier': cashier,
-        'client': client,
-        'paymentMethods':
-            paymentMethods.map((pm) => InvoicePayload._serializePaymentMethod(pm)).toList(),
-        'total': total,
-        'branch_number': branchNumber,
-        'branch_id': branchId,
-        'totalTax':
-            totalTax.map((t) => InvoicePayload._serializeTax(t)).toList(),
-        'items': logItems,
-      };
+  Map<String, dynamic> toJson() {
+    final json = <String, dynamic>{
+      if (ticketId != null) 'ticketId': ticketId,
+      'timestamp': timestamp,
+      'cashier': cashier,
+      'client': client,
+      if (paymentMethods.isNotEmpty) 'paymentMethod': paymentMethods.first.id,
+      'paymentMethods': paymentMethods.map((pm) => pm.toJson()).toList(),
+      'total': total,
+      'branch_id': branchId,
+      'sale_type': saleType ?? TicketType.factura,
+      'totalTax': totalTax.map((t) => InvoicePayload._serializeTax(t)).toList(),
+      'items': logItems,
+    };
+    if (branchNumber.isNotEmpty) {
+      json['branch_number'] = branchNumber;
+    }
+    return json;
+  }
 
   factory InvoicePayload.fromJson(Map<String, dynamic> json) {
+    final total = (json['total'] as num).toDouble();
+    final paymentMethodsList = json['paymentMethods'] as List? ?? [];
+
     return InvoicePayload(
       ticketId: json['ticketId']?.toString(),
       timestamp: json['timestamp'] as String,
       cashier: json['cashier'] as int?,
       client: json['client'] as Map<String, dynamic>?,
-      paymentMethods: (json['paymentMethods'] as List)
-          .map((pm) => PaymentMethod(
-                id: pm['id'] as int,
-                description: pm['description'] as String,
-                shortDescription: pm['short_description'] as String,
-                deleteAt: pm['delete_at'] as String,
-              ))
-          .toList(),
-      total: (json['total'] as num).toDouble(),
+      paymentMethods: _parsePaymentMethods(paymentMethodsList, total),
+      total: total,
       totalTax: (json['totalTax'] as List)
           .map((t) => TaxModel.fromJson(t as Map<String, dynamic>))
           .toList(),
@@ -94,8 +109,10 @@ class InvoicePayload {
       branchNumber: json['branch_number']?.toString() ?? '',
       branchId: json['branch_id'] as int? ?? 0,
       externalId: json['external_id'] as int?,
+      saleType: json['sale_type'] as String?,
       typeCode: json['type_code'] as String?,
       description: json['description'] as String?,
+      isAnnulled: json['is_annulled'] as bool? ?? false,
     );
   }
 
@@ -309,12 +326,23 @@ class InvoicePayload {
       timestamp: job.timestamp.toIso8601String(),
       cashier: job.cashierId,
       client: serializeClient(job.client),
-      paymentMethods: job.paymentMethod != null ? [job.paymentMethod!] : [],
+      paymentMethods: job.paymentMethod != null
+          ? [
+              PaymentMethodInput(
+                id: job.paymentMethod!.id,
+                amount: job.total,
+                details: PaymentDetails.empty(),
+              ),
+            ]
+          : [],
       total: job.total,
       totalTax: totalTax,
       logItems: logItems,
       branchNumber: job.branchNumber,
       branchId: job.branchId ?? 0,
+      saleType: TicketType.factura,
+      typeCode: TicketType.factura,
+      isAnnulled: false,
     );
   }
 }
