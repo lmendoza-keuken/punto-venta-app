@@ -12,6 +12,7 @@ import 'package:punto_venta_app/features/pos/domain/repositories/fiscal_issuer_d
 import 'package:punto_venta_app/features/pos/domain/usecases/complete_order_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_ticket_config_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/send_invoice_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/process_return_usecase.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/iibb_calculator.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/vat_perception_calculator.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/internal_tax_calculator.dart';
@@ -29,6 +30,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
   final CompleteOrderUsecase completeOrderUsecase;
   final GetTicketConfigUsecase getTicketConfigUsecase;
   final SendInvoiceUseCase sendInvoiceUseCase;
+  final ProcessReturnUseCase processReturnUseCase;
 
   CheckoutBloc({
     required this.authLocalDataSource,
@@ -40,8 +42,10 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
     required this.completeOrderUsecase,
     required this.getTicketConfigUsecase,
     required this.sendInvoiceUseCase,
+    required this.processReturnUseCase,
   }) : super(const CheckoutInitial()) {
     on<ProcessSale>(_onProcessSale);
+    on<ProcessReturn>(_onProcessReturn);
     on<ResetCheckout>(_onResetCheckout);
   }
 
@@ -234,6 +238,113 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
       return found;
     } catch (e) {
       return null;
+    }
+  }
+
+  Future<void> _onProcessReturn(
+    ProcessReturn event,
+    Emitter<CheckoutState> emit,
+  ) async {
+    emit(const CheckoutProcessing());
+
+    try {
+      if (event.client == null) {
+        emit(const CheckoutError(
+          message: 'Debe seleccionar un cliente antes de realizar una devolución.',
+        ));
+        return;
+      }
+
+      // Obtener datos necesarios
+      final user = await authLocalDataSource.getCachedUser();
+      final priceList = await priceListLocalDataSource.getCurrentPriceList();
+      final enterprise = await authLocalDataSource.getCachedEnterprise();
+      final config = await pdvLocalDataSource.getPdvConfig();
+      final branchNumber = config?.branchNumber ?? '';
+
+      // Obtener información de la sucursal y categoría IVA
+      final branch = config?.branchId != null
+          ? await branchLocalDataSource.getBranchById(config!.branchId!)
+          : null;
+
+      final vatCategory = event.client?.vatCategoryId != null
+          ? await _getVatCategoryById(event.client!.vatCategoryId!)
+          : null;
+
+      // Determinar template automáticamente
+      final templateType = TicketTemplateResolver.resolveTemplate(
+        branchAfipAvailable: branch?.afipAvailable,
+      );
+
+      final clientTaxDetails = vatCategory?.taxDetails;
+      final showPricesWithTax = TicketTemplateResolver.shouldShowPricesWithTax(
+        templateType: templateType,
+        clientTaxDetails: clientTaxDetails,
+      );
+
+      final showSubtotalAndTax = TicketTemplateResolver.shouldShowSubtotalAndTax(
+        templateType: templateType,
+        clientTaxDetails: clientTaxDetails,
+        hasClient: true,
+      );
+
+      // Obtener datos fiscales del emisor si es operación en blanco
+      FiscalIssuerData? fiscalData;
+      if (branch?.afipAvailable == true && config?.branchId != null) {
+        try {
+          fiscalData = await fiscalIssuerDataRepository.getFiscalIssuerData(config!.branchId!);
+        } catch (e) {
+          print('Error al obtener datos fiscales: $e');
+        }
+      }
+
+      // Llamar al endpoint /returns/partial
+      final returnResponse = await processReturnUseCase(
+        reasonId: event.reasonId,
+        deliveryLocationId: event.client!.id,
+        items: event.items,
+      );
+
+      final ticketId = returnResponse['ticketId']?.toString() ?? returnResponse['id']?.toString() ?? '';
+      final description = returnResponse['description']?.toString();
+
+      // Generar PrintJob de la devolución (cantidades negativas, total negativo)
+      final finalPrintJob = PrintJob(
+        ticketId: ticketId,
+        items: event.items,
+        logItems: event.logItems,
+        total: event.total,
+        clientName: event.client?.name,
+        client: event.client,
+        priceListId: priceList,
+        totalTax: event.totalIva,
+        iibbTax: 0.0,
+        iibbTaxPercentage: null,
+        vatPerception: 0.0,
+        vatPerceptionByRate: null,
+        internalTax: 0.0,
+        internalTaxRate: null,
+        paymentMethod: null,
+        cashierName: user?.name ?? 'Desconocido',
+        cashierId: int.tryParse(user?.id ?? ''),
+        timestamp: DateTime.now(),
+        enterprise: enterprise,
+        fiscalIssuerData: fiscalData,
+        showSubtotalAndTax: showSubtotalAndTax,
+        showPricesWithTax: showPricesWithTax,
+        receivedAmount: null,
+        change: null,
+        branchNumber: branchNumber,
+        branchId: config?.branchId,
+        description: description,
+        templateType: templateType,
+      );
+
+      await completeOrderUsecase.fromPrintJob(finalPrintJob);
+
+      emit(CheckoutSuccess(printJob: finalPrintJob));
+    } catch (e) {
+      emit(CheckoutError(message: _extractErrorMessage(e)));
     }
   }
 

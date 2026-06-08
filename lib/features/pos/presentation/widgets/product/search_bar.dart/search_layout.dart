@@ -4,6 +4,7 @@ import 'quantity_field.dart';
 import 'search_field.dart';
 import 'barcode_switch.dart';
 import 'delete_button.dart';
+import 'refund_button.dart';
 
 typedef SearchSubmitCallback = Future<void> Function(String value);
 
@@ -52,6 +53,8 @@ class ResponsiveSearchLayout extends StatelessWidget {
         const BarcodeSwitch(),
         const SizedBox(width: AppDimensions.paddingS),
         const DeleteButton(),
+        const SizedBox(width: AppDimensions.paddingS),
+        const RefundButton(),
       ],
     );
   }
@@ -76,6 +79,8 @@ class ResponsiveSearchLayout extends StatelessWidget {
             const BarcodeSwitch(),
             const SizedBox(width: AppDimensions.paddingS),
             const DeleteButton(),
+            const SizedBox(width: AppDimensions.paddingS),
+            const RefundButton(),
           ],
         ),
       ],

@@ -129,12 +129,24 @@ class _PosMainPageState extends State<PosMainPage> {
                                 : ProductGridSection(
                                     onProductTap:
                                         (product, quantity, isDeleteMode) {
+                                      final isRefundMode = uiState is UiLoaded
+                                          ? uiState.isRefundMode
+                                          : false;
+
                                       if (isDeleteMode) {
                                         final cartBloc =
                                             context.read<CartBloc>();
-                                        final quantityInCart =
-                                            cartBloc.getProductQuantityInCart(
-                                                product.id.toString());
+                                        
+                                        final hasItem = cartBloc.state is CartLoaded &&
+                                            (cartBloc.state as CartLoaded).items.any(
+                                                (it) => it.product.id.toString() == product.id.toString());
+                                                
+                                        final quantityInCart = hasItem
+                                            ? cartBloc
+                                                .getProductQuantityInCart(
+                                                    product.id.toString())
+                                                .abs()
+                                            : 0;
 
                                         if (quantityInCart >= quantity) {
                                           cartBloc.add(RemoveQuantityFromCart(
@@ -172,7 +184,9 @@ class _PosMainPageState extends State<PosMainPage> {
                                         if (product.price != null) {
                                           context.read<CartBloc>().add(
                                               AddToCart(product,
-                                                  quantity: quantity));
+                                                  quantity: isRefundMode
+                                                      ? -quantity
+                                                      : quantity));
                                         }
                                       }
                                       context

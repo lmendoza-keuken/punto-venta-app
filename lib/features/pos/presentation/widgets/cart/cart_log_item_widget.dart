@@ -11,10 +11,26 @@ class CartLogItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isAdd = entry.type == CartActionType.add;
-    final icon = isAdd ? Icons.add_circle_outline : Icons.remove_circle_outline;
-    final color = isAdd ? AppColors.success : AppColors.error;
-    final sign = isAdd ? '+' : '-';
+    final isRefund = entry.item.quantity < 0;
+    final isAdd = entry.type == CartActionType.add && !isRefund;
+    
+    final IconData icon;
+    final Color color;
+    final String sign;
+
+    if (isRefund) {
+      icon = Icons.assignment_return;
+      color = AppColors.error;
+      sign = '-';
+    } else if (isAdd) {
+      icon = Icons.add_circle_outline;
+      color = AppColors.success;
+      sign = '+';
+    } else {
+      icon = Icons.remove_circle_outline;
+      color = AppColors.error;
+      sign = '-';
+    }
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6),
@@ -49,7 +65,7 @@ class CartLogItemWidget extends StatelessWidget {
                       Text(
                         (entry.item.isWeighted ?? false)
                             ? '$sign${entry.item.weightKg} kg'
-                            : '$sign${entry.item.quantity}',
+                            : '$sign${entry.item.quantity.abs()}',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Colors.grey.shade600,
                             fontWeight: FontWeight.bold),
@@ -70,7 +86,7 @@ class CartLogItemWidget extends StatelessWidget {
               ),
             ),
             Text(
-              '$sign ${(entry.item.isWeighted ?? false) ? ((entry.item.pricePerKg ?? 0.0)).formatToCurrency() : ((((entry.item.product.price ?? 0.0) * (entry.item.product.vat / 100)) + (entry.item.product.price ?? 0.0)) * entry.item.quantity).formatToCurrency()}',
+              '$sign ${(entry.item.isWeighted ?? false) ? ((entry.item.pricePerKg ?? 0.0).abs()).formatToCurrency() : ((((entry.item.product.price ?? 0.0) * (entry.item.product.vat / 100)) + (entry.item.product.price ?? 0.0)) * entry.item.quantity.abs()).formatToCurrency()}',
               style: Theme.of(context)
                   .textTheme
                   .bodyMedium

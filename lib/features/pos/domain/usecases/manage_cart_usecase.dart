@@ -48,10 +48,14 @@ class ManageCartUsecase {
 
     if (existingItemIndex != -1) {
       final currentItem = newCart[existingItemIndex];
-      final newQuantity = currentItem.quantity - quantityToRemove;
+      final isNegative = currentItem.quantity < 0;
+      
+      final int newQuantity = isNegative 
+          ? currentItem.quantity + quantityToRemove
+          : currentItem.quantity - quantityToRemove;
 
-      if (newQuantity <= 0) {
-        // Si la cantidad resultante es 0 o menor, eliminar el item completamente
+      if (isNegative ? newQuantity >= 0 : newQuantity <= 0) {
+        // Si la cantidad resultante es 0 o cruza el umbral, eliminar el item completamente
         newCart.removeAt(existingItemIndex);
       } else {
         // Si queda cantidad, actualizar el item

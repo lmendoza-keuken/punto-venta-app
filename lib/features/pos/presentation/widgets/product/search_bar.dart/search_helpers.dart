@@ -26,11 +26,13 @@ class SearchProcessor {
     int qty = 1;
     bool isDeleteMode = false;
     bool isBarcodeMode = false;
+    bool isRefundMode = false;
 
     if (uiState is UiLoaded) {
       qty = uiState.selectedQuantity;
       isDeleteMode = uiState.isDeleteMode;
       isBarcodeMode = uiState.isBarcodeSearchEnabled;
+      isRefundMode = uiState.isRefundMode;
     }
 
     final productBloc = context.read<ProductBloc>();
@@ -86,9 +88,9 @@ class SearchProcessor {
       return;
     }
 
-    int finalQuantity = qty;
+    int finalQuantity = isRefundMode ? -qty : qty;
     if (matchedBarcode != null) {
-      finalQuantity = qty * (matchedBarcode.units ?? 1);
+      finalQuantity = (isRefundMode ? -qty : qty) * (matchedBarcode.units ?? 1);
 
       String tipoVentaMsg = '';
       switch (matchedBarcode.type) {
@@ -115,7 +117,7 @@ class SearchProcessor {
     }
 
     if (weightKg != null) {
-      finalQuantity = 1;
+      finalQuantity = isRefundMode ? -1 : 1;
     }
 
     final cartBloc = context.read<CartBloc>();
@@ -123,14 +125,14 @@ class SearchProcessor {
       if (weightKg != null && calculatedUnitPrice != null) {
         cartBloc.add(RemoveQuantityFromCart(
           found.id.toString(),
-          finalQuantity,
+          finalQuantity.abs(),
           isWeighted: true,
           weightKg: weightKg,
-          pricePerKg: calculatedUnitPrice,
+          pricePerKg: isRefundMode ? -calculatedUnitPrice : calculatedUnitPrice,
         ));
       } else {
         cartBloc
-            .add(RemoveQuantityFromCart(found.id.toString(), finalQuantity));
+            .add(RemoveQuantityFromCart(found.id.toString(), finalQuantity.abs()));
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -146,14 +148,17 @@ class SearchProcessor {
           quantity: finalQuantity,
           isWeighted: true,
           weightKg: weightKg,
-          pricePerKg: calculatedUnitPrice,
+          pricePerKg: isRefundMode ? -calculatedUnitPrice : calculatedUnitPrice,
         ));
       } else {
         cartBloc.add(AddToCart(found, quantity: finalQuantity));
+        final displayQuantity = finalQuantity.abs();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('$finalQuantity x ${found.name} agregado'),
-            backgroundColor: AppColors.success,
+            content: Text(isRefundMode 
+                ? '$displayQuantity x ${found.name} agregado (Devolución)'
+                : '$displayQuantity x ${found.name} agregado'),
+            backgroundColor: isRefundMode ? AppColors.error : AppColors.success,
             duration: const Duration(seconds: 1),
           ),
         );

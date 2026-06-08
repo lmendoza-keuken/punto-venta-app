@@ -7,6 +7,7 @@ class UiBloc extends Bloc<UiEvent, UiState> {
     on<SetQuantity>(_onSetQuantity);
     on<ToggleDeleteMode>(_onToggleDeleteMode);
     on<ToggleBarcodeSearch>(_onToggleBarcodeSearch);
+    on<ToggleRefundMode>(_onToggleRefundMode);
     on<ResetQuantity>(_onResetQuantity);
     on<ResetUiState>(_onResetUiState);
   }
@@ -29,6 +30,13 @@ class UiBloc extends Bloc<UiEvent, UiState> {
     if (state is UiLoaded) {
       final currentState = state as UiLoaded;
       emit(currentState.copyWith(isBarcodeSearchEnabled: !currentState.isBarcodeSearchEnabled));
+    }
+  }
+
+  void _onToggleRefundMode(ToggleRefundMode event, Emitter<UiState> emit) {
+    if (state is UiLoaded) {
+      final currentState = state as UiLoaded;
+      emit(currentState.copyWith(isRefundMode: !currentState.isRefundMode));
     }
   }
 

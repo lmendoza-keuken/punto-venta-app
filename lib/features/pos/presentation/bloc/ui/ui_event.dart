@@ -20,6 +20,8 @@ class ToggleDeleteMode extends UiEvent {}
 
 class ToggleBarcodeSearch extends UiEvent {}
 
+class ToggleRefundMode extends UiEvent {}
+
 class ResetQuantity extends UiEvent {}
 
 class ResetUiState extends UiEvent {}

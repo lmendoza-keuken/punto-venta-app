@@ -117,6 +117,9 @@ import 'features/pos/presentation/bloc/product/product_bloc.dart';
 import 'features/pos/presentation/bloc/cart/cart_bloc.dart';
 import 'features/pos/presentation/bloc/ui/ui_bloc.dart';
 import 'features/pos/presentation/bloc/saved_orders/saved_orders_bloc.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/returns_remote_datasource.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/get_return_reasons_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/process_return_usecase.dart';
 
 final sl = GetIt.instance;
 
@@ -233,6 +236,7 @@ Future<void> init() async {
         completeOrderUsecase: sl(),
         getTicketConfigUsecase: sl(),
         sendInvoiceUseCase: sl(),
+        processReturnUseCase: sl(),
       ));
 
   // sl.registerFactory(() => PrinterBloc(printTicketUsecase: sl()));
@@ -258,6 +262,8 @@ Future<void> init() async {
   sl.registerLazySingleton(() => FetchPriceListTypesUsecase(sl()));
   sl.registerLazySingleton(() => FetchBranchesUsecase(sl()));  
   sl.registerLazySingleton(() => GenerateCreditNoteUsecase(sl()));
+  sl.registerLazySingleton(() => GetReturnReasonsUseCase(sl()));
+  sl.registerLazySingleton(() => ProcessReturnUseCase(sl()));
 
   // sl.registerLazySingleton(() => PrintTicketUsecase(sl()));
 
@@ -440,6 +446,12 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<PaymentMethodRemoteDatasource>(
     () => PaymentMethodRemoteDatasourceImpl(),
+  );
+  sl.registerLazySingleton<ReturnsService>(
+    () => ReturnsService(sl()),
+  );
+  sl.registerLazySingleton<ReturnsRemoteDataSource>(
+    () => ReturnsRemoteDataSourceImpl(),
   );
 
   //! Features - Stock

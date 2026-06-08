@@ -28,6 +28,11 @@ import 'package:punto_venta_app/features/pos/presentation/widgets/common/error_d
 import 'package:punto_venta_app/features/pos/presentation/utils/iibb_calculator.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/vat_perception_calculator.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/internal_tax_calculator.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/get_return_reasons_usecase.dart';
+import 'package:punto_venta_app/features/pos/data/models/return_reason_model.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_state.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_event.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 class ConfirmationPanel extends StatefulWidget {
@@ -48,6 +53,11 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
   double _iibbAmount = 0.0;
   double _vatPerceptionAmount = 0.0;
   double _internalTaxAmount = 0.0;
+
+  List<ReturnReasonModel> _returnReasons = [];
+  ReturnReasonModel? _selectedReason;
+  bool _isLoadingReasons = false;
+  String? _reasonsError;
 
   IconData _getPaymentMethodIcon(String description, String shortDescription) {
     final desc = description.toLowerCase();
@@ -186,10 +196,41 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
     );
   }
 
+  Future<void> _loadReturnReasons() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoadingReasons = true;
+      _reasonsError = null;
+    });
+
+    try {
+      final reasons = await di.sl<GetReturnReasonsUseCase>()();
+      if (!mounted) return;
+      setState(() {
+        _returnReasons = reasons;
+        _isLoadingReasons = false;
+        if (reasons.isNotEmpty) {
+          _selectedReason = reasons.first;
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _reasonsError = 'No se pudieron cargar los motivos';
+        _isLoadingReasons = false;
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _calculateTaxesForUI();
+
+    final uiState = context.read<UiBloc>().state;
+    if (uiState is UiLoaded && uiState.isRefundMode) {
+      _loadReturnReasons();
+    }
   }
 
   Future<void> _calculateTaxesForUI() async {
@@ -314,16 +355,18 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                 setState(() {
                   _receivedAmount = null;
                   _change = null;
+                  _selectedReason = null;
                 });
                 
                 context.read<CartBloc>().add(ClearCart());
                 context.read<CheckoutBloc>().add(const ResetCheckout());
                 context.read<ClientsBloc>().add(ResetToDefaultClientEvent());
+                context.read<UiBloc>().add(ResetUiState());
                 widget.onClose();
 
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Venta procesada exitosamente'),
+                    content: Text('Operación procesada exitosamente'),
                     backgroundColor: AppColors.success,
                   ),
                 );
@@ -380,7 +423,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                         const SizedBox(width: AppDimensions.paddingS),
                         Expanded(
                           child: Text(
-                            'Confirmar Pago',
+                            isRefundMode ? 'Confirmar Devolución' : 'Confirmar Pago',
                             style: Theme.of(context)
                                 .textTheme
                                 .titleLarge
@@ -400,186 +443,234 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Métodos de Pago',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                          const SizedBox(height: 16),
-                          BlocBuilder<PaymentMethodsBloc, PaymentMethodsState>(
-                            builder: (context, pmState) {
-                              if (pmState is PaymentMethodsLoading) {
-                                return const Padding(
-                                  padding: EdgeInsets.all(16.0),
-                                  child: CircularProgressIndicator(),
-                                );
-                              }
-
-                              if (pmState is PaymentMethodsError) {
-                                return Container(
-                                  padding: const EdgeInsets.all(
-                                      AppDimensions.paddingM),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.error.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: AppColors.error.withOpacity(0.3),
-                                    ),
+                          if (!isRefundMode) ...[
+                            Text(
+                              'Métodos de Pago',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.error_outline,
-                                          size: 20, color: AppColors.error),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Text(
-                                          'Error al cargar métodos de pago: ${pmState.message}',
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                          ),
-                                        ),
+                            ),
+                            const SizedBox(height: 16),
+                            BlocBuilder<PaymentMethodsBloc, PaymentMethodsState>(
+                              builder: (context, pmState) {
+                                if (pmState is PaymentMethodsLoading) {
+                                  return const Padding(
+                                    padding: EdgeInsets.all(16.0),
+                                    child: CircularProgressIndicator(),
+                                  );
+                                }
+
+                                if (pmState is PaymentMethodsError) {
+                                  return Container(
+                                    padding: const EdgeInsets.all(
+                                        AppDimensions.paddingM),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.error.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: AppColors.error.withOpacity(0.3),
                                       ),
-                                    ],
-                                  ),
-                                );
-                              }
-
-                              if (pmState is PaymentMethodsLoaded) {
-                                final paymentMethods = pmState.paymentMethods;
-                                final selected = pmState.selectedPaymentMethod;
-
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    if (paymentMethods.isEmpty)
-                                      Container(
-                                        padding: const EdgeInsets.all(
-                                            AppDimensions.paddingM),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.warning
-                                              .withOpacity(0.1),
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                          border: Border.all(
-                                            color: AppColors.warning
-                                                .withOpacity(0.3),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.error_outline,
+                                            size: 20, color: AppColors.error),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(
+                                            'Error al cargar métodos de pago: ${pmState.message}',
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                            ),
                                           ),
                                         ),
-                                        child: Row(
-                                          children: [
-                                            Icon(Icons.warning,
-                                                size: 20,
-                                                color: AppColors.warning),
-                                            const SizedBox(width: 12),
-                                            const Expanded(
-                                              child: Text(
-                                                'No hay métodos de pago disponibles',
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      )
-                                    else
-                                      InkWell(
-                                        onTap: () => _showPaymentMethodsSelector(
-                                          context,
-                                          paymentMethods,
-                                          selected,
-                                        ),
-                                        borderRadius: BorderRadius.circular(12),
-                                        child: Container(
+                                      ],
+                                    ),
+                                  );
+                                }
+
+                                if (pmState is PaymentMethodsLoaded) {
+                                  final paymentMethods = pmState.paymentMethods;
+                                  final selected = pmState.selectedPaymentMethod;
+
+                                  return Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      if (paymentMethods.isEmpty)
+                                        Container(
                                           padding: const EdgeInsets.all(
                                               AppDimensions.paddingM),
                                           decoration: BoxDecoration(
-                                            color: AppColors.success
-                                                .withOpacity(0.05),
+                                            color: AppColors.warning
+                                                .withOpacity(0.1),
                                             borderRadius:
                                                 BorderRadius.circular(12),
                                             border: Border.all(
-                                              color: AppColors.success
+                                              color: AppColors.warning
                                                   .withOpacity(0.3),
                                             ),
                                           ),
                                           child: Row(
                                             children: [
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets.all(10),
-                                                decoration: BoxDecoration(
-                                                  color: AppColors.success
-                                                      .withOpacity(0.1),
-                                                  borderRadius:
-                                                      BorderRadius.circular(8),
-                                                ),
-                                                child: Icon(
-                                                  _getPaymentMethodIcon(
-                                                    selected?.description ?? '',
-                                                    selected?.shortDescription ?? '',
+                                              Icon(Icons.warning,
+                                                  size: 20,
+                                                  color: AppColors.warning),
+                                              const SizedBox(width: 12),
+                                              const Expanded(
+                                                child: Text(
+                                                  'No hay métodos de pago disponibles',
+                                                  style: TextStyle(
+                                                    fontSize: 14,
                                                   ),
-                                                  color: AppColors.success,
-                                                  size: 24,
                                                 ),
-                                              ),
-                                              const SizedBox(
-                                                  width: AppDimensions
-                                                      .paddingM),
-                                              Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      selected?.description ??
-                                                          'Seleccionar método de pago',
-                                                      style: const TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        fontSize: 16,
-                                                      ),
-                                                    ),
-                                                    if (selected != null) ...[
-                                                      const SizedBox(
-                                                          height: 4),
-                                                      Text(
-                                                        selected.shortDescription,
-                                                        style: const TextStyle(
-                                                          color: Colors.grey,
-                                                          fontSize: 13,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ],
-                                                ),
-                                              ),
-                                              const Icon(
-                                                Icons.arrow_drop_down,
-                                                color: Colors.grey,
                                               ),
                                             ],
                                           ),
+                                        )
+                                      else
+                                        InkWell(
+                                          onTap: () => _showPaymentMethodsSelector(
+                                            context,
+                                            paymentMethods,
+                                            selected,
+                                          ),
+                                          borderRadius: BorderRadius.circular(12),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(
+                                                AppDimensions.paddingM),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.success
+                                                  .withOpacity(0.05),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: AppColors.success
+                                                    .withOpacity(0.3),
+                                              ),
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Container(
+                                                  padding:
+                                                      const EdgeInsets.all(10),
+                                                  decoration: BoxDecoration(
+                                                    color: AppColors.success
+                                                        .withOpacity(0.1),
+                                                    borderRadius:
+                                                        BorderRadius.circular(8),
+                                                  ),
+                                                  child: Icon(
+                                                    _getPaymentMethodIcon(
+                                                      selected?.description ?? '',
+                                                      selected?.shortDescription ?? '',
+                                                    ),
+                                                    color: AppColors.success,
+                                                    size: 24,
+                                                  ),
+                                                ),
+                                                const SizedBox(
+                                                    width: AppDimensions
+                                                        .paddingM),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment.start,
+                                                    children: [
+                                                      Text(
+                                                        selected?.description ??
+                                                            'Seleccionar método de pago',
+                                                        style: const TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 16,
+                                                        ),
+                                                      ),
+                                                      if (selected != null) ...[
+                                                        const SizedBox(
+                                                            height: 4),
+                                                        Text(
+                                                          selected.shortDescription,
+                                                          style: const TextStyle(
+                                                            color: Colors.grey,
+                                                            fontSize: 13,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ],
+                                                  ),
+                                                ),
+                                                const Icon(
+                                                  Icons.arrow_drop_down,
+                                                  color: Colors.grey,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                  ],
-                                );
-                              }
+                                    ],
+                                  );
+                                }
 
-                              return const SizedBox.shrink();
-                            },
-                          ),
-
-                          const SizedBox(height: 24),
-                          const Divider(height: 1),
-                          const SizedBox(height: 24),
+                                return const SizedBox.shrink();
+                              },
+                            ),
+                            const SizedBox(height: 24),
+                            const Divider(height: 1),
+                            const SizedBox(height: 24),
+                          ] else ...[
+                            Text(
+                              'Motivo de Devolución',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                            const SizedBox(height: 16),
+                            if (_isLoadingReasons)
+                              const Center(child: CircularProgressIndicator())
+                            else if (_reasonsError != null)
+                              Row(
+                                children: [
+                                  Expanded(child: Text(_reasonsError!, style: const TextStyle(color: AppColors.error))),
+                                  IconButton(
+                                    icon: const Icon(Icons.refresh),
+                                    onPressed: _loadReturnReasons,
+                                  )
+                                ],
+                              )
+                            else
+                              DropdownButtonFormField<ReturnReasonModel>(
+                                decoration: InputDecoration(
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                ),
+                                value: _selectedReason,
+                                items: _returnReasons.map((reason) {
+                                  return DropdownMenuItem<ReturnReasonModel>(
+                                    value: reason,
+                                    child: Text(reason.description),
+                                  );
+                                }).toList(),
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedReason = value;
+                                  });
+                                },
+                              ),
+                            const SizedBox(height: 24),
+                            const Divider(height: 1),
+                            const SizedBox(height: 24),
+                          ],
 
                           // Mostrar desglose si aplican percepciones
-                          if (_iibbAmount > 0 || _vatPerceptionAmount > 0 || _internalTaxAmount > 0) ...[
+                          if (!isRefundMode && (_iibbAmount > 0 || _vatPerceptionAmount > 0 || _internalTaxAmount > 0)) ...[
                             Container(
                               padding: const EdgeInsets.all(AppDimensions.paddingM),
                               decoration: BoxDecoration(
@@ -707,20 +798,53 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                             const SizedBox(height: 16),
                           ],
 
-                          CashPaymentWidget(
-                            key: ValueKey(state.subtotal + state.totalIva + _iibbAmount + _vatPerceptionAmount + _internalTaxAmount),
-                            totalAmount: state.subtotal + state.totalIva + _iibbAmount + _vatPerceptionAmount + _internalTaxAmount,
-                            onAmountChanged: (amount) {
-                              setState(() {
-                                _receivedAmount = amount;
-                              });
-                            },
-                            onChangeCalculated: (change) {
-                              setState(() {
-                                _change = change;
-                              });
-                            },
-                          ),
+                          if (!isRefundMode)
+                            CashPaymentWidget(
+                              key: ValueKey(state.subtotal + state.totalIva + _iibbAmount + _vatPerceptionAmount + _internalTaxAmount),
+                              totalAmount: state.subtotal + state.totalIva + _iibbAmount + _vatPerceptionAmount + _internalTaxAmount,
+                              onAmountChanged: (amount) {
+                                setState(() {
+                                  _receivedAmount = amount;
+                                });
+                              },
+                              onChangeCalculated: (change) {
+                                setState(() {
+                                  _change = change;
+                                });
+                              },
+                            )
+                          else
+                            Container(
+                              padding: const EdgeInsets.all(AppDimensions.paddingM),
+                              decoration: BoxDecoration(
+                                color: AppColors.error.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: AppColors.error.withOpacity(0.3),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'Monto a devolver:',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.error,
+                                    ),
+                                  ),
+                                  Text(
+                                    '\$ ${(state.subtotal + state.totalIva).abs().toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.error,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
 
                           if (isProcessing) ...[
                             const SizedBox(height: 24),
@@ -731,19 +855,21 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                                 color: AppColors.info.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Row(
+                              child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  SizedBox(
+                                  const SizedBox(
                                     width: 20,
                                     height: 20,
                                     child: CircularProgressIndicator(
                                         strokeWidth: 2),
                                   ),
-                                  SizedBox(width: 12),
+                                  const SizedBox(width: 12),
                                   Text(
-                                    'Procesando venta...',
-                                    style: TextStyle(
+                                    isRefundMode
+                                        ? 'Procesando devolución...'
+                                        : 'Procesando venta...',
+                                    style: const TextStyle(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w500,
                                     ),
@@ -839,12 +965,49 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
     );
   }
 
-  // Función para confirmar la venta
+  // Función para confirmar la venta o devolución
   void _confirmSale(BuildContext context, CartLoaded cartState) {
+    final uiState = context.read<UiBloc>().state;
+    final isRefundMode = uiState is UiLoaded ? uiState.isRefundMode : false;
+
     // Obtener cliente seleccionado
     final clientsState = context.read<ClientsBloc>().state;
     final selectedClient =
         clientsState is ClientsLoaded ? clientsState.selectedClient : null;
+
+    if (isRefundMode) {
+      if (selectedClient == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Debe seleccionar un cliente para la devolución.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+      if (_selectedReason == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Debe seleccionar un motivo de devolución.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+
+      context.read<CheckoutBloc>().add(
+            ProcessReturn(
+              reasonId: _selectedReason!.id,
+              client: selectedClient,
+              items: cartState.items,
+              logItems: cartState.log,
+              total: cartState.total,
+              subtotal: cartState.subtotal,
+              totalIva: cartState.totalIva,
+            ),
+          );
+      return;
+    }
 
     // Obtener método de pago seleccionado
     final paymentMethodsState = context.read<PaymentMethodsBloc>().state;
@@ -874,6 +1037,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
     setState(() {
       _receivedAmount = null;
       _change = null;
+      _selectedReason = null;
     });
     widget.onClose();
   }
