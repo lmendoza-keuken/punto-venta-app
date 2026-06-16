@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
+import 'package:punto_venta_app/core/utils/extensions.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/pdv_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/branch_local_datasource.dart';
@@ -19,16 +20,40 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/p
 import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/payment_methods_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/payment_methods_state.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/payment_method.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/cart/payment_method_dialogs.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/cart/cash_payment_widget.dart';
-import 'package:punto_venta_app/features/pos/presentation/widgets/cart/payment_option_widget.dart';
+// import 'package:punto_venta_app/features/pos/presentation/widgets/cart/payment_option_widget.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/common/error_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/iibb_calculator.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/vat_perception_calculator.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/internal_tax_calculator.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
+
+class PaymentMethodDetailsControllers {
+  final TextEditingController accountOwner;
+  final TextEditingController bankId;
+  final TextEditingController checkNumber;
+  final TextEditingController transferId;
+  final TextEditingController verificationId;
+
+  PaymentMethodDetailsControllers()
+      : accountOwner = TextEditingController(),
+        bankId = TextEditingController(),
+        checkNumber = TextEditingController(),
+        transferId = TextEditingController(),
+        verificationId = TextEditingController();
+
+  void dispose() {
+    accountOwner.dispose();
+    bankId.dispose();
+    checkNumber.dispose();
+    transferId.dispose();
+    verificationId.dispose();
+  }
+}
 
 class ConfirmationPanel extends StatefulWidget {
   final VoidCallback onClose;
@@ -49,141 +74,461 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
   double _vatPerceptionAmount = 0.0;
   double _internalTaxAmount = 0.0;
 
+  List<PaymentMethod> _selectedPayments = [];
+  final List<TextEditingController> _amountControllers = [];
+  final List<TextEditingController> _receivedControllers = [];
+  final List<PaymentMethodDetailsControllers> _detailsControllers = [];
+  final Set<int> _expandedPaymentDetails = {};
+
+  @override
+  void dispose() {
+    for (final controller in _amountControllers) {
+      controller.dispose();
+    }
+    for (final controller in _receivedControllers) {
+      controller.dispose();
+    }
+    for (final controller in _detailsControllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  double get _totalAllocated =>
+      _selectedPayments.fold(0.0, (sum, pm) => sum + (pm.amount ?? 0.0));
+
+  void _updateChangeAndAmounts(double totalAmount) {
+    double totalReceived = 0.0;
+    double totalChange = 0.0;
+    double totalAllocated = 0.0;
+
+    for (final pm in _selectedPayments) {
+      final isCash = pm.description.toLowerCase().contains('efectivo') ||
+          pm.shortDescription.toLowerCase().contains('efectivo');
+      final amount = pm.amount ?? 0.0;
+      totalAllocated += amount;
+
+      if (isCash) {
+        final rec = pm.receivedAmount ?? amount;
+        totalReceived += rec;
+        if (rec > amount) {
+          totalChange += (rec - amount);
+        }
+      } else {
+        totalReceived += amount;
+      }
+    }
+
+    setState(() {
+      _receivedAmount = totalReceived;
+      _change = totalChange;
+    });
+  }
+
+  void _syncControllers() {
+    while (_amountControllers.length > _selectedPayments.length) {
+      _amountControllers.last.dispose();
+      _amountControllers.removeLast();
+    }
+    while (_receivedControllers.length > _selectedPayments.length) {
+      _receivedControllers.last.dispose();
+      _receivedControllers.removeLast();
+    }
+    while (_detailsControllers.length > _selectedPayments.length) {
+      _detailsControllers.last.dispose();
+      _detailsControllers.removeLast();
+    }
+
+    for (int i = 0; i < _selectedPayments.length; i++) {
+      final pm = _selectedPayments[i];
+      final amountStr = pm.amount != null ? pm.amount!.toStringAsFixed(2) : '';
+      final receivedStr = pm.receivedAmount != null
+          ? pm.receivedAmount!.toStringAsFixed(2)
+          : '';
+      final details = pm.details;
+
+      if (i >= _amountControllers.length) {
+        _amountControllers.add(TextEditingController(text: amountStr));
+      }
+
+      if (i >= _receivedControllers.length) {
+        _receivedControllers.add(TextEditingController(text: receivedStr));
+      }
+
+      if (i >= _detailsControllers.length) {
+        final ctrl = PaymentMethodDetailsControllers();
+        ctrl.accountOwner.text = details?.accountOwner ?? '';
+        ctrl.bankId.text = details?.bankId ?? '';
+        ctrl.checkNumber.text = details?.checkNumber ?? '';
+        ctrl.transferId.text = details?.transferId ?? '';
+        ctrl.verificationId.text = details?.verificationId ?? '';
+        _detailsControllers.add(ctrl);
+      } else {
+        final ctrl = _detailsControllers[i];
+        if (ctrl.accountOwner.text != (details?.accountOwner ?? '')) {
+          ctrl.accountOwner.text = details?.accountOwner ?? '';
+        }
+        if (ctrl.bankId.text != (details?.bankId ?? '')) {
+          ctrl.bankId.text = details?.bankId ?? '';
+        }
+        if (ctrl.checkNumber.text != (details?.checkNumber ?? '')) {
+          ctrl.checkNumber.text = details?.checkNumber ?? '';
+        }
+        if (ctrl.transferId.text != (details?.transferId ?? '')) {
+          ctrl.transferId.text = details?.transferId ?? '';
+        }
+        if (ctrl.verificationId.text != (details?.verificationId ?? '')) {
+          ctrl.verificationId.text = details?.verificationId ?? '';
+        }
+      }
+    }
+  }
+
+  Widget _buildPaymentRow(
+      int index, double totalAmount, List<PaymentMethod> allAvailableMethods) {
+    _syncControllers();
+    final pm = _selectedPayments[index];
+    final isCash = pm.description.toLowerCase().contains('efectivo') ||
+        pm.shortDescription.toLowerCase().contains('efectivo');
+
+    return Card(
+      key: ValueKey(pm.id),
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(_getPaymentMethodIcon(pm.description, pm.shortDescription),
+                    color: AppColors.success),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        pm.description,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      Text(
+                        pm.shortDescription,
+                        style:
+                            const TextStyle(color: Colors.grey, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+                if (_selectedPayments.length > 1)
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: AppColors.error),
+                    onPressed: () {
+                      setState(() {
+                        _selectedPayments.removeAt(index);
+                        if (index < _amountControllers.length) {
+                          _amountControllers[index].dispose();
+                          _amountControllers.removeAt(index);
+                        }
+                        if (index < _receivedControllers.length) {
+                          _receivedControllers[index].dispose();
+                          _receivedControllers.removeAt(index);
+                        }
+                        if (_selectedPayments.length == 1) {
+                          final remaining = _selectedPayments[0];
+                          _selectedPayments[0] =
+                              remaining.copyWith(amount: totalAmount);
+                          if (_amountControllers.isNotEmpty) {
+                            _amountControllers[0].text =
+                                totalAmount.toStringAsFixed(2);
+                          }
+                          context
+                              .read<PaymentMethodsBloc>()
+                              .add(SelectPaymentMethodEvent(remaining));
+                        }
+                        _updateChangeAndAmounts(totalAmount);
+                      });
+                    },
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _amountControllers[index],
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(
+                      labelText: 'Monto a pagar',
+                      prefixText: '\$ ',
+                      border: OutlineInputBorder(),
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    ),
+                    onChanged: (val) {
+                      final double? parsed = double.tryParse(val);
+                      setState(() {
+                        _selectedPayments[index] = _selectedPayments[index]
+                            .copyWith(amount: parsed ?? 0.0);
+                        _updateChangeAndAmounts(totalAmount);
+                      });
+                    },
+                  ),
+                ),
+                if (isCash) ...[
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _receivedControllers[index],
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      decoration: const InputDecoration(
+                        labelText: 'Paga con (Recibido)',
+                        prefixText: '\$ ',
+                        border: OutlineInputBorder(),
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      ),
+                      onChanged: (val) {
+                        final double? parsed = double.tryParse(val);
+                        setState(() {
+                          _selectedPayments[index] = _selectedPayments[index]
+                              .copyWith(receivedAmount: parsed);
+                          _updateChangeAndAmounts(totalAmount);
+                        });
+                      },
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            _buildDetailsForm(index, pm),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailsTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    required ValueChanged<String> onChanged,
+  }) {
+    return TextFormField(
+      controller: controller,
+      maxLength: 20,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, size: 18),
+        border: const OutlineInputBorder(),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        isDense: true,
+      ),
+      style: const TextStyle(fontSize: 13),
+      onChanged: onChanged,
+    );
+  }
+
+  void _updatePaymentDetails(int index,
+      PaymentMethodDetails Function(PaymentMethodDetails d) updateFn) {
+    setState(() {
+      final currentDetails =
+          _selectedPayments[index].details ?? const PaymentMethodDetails();
+      final updatedDetails = updateFn(currentDetails);
+      _selectedPayments[index] =
+          _selectedPayments[index].copyWith(details: updatedDetails);
+    });
+  }
+
+  Widget _buildDetailsForm(int index, PaymentMethod pm) {
+    final desc = pm.description.toLowerCase();
+    final shortDesc = pm.shortDescription.toLowerCase();
+
+    // saber los id para saber que tipo es.
+
+    final isCash = desc.contains('efectivo') || shortDesc.contains('efectivo');
+    if (isCash) return const SizedBox.shrink();
+
+    final isTransfer = desc.contains('transferencia') ||
+        shortDesc.contains('transferencia') ||
+        desc.contains('banco') ||
+        shortDesc.contains('banco');
+    final isCard = desc.contains('tarjeta') ||
+        shortDesc.contains('tarjeta') ||
+        desc.contains('debito') ||
+        shortDesc.contains('debito') ||
+        desc.contains('credito') ||
+        shortDesc.contains('credito') ||
+        desc.contains('posnet') ||
+        shortDesc.contains('posnet');
+    final isQR = desc.contains('qr') ||
+        shortDesc.contains('qr') ||
+        desc.contains('mercado') ||
+        shortDesc.contains('mercado');
+    final isCheck = desc.contains('cheque') || shortDesc.contains('cheque');
+
+    _syncControllers();
+    final controllers = _detailsControllers[index];
+    final isExpanded = _expandedPaymentDetails.contains(pm.id);
+
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: () {
+              setState(() {
+                if (isExpanded) {
+                  _expandedPaymentDetails.remove(pm.id);
+                } else {
+                  _expandedPaymentDetails.add(pm.id);
+                }
+              });
+            },
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.assignment_outlined,
+                        size: 16,
+                        color: AppColors.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Datos adicionales del pago',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Icon(
+                    isExpanded
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
+                    size: 18,
+                    color: Colors.grey,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (isExpanded)
+            Padding(
+              padding: const EdgeInsets.only(
+                  left: 12, right: 12, bottom: 12, top: 4),
+              child: Column(
+                spacing: 8,
+                children: [
+                  // formularios
+
+                  // _buildDetailsTextField(
+                  //   controller: controllers.accountOwner,
+                  //   label: 'Titular de la cuenta',
+                  //   icon: Icons.person_outline,
+                  //   onChanged: (val) {
+                  //     _updatePaymentDetails(
+                  //         index, (d) => d.copyWith(accountOwner: val));
+                  //   },
+                  // ),
+                  // if (isTransfer || isCard || isCheck)
+                  //   _buildDetailsTextField(
+                  //     controller: controllers.bankId,
+                  //     label: isCard ? 'Banco/Emisor' : 'Banco',
+                  //     icon: Icons.account_balance_outlined,
+                  //     onChanged: (val) {
+                  //       _updatePaymentDetails(
+                  //           index, (d) => d.copyWith(bankId: val));
+                  //     },
+                  //   ),
+                  if (isCheck)
+                    _buildDetailsTextField(
+                      controller: controllers.checkNumber,
+                      label: 'Número de cheque',
+                      icon: Icons.pin_outlined,
+                      onChanged: (val) {
+                        _updatePaymentDetails(
+                            index, (d) => d.copyWith(checkNumber: val));
+                      },
+                    ),
+                  if (isTransfer || isQR)
+                    _buildDetailsTextField(
+                      controller: controllers.transferId,
+                      label: 'ID de Transferencia/Operación',
+                      icon: Icons.receipt_long_outlined,
+                      onChanged: (val) {
+                        _updatePaymentDetails(
+                            index, (d) => d.copyWith(transferId: val));
+                      },
+                    ),
+                  if (isCard || isQR)
+                    _buildDetailsTextField(
+                      controller: controllers.verificationId,
+                      label: isCard
+                          ? 'Nro. de Lote/Cupón (Verificación)'
+                          : 'ID de Verificación',
+                      icon: Icons.verified_outlined,
+                      onChanged: (val) {
+                        _updatePaymentDetails(
+                            index, (d) => d.copyWith(verificationId: val));
+                      },
+                    ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // Obtener el icono adecuado para cada método de pago según su descripción
   IconData _getPaymentMethodIcon(String description, String shortDescription) {
     final desc = description.toLowerCase();
     final shortDesc = shortDescription.toLowerCase();
     if (desc.contains('efectivo') || shortDesc.contains('efectivo')) {
       return Icons.attach_money;
     }
-    if (desc.contains('tarjeta') || shortDesc.contains('tarjeta') ||
-        desc.contains('debito') || shortDesc.contains('debito') ||
-        desc.contains('credito') || shortDesc.contains('credito') ||
-        desc.contains('posnet') || shortDesc.contains('posnet')) {
+    if (desc.contains('tarjeta') ||
+        shortDesc.contains('tarjeta') ||
+        desc.contains('debito') ||
+        shortDesc.contains('debito') ||
+        desc.contains('credito') ||
+        shortDesc.contains('credito') ||
+        desc.contains('posnet') ||
+        shortDesc.contains('posnet')) {
       return Icons.credit_card;
     }
-    if (desc.contains('transferencia') || shortDesc.contains('transferencia') ||
-        desc.contains('banco') || shortDesc.contains('banco')) {
+    if (desc.contains('transferencia') ||
+        shortDesc.contains('transferencia') ||
+        desc.contains('banco') ||
+        shortDesc.contains('banco')) {
       return Icons.account_balance;
     }
-    if (desc.contains('qr') || shortDesc.contains('qr') ||
-        desc.contains('mercado') || shortDesc.contains('mercado')) {
+    if (desc.contains('qr') ||
+        shortDesc.contains('qr') ||
+        desc.contains('mercado') ||
+        shortDesc.contains('mercado')) {
       return Icons.qr_code;
     }
     return Icons.payment;
-  }
-
-  void _showPaymentMethodsSelector(
-    BuildContext context,
-    List<PaymentMethod> paymentMethods,
-    PaymentMethod? selectedPaymentMethod,
-  ) {
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text(
-            'Seleccionar Método de Pago',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: paymentMethods.map((pm) {
-                  final isSelected = selectedPaymentMethod?.id == pm.id;
-                  final icon = _getPaymentMethodIcon(pm.description, pm.shortDescription);
-                  
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: InkWell(
-                      onTap: () {
-                        context
-                            .read<PaymentMethodsBloc>()
-                            .add(SelectPaymentMethodEvent(pm));
-                        Navigator.of(dialogContext).pop();
-                      },
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? AppColors.primary.withOpacity(0.1)
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: isSelected
-                                ? AppColors.primary
-                                : Colors.grey.shade300,
-                            width: isSelected ? 2 : 1,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? AppColors.primary.withOpacity(0.15)
-                                    : Colors.grey.shade100,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                icon,
-                                color: isSelected ? AppColors.primary : Colors.grey,
-                                size: 20,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    pm.description,
-                                    style: TextStyle(
-                                      fontWeight: isSelected
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                  Text(
-                                    pm.shortDescription,
-                                    style: const TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            if (isSelected)
-                              const Icon(
-                                Icons.check_circle,
-                                color: AppColors.primary,
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cerrar'),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override
@@ -192,6 +537,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
     _calculateTaxesForUI();
   }
 
+  //  calcular impuestos para mostrar en el UI (IIBB, percepción de IVA e impuesto interno)
   Future<void> _calculateTaxesForUI() async {
     try {
       final clientsState = context.read<ClientsBloc>().state;
@@ -220,7 +566,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
       // Obtener configuración del PDV (branch)
       final pdvConfig = await di.sl<PdvLocalDataSource>().getPdvConfig();
       final branchId = pdvConfig?.branchId;
-      
+
       if (branchId == null) {
         setState(() {
           _iibbAmount = 0.0;
@@ -231,15 +577,16 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
       }
 
       // Obtener branch
-      final branch = await di.sl<BranchLocalDataSource>().getBranchById(branchId);
+      final branch =
+          await di.sl<BranchLocalDataSource>().getBranchById(branchId);
 
       // Obtener VAT category
       final vatCategoryId = selectedClient.vatCategoryId;
       final vatCategoryDataSource = di.sl<VatCategoryLocalDataSource>();
-      final allVatCategories = await vatCategoryDataSource.getCachedVatCategories();
-      final vatCategory = allVatCategories
-          ?.where((cat) => cat.id == vatCategoryId)
-          .firstOrNull;
+      final allVatCategories =
+          await vatCategoryDataSource.getCachedVatCategories();
+      final vatCategory =
+          allVatCategories?.where((cat) => cat.id == vatCategoryId).firstOrNull;
 
       // Calcular IIBB
       final iibb = IibbCalculator.calculateIibb(
@@ -267,12 +614,37 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
         _iibbAmount = iibb;
         _vatPerceptionAmount = vatPerception;
         _internalTaxAmount = internalTax;
+
+        if (_selectedPayments.length == 1) {
+          final total = cartState.subtotal +
+              cartState.totalIva +
+              iibb +
+              vatPerception +
+              internalTax;
+          _selectedPayments[0] = _selectedPayments[0].copyWith(amount: total);
+          _syncControllers();
+          if (_amountControllers.isNotEmpty) {
+            _amountControllers[0].text = total.toStringAsFixed(2);
+          }
+        }
       });
     } catch (e) {
       setState(() {
         _iibbAmount = 0.0;
         _vatPerceptionAmount = 0.0;
         _internalTaxAmount = 0.0;
+
+        if (_selectedPayments.length == 1) {
+          final cartState = context.read<CartBloc>().state;
+          if (cartState is CartLoaded) {
+            final total = cartState.subtotal + cartState.totalIva;
+            _selectedPayments[0] = _selectedPayments[0].copyWith(amount: total);
+            _syncControllers();
+            if (_amountControllers.isNotEmpty) {
+              _amountControllers[0].text = total.toStringAsFixed(2);
+            }
+          }
+        }
       });
     }
   }
@@ -293,8 +665,44 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
             _calculateTaxesForUI();
           },
         ),
+        BlocListener<PaymentMethodsBloc, PaymentMethodsState>(
+          listener: (context, pmState) {
+            if (pmState is PaymentMethodsLoaded) {
+              final selected = pmState.selectedPaymentMethod;
+              if (selected != null) {
+                final cartState = context.read<CartBloc>().state;
+                if (cartState is CartLoaded) {
+                  final total = cartState.subtotal +
+                      cartState.totalIva +
+                      _iibbAmount +
+                      _vatPerceptionAmount +
+                      _internalTaxAmount;
+                  if (_selectedPayments.isEmpty) {
+                    setState(() {
+                      _selectedPayments = [selected.copyWith(amount: total)];
+                      _syncControllers();
+                      if (_amountControllers.isNotEmpty) {
+                        _amountControllers[0].text = total.toStringAsFixed(2);
+                      }
+                    });
+                  } else if (_selectedPayments.length == 1 &&
+                      _selectedPayments[0].id != selected.id) {
+                    setState(() {
+                      _selectedPayments[0] = selected.copyWith(amount: total);
+                      _syncControllers();
+                      if (_amountControllers.isNotEmpty) {
+                        _amountControllers[0].text = total.toStringAsFixed(2);
+                      }
+                    });
+                  }
+                }
+              }
+            }
+          },
+        ),
         BlocListener<CheckoutBloc, CheckoutState>(
           listener: (context, checkoutState) async {
+            // Cuando la venta se procesa exitosamente, imprimir ticket y limpiar estado
             if (checkoutState is CheckoutSuccess) {
               final printerConfig =
                   await di.sl<PrinterLocalDataSource>().getPrinterConfig();
@@ -314,8 +722,10 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                 setState(() {
                   _receivedAmount = null;
                   _change = null;
+                  _selectedPayments.clear();
+                  _expandedPaymentDetails.clear();
                 });
-                
+
                 context.read<CartBloc>().add(ClearCart());
                 context.read<CheckoutBloc>().add(const ResetCheckout());
                 context.read<ClientsBloc>().add(ResetToDefaultClientEvent());
@@ -331,6 +741,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
 
               printerBloc.close();
             } else if (checkoutState is CheckoutError) {
+              // Si hay un error al procesar la venta, mostrar un diálogo con el mensaje de error
               if (mounted) {
                 showDialog(
                   context: context,
@@ -354,6 +765,12 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
           if (state is! CartLoaded) {
             return const SizedBox.shrink();
           }
+
+          final totalAmount = state.subtotal +
+              state.totalIva +
+              _iibbAmount +
+              _vatPerceptionAmount +
+              _internalTaxAmount;
 
           return BlocBuilder<CheckoutBloc, CheckoutState>(
             builder: (context, checkoutState) {
@@ -424,15 +841,17 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                                   padding: const EdgeInsets.all(
                                       AppDimensions.paddingM),
                                   decoration: BoxDecoration(
-                                    color: AppColors.error.withOpacity(0.1),
+                                    color:
+                                        AppColors.error.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                      color: AppColors.error.withOpacity(0.3),
+                                      color: AppColors.error
+                                          .withValues(alpha: 0.3),
                                     ),
                                   ),
                                   child: Row(
                                     children: [
-                                      Icon(Icons.error_outline,
+                                      const Icon(Icons.error_outline,
                                           size: 20, color: AppColors.error),
                                       const SizedBox(width: 12),
                                       Expanded(
@@ -452,6 +871,18 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                                 final paymentMethods = pmState.paymentMethods;
                                 final selected = pmState.selectedPaymentMethod;
 
+                                if (_selectedPayments.isEmpty &&
+                                    selected != null) {
+                                  _selectedPayments = [
+                                    selected.copyWith(amount: totalAmount)
+                                  ];
+                                  _syncControllers();
+                                  if (_amountControllers.isNotEmpty) {
+                                    _amountControllers[0].text =
+                                        totalAmount.toStringAsFixed(2);
+                                  }
+                                }
+
                                 return Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -469,13 +900,13 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                                                 .withOpacity(0.3),
                                           ),
                                         ),
-                                        child: Row(
+                                        child: const Row(
                                           children: [
                                             Icon(Icons.warning,
                                                 size: 20,
                                                 color: AppColors.warning),
-                                            const SizedBox(width: 12),
-                                            const Expanded(
+                                            SizedBox(width: 12),
+                                            Expanded(
                                               child: Text(
                                                 'No hay métodos de pago disponibles',
                                                 style: TextStyle(
@@ -486,12 +917,186 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                                           ],
                                         ),
                                       )
-                                    else
+                                    else if (_selectedPayments.length > 1) ...[
+                                      // UI para multiples metodos de pago
+                                      ...List.generate(_selectedPayments.length,
+                                          (index) {
+                                        return _buildPaymentRow(
+                                            index, totalAmount, paymentMethods);
+                                      }),
+                                      const SizedBox(height: 12),
+                                      Align(
+                                        alignment: Alignment.centerRight,
+                                        child: OutlinedButton.icon(
+                                          onPressed: () =>
+                                              showAddPaymentMethodDialog(
+                                            context: context,
+                                            allMethods: paymentMethods,
+                                            selectedPayments: _selectedPayments,
+                                            totalAmount: totalAmount,
+                                            totalAllocated: _totalAllocated,
+                                            getPaymentMethodIcon:
+                                                _getPaymentMethodIcon,
+                                            onMethodAdded: (pm, defaultAmount) {
+                                              setState(() {
+                                                _selectedPayments.add(
+                                                    pm.copyWith(
+                                                        amount: defaultAmount));
+                                                _updateChangeAndAmounts(
+                                                    totalAmount);
+                                              });
+                                            },
+                                          ),
+                                          icon: const Icon(Icons.add),
+                                          label:
+                                              const Text('Agregar Otro Método'),
+                                          style: OutlinedButton.styleFrom(
+                                            foregroundColor: AppColors.primary,
+                                            side: const BorderSide(
+                                                color: AppColors.primary),
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(8)),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Container(
+                                        padding: const EdgeInsets.all(
+                                            AppDimensions.paddingM),
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.shade50,
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          border: Border.all(
+                                              color: Colors.grey.shade200),
+                                        ),
+                                        child: Column(
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                const Text('Total Venta:',
+                                                    style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold)),
+                                                Text(
+                                                    totalAmount
+                                                        .formatToCurrency(),
+                                                    style: const TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold)),
+                                              ],
+                                            ),
+                                            const Divider(),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                const Text('Total Asignado:'),
+                                                Text(
+                                                    _totalAllocated
+                                                        .formatToCurrency(),
+                                                    style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: double.parse(
+                                                                  _totalAllocated
+                                                                      .toStringAsFixed(
+                                                                          2)) ==
+                                                              double.parse(
+                                                                  totalAmount
+                                                                      .toStringAsFixed(
+                                                                          2))
+                                                          ? AppColors.success
+                                                          : AppColors.error,
+                                                    )),
+                                              ],
+                                            ),
+                                            if (_change != null &&
+                                                _change! > 0) ...[
+                                              const SizedBox(height: 8),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  const Text('Vuelto / Cambio:',
+                                                      style: TextStyle(
+                                                          color:
+                                                              AppColors.success,
+                                                          fontWeight:
+                                                              FontWeight.bold)),
+                                                  Text(
+                                                      _change!
+                                                          .formatToCurrency(),
+                                                      style: const TextStyle(
+                                                          color:
+                                                              AppColors.success,
+                                                          fontWeight:
+                                                              FontWeight.bold)),
+                                                ],
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                      ),
+                                      if (double.parse(_totalAllocated
+                                              .toStringAsFixed(2)) !=
+                                          double.parse(totalAmount
+                                              .toStringAsFixed(2))) ...[
+                                        const SizedBox(height: 12),
+                                        Container(
+                                          padding: const EdgeInsets.all(12),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.error
+                                                .withOpacity(0.1),
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            border: Border.all(
+                                                color: AppColors.error
+                                                    .withOpacity(0.3)),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              const Icon(Icons.warning,
+                                                  color: AppColors.error,
+                                                  size: 20),
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: Text(
+                                                  _totalAllocated < totalAmount
+                                                      ? 'Falta asignar: \$ ${(totalAmount - _totalAllocated).toStringAsFixed(2)}'
+                                                      : 'El monto asignado supera el total por \$ ${(_totalAllocated - totalAmount).toStringAsFixed(2)}',
+                                                  style: const TextStyle(
+                                                      color: AppColors.error,
+                                                      fontWeight:
+                                                          FontWeight.w500),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ] else ...[
+                                      // UI para un solo metodo de pago
                                       InkWell(
-                                        onTap: () => _showPaymentMethodsSelector(
-                                          context,
-                                          paymentMethods,
-                                          selected,
+                                        onTap: () =>
+                                            showPaymentMethodsSelectorDialog(
+                                          context: context,
+                                          paymentMethods: paymentMethods,
+                                          selectedPaymentMethod: selected,
+                                          getPaymentMethodIcon:
+                                              _getPaymentMethodIcon,
+                                          onSelected: (pm) {
+                                            context
+                                                .read<PaymentMethodsBloc>()
+                                                .add(SelectPaymentMethodEvent(
+                                                    pm));
+                                          },
                                         ),
                                         borderRadius: BorderRadius.circular(12),
                                         child: Container(
@@ -521,15 +1126,16 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                                                 child: Icon(
                                                   _getPaymentMethodIcon(
                                                     selected?.description ?? '',
-                                                    selected?.shortDescription ?? '',
+                                                    selected?.shortDescription ??
+                                                        '',
                                                   ),
                                                   color: AppColors.success,
                                                   size: 24,
                                                 ),
                                               ),
                                               const SizedBox(
-                                                  width: AppDimensions
-                                                      .paddingM),
+                                                  width:
+                                                      AppDimensions.paddingM),
                                               Expanded(
                                                 child: Column(
                                                   crossAxisAlignment:
@@ -545,10 +1151,10 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                                                       ),
                                                     ),
                                                     if (selected != null) ...[
-                                                      const SizedBox(
-                                                          height: 4),
+                                                      const SizedBox(height: 4),
                                                       Text(
-                                                        selected.shortDescription,
+                                                        selected
+                                                            .shortDescription,
                                                         style: const TextStyle(
                                                           color: Colors.grey,
                                                           fontSize: 13,
@@ -566,6 +1172,47 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                                           ),
                                         ),
                                       ),
+                                      if (_selectedPayments.isNotEmpty) ...[
+                                        _buildDetailsForm(
+                                            0, _selectedPayments[0]),
+                                        const SizedBox(height: 12),
+                                      ],
+                                      Align(
+                                        alignment: Alignment.centerRight,
+                                        child: OutlinedButton.icon(
+                                          onPressed: () =>
+                                              showAddPaymentMethodDialog(
+                                            context: context,
+                                            allMethods: paymentMethods,
+                                            selectedPayments: _selectedPayments,
+                                            totalAmount: totalAmount,
+                                            totalAllocated: _totalAllocated,
+                                            getPaymentMethodIcon:
+                                                _getPaymentMethodIcon,
+                                            onMethodAdded: (pm, defaultAmount) {
+                                              setState(() {
+                                                _selectedPayments.add(
+                                                    pm.copyWith(
+                                                        amount: defaultAmount));
+                                                _updateChangeAndAmounts(
+                                                    totalAmount);
+                                              });
+                                            },
+                                          ),
+                                          icon: const Icon(Icons.add),
+                                          label:
+                                              const Text('Agregar Otro Método'),
+                                          style: OutlinedButton.styleFrom(
+                                            foregroundColor: AppColors.primary,
+                                            side: const BorderSide(
+                                                color: AppColors.primary),
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(8)),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ],
                                 );
                               }
@@ -579,9 +1226,12 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                           const SizedBox(height: 24),
 
                           // Mostrar desglose si aplican percepciones
-                          if (_iibbAmount > 0 || _vatPerceptionAmount > 0 || _internalTaxAmount > 0) ...[
+                          if (_iibbAmount > 0 ||
+                              _vatPerceptionAmount > 0 ||
+                              _internalTaxAmount > 0) ...[
                             Container(
-                              padding: const EdgeInsets.all(AppDimensions.paddingM),
+                              padding:
+                                  const EdgeInsets.all(AppDimensions.paddingM),
                               decoration: BoxDecoration(
                                 color: AppColors.info.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(12),
@@ -593,7 +1243,8 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       const Text(
                                         'Subtotal:',
@@ -612,7 +1263,8 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                                   ),
                                   const SizedBox(height: 8),
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       const Text(
                                         'IVA:',
@@ -632,7 +1284,8 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                                   if (_iibbAmount > 0) ...[
                                     const SizedBox(height: 8),
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         const Text(
                                           'Percep. IIBB:',
@@ -656,7 +1309,8 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                                   if (_vatPerceptionAmount > 0) ...[
                                     const SizedBox(height: 8),
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         const Text(
                                           'Percep. IVA:',
@@ -680,7 +1334,8 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                                   if (_internalTaxAmount > 0) ...[
                                     const SizedBox(height: 8),
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         const Text(
                                           'Imp. Interno:',
@@ -707,20 +1362,33 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                             const SizedBox(height: 16),
                           ],
 
-                          CashPaymentWidget(
-                            key: ValueKey(state.subtotal + state.totalIva + _iibbAmount + _vatPerceptionAmount + _internalTaxAmount),
-                            totalAmount: state.subtotal + state.totalIva + _iibbAmount + _vatPerceptionAmount + _internalTaxAmount,
-                            onAmountChanged: (amount) {
-                              setState(() {
-                                _receivedAmount = amount;
-                              });
-                            },
-                            onChangeCalculated: (change) {
-                              setState(() {
-                                _change = change;
-                              });
-                            },
-                          ),
+                          if (_selectedPayments.length <= 1)
+                            CashPaymentWidget(
+                              key: ValueKey(totalAmount),
+                              totalAmount: totalAmount,
+                              onAmountChanged: (amount) {
+                                setState(() {
+                                  _receivedAmount = amount;
+                                  if (_selectedPayments.isNotEmpty &&
+                                      (_selectedPayments[0]
+                                              .description
+                                              .toLowerCase()
+                                              .contains('efectivo') ||
+                                          _selectedPayments[0]
+                                              .shortDescription
+                                              .toLowerCase()
+                                              .contains('efectivo'))) {
+                                    _selectedPayments[0] = _selectedPayments[0]
+                                        .copyWith(receivedAmount: amount);
+                                  }
+                                });
+                              },
+                              onChangeCalculated: (change) {
+                                setState(() {
+                                  _change = change;
+                                });
+                              },
+                            ),
 
                           if (isProcessing) ...[
                             const SizedBox(height: 24),
@@ -775,7 +1443,12 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                           child: SizedBox(
                             height: AppDimensions.buttonHeightS,
                             child: ElevatedButton(
-                              onPressed: isProcessing
+                              onPressed: isProcessing ||
+                                      (_selectedPayments.length > 1 &&
+                                          double.parse(_totalAllocated
+                                                  .toStringAsFixed(2)) !=
+                                              double.parse(totalAmount
+                                                  .toStringAsFixed(2)))
                                   ? null
                                   : () => _confirmSale(context, state),
                               style: ElevatedButton.styleFrom(
@@ -862,7 +1535,11 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
             totalIva: cartState.totalIva,
             subtotal: cartState.subtotal,
             client: selectedClient,
-            paymentMethod: selectedPaymentMethod,
+            paymentMethod: _selectedPayments.isNotEmpty
+                ? _selectedPayments.first
+                : selectedPaymentMethod,
+            paymentMethods:
+                _selectedPayments.isNotEmpty ? _selectedPayments : null,
             receivedAmount: _receivedAmount,
             change: _change,
           ),

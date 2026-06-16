@@ -59,12 +59,10 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
   int? _originalSaleId;
   String? _returnReasonDescription;
 
-  bool get _isCreditNote =>
-      TicketType.isNotaCredito(widget.ticket.typeCode);
+  bool get _isCreditNote => TicketType.isNotaCredito(widget.ticket.typeCode);
 
   bool get _isAnnulledFactura =>
-      widget.ticket.isAnnulled &&
-      TicketType.isFactura(widget.ticket.typeCode);
+      widget.ticket.isAnnulled && TicketType.isFactura(widget.ticket.typeCode);
 
   @override
   void initState() {
@@ -84,8 +82,7 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
       final returns = await di.sl<FetchReturnsUsecase>()(
         date: widget.ticket.completedAt,
       );
-      final matches =
-          returns.where((r) => r.ncSaleId == ticketId).toList();
+      final matches = returns.where((r) => r.ncSaleId == ticketId).toList();
       if (matches.isEmpty || !mounted) return;
       final match = matches.first;
 
@@ -127,7 +124,7 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
     final localDs = di.sl<AuthLocalDataSource>();
     final enterprise = await localDs.getCachedEnterprise();
     CompletedOrder ticketToUse = widget.ticket;
-    
+
     final iibbAmount = ticketToUse.iibbTax;
     final iibbPercentage = ticketToUse.iibbTaxPercentage;
     final vatPerceptionAmount = ticketToUse.vatPerception;
@@ -168,6 +165,7 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
       internalTax: internalTaxAmount,
       internalTaxRate: internalTaxRate,
       paymentMethod: ticketToUse.paymentMethod,
+      paymentMethods: ticketToUse.paymentMethods,
       cashierName: ticketToUse.cashierName,
       cashierId: cashierId,
       timestamp: ticketToUse.completedAt,
@@ -182,7 +180,7 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
       branchId: branchId,
       description: ticketToUse.description,
       templateType: templateType,
-      isCopy: false, 
+      isCopy: false,
     );
 
     if (mounted) {
@@ -385,9 +383,8 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         TextButton(
-                          onPressed: isBusy
-                              ? null
-                              : () => Navigator.of(context).pop(),
+                          onPressed:
+                              isBusy ? null : () => Navigator.of(context).pop(),
                           child: const Text('Cerrar'),
                         ),
                         const Spacer(),
@@ -437,8 +434,8 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                                     Icons.print,
                                     color: Colors.white,
                                   ),
-                            label:
-                                Text(isPrinting ? 'Imprimiendo...' : 'Imprimir'),
+                            label: Text(
+                                isPrinting ? 'Imprimiendo...' : 'Imprimir'),
                           ),
                       ],
                     );
@@ -456,14 +453,14 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
     if (_printJob == null) return;
 
     bool? isCopy = false;
-    
+
     if (_printJob!.templateType == TicketTemplateType.whiteMarket) {
       isCopy = await showDialog<bool>(
         context: context,
         barrierDismissible: false,
         builder: (context) => const PrintTypeDialog(),
       );
-      
+
       if (isCopy == null) return;
     }
 
@@ -573,7 +570,8 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
               child: Column(
                 children: [
                   // Si es whiteMarket con datos fiscales, mostrar header completo
-                  if (_printJob!.templateType == TicketTemplateType.whiteMarket &&
+                  if (_printJob!.templateType ==
+                          TicketTemplateType.whiteMarket &&
                       _printJob!.fiscalIssuerData != null) ...[
                     if (_printJob!.fiscalIssuerData!.fiscalName != null)
                       Text(
@@ -586,15 +584,19 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                       ),
                     const SizedBox(height: 4),
                     if (_printJob!.fiscalIssuerData!.cuit != null)
-                      Text('C.U.I.T. Nro.: ${_printJob!.fiscalIssuerData!.cuit}'),
+                      Text(
+                          'C.U.I.T. Nro.: ${_printJob!.fiscalIssuerData!.cuit}'),
                     if (_printJob!.fiscalIssuerData!.iibbCuit != null)
-                      Text('Ing. Brutos: ${_printJob!.fiscalIssuerData!.iibbCuit}'),
+                      Text(
+                          'Ing. Brutos: ${_printJob!.fiscalIssuerData!.iibbCuit}'),
                     if (_printJob!.fiscalIssuerData!.address != null)
-                      Text('Domicilio: ${_printJob!.fiscalIssuerData!.address}'),
+                      Text(
+                          'Domicilio: ${_printJob!.fiscalIssuerData!.address}'),
                     if (_printJob!.fiscalIssuerData!.postalCode != null)
                       Text(_printJob!.fiscalIssuerData!.postalCode!),
                     if (_printJob!.fiscalIssuerData!.activityStartDate != null)
-                      Text('Inicio de Actividades: ${_printJob!.fiscalIssuerData!.activityStartDate}'),
+                      Text(
+                          'Inicio de Actividades: ${_printJob!.fiscalIssuerData!.activityStartDate}'),
                     if (_printJob!.fiscalIssuerData!.vatCondition != null)
                       Text(_printJob!.fiscalIssuerData!.vatCondition!),
                     const SizedBox(height: 8),
@@ -614,7 +616,6 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                     const Text('Sistema de Punto de Venta'),
                     const Text('comprobante no valido como factura'),
                   ],
-                  
                   const SizedBox(height: 16),
                   Container(
                     height: 1,
@@ -781,7 +782,7 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                 children: [
                   Text(_printJob!.internalTaxRate != null &&
                           _printJob!.internalTaxRate! > 0
-                      ? 'Imp. Interno (${_printJob!.internalTaxRate!.toStringAsFixed(1)}%):'  
+                      ? 'Imp. Interno (${_printJob!.internalTaxRate!.toStringAsFixed(1)}%):'
                       : 'Imp. Interno:'),
                   Text(_printJob!.internalTax.formatToCurrency()),
                 ],
@@ -840,7 +841,27 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
             const SizedBox(height: 8),
 
             // Información adicional
-            Text('Método de pago: $_paymentMethodName'),
+            if (widget.ticket.paymentMethods != null &&
+                widget.ticket.paymentMethods!.isNotEmpty) ...[
+              const Text(
+                'Métodos de pago:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              ...widget.ticket.paymentMethods!.map((pm) => Padding(
+                    padding: const EdgeInsets.only(left: 8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('  - ${pm.description}:'),
+                        Text(pm.amount != null
+                            ? pm.amount!.formatToCurrency()
+                            : '-'),
+                      ],
+                    ),
+                  )),
+            ] else ...[
+              Text('Método de pago: $_paymentMethodName'),
+            ],
             Text(
                 'Total de artículos: ${widget.ticket.items.fold(0, (previousValue, element) => previousValue + element.quantity)}'),
 

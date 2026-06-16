@@ -21,7 +21,9 @@ class PrintJob {
   final String? clientName;
   final Client? client;
   final int? priceListId;
+  // TODO: Cambiar a que el metodo de pago pueda ser un array para soportar múltiples métodos de pago
   final PaymentMethod? paymentMethod;
+  final List<PaymentMethod>? paymentMethods;
   final String? cashierName;
   final int? cashierId;
   final DateTime timestamp;
@@ -52,6 +54,7 @@ class PrintJob {
     this.clientName,
     this.priceListId,
     this.paymentMethod,
+    this.paymentMethods,
     required this.cashierName,
     this.cashierId,
     required this.timestamp,

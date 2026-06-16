@@ -336,15 +336,32 @@ abstract class BaseTicketTemplate {
     final totalItems =
         printJob.items.fold(0, (sum, item) => sum + item.quantity);
 
-    return [
+    final commands = <TicketCommand>[
       TicketCommand.feedLine(),
-      TicketCommand.text(
-          "Metodo de pago: ${printJob.paymentMethod?.shortDescription ?? 'Efectivo'}"),
-      TicketCommand.feedLine(),
+    ];
+
+    if (printJob.paymentMethods != null &&
+        printJob.paymentMethods!.isNotEmpty) {
+      commands.add(TicketCommand.text("Metodos de pago:"));
+      commands.add(TicketCommand.feedLine());
+      for (final pm in printJob.paymentMethods!) {
+        final amountStr = pm.amount!.formatToCurrency();
+        commands.add(TicketCommand.text("  - ${pm.description}: $amountStr"));
+        commands.add(TicketCommand.feedLine());
+      }
+    } else {
+      commands.add(TicketCommand.text(
+          "Metodo de pago: ${printJob.paymentMethod?.description ?? 'Efectivo'}"));
+      commands.add(TicketCommand.feedLine());
+    }
+
+    commands.addAll([
       TicketCommand.text("Total de articulos: $totalItems"),
       TicketCommand.feedLine(),
       TicketCommand.feedLine(),
-    ];
+    ]);
+
+    return commands;
   }
 
   /// Construye el código de barras
@@ -401,15 +418,17 @@ class PrintImageData {
 }
 
 class TicketCommand {
-    factory TicketCommand.textSize({int width = 1, int height = 1}) =>
-        TicketCommand._(TicketCommandType.textSize, {'width': width, 'height': height});
+  factory TicketCommand.textSize({int width = 1, int height = 1}) =>
+      TicketCommand._(
+          TicketCommandType.textSize, {'width': width, 'height': height});
   final TicketCommandType type;
   final dynamic value;
 
   TicketCommand._(this.type, [this.value]);
 
   factory TicketCommand.image(Uint8List bytes, int imageSize) =>
-      TicketCommand._(TicketCommandType.image, PrintImageData(bytes, imageSize));
+      TicketCommand._(
+          TicketCommandType.image, PrintImageData(bytes, imageSize));
 
   factory TicketCommand.text(String text) =>
       TicketCommand._(TicketCommandType.text, text);

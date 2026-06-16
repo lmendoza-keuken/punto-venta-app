@@ -36,6 +36,12 @@ class CompletedOrderModel {
     toJson: _paymentMethodToJson,
   )
   final PaymentMethod? paymentMethod;
+  @JsonKey(
+    name: 'payment_methods',
+    fromJson: _paymentMethodsFromJson,
+    toJson: _paymentMethodsToJson,
+  )
+  final List<PaymentMethod>? paymentMethods;
   @JsonKey(name: 'total_tax')
   final double totalTax;
   @JsonKey(name: 'total_items')
@@ -93,6 +99,7 @@ class CompletedOrderModel {
     required this.cashierName,
     this.cashierId,
     this.paymentMethod,
+    this.paymentMethods,
     required this.totalTax,
     required this.totalItems,
     this.showSubtotalAndTax = false,
@@ -133,6 +140,7 @@ class CompletedOrderModel {
       cashierName: cashierName,
       cashierId: cashierId,
       paymentMethod: paymentMethod,
+      paymentMethods: paymentMethods,
       totalTax: totalTax,
       totalItems: totalItems,
       showSubtotalAndTax: showSubtotalAndTax,
@@ -169,6 +177,7 @@ class CompletedOrderModel {
       cashierName: order.cashierName,
       cashierId: order.cashierId,
       paymentMethod: order.paymentMethod,
+      paymentMethods: order.paymentMethods,
       totalTax: order.totalTax,
       totalItems: order.totalItems,
       showSubtotalAndTax: order.showSubtotalAndTax,
@@ -200,6 +209,11 @@ PaymentMethod? _paymentMethodFromJson(Map<String, dynamic>? json) {
     description: json['description'] as String,
     shortDescription: json['short_description'] as String,
     deleteAt: json['delete_at'] as String,
+    amount: json['amount'] != null ? (json['amount'] as num).toDouble() : null,
+    receivedAmount: json['received_amount'] != null ? (json['received_amount'] as num).toDouble() : null,
+    details: json['details'] != null
+        ? PaymentMethodDetails.fromJson(json['details'] as Map<String, dynamic>)
+        : null,
   );
 }
 
@@ -210,7 +224,42 @@ Map<String, dynamic>? _paymentMethodToJson(PaymentMethod? paymentMethod) {
     'description': paymentMethod.description,
     'short_description': paymentMethod.shortDescription,
     'delete_at': paymentMethod.deleteAt,
+    if (paymentMethod.amount != null) 'amount': paymentMethod.amount,
+    if (paymentMethod.receivedAmount != null) 'received_amount': paymentMethod.receivedAmount,
+    if (paymentMethod.details != null) 'details': paymentMethod.details!.toJson(),
   };
+}
+
+List<PaymentMethod>? _paymentMethodsFromJson(List<dynamic>? json) {
+  if (json == null) return null;
+  return json
+      .map((item) => PaymentMethod(
+            id: item['id'] as int,
+            description: item['description'] as String,
+            shortDescription: item['short_description'] as String,
+            deleteAt: item['delete_at'] as String,
+            amount: item['amount'] != null ? (item['amount'] as num).toDouble() : null,
+            receivedAmount: item['received_amount'] != null ? (item['received_amount'] as num).toDouble() : null,
+            details: item['details'] != null
+                ? PaymentMethodDetails.fromJson(item['details'] as Map<String, dynamic>)
+                : null,
+          ))
+      .toList();
+}
+
+List<Map<String, dynamic>>? _paymentMethodsToJson(List<PaymentMethod>? paymentMethods) {
+  if (paymentMethods == null) return null;
+  return paymentMethods
+      .map((pm) => {
+            'id': pm.id,
+            'description': pm.description,
+            'short_description': pm.shortDescription,
+            'delete_at': pm.deleteAt,
+            if (pm.amount != null) 'amount': pm.amount,
+            if (pm.receivedAmount != null) 'received_amount': pm.receivedAmount,
+            if (pm.details != null) 'details': pm.details!.toJson(),
+          })
+      .toList();
 }
 
 Client? _clientFromJson(Map<String, dynamic>? json) {

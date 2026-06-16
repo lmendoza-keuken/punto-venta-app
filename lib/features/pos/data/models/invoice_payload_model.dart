@@ -2,8 +2,10 @@ import 'package:punto_venta_app/core/constants/ticket_types.dart';
 import 'package:punto_venta_app/features/pos/data/models/cart_item_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/cart_log_entry_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/tax_model.dart';
+import 'package:punto_venta_app/features/pos/data/models/payment_method_request_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/payment_details.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/payment_method.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/payment_method_input.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/client.dart';
@@ -13,7 +15,7 @@ class InvoicePayload {
   final String timestamp;
   final int? cashier;
   final Map<String, dynamic>? client;
-  final List<PaymentMethodInput> paymentMethods;
+  final List<PaymentMethodRequestModel> paymentMethods;
   final double total;
   final List<TaxModel> totalTax;
   final List<Map<String, dynamic>> logItems;
@@ -52,42 +54,19 @@ class InvoicePayload {
     };
   }
 
-  static List<PaymentMethodInput> _parsePaymentMethods(
-    List<dynamic> list,
-    double ticketTotal,
-  ) {
-    return list.map((pm) {
-      final map = pm as Map<String, dynamic>;
-      if (map.containsKey('amount')) {
-        return PaymentMethodInput.fromJson(map);
-      }
-      return PaymentMethodInput(
-        id: map['id'] as int,
-        amount: ticketTotal,
-        details: PaymentDetails.empty(),
-      );
-    }).toList();
-  }
-
-  Map<String, dynamic> toJson() {
-    final json = <String, dynamic>{
-      if (ticketId != null) 'ticketId': ticketId,
-      'timestamp': timestamp,
-      'cashier': cashier,
-      'client': client,
-      if (paymentMethods.isNotEmpty) 'paymentMethod': paymentMethods.first.id,
-      'paymentMethods': paymentMethods.map((pm) => pm.toJson()).toList(),
-      'total': total,
-      'branch_id': branchId,
-      'sale_type': saleType ?? TicketType.factura,
-      'totalTax': totalTax.map((t) => InvoicePayload._serializeTax(t)).toList(),
-      'items': logItems,
-    };
-    if (branchNumber.isNotEmpty) {
-      json['branch_number'] = branchNumber;
-    }
-    return json;
-  }
+  Map<String, dynamic> toJson() => {
+        if (ticketId != null) 'ticketId': ticketId,
+        'timestamp': timestamp,
+        'cashier': cashier,
+        'client': client,
+        'paymentMethods': paymentMethods.map((pm) => pm.toJson()).toList(),
+        'total': total,
+        'branch_number': branchNumber,
+        'branch_id': branchId,
+        'totalTax':
+            totalTax.map((t) => InvoicePayload._serializeTax(t)).toList(),
+        'items': logItems,
+      };
 
   factory InvoicePayload.fromJson(Map<String, dynamic> json) {
     final total = (json['total'] as num).toDouble();
@@ -98,8 +77,11 @@ class InvoicePayload {
       timestamp: json['timestamp'] as String,
       cashier: json['cashier'] as int?,
       client: json['client'] as Map<String, dynamic>?,
-      paymentMethods: _parsePaymentMethods(paymentMethodsList, total),
-      total: total,
+      paymentMethods: (json['paymentMethods'] as List)
+          .map((pm) =>
+              PaymentMethodRequestModel.fromJson(pm as Map<String, dynamic>))
+          .toList(),
+      total: (json['total'] as num).toDouble(),
       totalTax: (json['totalTax'] as List)
           .map((t) => TaxModel.fromJson(t as Map<String, dynamic>))
           .toList(),
@@ -116,6 +98,7 @@ class InvoicePayload {
     );
   }
 
+  // Método de fábrica para crear un InvoicePayload a partir de un PrintJob y una lista de TaxModel
   factory InvoicePayload.fromPrintJob(PrintJob job, List<TaxModel> taxes) {
     if (taxes.isEmpty) {
       print(
@@ -128,7 +111,7 @@ class InvoicePayload {
       if (percentage == 21) return 1;
       if (percentage == 10.5) return 2;
       if (percentage == 27) return 3;
-      return 0; 
+      return 0;
     }
 
     Map<String, dynamic>? serializeClient(Client? c) {
@@ -136,7 +119,7 @@ class InvoicePayload {
       return {
         'id': c.id,
         'name': c.name,
-        'document': c.document,
+        'document': (c.document ?? c.dni ?? c.cuit),
         'phone': c.phone,
         'email': c.email,
         'address': c.address,
@@ -189,7 +172,7 @@ class InvoicePayload {
         if (vatPerception != null && vatPerception > 0) {
           final vatPerceptionAmount = taxableBase * (vatPerception / 100.0);
           itemTaxes.add(TaxModel(
-            id: 6, 
+            id: 6,
             percentage: vatPerception,
             amount: double.parse(vatPerceptionAmount.toStringAsFixed(2)),
             provinceId: null,
@@ -200,10 +183,11 @@ class InvoicePayload {
         final internalTaxRate = itemModel.product.internalTaxRate;
         if (internalTax != null && internalTax > 0) {
           final fractional = itemModel.product.fractional ?? 1;
-          final itemTotalWithInternalTax = (internalTax + unitPrice) * quantity * fractional;
+          final itemTotalWithInternalTax =
+              (internalTax + unitPrice) * quantity * fractional;
           final baseAmount = unitPrice * quantity * fractional;
           final internalTaxAmount = itemTotalWithInternalTax - baseAmount;
-          
+
           itemTaxes.add(TaxModel(
             id: 7,
             percentage: internalTaxRate,
@@ -218,6 +202,7 @@ class InvoicePayload {
           ifAbsent: () => taxAmount,
         );
 
+        // "item"
         return {
           'id': cartLogItem.id,
           'type': cartLogItem.type.toString(),
@@ -227,11 +212,13 @@ class InvoicePayload {
           'discount': 0,
           'unitPrice': unitPrice,
           'priceListId': job.priceListId,
-          'taxes': itemTaxes.map((t) => {
-                'id': t.id,
-                'percentage': t.percentage,
-                'amount': t.amount,
-              }).toList(),
+          'taxes': itemTaxes
+              .map((t) => {
+                    'id': t.id,
+                    'percentage': t.percentage,
+                    'amount': t.amount,
+                  })
+              .toList(),
           'is_weighted': isWeighted ? "S" : "N",
           'net_weight': isWeighted ? itemModel.product.netWeight : null,
           'weight': isWeighted ? weightKg ?? 0.0 : null,
@@ -295,7 +282,7 @@ class InvoicePayload {
 
       totalTax.add(TaxModel(
         id: vatPerceptionTaxModel.id,
-        percentage: null, 
+        percentage: null,
         amount: double.parse(job.vatPerception.toStringAsFixed(2)),
         provinceId: null,
       ));
@@ -321,22 +308,33 @@ class InvoicePayload {
       ));
     }
 
+    final methods = job.paymentMethods ??
+        (job.paymentMethod != null ? [job.paymentMethod!] : <PaymentMethod>[]);
+
     return InvoicePayload(
       ticketId: job.ticketId,
       timestamp: job.timestamp.toIso8601String(),
       cashier: job.cashierId,
       client: serializeClient(job.client),
-      paymentMethods: job.paymentMethod != null
-          ? [
-              PaymentMethodInput(
-                id: job.paymentMethod!.id,
-                amount: job.total,
-                details: PaymentDetails.empty(),
-              ),
-            ]
-          : [],
+      paymentMethods: methods.map((pm) {
+        return PaymentMethodRequestModel(
+          id: pm.id,
+          amount: pm.amount,
+          details: pm.details != null
+              ? PaymentMethodDetailRequest(
+                  accountOwner: pm.details!.accountOwner,
+                  bankId: pm.details!.bankId,
+                  checkNumber: pm.details!.checkNumber,
+                  transferId: pm.details!.transferId,
+                  verificationId: pm.details!.verificationId,
+                )
+              : null,
+        );
+      }).toList(),
+
       total: job.total,
       totalTax: totalTax,
+      // "items"
       logItems: logItems,
       branchNumber: job.branchNumber,
       branchId: job.branchId ?? 0,

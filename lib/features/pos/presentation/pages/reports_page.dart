@@ -239,9 +239,7 @@ class _ReportsPageState extends State<ReportsPage>
                 onSelected: (selected) {
                   if (selected) {
                     setState(() => _ticketFilter = 'all');
-                    context
-                        .read<ReportsBloc>()
-                        .add(const LoadAllReports());
+                    context.read<ReportsBloc>().add(const LoadAllReports());
                   }
                 },
                 selectedColor: AppColors.primary,
@@ -282,7 +280,8 @@ class _ReportsPageState extends State<ReportsPage>
                   if (selected) {
                     setState(() => _ticketFilter = 'credit_notes');
                     context.read<ReportsBloc>().add(
-                          const LoadAllReports(typeCode: TicketType.notaCredito),
+                          const LoadAllReports(
+                              typeCode: TicketType.notaCredito),
                         );
                   }
                 },
@@ -393,8 +392,8 @@ class _ReportsPageState extends State<ReportsPage>
 
             final ticket = tickets[index];
             final isCreditNote = TicketType.isNotaCredito(ticket.typeCode);
-            final isAnnulled = ticket.isAnnulled &&
-                TicketType.isFactura(ticket.typeCode);
+            final isAnnulled =
+                ticket.isAnnulled && TicketType.isFactura(ticket.typeCode);
 
             // card del ticket
             return GestureDetector(
@@ -482,12 +481,13 @@ class _ReportsPageState extends State<ReportsPage>
                             ? TextStyle(color: Colors.grey.shade900)
                             : null,
                       ),
-                      Text(
-                        'Pago: ${ticket.paymentMethod?.shortDescription.capitalize()}',
-                        style: isCreditNote
-                            ? TextStyle(color: Colors.grey.shade900)
-                            : null,
-                      ),
+                      if (ticket.paymentMethods != null)
+                        Text(
+                          'Pago: ${ticket.paymentMethods!.map((e) => e.description).join(', ')}',
+                          style: isCreditNote
+                              ? TextStyle(color: Colors.grey.shade900)
+                              : null,
+                        ),
                     ],
                   ),
                   trailing: Row(

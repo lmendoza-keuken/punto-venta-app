@@ -19,6 +19,7 @@ class ProcessSale extends CheckoutEvent {
   final double subtotal;
   final Client? client;
   final PaymentMethod? paymentMethod;
+  final List<PaymentMethod>? paymentMethods;
   final double? receivedAmount;
   final double? change;
 
@@ -30,6 +31,7 @@ class ProcessSale extends CheckoutEvent {
     required this.subtotal,
     this.client,
     this.paymentMethod,
+    this.paymentMethods,
     this.receivedAmount,
     this.change,
   });
@@ -43,6 +45,7 @@ class ProcessSale extends CheckoutEvent {
         subtotal,
         client,
         paymentMethod,
+        paymentMethods,
         receivedAmount,
         change,
       ];

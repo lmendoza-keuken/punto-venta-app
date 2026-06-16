@@ -188,11 +188,11 @@ class _PosMainPageState extends State<PosMainPage> {
                 ),
               ),
               // Panel de carrito
-              Expanded(
+              const Expanded(
                 flex: 1,
                 child: SizedBox(
                   width: 380,
-                  child: const CartPanel(),
+                  child: CartPanel(),
                 ),
               ),
             ],

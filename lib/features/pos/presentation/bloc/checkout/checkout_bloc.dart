@@ -60,6 +60,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
 
       // Validar número de sucursal
       final branchNumber = config?.branchNumber ?? '';
+
       // if (branchNumber == null || branchNumber.trim().isEmpty) {
       //   emit(const CheckoutError(
       //     message: 'Configure el número de sucursal antes de realizar cobros.',
@@ -89,14 +90,16 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
       final iibbPercentage = iibbResult['percentage'];
 
       // Calcular percepción de IVA
-      final vatPerceptionResult = VatPerceptionCalculator.calculateVatPerceptionWithBreakdown(
+      final vatPerceptionResult =
+          VatPerceptionCalculator.calculateVatPerceptionWithBreakdown(
         cartItems: event.items,
         branch: branch,
         vatCategory: vatCategory,
       );
 
       final vatPerceptionAmount = vatPerceptionResult['total'] ?? 0.0;
-      final vatPerceptionByRateDouble = vatPerceptionResult['byPerception'] as Map<double, double>?;
+      final vatPerceptionByRateDouble =
+          vatPerceptionResult['byPerception'] as Map<double, double>?;
       final vatPerceptionByRate = vatPerceptionByRateDouble?.map(
         (key, value) => MapEntry(key.toString(), value),
       );
@@ -109,7 +112,8 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
       final internalTaxAmount = internalTaxResult['total'] ?? 0.0;
       final internalTaxRate = internalTaxResult['rate'];
 
-      final totalWithIibb = event.total + iibbAmount + vatPerceptionAmount + internalTaxAmount;
+      final totalWithIibb =
+          event.total + iibbAmount + vatPerceptionAmount + internalTaxAmount;
 
       // Determinar template automáticamente
       TicketTemplateType templateType = TicketTemplateType.standard;
@@ -140,7 +144,8 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
       FiscalIssuerData? fiscalData;
       if (branch?.afipAvailable == true && config?.branchId != null) {
         try {
-          fiscalData = await fiscalIssuerDataRepository.getFiscalIssuerData(config!.branchId!);
+          fiscalData = await fiscalIssuerDataRepository
+              .getFiscalIssuerData(config!.branchId!);
         } catch (e) {
           print('Error al obtener datos fiscales: $e');
         }
@@ -162,6 +167,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         internalTax: internalTaxAmount,
         internalTaxRate: internalTaxRate,
         paymentMethod: event.paymentMethod,
+        paymentMethods: event.paymentMethods,
         cashierName: user?.name ?? 'Desconocido',
         cashierId: int.tryParse(user?.id ?? ''),
         timestamp: DateTime.now(),
@@ -178,6 +184,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
 
       // Enviar factura y obtener ticketId y description
       final invoiceResponse = await sendInvoiceUseCase(tempPrintJob);
+
       final ticketId = invoiceResponse['ticketId'] ?? '';
       final description = invoiceResponse['description'];
 
@@ -198,6 +205,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         internalTax: internalTaxAmount,
         internalTaxRate: internalTaxRate,
         paymentMethod: event.paymentMethod,
+        paymentMethods: event.paymentMethods,
         cashierName: user?.name ?? 'Desconocido',
         cashierId: int.tryParse(user?.id ?? ''),
         timestamp: tempPrintJob.timestamp,

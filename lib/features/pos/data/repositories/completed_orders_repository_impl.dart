@@ -113,9 +113,8 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
       final invoicePayloads = await remoteDataSource!
           .getAllTickets(skip: skip, limit: limit, typeCode: typeCode);
 
-      final orders = await Future.wait(
-        invoicePayloads.map((payload) => _convertInvoicePayloadToCompletedOrder(payload))
-      );
+      final orders = await Future.wait(invoicePayloads
+          .map((payload) => _convertInvoicePayloadToCompletedOrder(payload)));
 
       return orders;
     } catch (e) {
@@ -141,9 +140,8 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
           skip: skip,
           limit: limit,
           typeCode: typeCode);
-      final orders = await Future.wait(
-        invoicePayloads.map((payload) => _convertInvoicePayloadToCompletedOrder(payload))
-      );
+      final orders = await Future.wait(invoicePayloads
+          .map((payload) => _convertInvoicePayloadToCompletedOrder(payload)));
 
       return orders;
     } catch (e) {
@@ -168,27 +166,29 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
   }
 
   // Helper method to convert InvoicePayload to CompletedOrder
-  Future<CompletedOrder> _convertInvoicePayloadToCompletedOrder(InvoicePayload ticket) async {
+  Future<CompletedOrder> _convertInvoicePayloadToCompletedOrder(
+      InvoicePayload ticket) async {
     bool? branchAfipAvailable;
     bool? clientTaxDetails;
-    
+
     try {
       final branch = await branchLocalDataSource.getBranchById(ticket.branchId);
       branchAfipAvailable = branch?.afipAvailable;
     } catch (e) {
       print('Error obteniendo branch: $e');
     }
-    
+
     Client? client;
     if (ticket.client != null && ticket.client!['id'] != null) {
       try {
         final clientId = ticket.client!['id'].toString();
         client = await clientLocalDataSource.getClientById(clientId);
-        
+
         if (client != null && client.vatCategoryId != null) {
           try {
             final clientVatCategoryId = client.vatCategoryId!;
-            final vatCategories = await vatCategoryLocalDataSource.getCachedVatCategories();
+            final vatCategories =
+                await vatCategoryLocalDataSource.getCachedVatCategories();
             final vatCategory = vatCategories?.firstWhere(
               (cat) => cat.id == clientVatCategoryId,
               orElse: () => const VatCategoryModel(id: 0),
@@ -198,15 +198,15 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
             print('Error obteniendo vatCategory: $e');
           }
         }
-        
+
         client ??= Client(
-            id: ticket.client!['id'],
-            name: ticket.client!['name'] as String? ?? '',
-            document: ticket.client!['document'] as String?,
-            phone: ticket.client!['phone'] as String?,
-            email: ticket.client!['email'] as String?,
-            address: ticket.client!['address'] as String?,
-          );
+          id: ticket.client!['id'],
+          name: ticket.client!['name'] as String? ?? '',
+          document: ticket.client!['document'] as String?,
+          phone: ticket.client!['phone'] as String?,
+          email: ticket.client!['email'] as String?,
+          address: ticket.client!['address'] as String?,
+        );
       } catch (e) {
         print('Error obteniendo client: $e');
         try {
@@ -223,21 +223,23 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
         }
       }
     }
-    
+
     final templateType = TicketTemplateResolver.resolveTemplate(
       branchAfipAvailable: branchAfipAvailable,
     );
-    
+
     final hasClient = client != null;
-    if (templateType == TicketTemplateType.whiteMarket && hasClient && clientTaxDetails == null) {
+    if (templateType == TicketTemplateType.whiteMarket &&
+        hasClient &&
+        clientTaxDetails == null) {
       clientTaxDetails = true;
     }
-    
+
     final showPricesWithTax = TicketTemplateResolver.shouldShowPricesWithTax(
       templateType: templateType,
       clientTaxDetails: clientTaxDetails,
     );
-    
+
     final showSubtotalAndTax = TicketTemplateResolver.shouldShowSubtotalAndTax(
       templateType: templateType,
       clientTaxDetails: clientTaxDetails,
@@ -250,7 +252,7 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
       final productId = itemJson['productId'] as int;
       final productName = itemJson['productName'] as String;
       final quantity = itemJson['quantity'] as int;
-      final unitPriceNet = (itemJson['unitPrice'] as num).toDouble(); 
+      final unitPriceNet = (itemJson['unitPrice'] as num).toDouble();
       final isWeighted = itemJson['is_weighted'] == 'S';
       final weightKg =
           isWeighted ? (itemJson['weight'] as num?)?.toDouble() : null;
@@ -264,7 +266,7 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
         taxPercentage = (firstTax['percentage'] as num?)?.toDouble() ?? 0.0;
       }
 
-      final finalPrice = showPricesWithTax 
+      final finalPrice = showPricesWithTax
           ? unitPriceNet * (1 + taxPercentage / 100) // Black market: add VAT
           : unitPriceNet; // White market: net price
 
@@ -272,7 +274,7 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
       final productModel = ProductModel(
         id: productId,
         description: productName,
-        price: finalPrice, 
+        price: finalPrice,
         vat: taxPercentage,
         netWeight: netWeight,
         stock: 0,
@@ -316,7 +318,7 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
         taxPercentage = (firstTax['percentage'] as num?)?.toDouble() ?? 0.0;
       }
 
-      final finalPrice = showPricesWithTax 
+      final finalPrice = showPricesWithTax
           ? unitPriceNet * (1 + taxPercentage / 100)
           : unitPriceNet;
 
@@ -356,22 +358,23 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
     }).toList();
 
     final taxesFromBackend = await taxLocalDataSource.getCachedTaxes() ?? [];
-    
+
     final ivaTaxIds = <int>{};
     final iibbTaxIds = <int>{};
     final vatPerceptionTaxIds = <int>{};
     final internalTaxIds = <int>{};
-    
+
     for (var tax in taxesFromBackend) {
       final description = (tax.description ?? '').toLowerCase();
-      
+
       if (description.contains('iva') && !description.contains('percep')) {
         // IVA 0%, 10.5%, 21%, 27%
         ivaTaxIds.add(tax.id);
       } else if (description.contains('iibb')) {
         // Percep.IIBB
         iibbTaxIds.add(tax.id);
-      } else if (description.contains('percep') && description.contains('iva')) {
+      } else if (description.contains('percep') &&
+          description.contains('iva')) {
         // Percep.IVA
         vatPerceptionTaxIds.add(tax.id);
       } else if (description.contains('impint')) {
@@ -419,9 +422,57 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
     // Calculate total items
     final totalItems = items.fold(0, (sum, item) => sum + item.quantity);
 
-    final PaymentMethod? paymentMethod = ticket.paymentMethods.isNotEmpty
-        ? await _resolvePaymentMethod(ticket.paymentMethods.first.id)
-        : null;
+    List<PaymentMethod> paymentMethods = [];
+    try {
+      final allMethods = await paymentMethodRepository.fetchPaymentMethods();
+      paymentMethods = ticket.paymentMethods.map((reqPm) {
+        final matched = allMethods.firstWhere(
+          (m) => m.id == reqPm.id,
+          orElse: () => PaymentMethod(
+            id: reqPm.id ?? 0,
+            description: 'Método ${reqPm.id}',
+            shortDescription: 'MET-${reqPm.id}',
+            deleteAt: '',
+          ),
+        );
+        return matched.copyWith(
+          amount: reqPm.amount,
+          details: reqPm.details != null
+              ? PaymentMethodDetails(
+                  accountOwner: reqPm.details!.accountOwner,
+                  bankId: reqPm.details!.bankId,
+                  checkNumber: reqPm.details!.checkNumber,
+                  transferId: reqPm.details!.transferId,
+                  verificationId: reqPm.details!.verificationId,
+                )
+              : null,
+        );
+      }).toList();
+    } catch (e) {
+      print(
+          'Error resolving payment methods in completed orders repository: $e');
+      paymentMethods = ticket.paymentMethods.map((reqPm) {
+        return PaymentMethod(
+          id: reqPm.id ?? 0,
+          description: 'Método ${reqPm.id}',
+          shortDescription: 'MET-${reqPm.id}',
+          deleteAt: '',
+          amount: reqPm.amount,
+          details: reqPm.details != null
+              ? PaymentMethodDetails(
+                  accountOwner: reqPm.details!.accountOwner,
+                  bankId: reqPm.details!.bankId,
+                  checkNumber: reqPm.details!.checkNumber,
+                  transferId: reqPm.details!.transferId,
+                  verificationId: reqPm.details!.verificationId,
+                )
+              : null,
+        );
+      }).toList();
+    }
+
+    PaymentMethod? paymentMethod =
+        paymentMethods.isNotEmpty ? paymentMethods.first : null;
 
     // Generate order number from ticketId or timestamp
     final orderNumber = ticket.ticketId ??
@@ -440,7 +491,8 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
       cashierName: 'Cajero ${ticket.cashier ?? ""}',
       cashierId: ticket.cashier,
       paymentMethod: paymentMethod,
-      totalTax: ivaTax, 
+      paymentMethods: paymentMethods,
+      totalTax: ivaTax,
       totalItems: totalItems,
       showSubtotalAndTax: showSubtotalAndTax,
       showPricesWithTax: showPricesWithTax,

@@ -17,6 +17,7 @@ class CompletedOrder extends Equatable {
   final String cashierName;
   final int? cashierId;
   final PaymentMethod? paymentMethod;
+  final List<PaymentMethod>? paymentMethods;
   final double totalTax;
   final int totalItems;
   final bool showSubtotalAndTax;
@@ -50,6 +51,7 @@ class CompletedOrder extends Equatable {
     required this.cashierName,
     this.cashierId,
     required this.paymentMethod,
+    this.paymentMethods,
     required this.totalTax,
     required this.totalItems,
     this.showSubtotalAndTax = false,
@@ -84,6 +86,7 @@ class CompletedOrder extends Equatable {
     String? cashierName,
     int? cashierId,
     PaymentMethod? paymentMethod,
+    List<PaymentMethod>? paymentMethods,
     double? totalTax,
     int? totalItems,
     bool? showSubtotalAndTax,
@@ -117,6 +120,7 @@ class CompletedOrder extends Equatable {
       cashierName: cashierName ?? this.cashierName,
       cashierId: cashierId ?? this.cashierId,
       paymentMethod: paymentMethod ?? this.paymentMethod,
+      paymentMethods: paymentMethods ?? this.paymentMethods,
       totalTax: totalTax ?? this.totalTax,
       totalItems: totalItems ?? this.totalItems,
       showSubtotalAndTax: showSubtotalAndTax ?? this.showSubtotalAndTax,
@@ -153,6 +157,7 @@ class CompletedOrder extends Equatable {
         cashierName,
         cashierId,
         paymentMethod,
+        paymentMethods,
         totalTax,
         totalItems,
         showSubtotalAndTax,

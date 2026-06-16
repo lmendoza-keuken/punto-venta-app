@@ -87,6 +87,7 @@ class _SelectClientDialogState extends State<SelectClientDialog> {
       ],
       content: SizedBox(
         width: 500,
+        height: (MediaQuery.of(context).size.height * 0.6).clamp(300.0, 550.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -97,8 +98,7 @@ class _SelectClientDialogState extends State<SelectClientDialog> {
               if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content:
-                      Text('Cliente deseleccionado - Consumidor Final'),
+                  content: Text('Cliente deseleccionado - Consumidor Final'),
                   backgroundColor: AppColors.warning,
                   duration: Duration(seconds: 2),
                 ),
@@ -134,8 +134,7 @@ class _SelectClientDialogState extends State<SelectClientDialog> {
               },
             ),
             const SizedBox(height: AppDimensions.paddingS),
-            SizedBox(
-              height: SelectClientDialog._listHeight,
+            Expanded(
               child: BlocBuilder<ClientsBloc, ClientsState>(
                 buildWhen: (previous, current) {
                   if (previous.runtimeType != current.runtimeType) {
