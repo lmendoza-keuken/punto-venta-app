@@ -284,16 +284,37 @@ class _CurrentClientHeader extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     if (selectedClient != null) ...[
-                      Text(
-                        selectedClient.name,
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            selectedClient.name,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
+                          ),
+                          Text(
+                            "ID: ${selectedClient.id}",
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                        ],
                       ),
-                      if (selectedClient.document != null)
+                      if (selectedClient.document != null ||
+                          selectedClient.dni != null ||
+                          selectedClient.cuit != null)
                         Text(
-                          selectedClient.document!,
+                          selectedClient.document ??
+                              selectedClient.dni ??
+                              selectedClient.cuit ??
+                              '',
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                     ] else ...[
@@ -432,21 +453,219 @@ class _ClientListTile extends StatelessWidget {
     required this.onDelete,
   });
 
+  String get _initials {
+    if (client.name.trim().isEmpty) return 'CF';
+    final parts = client.name.trim().split(RegExp(r'\s+'));
+    if (parts.length > 1) {
+      final first = parts[0];
+      final second = parts[1];
+      if (first.isNotEmpty && second.isNotEmpty) {
+        return (first[0] + second[0]).toUpperCase();
+      }
+    }
+    return client.name.trim().isNotEmpty
+        ? client.name.trim()[0].toUpperCase()
+        : 'CF';
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: AppDimensions.paddingS),
-      color: isSelected ? AppColors.primary.withOpacity(0.08) : null,
-      child: ListTile(
-        title: Text(client.name),
-        subtitle: Text(
-          '${client.document ?? ''}${client.phone != null ? ' • ${client.phone}' : ''}',
+      decoration: BoxDecoration(
+        color: isSelected ? AppColors.primary.withOpacity(0.04) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isSelected ? AppColors.primary : Colors.grey.shade200,
+          width: isSelected ? 1.5 : 1.0,
         ),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete, color: AppColors.error),
-          onPressed: onDelete,
+        boxShadow: [
+          BoxShadow(
+            color: isSelected
+                ? AppColors.primary.withOpacity(0.06)
+                : Colors.black.withOpacity(0.02),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppDimensions.paddingM,
+                vertical: AppDimensions.paddingS + 4,
+              ),
+              child: Row(
+                children: [
+                  // Avatar con iniciales
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: isSelected
+                            ? [
+                                AppColors.primary,
+                                AppColors.primary.withOpacity(0.8)
+                              ]
+                            : [Colors.grey.shade300, Colors.grey.shade400],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        _initials,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppDimensions.paddingM),
+
+                  // Info del cliente
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          client.name,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight:
+                                isSelected ? FontWeight.bold : FontWeight.w600,
+                            color: isSelected
+                                ? AppColors.primary
+                                : Colors.grey.shade800,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+
+                        // Badges de información
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 4,
+                          children: [
+                            // Documento/CUIT/DNI
+                            if (client.document != null ||
+                                client.dni != null ||
+                                client.cuit != null)
+                              _buildBadge(
+                                icon: Icons.badge_outlined,
+                                label: client.document ??
+                                    client.dni ??
+                                    client.cuit ??
+                                    '',
+                                isSelectedState: isSelected,
+                              ),
+
+                            // Teléfono
+                            if (client.phone != null &&
+                                client.phone!.trim().isNotEmpty)
+                              _buildBadge(
+                                icon: Icons.phone_outlined,
+                                label: client.phone!,
+                                isSelectedState: isSelected,
+                              ),
+
+                            // ID del cliente
+                            _buildBadge(
+                              icon: Icons.tag,
+                              label: 'ID ${client.id}',
+                              isSelectedState: isSelected,
+                              isId: true,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Indicador de selección y eliminar
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isSelected) ...[
+                        const Icon(
+                          Icons.check_circle,
+                          color: AppColors.primary,
+                          size: 22,
+                        ),
+                        const SizedBox(width: 4),
+                      ],
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline, size: 22),
+                        color: AppColors.error.withOpacity(0.8),
+                        tooltip: 'Eliminar cliente',
+                        onPressed: onDelete,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
-        onTap: onTap,
+      ),
+    );
+  }
+
+  Widget _buildBadge({
+    required IconData icon,
+    required String label,
+    required bool isSelectedState,
+    bool isId = false,
+  }) {
+    final backgroundColor = isId
+        ? (isSelectedState
+            ? AppColors.primary.withOpacity(0.12)
+            : Colors.grey.shade100)
+        : (isSelectedState
+            ? AppColors.primary.withOpacity(0.08)
+            : Colors.blueGrey.shade50.withOpacity(0.6));
+    final textColor = isId
+        ? (isSelectedState ? AppColors.primary : Colors.grey.shade700)
+        : (isSelectedState ? AppColors.primary : Colors.blueGrey.shade800);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: isSelectedState
+              ? AppColors.primary.withOpacity(0.2)
+              : Colors.grey.shade200,
+          width: 0.5,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 12,
+            color: textColor.withOpacity(0.7),
+          ),
+          const SizedBox(width: 3),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: isId ? FontWeight.bold : FontWeight.w500,
+              color: textColor,
+            ),
+          ),
+        ],
       ),
     );
   }
