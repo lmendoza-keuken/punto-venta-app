@@ -71,6 +71,7 @@ import 'package:punto_venta_app/features/pos/domain/usecases/fetch_payment_metho
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_return_reasons_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_returns_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/generate_credit_note_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/process_partial_return_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_clients_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_taxes_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_vat_categories_usecase.dart';
@@ -238,6 +239,7 @@ Future<void> init() async {
         completeOrderUsecase: sl(),
         getTicketConfigUsecase: sl(),
         sendInvoiceUseCase: sl(),
+        processPartialReturnUseCase: sl(),
       ));
 
   // sl.registerFactory(() => PrinterBloc(printTicketUsecase: sl()));
@@ -265,6 +267,10 @@ Future<void> init() async {
   sl.registerLazySingleton(() => FetchReturnReasonsUsecase(sl()));
   sl.registerLazySingleton(() => FetchReturnsUsecase(sl()));
   sl.registerLazySingleton(() => GenerateCreditNoteUsecase(
+        returnsRepository: sl(),
+        completedOrdersRepository: sl(),
+      ));
+  sl.registerLazySingleton(() => ProcessPartialReturnUseCase(
         returnsRepository: sl(),
         completedOrdersRepository: sl(),
       ));

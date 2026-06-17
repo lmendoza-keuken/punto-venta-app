@@ -181,6 +181,7 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
       description: ticketToUse.description,
       templateType: templateType,
       isCopy: false,
+      isCreditNote: _isCreditNote,
     );
 
     if (mounted) {
@@ -416,27 +417,26 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                           ),
                         if (canAnnul)
                           const SizedBox(width: AppDimensions.paddingS),
-                        if (!isCreditNote)
-                          ElevatedButton.icon(
-                            onPressed:
-                                isBusy ? null : () => _handlePrint(context),
-                            icon: isPrinting
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                          Colors.white),
-                                    ),
-                                  )
-                                : const Icon(
-                                    Icons.print,
-                                    color: Colors.white,
+                        ElevatedButton.icon(
+                          onPressed:
+                              isBusy ? null : () => _handlePrint(context),
+                          icon: isPrinting
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white),
                                   ),
-                            label: Text(
-                                isPrinting ? 'Imprimiendo...' : 'Imprimir'),
-                          ),
+                                )
+                              : const Icon(
+                                  Icons.print,
+                                  color: Colors.white,
+                                ),
+                          label:
+                              Text(isPrinting ? 'Imprimiendo...' : 'Imprimir'),
+                        ),
                       ],
                     );
                   },
@@ -497,6 +497,7 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
       description: _printJob!.description,
       templateType: _printJob!.templateType,
       isCopy: isCopy,
+      isCreditNote: _printJob!.isCreditNote,
     );
 
     // Disparar evento de impresión
@@ -600,9 +601,11 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                     if (_printJob!.fiscalIssuerData!.vatCondition != null)
                       Text(_printJob!.fiscalIssuerData!.vatCondition!),
                     const SizedBox(height: 8),
-                    const Text(
-                      'DOCUMENTO VALIDO COMO FACTURA',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                    Text(
+                      _isCreditNote
+                          ? 'NOTA DE CREDITO'
+                          : 'DOCUMENTO VALIDO COMO FACTURA',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                       textAlign: TextAlign.center,
                     ),
                   ] else ...[
@@ -614,7 +617,14 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                       ),
                     ),
                     const Text('Sistema de Punto de Venta'),
-                    const Text('comprobante no valido como factura'),
+                    Text(
+                      _isCreditNote
+                          ? 'NOTA DE CREDITO'
+                          : 'comprobante no valido como factura',
+                      style: _isCreditNote
+                          ? const TextStyle(fontWeight: FontWeight.bold)
+                          : null,
+                    ),
                   ],
                   const SizedBox(height: 16),
                   Container(
@@ -841,26 +851,28 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
             const SizedBox(height: 8),
 
             // Información adicional
-            if (widget.ticket.paymentMethods != null &&
-                widget.ticket.paymentMethods!.isNotEmpty) ...[
-              const Text(
-                'Métodos de pago:',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              ...widget.ticket.paymentMethods!.map((pm) => Padding(
-                    padding: const EdgeInsets.only(left: 8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('  - ${pm.description}:'),
-                        Text(pm.amount != null
-                            ? pm.amount!.formatToCurrency()
-                            : '-'),
-                      ],
-                    ),
-                  )),
-            ] else ...[
-              Text('Método de pago: $_paymentMethodName'),
+            if (!_isCreditNote) ...[
+              if (widget.ticket.paymentMethods != null &&
+                  widget.ticket.paymentMethods!.isNotEmpty) ...[
+                const Text(
+                  'Métodos de pago:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                ...widget.ticket.paymentMethods!.map((pm) => Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('  - ${pm.description}:'),
+                          Text(pm.amount != null
+                              ? pm.amount!.formatToCurrency()
+                              : '-'),
+                        ],
+                      ),
+                    )),
+              ] else ...[
+                Text('Método de pago: $_paymentMethodName'),
+              ],
             ],
             Text(
                 'Total de artículos: ${widget.ticket.items.fold(0, (previousValue, element) => previousValue + element.quantity)}'),

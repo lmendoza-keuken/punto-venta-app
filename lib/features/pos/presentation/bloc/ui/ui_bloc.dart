@@ -9,6 +9,7 @@ class UiBloc extends Bloc<UiEvent, UiState> {
     on<ToggleBarcodeSearch>(_onToggleBarcodeSearch);
     on<ResetQuantity>(_onResetQuantity);
     on<ResetUiState>(_onResetUiState);
+    on<ToggleReturnMode>(_onToggleReturnMode);
   }
 
   void _onSetQuantity(SetQuantity event, Emitter<UiState> emit) {
@@ -41,5 +42,12 @@ class UiBloc extends Bloc<UiEvent, UiState> {
 
   void _onResetUiState(ResetUiState event, Emitter<UiState> emit) {
     emit(const UiLoaded());
+  }
+
+  void _onToggleReturnMode(ToggleReturnMode event, Emitter<UiState> emit) {
+    if (state is UiLoaded) {
+      final currentState = state as UiLoaded;
+      emit(currentState.copyWith(isReturnMode: !currentState.isReturnMode));
+    }
   }
 }

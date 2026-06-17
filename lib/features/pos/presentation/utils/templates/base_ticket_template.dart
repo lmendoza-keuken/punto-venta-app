@@ -81,12 +81,20 @@ abstract class BaseTicketTemplate {
 
       // Documento válido como factura o COPIA
       commands.add(TicketCommand.bold(true));
-      if (printJob.isCopy) {
-        commands.add(TicketCommand.text("COPIA"));
-        commands.add(TicketCommand.feedLine());
-        commands.add(TicketCommand.text("NO VALIDA COMO FACTURA"));
+      if (printJob.isCreditNote) {
+        if (printJob.isCopy) {
+          commands.add(TicketCommand.text("COPIA"));
+          commands.add(TicketCommand.feedLine());
+        }
+        commands.add(TicketCommand.text("NOTA DE CREDITO"));
       } else {
-        commands.add(TicketCommand.text("DOCUMENTO VALIDO COMO FACTURA"));
+        if (printJob.isCopy) {
+          commands.add(TicketCommand.text("COPIA"));
+          commands.add(TicketCommand.feedLine());
+          commands.add(TicketCommand.text("NO VALIDA COMO FACTURA"));
+        } else {
+          commands.add(TicketCommand.text("DOCUMENTO VALIDO COMO FACTURA"));
+        }
       }
       commands.add(TicketCommand.bold(false));
       commands.add(TicketCommand.feedLine());
@@ -104,9 +112,13 @@ abstract class BaseTicketTemplate {
         commands.add(TicketCommand.text(buildSeparator('=')));
         commands.add(TicketCommand.feedLine());
         commands.add(TicketCommand.bold(true));
-        commands.add(TicketCommand.text("DOCUMENTO NO VALIDO"));
-        commands.add(TicketCommand.feedLine());
-        commands.add(TicketCommand.text("COMO FACTURA"));
+        if (printJob.isCreditNote) {
+          commands.add(TicketCommand.text("NOTA DE CREDITO"));
+        } else {
+          commands.add(TicketCommand.text("DOCUMENTO NO VALIDO"));
+          commands.add(TicketCommand.feedLine());
+          commands.add(TicketCommand.text("COMO FACTURA"));
+        }
         commands.add(TicketCommand.bold(false));
         commands.add(TicketCommand.feedLine());
         commands.add(TicketCommand.text(buildSeparator('=')));
@@ -114,7 +126,7 @@ abstract class BaseTicketTemplate {
         // Para factura sin datos fiscales detallados
         commands.add(TicketCommand.text("Sistema de Punto de Venta"));
         commands.add(TicketCommand.feedLine());
-        commands.add(TicketCommand.text("Ticket"));
+        commands.add(TicketCommand.text(printJob.isCreditNote ? "Nota de Credito" : "Ticket"));
         commands.add(TicketCommand.feedLine());
         commands.add(TicketCommand.feedLine());
         commands.add(TicketCommand.text(buildSeparator('_')));
@@ -340,19 +352,21 @@ abstract class BaseTicketTemplate {
       TicketCommand.feedLine(),
     ];
 
-    if (printJob.paymentMethods != null &&
-        printJob.paymentMethods!.isNotEmpty) {
-      commands.add(TicketCommand.text("Metodos de pago:"));
-      commands.add(TicketCommand.feedLine());
-      for (final pm in printJob.paymentMethods!) {
-        final amountStr = pm.amount!.formatToCurrency();
-        commands.add(TicketCommand.text("  - ${pm.description}: $amountStr"));
+    if (!printJob.isCreditNote) {
+      if (printJob.paymentMethods != null &&
+          printJob.paymentMethods!.isNotEmpty) {
+        commands.add(TicketCommand.text("Metodos de pago:"));
+        commands.add(TicketCommand.feedLine());
+        for (final pm in printJob.paymentMethods!) {
+          final amountStr = pm.amount!.formatToCurrency();
+          commands.add(TicketCommand.text("  - ${pm.description}: $amountStr"));
+          commands.add(TicketCommand.feedLine());
+        }
+      } else {
+        commands.add(TicketCommand.text(
+            "Metodo de pago: ${printJob.paymentMethod?.description ?? 'Efectivo'}"));
         commands.add(TicketCommand.feedLine());
       }
-    } else {
-      commands.add(TicketCommand.text(
-          "Metodo de pago: ${printJob.paymentMethod?.description ?? 'Efectivo'}"));
-      commands.add(TicketCommand.feedLine());
     }
 
     commands.addAll([

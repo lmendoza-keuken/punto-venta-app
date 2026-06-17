@@ -38,6 +38,7 @@ class PrintJob {
   final String? description;
   final TicketTemplateType templateType;
   final bool isCopy;
+  final bool isCreditNote;
 
   const PrintJob({
     required this.items,
@@ -70,5 +71,6 @@ class PrintJob {
     this.description,
     this.templateType = TicketTemplateType.standard,
     this.isCopy = false,
+    this.isCreditNote = false,
   });
 }

@@ -23,3 +23,5 @@ class ToggleBarcodeSearch extends UiEvent {}
 class ResetQuantity extends UiEvent {}
 
 class ResetUiState extends UiEvent {}
+
+class ToggleReturnMode extends UiEvent {}

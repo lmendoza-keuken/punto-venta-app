@@ -9,6 +9,7 @@ class CartSummary extends StatelessWidget {
   final double subtotal;
   final double totalIva;
   final double totalConIva;
+  final bool isReturnMode;
   final VoidCallback onClear;
   final VoidCallback onConfirm;
 
@@ -17,6 +18,7 @@ class CartSummary extends StatelessWidget {
     required this.subtotal,
     required this.totalIva,
     required this.totalConIva,
+    this.isReturnMode = false,
     required this.onClear,
     required this.onConfirm,
   });
@@ -75,9 +77,9 @@ class CartSummary extends StatelessWidget {
           CustomButton(
             height: 30,
             width: double.infinity,
-            text: AppStrings.confirm,
+            text: isReturnMode ? 'Devolución' : AppStrings.confirm,
             onPressed: onConfirm,
-            backgroundColor: AppColors.green,
+            backgroundColor: isReturnMode ? AppColors.warning : AppColors.green,
           ),
         ],
       ),

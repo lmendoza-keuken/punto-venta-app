@@ -171,6 +171,7 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
     bool? branchAfipAvailable;
     bool? clientTaxDetails;
 
+    // Obtener información de la sucursal
     try {
       final branch = await branchLocalDataSource.getBranchById(ticket.branchId);
       branchAfipAvailable = branch?.afipAvailable;
@@ -178,6 +179,7 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
       print('Error obteniendo branch: $e');
     }
 
+    // Obtener información del cliente
     Client? client;
     if (ticket.client != null && ticket.client!['id'] != null) {
       try {
@@ -224,10 +226,12 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
       }
     }
 
+    // Obtener tipo de template
     final templateType = TicketTemplateResolver.resolveTemplate(
       branchAfipAvailable: branchAfipAvailable,
     );
 
+    // Validar si el template es whiteMarket y no tiene detalles fiscales
     final hasClient = client != null;
     if (templateType == TicketTemplateType.whiteMarket &&
         hasClient &&
@@ -235,11 +239,13 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
       clientTaxDetails = true;
     }
 
+    // Determinar si el template muestra precios con impuestos
     final showPricesWithTax = TicketTemplateResolver.shouldShowPricesWithTax(
       templateType: templateType,
       clientTaxDetails: clientTaxDetails,
     );
 
+    // Determinar si el template muestra subtotal e impuestos
     final showSubtotalAndTax = TicketTemplateResolver.shouldShowSubtotalAndTax(
       templateType: templateType,
       clientTaxDetails: clientTaxDetails,
@@ -266,9 +272,8 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
         taxPercentage = (firstTax['percentage'] as num?)?.toDouble() ?? 0.0;
       }
 
-      final finalPrice = showPricesWithTax
-          ? unitPriceNet * (1 + taxPercentage / 100) // Black market: add VAT
-          : unitPriceNet; // White market: net price
+      // Precio Neto
+      final finalPrice = unitPriceNet;
 
       // Create product using ProductModel and convert to entity
       final productModel = ProductModel(
@@ -318,9 +323,8 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
         taxPercentage = (firstTax['percentage'] as num?)?.toDouble() ?? 0.0;
       }
 
-      final finalPrice = showPricesWithTax
-          ? unitPriceNet * (1 + taxPercentage / 100)
-          : unitPriceNet;
+      // Precio neto
+      final finalPrice = unitPriceNet;
 
       final productModel = ProductModel(
         id: productId,

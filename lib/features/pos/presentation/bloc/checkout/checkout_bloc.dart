@@ -18,6 +18,8 @@ import 'package:punto_venta_app/features/pos/presentation/utils/internal_tax_cal
 import 'package:punto_venta_app/features/pos/presentation/utils/ticket_template_resolver.dart';
 import 'checkout_event.dart';
 import 'checkout_state.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/process_partial_return_usecase.dart';
+import 'package:punto_venta_app/features/pos/data/models/partial_return_request_model.dart';
 
 class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
   final AuthLocalDataSource authLocalDataSource;
@@ -29,6 +31,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
   final CompleteOrderUsecase completeOrderUsecase;
   final GetTicketConfigUsecase getTicketConfigUsecase;
   final SendInvoiceUseCase sendInvoiceUseCase;
+  final ProcessPartialReturnUseCase processPartialReturnUseCase;
 
   CheckoutBloc({
     required this.authLocalDataSource,
@@ -40,9 +43,11 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
     required this.completeOrderUsecase,
     required this.getTicketConfigUsecase,
     required this.sendInvoiceUseCase,
+    required this.processPartialReturnUseCase,
   }) : super(const CheckoutInitial()) {
     on<ProcessSale>(_onProcessSale);
     on<ResetCheckout>(_onResetCheckout);
+    on<ConfirmReturn>(_onConfirmReturn);
   }
 
   Future<void> _onProcessSale(
@@ -255,5 +260,102 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
       message = message.replaceFirst('Exception: ', '');
     }
     return message;
+  }
+
+  Future<void> _onConfirmReturn(
+    ConfirmReturn event,
+    Emitter<CheckoutState> emit,
+  ) async {
+    emit(const CheckoutProcessing());
+
+    try {
+      final config = await pdvLocalDataSource.getPdvConfig();
+      final branchId = config?.branchId;
+      final deliveryLocationId = config?.pdvId;
+
+      if (branchId == null || deliveryLocationId == null) {
+        emit(const CheckoutError(
+          message:
+              'Configure la sucursal y la ubicación antes de hacer devoluciones.',
+        ));
+        return;
+      }
+
+      final returnItems = event.items.map((item) {
+        final double qty = (item.isWeighted == true)
+            ? (item.weightKg ?? 0.0)
+            : item.quantity.toDouble();
+        return PartialReturnItemModel(
+          articleId: item.product.id,
+          quantity: qty,
+        );
+      }).toList();
+
+      final request = PartialReturnRequestModel(
+        reasonId: event.reasonId,
+        branchId: branchId,
+        deliveryLocationId: deliveryLocationId,
+        items: returnItems,
+      );
+
+      final completedOrder = await processPartialReturnUseCase(request);
+
+      if (completedOrder == null) {
+        emit(const CheckoutError(
+            message: 'Error al procesar la devolución. Intente nuevamente.'));
+        return;
+      }
+
+      // Convertir completedOrder en un PrintJob
+      final user = await authLocalDataSource.getCachedUser();
+      final enterprise = await authLocalDataSource.getCachedEnterprise();
+
+      FiscalIssuerData? fiscalData;
+      if (completedOrder.branchId != null) {
+        try {
+          fiscalData = await fiscalIssuerDataRepository
+              .getFiscalIssuerData(completedOrder.branchId!);
+        } catch (e) {
+          print('Error al obtener datos fiscales para devolución: $e');
+        }
+      }
+
+      final printJob = PrintJob(
+        ticketId: completedOrder.id,
+        items: completedOrder.items,
+        logItems: completedOrder.logs,
+        total: completedOrder.total,
+        clientName: completedOrder.clientName,
+        client: completedOrder.client,
+        priceListId: completedOrder.priceListId,
+        totalTax: completedOrder.totalTax,
+        iibbTax: completedOrder.iibbTax,
+        iibbTaxPercentage: completedOrder.iibbTaxPercentage,
+        vatPerception: completedOrder.vatPerception,
+        vatPerceptionByRate: completedOrder.vatPerceptionByRate,
+        internalTax: completedOrder.internalTax,
+        internalTaxRate: completedOrder.internalTaxRate,
+        paymentMethod: completedOrder.paymentMethod,
+        paymentMethods: completedOrder.paymentMethods,
+        cashierName: completedOrder.cashierName ?? user?.name ?? 'Desconocido',
+        cashierId: completedOrder.cashierId ?? int.tryParse(user?.id ?? ''),
+        timestamp: completedOrder.completedAt,
+        enterprise: enterprise,
+        fiscalIssuerData: fiscalData,
+        showSubtotalAndTax: completedOrder.showSubtotalAndTax,
+        showPricesWithTax: completedOrder.showPricesWithTax,
+        receivedAmount: completedOrder.receivedAmount,
+        change: completedOrder.change,
+        branchNumber: completedOrder.branchNumber ?? '',
+        branchId: completedOrder.branchId,
+        description: completedOrder.description,
+        templateType: completedOrder.templateType,
+        isCreditNote: true,
+      );
+
+      emit(CheckoutSuccess(printJob: printJob));
+    } catch (e) {
+      emit(CheckoutError(message: _extractErrorMessage(e)));
+    }
   }
 }

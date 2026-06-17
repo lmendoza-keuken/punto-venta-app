@@ -54,3 +54,18 @@ class ProcessSale extends CheckoutEvent {
 class ResetCheckout extends CheckoutEvent {
   const ResetCheckout();
 }
+
+class ConfirmReturn extends CheckoutEvent {
+  final int reasonId;
+  final List<CartItem> items;
+  final List<CartLogEntry> logItems;
+
+  const ConfirmReturn({
+    required this.reasonId,
+    required this.items,
+    required this.logItems,
+  });
+
+  @override
+  List<Object?> get props => [reasonId, items, logItems];
+}

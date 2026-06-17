@@ -5,6 +5,7 @@ import 'package:punto_venta_app/features/pos/data/models/invoice_payload_model.d
 import 'package:punto_venta_app/features/pos/data/models/return_reason_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/sale_return_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/total_return_create_model.dart';
+import 'package:punto_venta_app/features/pos/data/models/partial_return_request_model.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 part 'returns_remote_datasource.g.dart';
@@ -21,12 +22,16 @@ abstract class ReturnsService {
 
   @POST('/returns/total')
   Future<dynamic> processTotalReturn(@Body() Map<String, dynamic> body);
+
+  @POST('/returns/partial')
+  Future<dynamic> processPartialReturn(@Body() Map<String, dynamic> body);
 }
 
 abstract class ReturnsRemoteDataSource {
   Future<List<ReturnReasonModel>> getReturnReasons();
   Future<List<SaleReturnModel>> getReturns({String? date});
   Future<InvoicePayload> processTotalReturn(int saleId, int reasonId);
+  Future<InvoicePayload> processPartialReturn(PartialReturnRequestModel request);
 }
 
 class ReturnsRemoteDataSourceImpl implements ReturnsRemoteDataSource {
@@ -67,6 +72,19 @@ class ReturnsRemoteDataSourceImpl implements ReturnsRemoteDataSource {
     } catch (e) {
       throw Exception(ErrorHandler.handleError(e,
           defaultMessage: 'Error al procesar devolución total'));
+    }
+  }
+
+  @override
+  Future<InvoicePayload> processPartialReturn(PartialReturnRequestModel request) async {
+    try {
+      final body = request.toJson();
+      final Map<String, dynamic> data =
+          await _apiService.processPartialReturn(body);
+      return InvoicePayload.fromJson(data);
+    } catch (e) {
+      throw Exception(ErrorHandler.handleError(e,
+          defaultMessage: 'Error al procesar devolución parcial'));
     }
   }
 }

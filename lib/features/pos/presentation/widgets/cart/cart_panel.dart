@@ -62,6 +62,9 @@ class _CartPanelState extends State<CartPanel> {
                         final isBarcodeMode = uiState is UiLoaded
                             ? uiState.isBarcodeSearchEnabled
                             : true;
+                        final isReturnMode = uiState is UiLoaded
+                            ? uiState.isReturnMode
+                            : false;
 
                         return BlocConsumer<CartBloc, CartState>(
                           listener: (context, state) {
@@ -149,6 +152,7 @@ class _CartPanelState extends State<CartPanel> {
                                     subtotal: subtotal,
                                     totalIva: totalIva,
                                     totalConIva: totalConIva,
+                                    isReturnMode: isReturnMode,
                                     onClear: () {
                                       context.read<CartBloc>().add(ClearCart());
                                     },
