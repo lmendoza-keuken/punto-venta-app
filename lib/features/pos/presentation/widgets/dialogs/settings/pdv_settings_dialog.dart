@@ -120,7 +120,8 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
     return clients.where((client) {
       return client.name.toLowerCase().contains(_clientSearchQuery) ||
           client.id.toString().contains(_clientSearchQuery) ||
-          (client.document?.toLowerCase().contains(_clientSearchQuery) ?? false);
+          (client.document?.toLowerCase().contains(_clientSearchQuery) ??
+              false);
     }).toList();
   }
 
@@ -368,7 +369,8 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                                       Border.all(color: Colors.grey.shade300),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                height: _PdvSettingsDialogContent.clientListHeight,
+                                height:
+                                    _PdvSettingsDialogContent.clientListHeight,
                                 child: _buildClientList(),
                               ),
                               const SizedBox(height: 8),
@@ -459,30 +461,12 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                           items: _branches.map((branch) {
                             return DropdownMenuItem<Branch>(
                               value: branch,
-                              child: Text(branch.name),
+                              child: Text('${branch.name} - Id: ${branch.id}'),
                             );
                           }).toList(),
                           onChanged: _onBranchSelected,
                           validator: (v) {
                             if (v == null) {
-                              return 'Selecciona una sucursal';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: AppDimensions.paddingM),
-                        TextFormField(
-                          controller: branchIdController,
-                          readOnly: true,
-                          decoration: const InputDecoration(
-                            labelText: 'ID de Sucursal',
-                            prefixIcon: Icon(Icons.location_on),
-                            border: OutlineInputBorder(),
-                            filled: true,
-                            fillColor: Color(0xFFF5F5F5),
-                          ),
-                          validator: (v) {
-                            if (v == null || v.isEmpty) {
                               return 'Selecciona una sucursal';
                             }
                             return null;
@@ -562,8 +546,7 @@ class _PdvClientListTile extends StatelessWidget {
       selected: isSelected,
       selectedTileColor: AppColors.primary.withValues(alpha: 0.1),
       leading: CircleAvatar(
-        backgroundColor:
-            isSelected ? AppColors.primary : Colors.grey.shade300,
+        backgroundColor: isSelected ? AppColors.primary : Colors.grey.shade300,
         child: Icon(
           Icons.person,
           color: isSelected ? Colors.white : Colors.grey.shade600,

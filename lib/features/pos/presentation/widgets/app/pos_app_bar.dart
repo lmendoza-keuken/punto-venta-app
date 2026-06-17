@@ -14,125 +14,84 @@ class PosAppBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.paddingM,
-        vertical: AppDimensions.paddingS,
-      ),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: Colors.grey.shade200,
-            width: 1,
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDimensions.paddingM,
+          vertical: AppDimensions.paddingS,
+        ),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: Colors.grey.shade200,
+              width: 1,
+            ),
           ),
         ),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return Row(
-            children: [
-              // Column(
-              //   crossAxisAlignment: CrossAxisAlignment.start,
-              //   mainAxisSize: MainAxisSize.min,
-              //   children: const [
-              //     Text(
-              //       AppStrings.keukenName,
-              //       style: TextStyle(
-              //         fontSize: 16,
-              //         fontWeight: FontWeight.bold,
-              //       ),
-              //     ),
-              //     Text(
-              //       AppStrings.keukenDesc,
-              //       style: TextStyle(
-              //         color: AppColors.textSecondary,
-              //         fontSize: 10,
-              //       ),
-              //     ),
-              //   ],
-              // ),
-              Text(
-                'Cajero: ${user?.name ?? "Desconocido"}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return Row(
+              children: [
+                Text(
+                  'Cajero: ${user?.name ?? "Desconocido"}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
                 ),
-              ),
-              const SizedBox(width: AppDimensions.paddingS),
-              const Text('|', style: TextStyle(fontSize: 14)),
-              const SizedBox(width: AppDimensions.paddingS),
-              Text(
-                'ID: ${user?.id ?? "N/A"}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
+                const SizedBox(width: AppDimensions.paddingS),
+                const Text('|', style: TextStyle(fontSize: 14)),
+                const SizedBox(width: AppDimensions.paddingS),
+                Text(
+                  'ID: ${user?.id ?? "N/A"}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
                 ),
-              ),
-              const SizedBox(width: AppDimensions.paddingM),
-              BlocBuilder<ProductBloc, ProductState>(
-                builder: (context, state) {
-                  if (state is ProductLoaded) {
-                    return Text(
-                      '# Lista: ${state.currentPriceList}',
-                      style: const TextStyle(fontSize: 14),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
-              ),
-              const SizedBox(width: AppDimensions.paddingM),
-              DynamicDateTime(
-                style: TextStyle(
-                  fontSize: constraints.maxWidth > 600 ? 14 : 12,
+                const SizedBox(width: AppDimensions.paddingM),
+                BlocBuilder<ProductBloc, ProductState>(
+                  builder: (context, state) {
+                    if (state is ProductLoaded) {
+                      return Text(
+                        '# Lista: ${state.currentPriceList}',
+                        style: const TextStyle(fontSize: 14),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
                 ),
-              ),
-              // const SizedBox(width: AppDimensions.paddingM),
-              if (user != null)
-                Padding(
-                  padding: const EdgeInsets.only(left: 8.0),
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      user!.roleCode,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
+                const SizedBox(width: AppDimensions.paddingM),
+                DynamicDateTime(
+                  style: TextStyle(
+                    fontSize: constraints.maxWidth > 600 ? 14 : 12,
+                  ),
+                ),
+                // const SizedBox(width: AppDimensions.paddingM),
+                if (user != null)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8.0),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        user!.roleCode,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
                   ),
-                ),
-
-              // if (user != null && user!.tipo == 'ADMIN')
-              //   IconButton(
-              //     iconSize: 18,
-              //     icon: const Icon(Icons.settings),
-              //     onPressed: () async {
-              //       await showDialog(
-              //         context: context,
-              //         builder: (context) => BlocProvider.value(
-              //           value: context.read<ClientsBloc>(),
-              //           child: const SettingsDialog(),
-              //         ),
-              //       );
-              //     },
-              //   ),
-
-              // ICONO DE LOGOUT
-              // IconButton(
-              //   iconSize: 18,
-              //   icon: const Icon(Icons.logout),
-              //   onPressed: () {
-              //     showLogoutDialog(context);
-              //   },
-              // ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
     );
   }

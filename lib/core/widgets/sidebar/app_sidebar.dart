@@ -122,9 +122,11 @@ class _AppSidebarState extends State<AppSidebar> {
                     sidebarSurface: sidebarSurface,
                     child: SidebarItem(
                       icon: Icons.label_outlined,
-                      isHighlighted: widget.currentRoute == RoutePaths.productLabels,
+                      isHighlighted:
+                          widget.currentRoute == RoutePaths.productLabels,
                       tooltip: 'Etiquetas de Productos',
-                      onTap: () => _navigateTo(context, RoutePaths.productLabels),
+                      onTap: () =>
+                          _navigateTo(context, RoutePaths.productLabels),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -245,7 +247,8 @@ class _AppSidebarState extends State<AppSidebar> {
                         },
                   ),
                 ),
-              if(!widget.isAdmin)
+              // Configuración PDV (solo si NO es administrador)
+              if (!widget.isAdmin)
                 _buildNavItem(
                   context,
                   isSelected: _isSettingsDialogOpen,
@@ -256,7 +259,7 @@ class _AppSidebarState extends State<AppSidebar> {
                     isHighlighted: _isSettingsDialogOpen,
                     tooltip: 'Configuración',
                     onTap: widget.onSettingsPressed ??
-                            () async {
+                        () async {
                           setState(() => _isSettingsDialogOpen = true);
                           await showPdvSettingsDialog(context, widget.isAdmin);
                           setState(() => _isSettingsDialogOpen = false);
