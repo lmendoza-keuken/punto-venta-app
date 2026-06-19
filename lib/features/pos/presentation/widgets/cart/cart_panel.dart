@@ -75,7 +75,8 @@ class _CartPanelState extends State<CartPanel> {
                                 if (state is CartLoaded && !isBarcodeMode) {
                                   if (state.log.length != _lastLogLength) {
                                     _lastLogLength = state.log.length;
-                                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                                    WidgetsBinding.instance
+                                        .addPostFrameCallback((_) {
                                       if (_scrollController.hasClients) {
                                         _scrollController.scrollToBottom();
                                       }
@@ -88,19 +89,24 @@ class _CartPanelState extends State<CartPanel> {
                               builder: (context, state) {
                                 if (state is CartLoaded) {
                                   if (!isBarcodeMode && state.log.isNotEmpty) {
-                                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                                    WidgetsBinding.instance
+                                        .addPostFrameCallback((_) {
                                       if (_scrollController.hasClients) {
                                         _scrollController.scrollToBottom();
                                       }
                                     });
                                   }
-                                   final internalTaxResult = InternalTaxCalculator.calculateInternalTax(
-                                     items: state.items,
-                                   );
-                                   final internalTax = internalTaxResult['total'] ?? 0.0;
-                                   double subtotal = state.subtotal;
-                                   double totalIva = state.totalIva;
-                                   double totalConIva = subtotal + totalIva + internalTax;
+                                  final internalTaxResult =
+                                      InternalTaxCalculator
+                                          .calculateInternalTax(
+                                    items: state.items,
+                                  );
+                                  final internalTax =
+                                      internalTaxResult['total'] ?? 0.0;
+                                  double subtotal = state.subtotal;
+                                  double totalIva = state.totalIva;
+                                  double totalConIva =
+                                      subtotal + totalIva + internalTax;
 
                                   return Column(
                                     children: [
@@ -115,14 +121,16 @@ class _CartPanelState extends State<CartPanel> {
                                                     Icon(
                                                       Icons.barcode_reader,
                                                       size: 64,
-                                                      color: Colors.grey.shade400,
+                                                      color:
+                                                          Colors.grey.shade400,
                                                     ),
                                                     const SizedBox(height: 16),
                                                     Text(
                                                       'Modo escaneo de código de barras',
                                                       style: TextStyle(
                                                         fontSize: 16,
-                                                        color: Colors.grey.shade600,
+                                                        color: Colors
+                                                            .grey.shade600,
                                                       ),
                                                     ),
                                                     const SizedBox(height: 8),
@@ -130,7 +138,8 @@ class _CartPanelState extends State<CartPanel> {
                                                       'Ver historial en el área principal',
                                                       style: TextStyle(
                                                         fontSize: 14,
-                                                        color: Colors.grey.shade500,
+                                                        color: Colors
+                                                            .grey.shade500,
                                                       ),
                                                     ),
                                                   ],
@@ -144,7 +153,8 @@ class _CartPanelState extends State<CartPanel> {
                                                     : ListView.builder(
                                                         controller:
                                                             _scrollController,
-                                                        itemCount: state.log.length,
+                                                        itemCount:
+                                                            state.log.length,
                                                         itemBuilder:
                                                             (context, index) {
                                                           final entry =
@@ -156,13 +166,16 @@ class _CartPanelState extends State<CartPanel> {
                                               ),
                                       ),
                                       const Divider(height: 1),
+                                      // monto, botones de cartPanel ( confirmar venta o devolucion)
                                       CartSummary(
                                         subtotal: subtotal,
                                         totalIva: totalIva,
                                         totalConIva: totalConIva,
                                         isReturnMode: isReturnMode,
                                         onClear: () {
-                                          context.read<CartBloc>().add(ClearCart());
+                                          context
+                                              .read<CartBloc>()
+                                              .add(ClearCart());
                                         },
                                         onConfirm: () {
                                           if (state.items.isNotEmpty) {
@@ -171,6 +184,7 @@ class _CartPanelState extends State<CartPanel> {
                                                   .read<UiBloc>()
                                                   .add(ToggleBarcodeSearch());
                                             }
+                                            // abre el showconfirmation panel
                                             setState(() {
                                               _showConfirmation = true;
                                             });
@@ -190,7 +204,7 @@ class _CartPanelState extends State<CartPanel> {
                   ),
                 ),
 
-                // Panel de confirmación expandido
+                // Panel de confirmación expandido ( dependiendo de la var _showConfirmation)
                 AnimatedPositioned(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeInOut,
@@ -213,6 +227,7 @@ class _CartPanelState extends State<CartPanel> {
                       ],
                     ),
                     child: ConfirmationPanel(
+                      // desde el confirmation panel se pasa el onClose() (cierra el panel. deberia esperar un estado de ahi si cerrar y limpiar el (cartpanel. o el cliente default(en el pos) ) )
                       onClose: () {
                         setState(() {
                           _showConfirmation = false;

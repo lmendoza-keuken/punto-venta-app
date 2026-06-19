@@ -24,6 +24,7 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_event.dart'
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_state.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/cart/confirmation/payment_methods_detail_form.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/common/error_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/iibb_calculator.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/vat_perception_calculator.dart';
@@ -37,6 +38,7 @@ import 'package:punto_venta_app/features/pos/presentation/widgets/cart/confirmat
 import 'package:punto_venta_app/features/pos/presentation/widgets/cart/confirmation/checkout_confirmation_view.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/cart/confirmation/return_confirmation_view.dart';
 
+// componente de confirmation panel deberia tener solo que detecte si es en devolucion o en venta y dependiendo mostrar los subcomponentes.
 class ConfirmationPanel extends StatefulWidget {
   final VoidCallback onClose;
 
@@ -50,6 +52,7 @@ class ConfirmationPanel extends StatefulWidget {
 }
 
 class _ConfirmationPanelState extends State<ConfirmationPanel> {
+  // variables no deberian estar en el widget.
   double? _receivedAmount;
   double? _change;
   double _iibbAmount = 0.0;
@@ -112,6 +115,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
     });
   }
 
+  // funcion para sincronizar que controlador eliminar
   void _syncControllers() {
     while (_amountControllers.length > _selectedPayments.length) {
       _amountControllers.last.dispose();
@@ -171,8 +175,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
     }
   }
 
-  // Builders de filas de pago (pasados como callbacks al CheckoutView)
-
+  // Builders de filas de pago (pasados como callbacks al CheckoutView) ( deberia estar directamente dentro del otro componente)
   Widget _buildPaymentRow(
       int index, double totalAmount, List<PaymentMethod> allAvailableMethods) {
     _syncControllers();
@@ -180,6 +183,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
     final isCash = pm.description.toLowerCase().contains('efectivo') ||
         pm.shortDescription.toLowerCase().contains('efectivo');
 
+    // deberia ser un componente independiente.
     return Card(
       key: ValueKey(pm.id),
       margin: const EdgeInsets.only(bottom: 12),
@@ -302,27 +306,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
     );
   }
 
-  Widget _buildDetailsTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    required ValueChanged<String> onChanged,
-  }) {
-    return TextFormField(
-      controller: controller,
-      maxLength: 20,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, size: 18),
-        border: const OutlineInputBorder(),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        isDense: true,
-      ),
-      style: const TextStyle(fontSize: 13),
-      onChanged: onChanged,
-    );
-  }
-
+  // funcion para actualizar detalles del pago
   void _updatePaymentDetails(int index,
       PaymentMethodDetails Function(PaymentMethodDetails d) updateFn) {
     setState(() {
@@ -334,6 +318,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
     });
   }
 
+  // componente de formulario de detalles de metodo de pago
   Widget _buildDetailsForm(int index, PaymentMethod pm) {
     final desc = pm.description.toLowerCase();
     final shortDesc = pm.shortDescription.toLowerCase();
@@ -428,7 +413,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                 spacing: 8,
                 children: [
                   if (isCheck)
-                    _buildDetailsTextField(
+                    PaymentMethodsDetailForm(
                       controller: controllers.checkNumber,
                       label: 'Número de cheque',
                       icon: Icons.pin_outlined,
@@ -438,7 +423,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                       },
                     ),
                   if (isTransfer || isQR)
-                    _buildDetailsTextField(
+                    PaymentMethodsDetailForm(
                       controller: controllers.transferId,
                       label: 'ID de Transferencia/Operación',
                       icon: Icons.receipt_long_outlined,
@@ -448,7 +433,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                       },
                     ),
                   if (isCard || isQR)
-                    _buildDetailsTextField(
+                    PaymentMethodsDetailForm(
                       controller: controllers.verificationId,
                       label: isCard
                           ? 'Nro. de Lote/Cupón (Verificación)'
@@ -467,6 +452,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
     );
   }
 
+  // funcion para obtener icono dependiendo del metodo de pago ( description y shortDescription))
   IconData _getPaymentMethodIcon(String description, String shortDescription) {
     final desc = description.toLowerCase();
     final shortDesc = shortDescription.toLowerCase();
@@ -506,6 +492,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
     _loadReturnReasons();
   }
 
+  // funcion para inicializar los pagos seleccionados (se lee el bloc y se hace el array de los metodos de pago)
   void _initializeSelectedPayments() {
     if (_selectedPayments.isNotEmpty) return;
     final pmState = context.read<PaymentMethodsBloc>().state;
@@ -515,6 +502,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
     }
   }
 
+  // funcion para obtener los motivos de devolucion (deberia estar dentro del componente de las devoluciones)
   Future<void> _loadReturnReasons() async {
     setState(() {
       _isLoadingReasons = true;
@@ -537,6 +525,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
     }
   }
 
+  // funcion para confirmar la devolucion (llama el checkout bloc y le manda el confirm return)
   void _confirmReturn(BuildContext context, CartLoaded cartState) {
     if (_selectedReturnReasonId == null) return;
 
@@ -684,6 +673,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
   Widget build(BuildContext context) {
     return MultiBlocListener(
       listeners: [
+        // multi bloc listener para saber si cambia el estado de el cliente ( si cambia de cliente ) o el estado del Cart ( si se agrega un producto al carrito)
         BlocListener<ClientsBloc, ClientsState>(
           listener: (context, clientsState) {
             // Recalcular impuestos cuando cambia el cliente
@@ -696,10 +686,14 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
             _calculateTaxesForUI();
           },
         ),
+
+        // Listener de metodos de pago
         BlocListener<PaymentMethodsBloc, PaymentMethodsState>(
           listener: (context, pmState) {
             if (pmState is PaymentMethodsLoaded) {
               final selected = pmState.selectedPaymentMethod;
+
+              // si hay seleccionado un metodo de pago se actualiza el total en el metodo de pago
               if (selected != null) {
                 final cartState = context.read<CartBloc>().state;
                 if (cartState is CartLoaded) {
@@ -731,6 +725,8 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
             }
           },
         ),
+
+        // Listener de Checkout ( para saber si la venta fue procesada con exito )
         BlocListener<CheckoutBloc, CheckoutState>(
           listener: (context, checkoutState) async {
             // Cuando la venta se procesa exitosamente, imprimir ticket y limpiar estado
@@ -739,6 +735,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
               final isReturnMode =
                   uiState is UiLoaded ? uiState.isReturnMode : false;
 
+              // el llamado a imprimir desde ete componente esta bien
               if (!isReturnMode) {
                 final printerConfig =
                     await di.sl<PrinterLocalDataSource>().getPrinterConfig();
@@ -756,6 +753,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
               }
 
               // Limpiar el carrito y cerrar el panel de confirmación
+
               if (mounted) {
                 setState(() {
                   _receivedAmount = null;
@@ -764,14 +762,20 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                   _expandedPaymentDetails.clear();
                 });
 
+                // metodos deberian estar en el componente de cart panel ( esperando el cambio del estado de procesado. )
                 context.read<CartBloc>().add(ClearCart());
                 context.read<CheckoutBloc>().add(const ResetCheckout());
                 context.read<ClientsBloc>().add(ResetToDefaultClientEvent());
+
+                // si es devolucion vuelve a modo normal de venta
                 if (isReturnMode) {
                   context.read<UiBloc>().add(ToggleReturnMode());
                 }
+
+                // usa la funcion de Cart panel. para cerrar el panel de confirmacion
                 widget.onClose();
 
+                // muestra un snackbar con el mensaje de exito
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(isReturnMode
@@ -800,16 +804,22 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
           },
         ),
       ],
+
+      // builder de cart bloc ( para obtener el estado de totalAmount)
       child: BlocBuilder<CartBloc, CartState>(
         builder: (context, state) {
           if (state is! CartLoaded) {
             return const SizedBox.shrink();
           }
 
+          // mira el estado de UIBloc para saber si es modo devolucion (deberia ser del padre)
           final uiState = context.watch<UiBloc>().state;
           final isReturnMode =
               uiState is UiLoaded ? uiState.isReturnMode : false;
 
+          // se obtiene del estado del CartBloc el subtotal y el totalIva y se le suman
+          // los montos de Ingresos Brutos, Percepción de IVA e Impuestos Internos que
+          // estan calculados en este componente.
           final totalAmount = state.subtotal +
               state.totalIva +
               _iibbAmount +
@@ -817,6 +827,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
               _internalTaxAmount;
 
           return BlocBuilder<CheckoutBloc, CheckoutState>(
+            // builder de CheckoutBloc ( para saber si esta en proceso la venta)
             builder: (context, checkoutState) {
               final isProcessing = checkoutState is CheckoutProcessing;
 
@@ -863,28 +874,53 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                           // Vista de devolución
                           if (isReturnMode)
                             ReturnConfirmationView(
+                              // total amount
                               totalAmount: totalAmount,
+
+                              // bool de carga de razones
                               isLoadingReasons: _isLoadingReasons,
+
+                              // listado de razones
                               returnReasons: _returnReasons,
+
+                              // id de razon deleccionada
                               selectedReturnReasonId: _selectedReturnReasonId,
+
+                              // cuando cambia la razon seleccionada
                               onReturnReasonChanged: (id) =>
                                   setState(() => _selectedReturnReasonId = id),
                             )
+
                           // Vista de cobro
                           else
                             CheckoutConfirmationView(
+                              // totales
                               totalAmount: totalAmount,
+
+                              // pagos seleccionados
                               selectedPayments: _selectedPayments,
                               totalAllocated: _totalAllocated,
                               change: _change,
+
+                              // impuestos
                               iibbAmount: _iibbAmount,
                               vatPerceptionAmount: _vatPerceptionAmount,
                               internalTaxAmount: _internalTaxAmount,
+
+                              // totales del carrito
                               cartSubtotal: state.subtotal,
                               cartTotalIva: state.totalIva,
+
+                              // funciones que vienen desde el confirmation panel
                               buildPaymentRow: _buildPaymentRow,
+
+                              // se le pasa funcion de crear el formulario de metodo de pago ( deberia ir dentro del componente)
                               buildDetailsForm: _buildDetailsForm,
+
+                              // se le pasa la funcion de icono para metodo de pago  ( deberia ir dentro del componente )
                               getPaymentMethodIcon: _getPaymentMethodIcon,
+
+                              // cuando se agrega un metodo de pago. le agrega el monto y actualiza el total asignado
                               onMethodAdded: (pm, defaultAmount) {
                                 setState(() {
                                   _selectedPayments
@@ -892,6 +928,8 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                                   _updateChangeAndAmounts(totalAmount);
                                 });
                               },
+
+                              // cuando cambia el monto del efectivo.
                               onCashAmountChanged: (amount) {
                                 setState(() {
                                   _receivedAmount = amount;
@@ -909,12 +947,15 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                                   }
                                 });
                               },
+
+                              // cuando cambia el vuelto.
                               onChangeCalculated: (change) {
                                 setState(() {
                                   _change = change;
                                 });
                               },
                             ),
+                          // contenido de procesando con circular progress
                           if (isProcessing) ...[
                             const SizedBox(height: 24),
                             Container(

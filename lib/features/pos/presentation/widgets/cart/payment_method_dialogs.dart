@@ -7,7 +7,8 @@ void showPaymentMethodsSelectorDialog({
   required BuildContext context,
   required List<PaymentMethod> paymentMethods,
   required PaymentMethod? selectedPaymentMethod,
-  required IconData Function(String description, String shortDescription) getPaymentMethodIcon,
+  required IconData Function(String description, String shortDescription)
+      getPaymentMethodIcon,
   required Function(PaymentMethod pm) onSelected,
 }) {
   showDialog(
@@ -28,7 +29,8 @@ void showPaymentMethodsSelectorDialog({
               mainAxisSize: MainAxisSize.min,
               children: paymentMethods.map((pm) {
                 final isSelected = selectedPaymentMethod?.id == pm.id;
-                final icon = getPaymentMethodIcon(pm.description, pm.shortDescription);
+                final icon =
+                    getPaymentMethodIcon(pm.description, pm.shortDescription);
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 8.0),
@@ -64,7 +66,8 @@ void showPaymentMethodsSelectorDialog({
                             ),
                             child: Icon(
                               icon,
-                              color: isSelected ? AppColors.primary : Colors.grey,
+                              color:
+                                  isSelected ? AppColors.primary : Colors.grey,
                               size: 20,
                             ),
                           ),
@@ -73,48 +76,48 @@ void showPaymentMethodsSelectorDialog({
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                  Text(
-                                    pm.description,
-                                    style: TextStyle(
-                                      fontWeight: isSelected
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
-                                      fontSize: 15,
-                                    ),
+                                Text(
+                                  pm.description,
+                                  style: TextStyle(
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                    fontSize: 15,
                                   ),
-                                  Text(
-                                    pm.shortDescription,
-                                    style: const TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 12,
-                                    ),
+                                ),
+                                Text(
+                                  pm.shortDescription,
+                                  style: const TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 12,
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                            if (isSelected)
-                              const Icon(
-                                Icons.check_circle,
-                                color: AppColors.primary,
-                              ),
-                          ],
-                        ),
+                          ),
+                          if (isSelected)
+                            const Icon(
+                              Icons.check_circle,
+                              color: AppColors.primary,
+                            ),
+                        ],
                       ),
                     ),
-                  );
-                }).toList(),
-              ),
+                  ),
+                );
+              }).toList(),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cerrar'),
-            ),
-          ],
-        );
-      },
-    );
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cerrar'),
+          ),
+        ],
+      );
+    },
+  );
 }
 
 /// Diálogo para agregar un nuevo método de pago (Flujo dividido)
@@ -124,11 +127,13 @@ void showAddPaymentMethodDialog({
   required List<PaymentMethod> selectedPayments,
   required double totalAmount,
   required double totalAllocated,
-  required IconData Function(String description, String shortDescription) getPaymentMethodIcon,
+  required IconData Function(String description, String shortDescription)
+      getPaymentMethodIcon,
   required Function(PaymentMethod pm, double defaultAmount) onMethodAdded,
 }) {
   final selectedIds = selectedPayments.map((pm) => pm.id).toSet();
-  final available = allMethods.where((pm) => !selectedIds.contains(pm.id)).toList();
+  final available =
+      allMethods.where((pm) => !selectedIds.contains(pm.id)).toList();
 
   if (available.isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -155,15 +160,19 @@ void showAddPaymentMethodDialog({
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: available.map((pm) {
-                final icon = getPaymentMethodIcon(pm.description, pm.shortDescription);
+                final icon =
+                    getPaymentMethodIcon(pm.description, pm.shortDescription);
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 8.0),
                   child: InkWell(
                     onTap: () {
+                      // se pasa el restante al nuevo metodo de pago y se cierra el dialog.
                       final remaining = totalAmount - totalAllocated;
                       final defaultAmount = remaining > 0 ? remaining : 0.0;
+
                       onMethodAdded(pm, defaultAmount);
+
                       Navigator.of(dialogContext).pop();
                     },
                     borderRadius: BorderRadius.circular(12),

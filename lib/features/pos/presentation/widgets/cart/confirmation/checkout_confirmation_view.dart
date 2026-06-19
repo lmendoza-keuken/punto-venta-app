@@ -8,6 +8,7 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/p
 import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/payment_methods_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/payment_methods_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/cart/cash_payment_widget.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/cart/confirmation/add_payment_method_button.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/cart/payment_method_dialogs.dart';
 
 class CheckoutConfirmationView extends StatelessWidget {
@@ -31,6 +32,7 @@ class CheckoutConfirmationView extends StatelessWidget {
     List<PaymentMethod> allMethods,
   ) buildPaymentRow;
 
+  // funcion que construye el formulario de detalles de cada metodo de pago
   final Widget Function(int index, PaymentMethod pm) buildDetailsForm;
 
   final IconData Function(String description, String shortDescription)
@@ -62,6 +64,7 @@ class CheckoutConfirmationView extends StatelessWidget {
     required this.onChangeCalculated,
   });
 
+  // widget que construye los pagos multiples del param de selectedPayments
   Widget _buildMultiplePayments(
     BuildContext context,
     List<PaymentMethod> paymentMethods,
@@ -74,11 +77,23 @@ class CheckoutConfirmationView extends StatelessWidget {
           (index) => buildPaymentRow(index, totalAmount, paymentMethods),
         ),
         const SizedBox(height: 12),
+        // boton de agregar metodo de pago
         Align(
           alignment: Alignment.centerRight,
-          child: _addMethodButton(context, paymentMethods),
+          child: AddPaymentMethodButton(
+            onPressed: () => showAddPaymentMethodDialog(
+              context: context,
+              allMethods: paymentMethods,
+              selectedPayments: selectedPayments,
+              totalAmount: totalAmount,
+              totalAllocated: totalAllocated,
+              getPaymentMethodIcon: getPaymentMethodIcon,
+              onMethodAdded: onMethodAdded,
+            ),
+          ),
         ),
         const SizedBox(height: 16),
+
         _allocationSummary(),
         if (double.parse(totalAllocated.toStringAsFixed(2)) !=
             double.parse(totalAmount.toStringAsFixed(2))) ...[
@@ -89,6 +104,7 @@ class CheckoutConfirmationView extends StatelessWidget {
     );
   }
 
+  // widget de Build cuando es solo un metodo de pago, abre el dialogo para seleccionar y
   Widget _buildSinglePayment(
     BuildContext context,
     PaymentMethod? selected,
@@ -166,10 +182,12 @@ class CheckoutConfirmationView extends StatelessWidget {
             ),
           ),
         ),
+        // si hay pagos seleccionados , se muestra el formulario de detalles
         if (selectedPayments.isNotEmpty) ...[
           buildDetailsForm(0, selectedPayments[0]),
           const SizedBox(height: 12),
         ],
+        // boton de agregar otro metodo de pago
         Align(
           alignment: Alignment.centerRight,
           child: _addMethodButton(context, paymentMethods),
@@ -178,6 +196,7 @@ class CheckoutConfirmationView extends StatelessWidget {
     );
   }
 
+  // widget de boton de agregar otro metodo de pago
   Widget _addMethodButton(
     BuildContext context,
     List<PaymentMethod> paymentMethods,
@@ -204,6 +223,7 @@ class CheckoutConfirmationView extends StatelessWidget {
     );
   }
 
+  // Widget que construye el resumen del pago
   Widget _allocationSummary() {
     return Container(
       padding: const EdgeInsets.all(AppDimensions.paddingM),
@@ -271,6 +291,7 @@ class CheckoutConfirmationView extends StatelessWidget {
     );
   }
 
+  // widget de warning si falta asignar o hay excedente de dinero
   Widget _allocationWarning() {
     final isShort = totalAllocated < totalAmount;
     return Container(
@@ -300,6 +321,7 @@ class CheckoutConfirmationView extends StatelessWidget {
     );
   }
 
+  // widget que construye el desglose de impuestos
   Widget _taxBreakdown() {
     return Column(
       children: [
@@ -350,6 +372,7 @@ class CheckoutConfirmationView extends StatelessWidget {
     );
   }
 
+  // widget que hace el taxRow con un label y un valor
   Widget _taxRow(String label, String value,
       {Color? color, bool isBold = true}) {
     final style = TextStyle(
@@ -366,6 +389,7 @@ class CheckoutConfirmationView extends StatelessWidget {
     );
   }
 
+  // BUILD principal
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -382,6 +406,7 @@ class CheckoutConfirmationView extends StatelessWidget {
         // Selector / filas de métodos de pago
         BlocBuilder<PaymentMethodsBloc, PaymentMethodsState>(
           builder: (context, pmState) {
+            // estado de carga
             if (pmState is PaymentMethodsLoading) {
               return const Padding(
                 padding: EdgeInsets.all(16.0),
@@ -389,6 +414,7 @@ class CheckoutConfirmationView extends StatelessWidget {
               );
             }
 
+            // estado de error
             if (pmState is PaymentMethodsError) {
               return Container(
                 padding: const EdgeInsets.all(AppDimensions.paddingM),
@@ -419,6 +445,7 @@ class CheckoutConfirmationView extends StatelessWidget {
               final paymentMethods = pmState.paymentMethods;
               final selected = pmState.selectedPaymentMethod;
 
+              // si viene el array vacio.
               if (paymentMethods.isEmpty) {
                 return Container(
                   padding: const EdgeInsets.all(AppDimensions.paddingM),
@@ -444,10 +471,11 @@ class CheckoutConfirmationView extends StatelessWidget {
                 );
               }
 
+              // si es mas de un metodo de pago, construye un build diferente.
               if (selectedPayments.length > 1) {
                 return _buildMultiplePayments(context, paymentMethods);
               }
-
+              // si es solo un metodo de pago, construye el build normal.
               return _buildSinglePayment(context, selected, paymentMethods);
             }
 
@@ -459,7 +487,7 @@ class CheckoutConfirmationView extends StatelessWidget {
         const Divider(height: 1),
         const SizedBox(height: 24),
 
-        // Desglose de impuestos (solo si aplican percepciones)
+        // Desglose de impuestos (solo si aplican percepciones) ( componetizar mandar a otro archivo)
         if (iibbAmount > 0 || vatPerceptionAmount > 0 || internalTaxAmount > 0)
           _taxBreakdown(),
 
