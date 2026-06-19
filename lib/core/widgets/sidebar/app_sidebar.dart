@@ -121,8 +121,7 @@ class _AppSidebarState extends State<AppSidebar> {
                   isHighlighted:
                       widget.currentRoute == RoutePaths.productLabels,
                   tooltip: 'Etiquetas de Productos',
-                  onTap: () =>
-                      _navigateTo(context, RoutePaths.productLabels),
+                  onTap: () => _navigateTo(context, RoutePaths.productLabels),
                 ),
               ),
               if (widget.isAdmin) ...[
@@ -136,12 +135,12 @@ class _AppSidebarState extends State<AppSidebar> {
                   sidebarSurface: sidebarSurface,
                   child: SidebarItem(
                     icon: Icons.attach_money_outlined,
-                    isHighlighted: widget.currentRoute ==
-                        RoutePaths.pendingSettlements,
+                    isHighlighted:
+                        widget.currentRoute == RoutePaths.pendingSettlements,
                     tooltip: 'Cobradores Pendientes',
                     onTap: widget.onHistoryPressed ??
-                        () => _navigateTo(
-                            context, RoutePaths.pendingSettlements),
+                        () =>
+                            _navigateTo(context, RoutePaths.pendingSettlements),
                   ),
                 ),
               ],
@@ -295,10 +294,10 @@ class _AppSidebarState extends State<AppSidebar> {
               ),
 
               // Theme switch
-              _buildThemeToggle(
-                context,
-                isDark: mode == ThemeMode.dark,
-              ),
+              // _buildThemeToggle(
+              //   context,
+              //   isDark: mode == ThemeMode.dark,
+              // ),
               const SizedBox(height: 8),
             ],
           ),
