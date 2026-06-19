@@ -9,6 +9,9 @@ import 'package:punto_venta_app/features/auth/prensetation/pages/company_selecti
 import 'package:punto_venta_app/features/auth/prensetation/pages/credentials_page.dart';
 import 'package:punto_venta_app/features/auth/prensetation/pages/login_page.dart';
 import 'package:punto_venta_app/features/auth/domain/entities/user.dart';
+import 'package:punto_venta_app/features/pos/presentation/pages/pending_settlements_page.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/settlements/settlements_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/settlements/settlements_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/pages/pos_main_page.dart';
 import 'package:punto_venta_app/features/pos/presentation/pages/reports_page.dart';
 import 'package:punto_venta_app/features/pos/presentation/pages/product_labels_page.dart';
@@ -85,6 +88,15 @@ class AppRouter {
             path: RoutePaths.productLabels,
             builder: (BuildContext context, GoRouterState state) {
               return const ProductLabelsPage();
+            },
+          ),
+          GoRoute(
+            path: RoutePaths.pendingSettlements,
+            builder: (BuildContext context, GoRouterState state) {
+              return BlocProvider(
+                create: (_) => di.sl<SettlementsBloc>(),
+                child: const PendingSettlementsPage(),
+              );
             },
           ),
           GoRoute(

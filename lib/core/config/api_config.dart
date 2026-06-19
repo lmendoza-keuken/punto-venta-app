@@ -26,6 +26,10 @@ class ApiConfig {
       '$validatedBaseUrl/configuration/fiscal-data';
   static String get returnsReasonsUrl => '$validatedBaseUrl/returns/reasons';
   static String get returnsTotalUrl => '$validatedBaseUrl/returns/total';
+  static String get pendingCollectors =>
+      '$validatedBaseUrl/settlements/pending/collectors';
+  static String get pendingCollectorDetail =>
+      '$validatedBaseUrl/settlements/pending/{collector_id}';
 
   static void updateCompanyConfig(String companyId, String? baseUrl) {
     _companyId = companyId;

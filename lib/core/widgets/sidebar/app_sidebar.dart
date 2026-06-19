@@ -70,6 +70,7 @@ class _AppSidebarState extends State<AppSidebar> {
 
         return Container(
           width: 80,
+          height: double.infinity,
           decoration: BoxDecoration(
             color: sidebarBg,
           ),
@@ -93,128 +94,139 @@ class _AppSidebarState extends State<AppSidebar> {
                   onTap: () => _navigateTo(context, RoutePaths.pos),
                 ),
               ),
+              const SizedBox(height: 8),
+              // History / Reports (fixed)
+              _buildNavItem(
+                context,
+                isSelected: widget.currentRoute == RoutePaths.reports,
+                isDark: isDark,
+                sidebarSurface: sidebarSurface,
+                child: SidebarItem(
+                  icon: Icons.request_page_rounded,
+                  isHighlighted: widget.currentRoute == RoutePaths.reports,
+                  tooltip: 'Reportes',
+                  onTap: widget.onHistoryPressed ??
+                      () => _navigateTo(context, RoutePaths.reports),
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Product Labels (fixed)
+              _buildNavItem(
+                context,
+                isSelected: widget.currentRoute == RoutePaths.productLabels,
+                isDark: isDark,
+                sidebarSurface: sidebarSurface,
+                child: SidebarItem(
+                  icon: Icons.label_outlined,
+                  isHighlighted:
+                      widget.currentRoute == RoutePaths.productLabels,
+                  tooltip: 'Etiquetas de Productos',
+                  onTap: () =>
+                      _navigateTo(context, RoutePaths.productLabels),
+                ),
+              ),
+              if (widget.isAdmin) ...[
+                const SizedBox(height: 8),
+                // Cobradores Pendientes (fixed)
+                _buildNavItem(
+                  context,
+                  isSelected:
+                      widget.currentRoute == RoutePaths.pendingSettlements,
+                  isDark: isDark,
+                  sidebarSurface: sidebarSurface,
+                  child: SidebarItem(
+                    icon: Icons.attach_money_outlined,
+                    isHighlighted: widget.currentRoute ==
+                        RoutePaths.pendingSettlements,
+                    tooltip: 'Cobradores Pendientes',
+                    onTap: widget.onHistoryPressed ??
+                        () => _navigateTo(
+                            context, RoutePaths.pendingSettlements),
+                  ),
+                ),
+              ],
 
               const SizedBox(height: 8),
 
-              // Navigation items
-              Column(
-                children: [
-                  // History / Reports
-                  _buildNavItem(
-                    context,
-                    isSelected: widget.currentRoute == RoutePaths.reports,
-                    isDark: isDark,
-                    sidebarSurface: sidebarSurface,
-                    child: SidebarItem(
-                      icon: Icons.request_page_rounded,
-                      isHighlighted: widget.currentRoute == RoutePaths.reports,
-                      tooltip: 'Reportes',
-                      onTap: widget.onHistoryPressed ??
-                          () => _navigateTo(context, RoutePaths.reports),
+              // Middle scrollable items (only active in POS route)
+              if (widget.currentRoute == RoutePaths.pos) ...[
+                Divider(
+                  color: sidebarDivider,
+                  height: 1,
+                  indent: 16,
+                  endIndent: 16,
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        // Guardar pedido
+                        _buildNavItem(
+                          context,
+                          isSelected: _isSaveOrderDialogOpen,
+                          isDark: isDark,
+                          sidebarSurface: sidebarSurface,
+                          child: SidebarItem(
+                            icon: Icons.save_outlined,
+                            isHighlighted: _isSaveOrderDialogOpen,
+                            tooltip: 'Guardar Pedido',
+                            onTap: () => _handleSaveOrder(context),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        // Cargar pedido guardado
+                        _buildNavItem(
+                          context,
+                          isSelected: _isLoadSavedOrdersDialogOpen,
+                          isDark: isDark,
+                          sidebarSurface: sidebarSurface,
+                          child: SidebarItem(
+                            icon: Icons.folder_open_outlined,
+                            isHighlighted: _isLoadSavedOrdersDialogOpen,
+                            tooltip: 'Cargar Pedido',
+                            onTap: () => _handleLoadOrder(context),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        // Seleccionar cliente
+                        _buildNavItem(
+                          context,
+                          isSelected: _isSelectClientDialogOpen,
+                          isDark: isDark,
+                          sidebarSurface: sidebarSurface,
+                          child: SidebarItem(
+                            icon: Icons.person_search_outlined,
+                            isHighlighted: _isSelectClientDialogOpen,
+                            tooltip: 'Seleccionar Cliente',
+                            onTap: () => _handleSelectClient(context),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        // Agregar cliente
+                        _buildNavItem(
+                          context,
+                          isSelected: _isAddClientDialogOpen,
+                          isDark: isDark,
+                          sidebarSurface: sidebarSurface,
+                          child: SidebarItem(
+                            isDisabled: true, // Deshabilitado temporalmente
+                            icon: Icons.person_add_outlined,
+                            isHighlighted: _isAddClientDialogOpen,
+                            tooltip: 'Agregar Cliente',
+                            onTap: () => _handleAddClient(context),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  // Product Labels
-                  _buildNavItem(
-                    context,
-                    isSelected: widget.currentRoute == RoutePaths.productLabels,
-                    isDark: isDark,
-                    sidebarSurface: sidebarSurface,
-                    child: SidebarItem(
-                      icon: Icons.label_outlined,
-                      isHighlighted:
-                          widget.currentRoute == RoutePaths.productLabels,
-                      tooltip: 'Etiquetas de Productos',
-                      onTap: () =>
-                          _navigateTo(context, RoutePaths.productLabels),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  // Action buttons
-                  Divider(
-                    color: sidebarDivider,
-                    height: 1,
-                    indent: 16,
-                    endIndent: 16,
-                  ),
-
-                  if (widget.currentRoute == RoutePaths.pos) ...[
-                    const SizedBox(height: 8),
-                    // Guardar pedido
-                    _buildNavItem(
-                      context,
-                      isSelected: _isSaveOrderDialogOpen,
-                      isDark: isDark,
-                      sidebarSurface: sidebarSurface,
-                      child: SidebarItem(
-                        icon: Icons.save_outlined,
-                        isHighlighted: _isSaveOrderDialogOpen,
-                        tooltip: 'Guardar Pedido',
-                        onTap: () => _handleSaveOrder(context),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    // Cargar pedido guardado
-                    _buildNavItem(
-                      context,
-                      isSelected: _isLoadSavedOrdersDialogOpen,
-                      isDark: isDark,
-                      sidebarSurface: sidebarSurface,
-                      child: SidebarItem(
-                        icon: Icons.folder_open_outlined,
-                        isHighlighted: _isLoadSavedOrdersDialogOpen,
-                        tooltip: 'Cargar Pedido',
-                        onTap: () => _handleLoadOrder(context),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    // Seleccionar cliente
-                    _buildNavItem(
-                      context,
-                      isSelected: _isSelectClientDialogOpen,
-                      isDark: isDark,
-                      sidebarSurface: sidebarSurface,
-                      child: SidebarItem(
-                        // isDisabled: true, // Deshabilitado temporalmente
-                        icon: Icons.person_search_outlined,
-                        isHighlighted: _isSelectClientDialogOpen,
-                        tooltip: 'Seleccionar Cliente',
-                        onTap: () => _handleSelectClient(context),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    // Agregar cliente
-                    _buildNavItem(
-                      context,
-                      isSelected: _isAddClientDialogOpen,
-                      isDark: isDark,
-                      sidebarSurface: sidebarSurface,
-                      child: SidebarItem(
-                        isDisabled: true, // Deshabilitado temporalmente
-                        icon: Icons.person_add_outlined,
-                        isHighlighted: _isAddClientDialogOpen,
-                        tooltip: 'Agregar Cliente',
-                        onTap: () => _handleAddClient(context),
-                      ),
-                    ),
-                  ]
-
-                  // Stock / Inventory (todavia no esta activo pero no eliminar)
-                  // _buildNavItem(
-                  //   context,
-                  //   isSelected: widget.currentRoute == RoutePaths.stock,
-                  //   isDark: isDark,
-                  //   sidebarSurface: sidebarSurface,
-                  //   child: SidebarItem(
-                  //     icon: Icons.inventory_2_rounded,
-                  //     isHighlighted: widget.currentRoute == RoutePaths.stock,
-                  //     tooltip: 'Inventario',
-                  //     onTap: () => _navigateTo(context, RoutePaths.stock),
-                  //   ),
-                  // ),
-                ],
-              ),
-              const Spacer(),
+                ),
+              ] else ...[
+                // Expanded empty area to push footer down on non-POS routes
+                const Expanded(
+                  child: SizedBox(),
+                ),
+              ],
               Divider(
                 color: sidebarDivider,
                 height: 1,

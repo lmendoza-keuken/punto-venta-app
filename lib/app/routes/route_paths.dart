@@ -8,4 +8,5 @@ class RoutePaths {
   static const String reports = '/reports';
   static const String productLabels = '/product-labels';
   static const String settings = '/settings';
+  static const String pendingSettlements = '/pending-settlements';
 }

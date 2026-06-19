@@ -122,7 +122,12 @@ import 'features/pos/domain/usecases/save_order_usecase.dart';
 import 'features/pos/presentation/bloc/product/product_bloc.dart';
 import 'features/pos/presentation/bloc/cart/cart_bloc.dart';
 import 'features/pos/presentation/bloc/ui/ui_bloc.dart';
-import 'features/pos/presentation/bloc/saved_orders/saved_orders_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/saved_orders/saved_orders_bloc.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/settlements_remote_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/repositories/settlements_repository_impl.dart';
+import 'package:punto_venta_app/features/pos/domain/repositories/settlements_repository.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/get_settlements_usecase.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/settlements/settlements_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -210,6 +215,7 @@ Future<void> init() async {
         loadSavedOrdersUsecase: sl(),
       ));
   sl.registerFactory(() => ReportsBloc(getReportsUsecase: sl(), generateCreditNoteUsecase: sl()));
+  sl.registerFactory(() => SettlementsBloc(getSettlementsUsecase: sl()));
   sl.registerFactory(
       () => ClientsBloc(
         getClients: sl(), 
@@ -251,6 +257,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => LoadSavedOrdersUsecase(sl()));
   sl.registerLazySingleton(() => CompleteOrderUsecase(sl()));
   sl.registerLazySingleton(() => GetReportsUsecase(sl()));
+  sl.registerLazySingleton(() => GetSettlementsUsecase(sl()));
   sl.registerLazySingleton(() => GetClientsUsecase(sl()));
   sl.registerLazySingleton(() => AddClientUsecase(sl()));
   sl.registerLazySingleton(() => DeleteClientUsecase(sl()));
@@ -286,6 +293,9 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<ReturnsRepository>(
     () => ReturnsRepositoryImpl(remoteDataSource: sl()),
+  );
+  sl.registerLazySingleton<SettlementsRepository>(
+    () => SettlementsRepositoryImpl(remoteDataSource: sl()),
   );
   sl.registerLazySingleton<CompletedOrdersRepository>(
     () => CompletedOrdersRepositoryImpl(
@@ -405,6 +415,12 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<ReturnsRemoteDataSource>(
     () => ReturnsRemoteDataSourceImpl(),
+  );
+  sl.registerLazySingleton<SettlementsService>(
+    () => SettlementsService(sl()),
+  );
+  sl.registerLazySingleton<SettlementsRemoteDataSource>(
+    () => SettlementsRemoteDataSourceImpl(),
   );
   sl.registerLazySingleton<CompletedOrdersService>(
     () => CompletedOrdersService(sl()),

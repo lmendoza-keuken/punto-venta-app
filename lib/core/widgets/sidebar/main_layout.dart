@@ -29,6 +29,7 @@ class MainLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Sidebar
           AppSidebar(
