@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:punto_venta_app/core/themes/app_theme.dart';
 import 'package:punto_venta_app/core/themes/theme_cubit.dart';
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
@@ -23,6 +24,16 @@ class PosApp extends StatelessWidget {
                 themeMode: mode,
                 routerConfig: AppRouter.router,
                 debugShowCheckedModeBanner: false,
+                locale: const Locale('es', 'AR'),
+                localizationsDelegates: const [
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                ],
+                supportedLocales: const [
+                  Locale('es', 'AR'),
+                  Locale('en', 'US'),
+                ],
               ),
             );
           },

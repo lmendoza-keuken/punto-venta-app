@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   
   # State Management
   bloc: 9.0.0
@@ -40,7 +42,7 @@ dependencies:
   retrofit: 4.1.0
   
   # Date formatting
-  intl: 0.20.2
+  intl: ^0.19.0
   
   # UI
   cupertino_icons: 1.0.8

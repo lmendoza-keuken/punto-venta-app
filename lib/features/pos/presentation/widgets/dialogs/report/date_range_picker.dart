@@ -44,7 +44,7 @@ class DateRangePicker extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.calendar_today,
+                      const Icon(Icons.calendar_today,
                           size: 16, color: AppColors.primary),
                       const SizedBox(width: AppDimensions.paddingS),
                       Text(DateFormat('dd/MM/yyyy').format(selectedDate)),
@@ -69,7 +69,7 @@ class DateRangePicker extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.calendar_today,
+                      const Icon(Icons.calendar_today,
                           size: 16, color: AppColors.primary),
                       const SizedBox(width: AppDimensions.paddingS),
                       Text(selectedEndDate != null
@@ -105,6 +105,7 @@ class DateRangePicker extends StatelessWidget {
       initialDate: selectedDate,
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
+      locale: const Locale('es', 'AR'),
     );
     if (picked != null && picked != selectedDate) {
       onStartDateChanged(picked);
@@ -117,6 +118,7 @@ class DateRangePicker extends StatelessWidget {
       initialDate: selectedEndDate ?? selectedDate,
       firstDate: selectedDate,
       lastDate: DateTime.now(),
+      locale: const Locale('es', 'AR'),
     );
     if (picked != null) {
       onEndDateChanged(picked);
