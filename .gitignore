@@ -22,6 +22,10 @@ migrate_working_dir/
 # VS Code which you may wish to be included in version control, so this line
 # is commented out by default.
 #.vscode/
+# launch.json contains --dart-define secrets and must NOT be committed
+.vscode/launch.json
+# Local dart-define secrets file (used with --dart-define-from-file)
+.dart_define.json
 
 # Flutter/Dart/Pub related
 **/doc/api/
