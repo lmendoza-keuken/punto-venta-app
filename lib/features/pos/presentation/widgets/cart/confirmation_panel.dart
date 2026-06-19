@@ -21,12 +21,9 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/p
 import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/payment_methods_state.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/payment_method.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_event.dart';
-import 'package:punto_venta_app/features/pos/presentation/widgets/cart/payment_method_dialogs.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_state.dart';
-import 'package:punto_venta_app/features/pos/presentation/widgets/cart/cash_payment_widget.dart';
-// import 'package:punto_venta_app/features/pos/presentation/widgets/cart/payment_option_widget.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/common/error_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/iibb_calculator.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/vat_perception_calculator.dart';
@@ -36,29 +33,9 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_state.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_return_reasons_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/return_reason.dart';
-
-class PaymentMethodDetailsControllers {
-  final TextEditingController accountOwner;
-  final TextEditingController bankId;
-  final TextEditingController checkNumber;
-  final TextEditingController transferId;
-  final TextEditingController verificationId;
-
-  PaymentMethodDetailsControllers()
-      : accountOwner = TextEditingController(),
-        bankId = TextEditingController(),
-        checkNumber = TextEditingController(),
-        transferId = TextEditingController(),
-        verificationId = TextEditingController();
-
-  void dispose() {
-    accountOwner.dispose();
-    bankId.dispose();
-    checkNumber.dispose();
-    transferId.dispose();
-    verificationId.dispose();
-  }
-}
+import 'package:punto_venta_app/features/pos/presentation/widgets/cart/confirmation/payment_method_details_controllers.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/cart/confirmation/checkout_confirmation_view.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/cart/confirmation/return_confirmation_view.dart';
 
 class ConfirmationPanel extends StatefulWidget {
   final VoidCallback onClose;
@@ -106,6 +83,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
   double get _totalAllocated =>
       _selectedPayments.fold(0.0, (sum, pm) => sum + (pm.amount ?? 0.0));
 
+  // Lógica de montos y controllers
   void _updateChangeAndAmounts(double totalAmount) {
     double totalReceived = 0.0;
     double totalChange = 0.0;
@@ -192,6 +170,8 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
       }
     }
   }
+
+  // Builders de filas de pago (pasados como callbacks al CheckoutView)
 
   Widget _buildPaymentRow(
       int index, double totalAmount, List<PaymentMethod> allAvailableMethods) {
@@ -447,27 +427,6 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
               child: Column(
                 spacing: 8,
                 children: [
-                  // formularios
-
-                  // _buildDetailsTextField(
-                  //   controller: controllers.accountOwner,
-                  //   label: 'Titular de la cuenta',
-                  //   icon: Icons.person_outline,
-                  //   onChanged: (val) {
-                  //     _updatePaymentDetails(
-                  //         index, (d) => d.copyWith(accountOwner: val));
-                  //   },
-                  // ),
-                  // if (isTransfer || isCard || isCheck)
-                  //   _buildDetailsTextField(
-                  //     controller: controllers.bankId,
-                  //     label: isCard ? 'Banco/Emisor' : 'Banco',
-                  //     icon: Icons.account_balance_outlined,
-                  //     onChanged: (val) {
-                  //       _updatePaymentDetails(
-                  //           index, (d) => d.copyWith(bankId: val));
-                  //     },
-                  //   ),
                   if (isCheck)
                     _buildDetailsTextField(
                       controller: controllers.checkNumber,
@@ -508,7 +467,6 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
     );
   }
 
-  // Obtener el icono adecuado para cada método de pago según su descripción
   IconData _getPaymentMethodIcon(String description, String shortDescription) {
     final desc = description.toLowerCase();
     final shortDesc = shortDescription.toLowerCase();
@@ -543,8 +501,18 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
   @override
   void initState() {
     super.initState();
+    _initializeSelectedPayments();
     _calculateTaxesForUI();
     _loadReturnReasons();
+  }
+
+  void _initializeSelectedPayments() {
+    if (_selectedPayments.isNotEmpty) return;
+    final pmState = context.read<PaymentMethodsBloc>().state;
+    if (pmState is PaymentMethodsLoaded &&
+        pmState.selectedPaymentMethod != null) {
+      _selectedPayments = [pmState.selectedPaymentMethod!];
+    }
   }
 
   Future<void> _loadReturnReasons() async {
@@ -583,6 +551,22 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
 
   //  calcular impuestos para mostrar en el UI (IIBB, percepción de IVA e impuesto interno)
   Future<void> _calculateTaxesForUI() async {
+    final cartState = context.read<CartBloc>().state;
+    if (cartState is! CartLoaded) {
+      setState(() {
+        _iibbAmount = 0.0;
+        _vatPerceptionAmount = 0.0;
+        _internalTaxAmount = 0.0;
+      });
+      return;
+    }
+
+    final cartLoaded = cartState;
+    final internalTaxResult = InternalTaxCalculator.calculateInternalTax(
+      items: cartLoaded.items,
+    );
+    final double computedInternalTax = internalTaxResult['total'] ?? 0.0;
+
     try {
       final clientsState = context.read<ClientsBloc>().state;
       final selectedClient =
@@ -592,17 +576,17 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
         setState(() {
           _iibbAmount = 0.0;
           _vatPerceptionAmount = 0.0;
-          _internalTaxAmount = 0.0;
-        });
-        return;
-      }
+          _internalTaxAmount = computedInternalTax;
 
-      final cartState = context.read<CartBloc>().state;
-      if (cartState is! CartLoaded) {
-        setState(() {
-          _iibbAmount = 0.0;
-          _vatPerceptionAmount = 0.0;
-          _internalTaxAmount = 0.0;
+          if (_selectedPayments.length == 1) {
+            final total =
+                cartLoaded.subtotal + cartLoaded.totalIva + computedInternalTax;
+            _selectedPayments[0] = _selectedPayments[0].copyWith(amount: total);
+            _syncControllers();
+            if (_amountControllers.isNotEmpty) {
+              _amountControllers[0].text = total.toStringAsFixed(2);
+            }
+          }
         });
         return;
       }
@@ -615,7 +599,17 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
         setState(() {
           _iibbAmount = 0.0;
           _vatPerceptionAmount = 0.0;
-          _internalTaxAmount = 0.0;
+          _internalTaxAmount = computedInternalTax;
+
+          if (_selectedPayments.length == 1) {
+            final total =
+                cartLoaded.subtotal + cartLoaded.totalIva + computedInternalTax;
+            _selectedPayments[0] = _selectedPayments[0].copyWith(amount: total);
+            _syncControllers();
+            if (_amountControllers.isNotEmpty) {
+              _amountControllers[0].text = total.toStringAsFixed(2);
+            }
+          }
         });
         return;
       }
@@ -637,34 +631,28 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
         client: selectedClient,
         branch: branch,
         vatCategory: vatCategory,
-        subtotal: cartState.subtotal,
-        totalWithVat: cartState.subtotal + cartState.totalIva,
+        subtotal: cartLoaded.subtotal,
+        totalWithVat: cartLoaded.subtotal + cartLoaded.totalIva,
       );
 
       // Calcular percepción de IVA
       final vatPerception = VatPerceptionCalculator.calculateVatPerception(
-        cartItems: cartState.items,
+        cartItems: cartLoaded.items,
         branch: branch,
         vatCategory: vatCategory,
       );
 
-      // Calcular impuesto interno
-      final internalTaxResult = InternalTaxCalculator.calculateInternalTax(
-        items: cartState.items,
-      );
-      final internalTax = internalTaxResult['total'] ?? 0.0;
-
       setState(() {
         _iibbAmount = iibb;
         _vatPerceptionAmount = vatPerception;
-        _internalTaxAmount = internalTax;
+        _internalTaxAmount = computedInternalTax;
 
         if (_selectedPayments.length == 1) {
-          final total = cartState.subtotal +
-              cartState.totalIva +
+          final total = cartLoaded.subtotal +
+              cartLoaded.totalIva +
               iibb +
               vatPerception +
-              internalTax;
+              computedInternalTax;
           _selectedPayments[0] = _selectedPayments[0].copyWith(amount: total);
           _syncControllers();
           if (_amountControllers.isNotEmpty) {
@@ -672,21 +660,20 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
           }
         }
       });
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('⚠️ Error calculating taxes for UI: $e\n$stackTrace');
       setState(() {
         _iibbAmount = 0.0;
         _vatPerceptionAmount = 0.0;
-        _internalTaxAmount = 0.0;
+        _internalTaxAmount = computedInternalTax;
 
         if (_selectedPayments.length == 1) {
-          final cartState = context.read<CartBloc>().state;
-          if (cartState is CartLoaded) {
-            final total = cartState.subtotal + cartState.totalIva;
-            _selectedPayments[0] = _selectedPayments[0].copyWith(amount: total);
-            _syncControllers();
-            if (_amountControllers.isNotEmpty) {
-              _amountControllers[0].text = total.toStringAsFixed(2);
-            }
+          final total =
+              cartLoaded.subtotal + cartLoaded.totalIva + computedInternalTax;
+          _selectedPayments[0] = _selectedPayments[0].copyWith(amount: total);
+          _syncControllers();
+          if (_amountControllers.isNotEmpty) {
+            _amountControllers[0].text = total.toStringAsFixed(2);
           }
         }
       });
@@ -795,7 +782,6 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                 );
               }
             } else if (checkoutState is CheckoutError) {
-              // Si hay un error al procesar la venta, mostrar un diálogo con el mensaje de error
               if (mounted) {
                 showDialog(
                   context: context,
@@ -836,7 +822,6 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
 
               return Column(
                 children: [
-                  // Header del panel de confirmación
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: AppDimensions.paddingM,
@@ -869,708 +854,67 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                       ],
                     ),
                   ),
-
-                  // Contenido del panel de confirmación
                   Expanded(
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.all(AppDimensions.paddingL),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (isReturnMode) ...[
-                            Text(
-                              'Motivo de Devolución',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleLarge
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
-                            const SizedBox(height: 16),
-                            if (_isLoadingReasons)
-                              const Center(
-                                child: Padding(
-                                  padding: EdgeInsets.all(24.0),
-                                  child: CircularProgressIndicator(),
-                                ),
-                              )
-                            else if (_returnReasons.isEmpty)
-                              Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: AppColors.error.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Text(
-                                  'No hay motivos de devolución configurados en el sistema.',
-                                  style: TextStyle(color: AppColors.error),
-                                ),
-                              )
-                            else ...[
-                              DropdownButtonFormField<int>(
-                                value: _selectedReturnReasonId,
-                                decoration: const InputDecoration(
-                                  labelText: 'Seleccione un motivo',
-                                  border: OutlineInputBorder(),
-                                  contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
-                                  ),
-                                ),
-                                items: _returnReasons
-                                    .map(
-                                      (reason) => DropdownMenuItem<int>(
-                                        value: reason.id,
-                                        child: Text(
-                                          reason.description,
-                                          style: const TextStyle(fontSize: 14),
-                                        ),
-                                      ),
-                                    )
-                                    .toList(),
-                                onChanged: (value) {
-                                  setState(() {
-                                    _selectedReturnReasonId = value;
-                                  });
-                                },
-                              ),
-                              const SizedBox(height: 24),
-                              const Divider(),
-                              const SizedBox(height: 24),
-                              Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: AppColors.warning.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: AppColors.warning.withOpacity(0.3),
-                                  ),
-                                ),
-                                child: Column(
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        const Text(
-                                          'Monto a Devolver:',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 15,
-                                          ),
-                                        ),
-                                        Text(
-                                          totalAmount.formatToCurrency(),
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                            color: AppColors.warning,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ] else ...[
-                            Text(
-                              'Métodos de Pago',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleLarge
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
-                            const SizedBox(height: 16),
-                            BlocBuilder<PaymentMethodsBloc,
-                                PaymentMethodsState>(
-                              builder: (context, pmState) {
-                                if (pmState is PaymentMethodsLoading) {
-                                  return const Padding(
-                                    padding: EdgeInsets.all(16.0),
-                                    child: CircularProgressIndicator(),
-                                  );
-                                }
-
-                                if (pmState is PaymentMethodsError) {
-                                  return Container(
-                                    padding: const EdgeInsets.all(
-                                        AppDimensions.paddingM),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.error
-                                          .withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: AppColors.error
-                                            .withValues(alpha: 0.3),
-                                      ),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        const Icon(Icons.error_outline,
-                                            size: 20, color: AppColors.error),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Text(
-                                            'Error al cargar métodos de pago: ${pmState.message}',
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }
-
-                                if (pmState is PaymentMethodsLoaded) {
-                                  final paymentMethods = pmState.paymentMethods;
-                                  final selected =
-                                      pmState.selectedPaymentMethod;
-
-                                  if (_selectedPayments.isEmpty &&
-                                      selected != null) {
-                                    _selectedPayments = [
-                                      selected.copyWith(amount: totalAmount)
-                                    ];
-                                    _syncControllers();
-                                    if (_amountControllers.isNotEmpty) {
-                                      _amountControllers[0].text =
-                                          totalAmount.toStringAsFixed(2);
-                                    }
+                          // Vista de devolución
+                          if (isReturnMode)
+                            ReturnConfirmationView(
+                              totalAmount: totalAmount,
+                              isLoadingReasons: _isLoadingReasons,
+                              returnReasons: _returnReasons,
+                              selectedReturnReasonId: _selectedReturnReasonId,
+                              onReturnReasonChanged: (id) =>
+                                  setState(() => _selectedReturnReasonId = id),
+                            )
+                          // Vista de cobro
+                          else
+                            CheckoutConfirmationView(
+                              totalAmount: totalAmount,
+                              selectedPayments: _selectedPayments,
+                              totalAllocated: _totalAllocated,
+                              change: _change,
+                              iibbAmount: _iibbAmount,
+                              vatPerceptionAmount: _vatPerceptionAmount,
+                              internalTaxAmount: _internalTaxAmount,
+                              cartSubtotal: state.subtotal,
+                              cartTotalIva: state.totalIva,
+                              buildPaymentRow: _buildPaymentRow,
+                              buildDetailsForm: _buildDetailsForm,
+                              getPaymentMethodIcon: _getPaymentMethodIcon,
+                              onMethodAdded: (pm, defaultAmount) {
+                                setState(() {
+                                  _selectedPayments
+                                      .add(pm.copyWith(amount: defaultAmount));
+                                  _updateChangeAndAmounts(totalAmount);
+                                });
+                              },
+                              onCashAmountChanged: (amount) {
+                                setState(() {
+                                  _receivedAmount = amount;
+                                  if (_selectedPayments.isNotEmpty &&
+                                      (_selectedPayments[0]
+                                              .description
+                                              .toLowerCase()
+                                              .contains('efectivo') ||
+                                          _selectedPayments[0]
+                                              .shortDescription
+                                              .toLowerCase()
+                                              .contains('efectivo'))) {
+                                    _selectedPayments[0] = _selectedPayments[0]
+                                        .copyWith(receivedAmount: amount);
                                   }
-
-                                  return Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      if (paymentMethods.isEmpty)
-                                        Container(
-                                          padding: const EdgeInsets.all(
-                                              AppDimensions.paddingM),
-                                          decoration: BoxDecoration(
-                                            color: AppColors.warning
-                                                .withOpacity(0.1),
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                            border: Border.all(
-                                              color: AppColors.warning
-                                                  .withOpacity(0.3),
-                                            ),
-                                          ),
-                                          child: const Row(
-                                            children: [
-                                              Icon(Icons.warning,
-                                                  size: 20,
-                                                  color: AppColors.warning),
-                                              SizedBox(width: 12),
-                                              Expanded(
-                                                child: Text(
-                                                  'No hay métodos de pago disponibles',
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        )
-                                      else if (_selectedPayments.length >
-                                          1) ...[
-                                        // UI para multiples metodos de pago
-                                        ...List.generate(
-                                            _selectedPayments.length, (index) {
-                                          return _buildPaymentRow(index,
-                                              totalAmount, paymentMethods);
-                                        }),
-                                        const SizedBox(height: 12),
-                                        Align(
-                                          alignment: Alignment.centerRight,
-                                          child: OutlinedButton.icon(
-                                            onPressed: () =>
-                                                showAddPaymentMethodDialog(
-                                              context: context,
-                                              allMethods: paymentMethods,
-                                              selectedPayments:
-                                                  _selectedPayments,
-                                              totalAmount: totalAmount,
-                                              totalAllocated: _totalAllocated,
-                                              getPaymentMethodIcon:
-                                                  _getPaymentMethodIcon,
-                                              onMethodAdded:
-                                                  (pm, defaultAmount) {
-                                                setState(() {
-                                                  _selectedPayments.add(
-                                                      pm.copyWith(
-                                                          amount:
-                                                              defaultAmount));
-                                                  _updateChangeAndAmounts(
-                                                      totalAmount);
-                                                });
-                                              },
-                                            ),
-                                            icon: const Icon(Icons.add),
-                                            label: const Text(
-                                                'Agregar Otro Método'),
-                                            style: OutlinedButton.styleFrom(
-                                              foregroundColor:
-                                                  AppColors.primary,
-                                              side: const BorderSide(
-                                                  color: AppColors.primary),
-                                              shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(8)),
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 16),
-                                        Container(
-                                          padding: const EdgeInsets.all(
-                                              AppDimensions.paddingM),
-                                          decoration: BoxDecoration(
-                                            color: Colors.grey.shade50,
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                            border: Border.all(
-                                                color: Colors.grey.shade200),
-                                          ),
-                                          child: Column(
-                                            children: [
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  const Text('Total Venta:',
-                                                      style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold)),
-                                                  Text(
-                                                      totalAmount
-                                                          .formatToCurrency(),
-                                                      style: const TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold)),
-                                                ],
-                                              ),
-                                              const Divider(),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  const Text('Total Asignado:'),
-                                                  Text(
-                                                      _totalAllocated
-                                                          .formatToCurrency(),
-                                                      style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: double.parse(
-                                                                    _totalAllocated
-                                                                        .toStringAsFixed(
-                                                                            2)) ==
-                                                                double.parse(
-                                                                    totalAmount
-                                                                        .toStringAsFixed(
-                                                                            2))
-                                                            ? AppColors.success
-                                                            : AppColors.error,
-                                                      )),
-                                                ],
-                                              ),
-                                              if (_change != null &&
-                                                  _change! > 0) ...[
-                                                const SizedBox(height: 8),
-                                                Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment
-                                                          .spaceBetween,
-                                                  children: [
-                                                    const Text(
-                                                        'Vuelto / Cambio:',
-                                                        style: TextStyle(
-                                                            color: AppColors
-                                                                .success,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .bold)),
-                                                    Text(
-                                                        _change!
-                                                            .formatToCurrency(),
-                                                        style: const TextStyle(
-                                                            color: AppColors
-                                                                .success,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .bold)),
-                                                  ],
-                                                ),
-                                              ],
-                                            ],
-                                          ),
-                                        ),
-                                        if (double.parse(_totalAllocated
-                                                .toStringAsFixed(2)) !=
-                                            double.parse(totalAmount
-                                                .toStringAsFixed(2))) ...[
-                                          const SizedBox(height: 12),
-                                          Container(
-                                            padding: const EdgeInsets.all(12),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.error
-                                                  .withOpacity(0.1),
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                              border: Border.all(
-                                                  color: AppColors.error
-                                                      .withOpacity(0.3)),
-                                            ),
-                                            child: Row(
-                                              children: [
-                                                const Icon(Icons.warning,
-                                                    color: AppColors.error,
-                                                    size: 20),
-                                                const SizedBox(width: 8),
-                                                Expanded(
-                                                  child: Text(
-                                                    _totalAllocated <
-                                                            totalAmount
-                                                        ? 'Falta asignar: \$ ${(totalAmount - _totalAllocated).toStringAsFixed(2)}'
-                                                        : 'El monto asignado supera el total por \$ ${(_totalAllocated - totalAmount).toStringAsFixed(2)}',
-                                                    style: const TextStyle(
-                                                        color: AppColors.error,
-                                                        fontWeight:
-                                                            FontWeight.w500),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ] else ...[
-                                        // UI para un solo metodo de pago
-                                        InkWell(
-                                          onTap: () =>
-                                              showPaymentMethodsSelectorDialog(
-                                            context: context,
-                                            paymentMethods: paymentMethods,
-                                            selectedPaymentMethod: selected,
-                                            getPaymentMethodIcon:
-                                                _getPaymentMethodIcon,
-                                            onSelected: (pm) {
-                                              context
-                                                  .read<PaymentMethodsBloc>()
-                                                  .add(SelectPaymentMethodEvent(
-                                                      pm));
-                                            },
-                                          ),
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                          child: Container(
-                                            padding: const EdgeInsets.all(
-                                                AppDimensions.paddingM),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.success
-                                                  .withOpacity(0.05),
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              border: Border.all(
-                                                color: AppColors.success
-                                                    .withOpacity(0.3),
-                                              ),
-                                            ),
-                                            child: Row(
-                                              children: [
-                                                Container(
-                                                  padding:
-                                                      const EdgeInsets.all(10),
-                                                  decoration: BoxDecoration(
-                                                    color: AppColors.success
-                                                        .withOpacity(0.1),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            8),
-                                                  ),
-                                                  child: Icon(
-                                                    _getPaymentMethodIcon(
-                                                      selected?.description ??
-                                                          '',
-                                                      selected?.shortDescription ??
-                                                          '',
-                                                    ),
-                                                    color: AppColors.success,
-                                                    size: 24,
-                                                  ),
-                                                ),
-                                                const SizedBox(
-                                                    width:
-                                                        AppDimensions.paddingM),
-                                                Expanded(
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Text(
-                                                        selected?.description ??
-                                                            'Seleccionar método de pago',
-                                                        style: const TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          fontSize: 16,
-                                                        ),
-                                                      ),
-                                                      if (selected != null) ...[
-                                                        const SizedBox(
-                                                            height: 4),
-                                                        Text(
-                                                          selected
-                                                              .shortDescription,
-                                                          style:
-                                                              const TextStyle(
-                                                            color: Colors.grey,
-                                                            fontSize: 13,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ],
-                                                  ),
-                                                ),
-                                                const Icon(
-                                                  Icons.arrow_drop_down,
-                                                  color: Colors.grey,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                        if (_selectedPayments.isNotEmpty) ...[
-                                          _buildDetailsForm(
-                                              0, _selectedPayments[0]),
-                                          const SizedBox(height: 12),
-                                        ],
-                                        Align(
-                                          alignment: Alignment.centerRight,
-                                          child: OutlinedButton.icon(
-                                            onPressed: () =>
-                                                showAddPaymentMethodDialog(
-                                              context: context,
-                                              allMethods: paymentMethods,
-                                              selectedPayments:
-                                                  _selectedPayments,
-                                              totalAmount: totalAmount,
-                                              totalAllocated: _totalAllocated,
-                                              getPaymentMethodIcon:
-                                                  _getPaymentMethodIcon,
-                                              onMethodAdded:
-                                                  (pm, defaultAmount) {
-                                                setState(() {
-                                                  _selectedPayments.add(
-                                                      pm.copyWith(
-                                                          amount:
-                                                              defaultAmount));
-                                                  _updateChangeAndAmounts(
-                                                      totalAmount);
-                                                });
-                                              },
-                                            ),
-                                            icon: const Icon(Icons.add),
-                                            label: const Text(
-                                                'Agregar Otro Método'),
-                                            style: OutlinedButton.styleFrom(
-                                              foregroundColor:
-                                                  AppColors.primary,
-                                              side: const BorderSide(
-                                                  color: AppColors.primary),
-                                              shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(8)),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ],
-                                  );
-                                }
-
-                                return const SizedBox.shrink();
+                                });
+                              },
+                              onChangeCalculated: (change) {
+                                setState(() {
+                                  _change = change;
+                                });
                               },
                             ),
-
-                            const SizedBox(height: 24),
-                            const Divider(height: 1),
-                            const SizedBox(height: 24),
-
-                            // Mostrar desglose si aplican percepciones
-                            if (_iibbAmount > 0 ||
-                                _vatPerceptionAmount > 0 ||
-                                _internalTaxAmount > 0) ...[
-                              Container(
-                                padding: const EdgeInsets.all(
-                                    AppDimensions.paddingM),
-                                decoration: BoxDecoration(
-                                  color: AppColors.info.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: AppColors.info.withOpacity(0.3),
-                                  ),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        const Text(
-                                          'Subtotal:',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        Text(
-                                          '\$ ${state.subtotal.toStringAsFixed(2)}',
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        const Text(
-                                          'IVA:',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        Text(
-                                          '\$ ${state.totalIva.toStringAsFixed(2)}',
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    if (_iibbAmount > 0) ...[
-                                      const SizedBox(height: 8),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          const Text(
-                                            'Percep. IIBB:',
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold,
-                                              color: AppColors.info,
-                                            ),
-                                          ),
-                                          Text(
-                                            '\$ ${_iibbAmount.toStringAsFixed(2)}',
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold,
-                                              color: AppColors.info,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                    if (_vatPerceptionAmount > 0) ...[
-                                      const SizedBox(height: 8),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          const Text(
-                                            'Percep. IVA:',
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold,
-                                              color: AppColors.info,
-                                            ),
-                                          ),
-                                          Text(
-                                            '\$ ${_vatPerceptionAmount.toStringAsFixed(2)}',
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold,
-                                              color: AppColors.info,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                    if (_internalTaxAmount > 0) ...[
-                                      const SizedBox(height: 8),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          const Text(
-                                            'Imp. Interno:',
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold,
-                                              color: AppColors.info,
-                                            ),
-                                          ),
-                                          Text(
-                                            '\$ ${_internalTaxAmount.toStringAsFixed(2)}',
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold,
-                                              color: AppColors.info,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                            ],
-
-                            if (_selectedPayments.length <= 1)
-                              CashPaymentWidget(
-                                key: ValueKey(totalAmount),
-                                totalAmount: totalAmount,
-                                onAmountChanged: (amount) {
-                                  setState(() {
-                                    _receivedAmount = amount;
-                                    if (_selectedPayments.isNotEmpty &&
-                                        (_selectedPayments[0]
-                                                .description
-                                                .toLowerCase()
-                                                .contains('efectivo') ||
-                                            _selectedPayments[0]
-                                                .shortDescription
-                                                .toLowerCase()
-                                                .contains('efectivo'))) {
-                                      _selectedPayments[0] =
-                                          _selectedPayments[0]
-                                              .copyWith(receivedAmount: amount);
-                                    }
-                                  });
-                                },
-                                onChangeCalculated: (change) {
-                                  setState(() {
-                                    _change = change;
-                                  });
-                                },
-                              ),
-                          ],
                           if (isProcessing) ...[
                             const SizedBox(height: 24),
                             Container(
@@ -1605,7 +949,6 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                       ),
                     ),
                   ),
-
                   // Botones de acción
                   Container(
                     padding: const EdgeInsets.symmetric(

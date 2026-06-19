@@ -16,6 +16,24 @@ class CartLogItemWidget extends StatelessWidget {
     final color = isAdd ? AppColors.success : AppColors.error;
     final sign = isAdd ? '+' : '-';
 
+    final product = entry.item.product;
+    final basePrice = product.price ?? 0.0;
+    final vatRate = product.vat / 100.0;
+    final internalTax = product.internalTax;
+    final fractional = product.fractional ?? 1;
+
+    double displayedUnitPrice = basePrice * (1 + vatRate);
+    if (internalTax > 0) {
+      displayedUnitPrice += internalTax * fractional;
+    }
+
+    double displayedRowTotal;
+    if (entry.item.isWeighted ?? false) {
+      displayedRowTotal = entry.item.pricePerKg ?? 0.0;
+    } else {
+      displayedRowTotal = displayedUnitPrice * entry.item.quantity;
+    }
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6),
       child: Padding(
@@ -56,7 +74,7 @@ class CartLogItemWidget extends StatelessWidget {
                       ),
                       Flexible(
                         child: Text(
-                          '  • ${(((entry.item.product.price ?? 0) * (entry.item.product.vat / 100)) + (entry.item.product.price ?? 0)).formatToCurrency()}  • ${entry.timestamp.hour.toString().padLeft(2, '0')}:${entry.timestamp.minute.toString().padLeft(2, '0')}',
+                          '  • ${displayedUnitPrice.formatToCurrency()}  • ${entry.timestamp.hour.toString().padLeft(2, '0')}:${entry.timestamp.minute.toString().padLeft(2, '0')}',
                           style: Theme.of(context)
                               .textTheme
                               .bodySmall
@@ -70,7 +88,7 @@ class CartLogItemWidget extends StatelessWidget {
               ),
             ),
             Text(
-              '$sign ${(entry.item.isWeighted ?? false) ? ((entry.item.pricePerKg ?? 0.0)).formatToCurrency() : ((((entry.item.product.price ?? 0.0) * (entry.item.product.vat / 100)) + (entry.item.product.price ?? 0.0)) * entry.item.quantity).formatToCurrency()}',
+              '$sign ${displayedRowTotal.formatToCurrency()}',
               style: Theme.of(context)
                   .textTheme
                   .bodyMedium

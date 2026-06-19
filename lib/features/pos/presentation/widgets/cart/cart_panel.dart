@@ -11,6 +11,7 @@ import 'package:punto_venta_app/features/pos/presentation/widgets/cart/cart_log_
 import 'package:punto_venta_app/features/pos/presentation/widgets/cart/cart_panel_header.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/cart/cart_summary_widget.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/cart/confirmation_panel.dart';
+import 'package:punto_venta_app/features/pos/presentation/utils/internal_tax_calculator.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_dimensions.dart';
 import '../../bloc/cart/cart_bloc.dart';
@@ -93,9 +94,13 @@ class _CartPanelState extends State<CartPanel> {
                                       }
                                     });
                                   }
-                                  double subtotal = state.subtotal;
-                                  double totalIva = state.totalIva;
-                                  double totalConIva = subtotal + totalIva;
+                                   final internalTaxResult = InternalTaxCalculator.calculateInternalTax(
+                                     items: state.items,
+                                   );
+                                   final internalTax = internalTaxResult['total'] ?? 0.0;
+                                   double subtotal = state.subtotal;
+                                   double totalIva = state.totalIva;
+                                   double totalConIva = subtotal + totalIva + internalTax;
 
                                   return Column(
                                     children: [
