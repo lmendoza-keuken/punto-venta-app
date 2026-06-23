@@ -10,6 +10,7 @@ import 'package:punto_venta_app/features/auth/data/datasources/auth_local_dataso
 import 'package:punto_venta_app/features/pos/domain/entities/fiscal_issuer_data.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/fiscal_issuer_data_repository.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/payment_method_repository.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/cart_item.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_bloc.dart';
@@ -674,9 +675,11 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
             // Items
             ...(_recalculatedTicket ?? widget.ticket).items.map((item) {
               final basePrice = item.pricePerKg ?? item.product.price ?? 0.0;
-              final displayPrice = _printJob!.showPricesWithTax
-                  ? _calculatePriceWithTax(basePrice, item.product.vat)
-                  : basePrice;
+              final displayPrice = _getDisplayUnitPrice(
+                item,
+                basePrice,
+                showPricesWithTax: _printJob!.showPricesWithTax,
+              );
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
@@ -888,5 +891,17 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
   double _calculatePriceWithTax(double price, double? taxPercentage) {
     final tax = (taxPercentage ?? 0.0) / 100;
     return price * (1 + tax);
+  }
+
+  double _getDisplayUnitPrice(CartItem item, double basePrice, {required bool showPricesWithTax}) {
+    if (!showPricesWithTax) {
+      return basePrice;
+    }
+    double priceWithTax = _calculatePriceWithTax(basePrice, item.product.vat);
+    if (item.product.internalTax > 0) {
+      final fractional = item.product.fractional ?? 1;
+      priceWithTax += item.product.internalTax * fractional;
+    }
+    return priceWithTax;
   }
 }

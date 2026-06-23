@@ -59,7 +59,13 @@ class InvoicePayload {
         'timestamp': timestamp,
         'cashier': cashier,
         'client': client,
-        'paymentMethods': paymentMethods.map((pm) => pm.toJson()).toList(),
+        'paymentMethods': paymentMethods.map((pm) {
+          final map = pm.toJson();
+          if (pm.details != null) {
+            map['details'] = pm.details!.toJson();
+          }
+          return map;
+        }).toList(),
         'total': total,
         'branch_number': branchNumber,
         'branch_id': branchId,
@@ -116,10 +122,22 @@ class InvoicePayload {
 
     Map<String, dynamic>? serializeClient(Client? c) {
       if (c == null) return null;
+
+      String? doc = c.document;
+      if (doc == null || doc.trim().isEmpty) {
+        doc = c.cuit;
+      }
+      if (doc == null || doc.trim().isEmpty) {
+        doc = c.dni;
+      }
+      if (doc == null || doc.trim().isEmpty) {
+        doc = '';
+      }
+
       return {
         'id': c.id,
         'name': c.name,
-        'document': (c.document ?? c.dni ?? c.cuit),
+        'document': doc,
         'phone': c.phone,
         'email': c.email,
         'address': c.address,
@@ -169,7 +187,9 @@ class InvoicePayload {
         ];
 
         final vatPerception = itemModel.product.vatPerception;
-        if (vatPerception != null && vatPerception > 0) {
+        if (job.vatPerception > 0 &&
+            vatPerception != null &&
+            vatPerception > 0) {
           final vatPerceptionAmount = taxableBase * (vatPerception / 100.0);
           itemTaxes.add(TaxModel(
             id: 6,
@@ -181,7 +201,7 @@ class InvoicePayload {
 
         final internalTax = itemModel.product.internalTax;
         final internalTaxRate = itemModel.product.internalTaxRate;
-        if (internalTax != null && internalTax > 0) {
+        if (job.internalTax > 0 && internalTax != null && internalTax > 0) {
           final fractional = itemModel.product.fractional ?? 1;
           final itemTotalWithInternalTax =
               (internalTax + unitPrice) * quantity * fractional;

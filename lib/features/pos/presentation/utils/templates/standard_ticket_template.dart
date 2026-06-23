@@ -49,9 +49,7 @@ class StandardTicketTemplate extends BaseTicketTemplate {
         final pricePerKg = (item.pricePerKg ?? item.product.price ?? 0.0);
 
         // Calcular precio con o sin IVA según configuración
-        final displayPrice = printJob.showPricesWithTax
-            ? calculatePriceWithTax(pricePerKg, item.product.vat)
-            : pricePerKg;
+        final displayPrice = getDisplayUnitPrice(item, pricePerKg, showPricesWithTax: printJob.showPricesWithTax);
 
         final subtotal = weightKg * displayPrice;
 
@@ -70,9 +68,7 @@ class StandardTicketTemplate extends BaseTicketTemplate {
         final basePrice = (item.pricePerKg ?? item.product.price ?? 0.0);
 
         // Calcular precio con o sin IVA según configuración
-        final displayPrice = printJob.showPricesWithTax
-            ? calculatePriceWithTax(basePrice, item.product.vat)
-            : basePrice;
+        final displayPrice = getDisplayUnitPrice(item, basePrice, showPricesWithTax: printJob.showPricesWithTax);
 
         final unitPrice = displayPrice.formatToCurrency();
         final subtotalValue = (item.quantity * displayPrice).formatToCurrency();

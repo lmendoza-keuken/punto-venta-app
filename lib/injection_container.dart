@@ -81,6 +81,7 @@ import 'package:punto_venta_app/features/pos/domain/usecases/load_ordes_usecase.
 import 'package:punto_venta_app/features/pos/domain/usecases/print_ticket_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/send_invoice_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/update_ticket_config_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/calculate_order_taxes_usecase.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/checkout/checkout_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/payment_methods_bloc.dart';
@@ -245,6 +246,13 @@ Future<void> init() async {
         getTicketConfigUsecase: sl(),
         sendInvoiceUseCase: sl(),
         processPartialReturnUseCase: sl(),
+        calculateOrderTaxesUseCase: sl(),
+      ));
+
+  sl.registerLazySingleton(() => CalculateOrderTaxesUseCase(
+        pdvLocalDataSource: sl(),
+        branchLocalDataSource: sl(),
+        vatCategoryLocalDataSource: sl(),
       ));
 
   // sl.registerFactory(() => PrinterBloc(printTicketUsecase: sl()));

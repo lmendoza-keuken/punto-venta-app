@@ -12,14 +12,12 @@ import 'package:punto_venta_app/features/pos/domain/repositories/fiscal_issuer_d
 import 'package:punto_venta_app/features/pos/domain/usecases/complete_order_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_ticket_config_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/send_invoice_usecase.dart';
-import 'package:punto_venta_app/features/pos/presentation/utils/iibb_calculator.dart';
-import 'package:punto_venta_app/features/pos/presentation/utils/vat_perception_calculator.dart';
-import 'package:punto_venta_app/features/pos/presentation/utils/internal_tax_calculator.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/ticket_template_resolver.dart';
 import 'checkout_event.dart';
 import 'checkout_state.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/process_partial_return_usecase.dart';
 import 'package:punto_venta_app/features/pos/data/models/partial_return_request_model.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/calculate_order_taxes_usecase.dart';
 
 class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
   final AuthLocalDataSource authLocalDataSource;
@@ -32,6 +30,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
   final GetTicketConfigUsecase getTicketConfigUsecase;
   final SendInvoiceUseCase sendInvoiceUseCase;
   final ProcessPartialReturnUseCase processPartialReturnUseCase;
+  final CalculateOrderTaxesUseCase calculateOrderTaxesUseCase;
 
   CheckoutBloc({
     required this.authLocalDataSource,
@@ -44,6 +43,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
     required this.getTicketConfigUsecase,
     required this.sendInvoiceUseCase,
     required this.processPartialReturnUseCase,
+    required this.calculateOrderTaxesUseCase,
   }) : super(const CheckoutInitial()) {
     on<ProcessSale>(_onProcessSale);
     on<ResetCheckout>(_onResetCheckout);
@@ -73,7 +73,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
       //   return;
       // }
 
-      // Obtener información de la sucursal y categoría IVA para calcular IIBB
+      // Obtener información de la sucursal y categoría IVA para determinar plantillas
       final branch = config?.branchId != null
           ? await branchLocalDataSource.getBranchById(config!.branchId!)
           : null;
@@ -82,43 +82,21 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
           ? await _getVatCategoryById(event.client!.vatCategoryId!)
           : null;
 
-      // Calcular IIBB con porcentaje
-      final iibbResult = IibbCalculator.calculateIibbWithPercentage(
-        client: event.client,
-        branch: branch,
-        vatCategory: vatCategory,
-        subtotal: event.subtotal,
-        totalWithVat: event.total,
-      );
-
-      final iibbAmount = iibbResult['amount'] ?? 0.0;
-      final iibbPercentage = iibbResult['percentage'];
-
-      // Calcular percepción de IVA
-      final vatPerceptionResult =
-          VatPerceptionCalculator.calculateVatPerceptionWithBreakdown(
-        cartItems: event.items,
-        branch: branch,
-        vatCategory: vatCategory,
-      );
-
-      final vatPerceptionAmount = vatPerceptionResult['total'] ?? 0.0;
-      final vatPerceptionByRateDouble =
-          vatPerceptionResult['byPerception'] as Map<double, double>?;
-      final vatPerceptionByRate = vatPerceptionByRateDouble?.map(
-        (key, value) => MapEntry(key.toString(), value),
-      );
-
-      // Calcular impuesto interno
-      final internalTaxResult = InternalTaxCalculator.calculateInternalTax(
+      // Calcular impuestos usando el caso de uso centralizado
+      final taxResult = await calculateOrderTaxesUseCase(
         items: event.items,
+        subtotal: event.subtotal,
+        totalIva: event.totalIva,
+        client: event.client,
       );
 
-      final internalTaxAmount = internalTaxResult['total'] ?? 0.0;
-      final internalTaxRate = internalTaxResult['rate'];
-
-      final totalWithIibb =
-          event.total + iibbAmount + vatPerceptionAmount + internalTaxAmount;
+      final iibbAmount = taxResult.iibbAmount;
+      final iibbPercentage = taxResult.iibbPercentage;
+      final vatPerceptionAmount = taxResult.vatPerceptionAmount;
+      final vatPerceptionByRate = taxResult.vatPerceptionByRate;
+      final internalTaxAmount = taxResult.internalTaxAmount;
+      final internalTaxRate = taxResult.internalTaxRate;
+      final totalWithIibb = taxResult.totalAmount;
 
       // Determinar template automáticamente
       TicketTemplateType templateType = TicketTemplateType.standard;

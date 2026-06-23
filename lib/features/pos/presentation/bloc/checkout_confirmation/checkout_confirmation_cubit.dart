@@ -1,25 +1,21 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:punto_venta_app/features/pos/data/datasources/pdv_local_datasource.dart';
-import 'package:punto_venta_app/features/pos/data/datasources/branch_local_datasource.dart';
-import 'package:punto_venta_app/features/pos/data/datasources/vat_category_local_datasource.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/cart_item.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/payment_method.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_return_reasons_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/calculate_order_taxes_usecase.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_state.dart';
-import 'package:punto_venta_app/features/pos/presentation/utils/iibb_calculator.dart';
-import 'package:punto_venta_app/features/pos/presentation/utils/vat_perception_calculator.dart';
-import 'package:punto_venta_app/features/pos/presentation/utils/internal_tax_calculator.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/checkout/checkout_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/cart/confirmation/confirmation_helpers.dart';
 import 'checkout_confirmation_state.dart';
 
 class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
   final FetchReturnReasonsUsecase fetchReturnReasonsUsecase;
-  final PdvLocalDataSource pdvLocalDataSource;
-  final BranchLocalDataSource branchLocalDataSource;
-  final VatCategoryLocalDataSource vatCategoryLocalDataSource;
+  final CalculateOrderTaxesUseCase calculateOrderTaxesUseCase;
   final CartBloc cartBloc;
   final ClientsBloc clientsBloc;
 
@@ -28,9 +24,7 @@ class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
 
   CheckoutConfirmationCubit({
     required this.fetchReturnReasonsUsecase,
-    required this.pdvLocalDataSource,
-    required this.branchLocalDataSource,
-    required this.vatCategoryLocalDataSource,
+    required this.calculateOrderTaxesUseCase,
     required this.cartBloc,
     required this.clientsBloc,
   }) : super(const CheckoutConfirmationState()) {
@@ -55,7 +49,7 @@ class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
         selectedReturnReasonId: defaultReasonId,
       ));
 
-      // 2. Calculate taxes using injected blocs
+      // 2. Calculate taxes using injected UseCase
       await _calculateTaxes(cartBloc.state, clientsBloc.state, defaultPaymentMethod: defaultPaymentMethod);
     } catch (e) {
       emit(state.copyWith(
@@ -176,73 +170,78 @@ class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
     }
 
     final cartLoaded = cartState;
-    final internalTaxResult = InternalTaxCalculator.calculateInternalTax(
-      items: cartLoaded.items,
-    );
-    final double computedInternalTax = internalTaxResult['total'] ?? 0.0;
-
     final selectedClient =
         clientsState is ClientsLoaded ? clientsState.selectedClient : null;
 
-    double iibb = 0.0;
-    double vatPerception = 0.0;
-
-    if (selectedClient != null) {
-      try {
-        final pdvConfig = await pdvLocalDataSource.getPdvConfig();
-        final branchId = pdvConfig?.branchId;
-
-        if (branchId != null) {
-          final branch = await branchLocalDataSource.getBranchById(branchId);
-          final vatCategoryId = selectedClient.vatCategoryId;
-          final allVatCategories = await vatCategoryLocalDataSource.getCachedVatCategories();
-          final vatCategory =
-              allVatCategories?.where((cat) => cat.id == vatCategoryId).firstOrNull;
-
-          iibb = IibbCalculator.calculateIibb(
-            client: selectedClient,
-            branch: branch,
-            vatCategory: vatCategory,
-            subtotal: cartLoaded.subtotal,
-            totalWithVat: cartLoaded.subtotal + cartLoaded.totalIva,
-          );
-
-          vatPerception = VatPerceptionCalculator.calculateVatPerception(
-            cartItems: cartLoaded.items,
-            branch: branch,
-            vatCategory: vatCategory,
-          );
-        }
-      } catch (e) {
-        // Keep logs / handle errors
-      }
-    }
-
-    final totalAmount = cartLoaded.subtotal +
-        cartLoaded.totalIva +
-        iibb +
-        vatPerception +
-        computedInternalTax;
+    final taxResult = await calculateOrderTaxesUseCase(
+      items: cartLoaded.items,
+      subtotal: cartLoaded.subtotal,
+      totalIva: cartLoaded.totalIva,
+      client: selectedClient,
+    );
 
     List<PaymentMethod> updatedPayments = List<PaymentMethod>.from(state.selectedPayments);
     if (updatedPayments.isEmpty && defaultPaymentMethod != null) {
-      updatedPayments = [defaultPaymentMethod.copyWith(amount: totalAmount)];
+      updatedPayments = [defaultPaymentMethod.copyWith(amount: taxResult.totalAmount)];
     } else if (updatedPayments.length == 1) {
-      updatedPayments[0] = updatedPayments[0].copyWith(amount: totalAmount);
+      updatedPayments[0] = updatedPayments[0].copyWith(amount: taxResult.totalAmount);
     }
 
-    final result = calculateChangeAndAmounts(updatedPayments, totalAmount);
+    final result = calculateChangeAndAmounts(updatedPayments, taxResult.totalAmount);
 
     emit(state.copyWith(
       isLoading: false,
-      iibbAmount: iibb,
-      vatPerceptionAmount: vatPerception,
-      internalTaxAmount: computedInternalTax,
-      totalAmount: totalAmount,
+      iibbAmount: taxResult.iibbAmount,
+      vatPerceptionAmount: taxResult.vatPerceptionAmount,
+      internalTaxAmount: taxResult.internalTaxAmount,
+      totalAmount: taxResult.totalAmount,
       selectedPayments: updatedPayments,
       receivedAmount: result.receivedAmount,
       change: result.change,
     ));
+  }
+
+  ProcessSale buildProcessSaleEvent({PaymentMethod? fallbackPaymentMethod}) {
+    final cartState = cartBloc.state;
+    final clientsState = clientsBloc.state;
+
+    final items = cartState is CartLoaded ? cartState.items : const <CartItem>[];
+    final logItems = cartState is CartLoaded ? cartState.log : const <CartLogEntry>[];
+    final total = cartState is CartLoaded ? cartState.total : 0.0;
+    final totalIva = cartState is CartLoaded ? cartState.totalIva : 0.0;
+    final subtotal = cartState is CartLoaded ? cartState.subtotal : 0.0;
+
+    final selectedClient =
+        clientsState is ClientsLoaded ? clientsState.selectedClient : null;
+
+    return ProcessSale(
+      items: items,
+      logItems: logItems,
+      total: total,
+      totalIva: totalIva,
+      subtotal: subtotal,
+      client: selectedClient,
+      paymentMethod: state.selectedPayments.isNotEmpty
+          ? state.selectedPayments.first
+          : fallbackPaymentMethod,
+      paymentMethods: state.selectedPayments.isNotEmpty
+          ? state.selectedPayments
+          : null,
+      receivedAmount: state.receivedAmount,
+      change: state.change,
+    );
+  }
+
+  ConfirmReturn buildConfirmReturnEvent() {
+    final cartState = cartBloc.state;
+    final items = cartState is CartLoaded ? cartState.items : const <CartItem>[];
+    final logItems = cartState is CartLoaded ? cartState.log : const <CartLogEntry>[];
+
+    return ConfirmReturn(
+      reasonId: state.selectedReturnReasonId ?? -1,
+      items: items,
+      logItems: logItems,
+    );
   }
 
   @override

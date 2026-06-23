@@ -5,12 +5,10 @@ import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/checkout/checkout_bloc.dart';
-import 'package:punto_venta_app/features/pos/presentation/bloc/checkout/checkout_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/checkout/checkout_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/checkout_confirmation/checkout_confirmation_cubit.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/checkout_confirmation/checkout_confirmation_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_bloc.dart';
-import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/payment_methods_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/payment_methods_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/cart/confirmation/return_confirmation/return_confirmation_view.dart';
@@ -41,9 +39,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
     return BlocProvider(
       create: (context) => CheckoutConfirmationCubit(
         fetchReturnReasonsUsecase: di.sl(),
-        pdvLocalDataSource: di.sl(),
-        branchLocalDataSource: di.sl(),
-        vatCategoryLocalDataSource: di.sl(),
+        calculateOrderTaxesUseCase: di.sl(),
         cartBloc: context.read<CartBloc>(),
         clientsBloc: context.read<ClientsBloc>(),
       )..load(defaultPaymentMethod),
@@ -193,11 +189,9 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                                       ? null
                                       : () {
                                           if (isReturnMode) {
-                                            _confirmReturn(context, cartState,
-                                                confirmationState);
+                                            _confirmReturn(context);
                                           } else {
-                                            _confirmSale(context, cartState,
-                                                confirmationState);
+                                            _confirmSale(context);
                                           }
                                         },
                                   style: ElevatedButton.styleFrom(
@@ -269,53 +263,26 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
   // Función para confirmar la venta
   void _confirmSale(
     BuildContext context,
-    CartLoaded cartState,
-    CheckoutConfirmationState confirmationState,
   ) {
-    final clientsState = context.read<ClientsBloc>().state;
-    final selectedClient =
-        clientsState is ClientsLoaded ? clientsState.selectedClient : null;
-
     final paymentMethodsState = context.read<PaymentMethodsBloc>().state;
     final selectedPaymentMethod = paymentMethodsState is PaymentMethodsLoaded
         ? paymentMethodsState.selectedPaymentMethod
         : null;
 
-    context.read<CheckoutBloc>().add(
-          ProcessSale(
-            items: cartState.items,
-            logItems: cartState.log,
-            total: cartState.total,
-            totalIva: cartState.totalIva,
-            subtotal: cartState.subtotal,
-            client: selectedClient,
-            paymentMethod: confirmationState.selectedPayments.isNotEmpty
-                ? confirmationState.selectedPayments.first
-                : selectedPaymentMethod,
-            paymentMethods: confirmationState.selectedPayments.isNotEmpty
-                ? confirmationState.selectedPayments
-                : null,
-            receivedAmount: confirmationState.receivedAmount,
-            change: confirmationState.change,
-          ),
-        );
+    final event =
+        context.read<CheckoutConfirmationCubit>().buildProcessSaleEvent(
+              fallbackPaymentMethod: selectedPaymentMethod,
+            );
+    context.read<CheckoutBloc>().add(event);
   }
 
   // funcion para confirmar la devolucion
   void _confirmReturn(
     BuildContext context,
-    CartLoaded cartState,
-    CheckoutConfirmationState confirmationState,
   ) {
-    if (confirmationState.selectedReturnReasonId == null) return;
-
-    context.read<CheckoutBloc>().add(
-          ConfirmReturn(
-            reasonId: confirmationState.selectedReturnReasonId!,
-            items: cartState.items,
-            logItems: cartState.log,
-          ),
-        );
+    final event =
+        context.read<CheckoutConfirmationCubit>().buildConfirmReturnEvent();
+    context.read<CheckoutBloc>().add(event);
   }
 
   // Función para manejar el cierre del panel

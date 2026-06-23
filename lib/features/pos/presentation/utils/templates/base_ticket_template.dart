@@ -216,9 +216,7 @@ abstract class BaseTicketTemplate {
       final basePrice = item.product.price ?? 0;
 
       if (item.isWeighted == true) {
-        final unitPrice = showPricesWithTax
-            ? calculatePriceWithTax(basePrice, item.product.vat)
-            : basePrice;
+        final unitPrice = getDisplayUnitPrice(item, basePrice, showPricesWithTax: showPricesWithTax);
         final subtotalValue = (item.quantity * unitPrice).formatToCurrency();
         final line =
             "  ${(item.quantity / 1000).toStringAsFixed(3)} kg x ${unitPrice.formatToCurrency()}";
@@ -229,9 +227,7 @@ abstract class BaseTicketTemplate {
         commands.add(TicketCommand.text("$line$spacer$subtotalValue"));
         commands.add(TicketCommand.feedLine());
       } else {
-        final displayPrice = showPricesWithTax
-            ? calculatePriceWithTax(basePrice, item.product.vat)
-            : basePrice;
+        final displayPrice = getDisplayUnitPrice(item, basePrice, showPricesWithTax: showPricesWithTax);
 
         final unitPrice = displayPrice.formatToCurrency();
         final subtotalValue = (item.quantity * displayPrice).formatToCurrency();
@@ -418,6 +414,18 @@ abstract class BaseTicketTemplate {
   double calculatePriceWithTax(double price, double? taxPercentage) {
     final tax = (taxPercentage ?? 0.0) / 100;
     return price * (1 + tax);
+  }
+
+  double getDisplayUnitPrice(dynamic item, double basePrice, {required bool showPricesWithTax}) {
+    if (!showPricesWithTax) {
+      return basePrice;
+    }
+    double priceWithTax = calculatePriceWithTax(basePrice, item.product.vat);
+    if (item.product.internalTax > 0) {
+      final fractional = item.product.fractional ?? 1;
+      priceWithTax += item.product.internalTax * fractional;
+    }
+    return priceWithTax;
   }
 }
 
