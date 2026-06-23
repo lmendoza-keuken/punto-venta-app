@@ -31,7 +31,9 @@ class ProductListItem extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
         side: BorderSide(
-          color: isLowStock ? AppColors.warning.withOpacity(0.3) : Colors.transparent,
+          color: isLowStock
+              ? AppColors.warning.withValues(alpha: 0.3)
+              : Colors.transparent,
           width: 2,
         ),
       ),
@@ -40,7 +42,9 @@ class ProductListItem extends StatelessWidget {
           width: 50,
           height: 50,
           decoration: BoxDecoration(
-            color: isLowStock ? AppColors.warning.withOpacity(0.1) : AppColors.primary.withOpacity(0.1),
+            color: isLowStock
+                ? AppColors.warning.withValues(alpha: 0.1)
+                : AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(AppDimensions.borderRadiusS),
           ),
           child: Icon(
@@ -85,7 +89,7 @@ class ProductListItem extends StatelessWidget {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.warning.withOpacity(0.1),
+                      color: AppColors.warning.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: const Text(
@@ -121,7 +125,8 @@ class ProductListItem extends StatelessWidget {
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: onAddStock,
-                        icon: const Icon(Icons.add, size: 18, color: AppColors.success),
+                        icon: const Icon(Icons.add,
+                            size: 18, color: AppColors.success),
                         label: const Text('Agregar'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppColors.success,
@@ -133,7 +138,8 @@ class ProductListItem extends StatelessWidget {
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: onRemoveStock,
-                        icon: const Icon(Icons.remove, size: 18, color: AppColors.error),
+                        icon: const Icon(Icons.remove,
+                            size: 18, color: AppColors.error),
                         label: const Text('Quitar'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppColors.error,
@@ -145,7 +151,8 @@ class ProductListItem extends StatelessWidget {
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: onAdjustStock,
-                        icon: const Icon(Icons.tune, size: 18, color: AppColors.warning),
+                        icon: const Icon(Icons.tune,
+                            size: 18, color: AppColors.warning),
                         label: const Text('Ajustar'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppColors.warning,
@@ -162,7 +169,8 @@ class ProductListItem extends StatelessWidget {
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: onEdit,
-                        icon: const Icon(Icons.edit, size: 18, color: Colors.white),
+                        icon: const Icon(Icons.edit,
+                            size: 18, color: Colors.white),
                         label: const Text('Editar'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
@@ -174,7 +182,8 @@ class ProductListItem extends StatelessWidget {
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: onDelete,
-                        icon: const Icon(Icons.delete, size: 18, color: Colors.white),
+                        icon: const Icon(Icons.delete,
+                            size: 18, color: Colors.white),
                         label: const Text('Eliminar'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.error,

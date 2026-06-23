@@ -29,7 +29,7 @@ class DeleteButton extends StatelessWidget {
             boxShadow: uiState.isDeleteMode
                 ? [
                     BoxShadow(
-                      color: AppColors.error.withOpacity(0.3),
+                      color: AppColors.error.withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),

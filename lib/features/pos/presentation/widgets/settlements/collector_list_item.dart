@@ -52,14 +52,14 @@ class CollectorListItem extends StatelessWidget {
                 height: 50,
                 decoration: BoxDecoration(
                   color: isDark
-                      ? AppColors.primary.withOpacity(0.15)
-                      : AppColors.primary.withOpacity(0.1),
+                      ? AppColors.primary.withValues(alpha: 0.15)
+                      : AppColors.primary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
                   child: Text(
                     initials,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: AppColors.primary,
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
@@ -79,7 +79,9 @@ class CollectorListItem extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.textPrimary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -89,7 +91,9 @@ class CollectorListItem extends StatelessWidget {
                       'ID Usuario: ${collector.userId ?? "N/A"}',
                       style: TextStyle(
                         fontSize: 12,
-                        color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -107,11 +111,13 @@ class CollectorListItem extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                       color: pendingTotal > 0
                           ? (isDark ? Colors.greenAccent : AppColors.primary)
-                          : (isDark ? AppColors.darkTextSecondary : AppColors.textSecondary),
+                          : (isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.textSecondary),
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Row(
+                  const Row(
                     children: [
                       Text(
                         'Ver detalles',
@@ -121,7 +127,7 @@ class CollectorListItem extends StatelessWidget {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const SizedBox(width: 4),
+                      SizedBox(width: 4),
                       Icon(
                         Icons.arrow_forward_ios,
                         size: 10,

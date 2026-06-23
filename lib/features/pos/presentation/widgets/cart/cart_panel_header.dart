@@ -105,7 +105,7 @@ class CartPanelHeader extends StatelessWidget {
           boxShadow: isActive
               ? [
                   BoxShadow(
-                    color: activeColor.withOpacity(0.3),
+                    color: activeColor.withValues(alpha: 0.3),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),

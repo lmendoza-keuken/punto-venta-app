@@ -84,31 +84,36 @@ class _AppModeSettingsDialogContentState
                   style: TextStyle(fontSize: 16),
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Modo En Línea
                 InkWell(
-                  onTap: isLoading ? null : () {
-                    setState(() {
-                      _offlineMode = false;
-                    });
-                  },
+                  onTap: isLoading
+                      ? null
+                      : () {
+                          setState(() {
+                            _offlineMode = false;
+                          });
+                        },
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: !_offlineMode ? AppColors.primary : Colors.grey.shade300,
+                        color: !_offlineMode
+                            ? AppColors.primary
+                            : Colors.grey.shade300,
                         width: !_offlineMode ? 2 : 1,
                       ),
                       borderRadius: BorderRadius.circular(8),
-                      color: !_offlineMode 
-                          ? AppColors.primary.withOpacity(0.1) 
+                      color: !_offlineMode
+                          ? AppColors.primary.withValues(alpha: 0.1)
                           : Colors.transparent,
                     ),
                     child: Row(
                       children: [
                         Icon(
                           Icons.cloud_queue,
-                          color: !_offlineMode ? AppColors.primary : Colors.grey,
+                          color:
+                              !_offlineMode ? AppColors.primary : Colors.grey,
                           size: 32,
                         ),
                         const SizedBox(width: 16),
@@ -121,13 +126,16 @@ class _AppModeSettingsDialogContentState
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  color: !_offlineMode ? AppColors.primary : Colors.black,
+                                  color: !_offlineMode
+                                      ? AppColors.primary
+                                      : Colors.black,
                                 ),
                               ),
                               const SizedBox(height: 4),
                               const Text(
                                 'La aplicación estará conectada al servidor para sincronización en tiempo real.',
-                                style: TextStyle(fontSize: 14, color: Colors.grey),
+                                style:
+                                    TextStyle(fontSize: 14, color: Colors.grey),
                               ),
                             ],
                           ),
@@ -135,36 +143,42 @@ class _AppModeSettingsDialogContentState
                         Radio<bool>(
                           value: false,
                           groupValue: _offlineMode,
-                          onChanged: isLoading ? null : (value) {
-                            setState(() {
-                              _offlineMode = value!;
-                            });
-                          },
+                          onChanged: isLoading
+                              ? null
+                              : (value) {
+                                  setState(() {
+                                    _offlineMode = value!;
+                                  });
+                                },
                         ),
                       ],
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Modo Offline
                 InkWell(
-                  onTap: isLoading ? null : () {
-                    setState(() {
-                      _offlineMode = true;
-                    });
-                  },
+                  onTap: isLoading
+                      ? null
+                      : () {
+                          setState(() {
+                            _offlineMode = true;
+                          });
+                        },
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: _offlineMode ? AppColors.primary : Colors.grey.shade300,
+                        color: _offlineMode
+                            ? AppColors.primary
+                            : Colors.grey.shade300,
                         width: _offlineMode ? 2 : 1,
                       ),
                       borderRadius: BorderRadius.circular(8),
-                      color: _offlineMode 
-                          ? AppColors.primary.withOpacity(0.1) 
+                      color: _offlineMode
+                          ? AppColors.primary.withValues(alpha: 0.1)
                           : Colors.transparent,
                     ),
                     child: Row(
@@ -184,13 +198,16 @@ class _AppModeSettingsDialogContentState
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  color: _offlineMode ? AppColors.primary : Colors.black,
+                                  color: _offlineMode
+                                      ? AppColors.primary
+                                      : Colors.black,
                                 ),
                               ),
                               const SizedBox(height: 4),
                               const Text(
                                 'La aplicación trabajará sin conexión, guardando datos localmente.',
-                                style: TextStyle(fontSize: 14, color: Colors.grey),
+                                style:
+                                    TextStyle(fontSize: 14, color: Colors.grey),
                               ),
                             ],
                           ),
@@ -198,17 +215,19 @@ class _AppModeSettingsDialogContentState
                         Radio<bool>(
                           value: true,
                           groupValue: _offlineMode,
-                          onChanged: isLoading ? null : (value) {
-                            setState(() {
-                              _offlineMode = value!;
-                            });
-                          },
+                          onChanged: isLoading
+                              ? null
+                              : (value) {
+                                  setState(() {
+                                    _offlineMode = value!;
+                                  });
+                                },
                         ),
                       ],
                     ),
                   ),
                 ),
-                
+
                 if (isLoading) ...[
                   const SizedBox(height: 16),
                   const Center(

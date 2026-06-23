@@ -39,7 +39,7 @@ class _CashPaymentWidgetState extends State<CashPaymentWidget> {
   void _calculateChange() {
     final text = _amountController.text.trim();
     final enteredAmount = text.isEmpty ? null : double.tryParse(text);
-    
+
     double changeValue = 0.0;
     if (enteredAmount != null) {
       final calculated = enteredAmount - widget.totalAmount;
@@ -64,10 +64,10 @@ class _CashPaymentWidgetState extends State<CashPaymentWidget> {
         Container(
           padding: const EdgeInsets.all(AppDimensions.paddingM),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: AppColors.primary.withOpacity(0.3),
+              color: AppColors.primary.withValues(alpha: 0.3),
             ),
           ),
           child: Row(
@@ -128,13 +128,13 @@ class _CashPaymentWidgetState extends State<CashPaymentWidget> {
           padding: const EdgeInsets.all(AppDimensions.paddingM),
           decoration: BoxDecoration(
             color: _change > 0
-                ? AppColors.success.withOpacity(0.1)
-                : Colors.grey.withOpacity(0.05),
+                ? AppColors.success.withValues(alpha: 0.1)
+                : Colors.grey.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: _change > 0
-                  ? AppColors.success.withOpacity(0.3)
-                  : Colors.grey.withOpacity(0.2),
+                  ? AppColors.success.withValues(alpha: 0.3)
+                  : Colors.grey.withValues(alpha: 0.2),
             ),
           ),
           child: Row(
@@ -191,15 +191,15 @@ class _CashPaymentWidgetState extends State<CashPaymentWidget> {
           vertical: 8,
         ),
         decoration: BoxDecoration(
-          color: AppColors.warning.withOpacity(0.1),
+          color: AppColors.warning.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
-            color: AppColors.warning.withOpacity(0.3),
+            color: AppColors.warning.withValues(alpha: 0.3),
           ),
         ),
         child: Row(
           children: [
-            Icon(
+            const Icon(
               Icons.warning,
               size: 18,
               color: AppColors.warning,
@@ -226,15 +226,15 @@ class _CashPaymentWidgetState extends State<CashPaymentWidget> {
           vertical: 8,
         ),
         decoration: BoxDecoration(
-          color: AppColors.success.withOpacity(0.1),
+          color: AppColors.success.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
-            color: AppColors.success.withOpacity(0.3),
+            color: AppColors.success.withValues(alpha: 0.3),
           ),
         ),
         child: Row(
           children: [
-            Icon(
+            const Icon(
               Icons.check_circle_outline,
               size: 18,
               color: AppColors.success,

@@ -31,12 +31,14 @@ class SettlementSearchField extends StatelessWidget {
               hintText: 'Buscar cobrador por nombre o ID...',
               hintStyle: TextStyle(
                 color: isDark
-                    ? AppColors.darkTextSecondary.withOpacity(0.6)
+                    ? AppColors.darkTextSecondary.withValues(alpha: 0.6)
                     : AppColors.textHint,
               ),
               prefixIcon: Icon(
                 Icons.search,
-                color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                color: isDark
+                    ? AppColors.darkTextSecondary
+                    : AppColors.textSecondary,
               ),
               suffixIcon: value.text.isNotEmpty
                   ? IconButton(
@@ -50,22 +52,27 @@ class SettlementSearchField extends StatelessWidget {
               filled: true,
               fillColor: isDark ? AppColors.darkCard : Colors.white,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
+                borderRadius:
+                    BorderRadius.circular(AppDimensions.borderRadiusM),
                 borderSide: isDark
                     ? const BorderSide(color: AppColors.darkDivider)
                     : BorderSide(color: Colors.grey.shade300),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
+                borderRadius:
+                    BorderRadius.circular(AppDimensions.borderRadiusM),
                 borderSide: isDark
                     ? const BorderSide(color: AppColors.darkDivider)
                     : BorderSide(color: Colors.grey.shade300),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
-                borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                borderRadius:
+                    BorderRadius.circular(AppDimensions.borderRadiusM),
+                borderSide:
+                    const BorderSide(color: AppColors.primary, width: 2),
               ),
-              contentPadding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingS),
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: AppDimensions.paddingS),
             ),
           );
         },

@@ -27,17 +27,17 @@ class PaymentOptionWidget extends StatelessWidget {
         padding: const EdgeInsets.all(AppDimensions.paddingS),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.primary.withOpacity(0.15)
+              ? AppColors.primary.withValues(alpha: 0.15)
               : (isEnabled
-                  ? AppColors.success.withOpacity(0.05)
-                  : Colors.grey.withOpacity(0.05)),
+                  ? AppColors.success.withValues(alpha: 0.05)
+                  : Colors.grey.withValues(alpha: 0.05)),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected
                 ? AppColors.primary
                 : (isEnabled
-                    ? AppColors.success.withOpacity(0.3)
-                    : Colors.grey.withOpacity(0.2)),
+                    ? AppColors.success.withValues(alpha: 0.3)
+                    : Colors.grey.withValues(alpha: 0.2)),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -48,10 +48,10 @@ class PaymentOptionWidget extends StatelessWidget {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? AppColors.primary.withOpacity(0.15)
+                    ? AppColors.primary.withValues(alpha: 0.15)
                     : (isEnabled
-                        ? AppColors.success.withOpacity(0.1)
-                        : Colors.grey.withOpacity(0.1)),
+                        ? AppColors.success.withValues(alpha: 0.1)
+                        : Colors.grey.withValues(alpha: 0.1)),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -68,7 +68,8 @@ class PaymentOptionWidget extends StatelessWidget {
                 paymentMethod.shortDescription,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.w500,
                     ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,

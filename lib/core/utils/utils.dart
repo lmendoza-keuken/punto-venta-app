@@ -15,9 +15,9 @@ BorderSide getBorderSide(
 }
 
 Color getOverlayColor(bool canRemoveQuantity, bool hasInsufficientQuantity) {
-  if (hasInsufficientQuantity) return AppColors.warning.withOpacity(0.15);
-  if (canRemoveQuantity) return AppColors.error.withOpacity(0.15);
-  return Colors.grey.withOpacity(0.15);
+  if (hasInsufficientQuantity) return AppColors.warning.withValues(alpha: 0.15);
+  if (canRemoveQuantity) return AppColors.error.withValues(alpha: 0.15);
+  return Colors.grey.withValues(alpha: 0.15);
 }
 
 IconData getOverlayIcon(bool canRemoveQuantity, bool hasInsufficientQuantity) {

@@ -18,7 +18,8 @@ class PaymentTaxBreakdown extends StatelessWidget {
     required this.internalTaxAmount,
   });
 
-  Widget _taxRow(String label, String value, {Color? color, bool isBold = true}) {
+  Widget _taxRow(String label, String value,
+      {Color? color, bool isBold = true}) {
     final style = TextStyle(
       fontSize: 14,
       fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
@@ -40,16 +41,18 @@ class PaymentTaxBreakdown extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(AppDimensions.paddingM),
           decoration: BoxDecoration(
-            color: AppColors.info.withOpacity(0.1),
+            color: AppColors.info.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.info.withOpacity(0.3)),
+            border: Border.all(color: AppColors.info.withValues(alpha: 0.3)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _taxRow('Subtotal:', '\$ ${cartSubtotal.toStringAsFixed(2)}', isBold: false),
+              _taxRow('Subtotal:', '\$ ${cartSubtotal.toStringAsFixed(2)}',
+                  isBold: false),
               const SizedBox(height: 8),
-              _taxRow('IVA:', '\$ ${cartTotalIva.toStringAsFixed(2)}', isBold: false),
+              _taxRow('IVA:', '\$ ${cartTotalIva.toStringAsFixed(2)}',
+                  isBold: false),
               if (iibbAmount > 0) ...[
                 const SizedBox(height: 8),
                 _taxRow(

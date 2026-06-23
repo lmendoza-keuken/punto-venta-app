@@ -20,7 +20,7 @@ class PrintTypeDialog extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(AppDimensions.paddingL),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -57,7 +57,8 @@ class PrintTypeDialog extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                         vertical: AppDimensions.paddingL,
                       ),
-                      side: const BorderSide(color: AppColors.primary, width: 2),
+                      side:
+                          const BorderSide(color: AppColors.primary, width: 2),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(
                           AppDimensions.borderRadiusM,

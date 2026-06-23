@@ -254,13 +254,13 @@ class _CurrentClientHeader extends StatelessWidget {
           padding: const EdgeInsets.all(AppDimensions.paddingM),
           decoration: BoxDecoration(
             color: selectedClient == null
-                ? AppColors.warning.withOpacity(0.1)
-                : AppColors.success.withOpacity(0.1),
+                ? AppColors.warning.withValues(alpha: 0.1)
+                : AppColors.success.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: selectedClient == null
-                  ? AppColors.warning.withOpacity(0.3)
-                  : AppColors.success.withOpacity(0.3),
+                  ? AppColors.warning.withValues(alpha: 0.3)
+                  : AppColors.success.withValues(alpha: 0.3),
             ),
           ),
           child: Row(
@@ -474,7 +474,9 @@ class _ClientListTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: AppDimensions.paddingS),
       decoration: BoxDecoration(
-        color: isSelected ? AppColors.primary.withOpacity(0.04) : Colors.white,
+        color: isSelected
+            ? AppColors.primary.withValues(alpha: 0.04)
+            : Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isSelected ? AppColors.primary : Colors.grey.shade200,
@@ -483,8 +485,8 @@ class _ClientListTile extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: isSelected
-                ? AppColors.primary.withOpacity(0.06)
-                : Colors.black.withOpacity(0.02),
+                ? AppColors.primary.withValues(alpha: 0.06)
+                : Colors.black.withValues(alpha: 0.02),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -513,7 +515,7 @@ class _ClientListTile extends StatelessWidget {
                         colors: isSelected
                             ? [
                                 AppColors.primary,
-                                AppColors.primary.withOpacity(0.8)
+                                AppColors.primary.withValues(alpha: 0.8)
                               ]
                             : [Colors.grey.shade300, Colors.grey.shade400],
                         begin: Alignment.topLeft,
@@ -605,7 +607,7 @@ class _ClientListTile extends StatelessWidget {
                       ],
                       IconButton(
                         icon: const Icon(Icons.delete_outline, size: 22),
-                        color: AppColors.error.withOpacity(0.8),
+                        color: AppColors.error.withValues(alpha: 0.8),
                         tooltip: 'Eliminar cliente',
                         onPressed: onDelete,
                       ),
@@ -628,11 +630,11 @@ class _ClientListTile extends StatelessWidget {
   }) {
     final backgroundColor = isId
         ? (isSelectedState
-            ? AppColors.primary.withOpacity(0.12)
+            ? AppColors.primary.withValues(alpha: 0.12)
             : Colors.grey.shade100)
         : (isSelectedState
-            ? AppColors.primary.withOpacity(0.08)
-            : Colors.blueGrey.shade50.withOpacity(0.6));
+            ? AppColors.primary.withValues(alpha: 0.08)
+            : Colors.blueGrey.shade50.withValues(alpha: 0.6));
     final textColor = isId
         ? (isSelectedState ? AppColors.primary : Colors.grey.shade700)
         : (isSelectedState ? AppColors.primary : Colors.blueGrey.shade800);
@@ -644,7 +646,7 @@ class _ClientListTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: isSelectedState
-              ? AppColors.primary.withOpacity(0.2)
+              ? AppColors.primary.withValues(alpha: 0.2)
               : Colors.grey.shade200,
           width: 0.5,
         ),
@@ -655,7 +657,7 @@ class _ClientListTile extends StatelessWidget {
           Icon(
             icon,
             size: 12,
-            color: textColor.withOpacity(0.7),
+            color: textColor.withValues(alpha: 0.7),
           ),
           const SizedBox(width: 3),
           Text(

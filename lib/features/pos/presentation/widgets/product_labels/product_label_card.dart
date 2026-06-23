@@ -137,11 +137,13 @@ class ProductLabelCard extends StatelessWidget {
 
   Widget _buildPrice() {
     // Calcular precio con IVA (igual que en POS)
-    final priceWithVat = ((product.price ?? 0) * (product.vat / 100)) + (product.price ?? 0);
-    final regularPriceWithVat = product.regularPrice != null 
-        ? ((product.regularPrice! * (product.vat / 100)) + product.regularPrice!)
+    final priceWithVat =
+        ((product.price ?? 0) * (product.vat / 100)) + (product.price ?? 0);
+    final regularPriceWithVat = product.regularPrice != null
+        ? ((product.regularPrice! * (product.vat / 100)) +
+            product.regularPrice!)
         : null;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -164,7 +166,8 @@ class ProductLabelCard extends StatelessWidget {
               // Porcentaje de descuento
               if (regularPriceWithVat > 0)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                   decoration: BoxDecoration(
                     color: AppColors.warning,
                     borderRadius: BorderRadius.circular(3),
@@ -188,8 +191,8 @@ class ProductLabelCard extends StatelessWidget {
             vertical: 4,
           ),
           decoration: BoxDecoration(
-            color: product.isOnSale 
-                ? AppColors.warning.withOpacity(0.15)
+            color: product.isOnSale
+                ? AppColors.warning.withValues(alpha: 0.15)
                 : AppColors.primary.withAlpha(25),
             borderRadius: BorderRadius.circular(4),
           ),

@@ -16,7 +16,7 @@ class ProductLabelsHeader extends StatelessWidget {
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -51,10 +51,13 @@ class ProductLabelsHeader extends StatelessWidget {
     return BlocBuilder<ProductLabelsBloc, ProductLabelsState>(
       builder: (context, state) {
         if (state is ProductLabelsLoaded && state.products.isNotEmpty) {
-          final allSelected = state.selectedProducts.length == state.products.length;
+          final allSelected =
+              state.selectedProducts.length == state.products.length;
           return TextButton.icon(
-            icon: Icon(allSelected ? Icons.check_box : Icons.check_box_outline_blank),
-            label: Text(allSelected ? 'Deseleccionar todas' : 'Seleccionar todas'),
+            icon: Icon(
+                allSelected ? Icons.check_box : Icons.check_box_outline_blank),
+            label:
+                Text(allSelected ? 'Deseleccionar todas' : 'Seleccionar todas'),
             onPressed: () {
               final bloc = context.read<ProductLabelsBloc>();
               if (allSelected) {
@@ -73,8 +76,7 @@ class ProductLabelsHeader extends StatelessWidget {
   Widget _buildActionButtons() {
     return BlocBuilder<ProductLabelsBloc, ProductLabelsState>(
       builder: (context, state) {
-        if (state is ProductLabelsLoaded &&
-            state.selectedProducts.isNotEmpty) {
+        if (state is ProductLabelsLoaded && state.selectedProducts.isNotEmpty) {
           return Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -84,7 +86,7 @@ class ProductLabelsHeader extends StatelessWidget {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -99,13 +101,10 @@ class ProductLabelsHeader extends StatelessWidget {
               const SizedBox(width: 12),
               OutlinedButton.icon(
                 onPressed: () {
-                  context
-                      .read<ProductLabelsBloc>()
-                      .add(const ClearSelection());
+                  context.read<ProductLabelsBloc>().add(const ClearSelection());
                 },
                 icon: const Icon(Icons.clear, size: 16, color: Colors.red),
                 label: const Text('Limpiar'),
-                
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.red,
                   side: BorderSide(color: Colors.red),
@@ -122,7 +121,11 @@ class ProductLabelsHeader extends StatelessWidget {
                       .read<ProductLabelsBloc>()
                       .add(const PrintSelectedLabels());
                 },
-                icon: const Icon(Icons.print, size: 16, color: Colors.white,),
+                icon: const Icon(
+                  Icons.print,
+                  size: 16,
+                  color: Colors.white,
+                ),
                 label: const Text('Imprimir'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,

@@ -104,7 +104,7 @@ class _LoadSavedOrdersDialogState extends State<LoadSavedOrdersDialog> {
                             margin: const EdgeInsets.only(
                                 bottom: AppDimensions.paddingS),
                             color: isSelected
-                                ? AppColors.primary.withOpacity(0.1)
+                                ? AppColors.primary.withValues(alpha: 0.1)
                                 : null,
                             child: ListTile(
                               leading: CircleAvatar(
@@ -158,7 +158,7 @@ class _LoadSavedOrdersDialogState extends State<LoadSavedOrdersDialog> {
                             const EdgeInsets.only(top: AppDimensions.paddingM),
                         padding: const EdgeInsets.all(AppDimensions.paddingM),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
+                          color: AppColors.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(
                               AppDimensions.borderRadiusM),
                         ),

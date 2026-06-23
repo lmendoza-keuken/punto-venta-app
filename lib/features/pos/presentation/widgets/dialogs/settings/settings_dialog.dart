@@ -32,7 +32,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
                   ActionCard(
                     icon: Icons.print,
                     iconColor: Colors.orange,
-                    backgroundColor: Colors.orange.withOpacity(0.1),
+                    backgroundColor: Colors.orange.withValues(alpha: 0.1),
                     title: 'Configurar impresoras',
                     subtitle: 'Configurar Ip de impresoras de tickets',
                     onTap: () {
@@ -45,7 +45,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
                   ActionCard(
                     icon: Icons.attach_money,
                     iconColor: Colors.green,
-                    backgroundColor: Colors.green.withOpacity(0.1),
+                    backgroundColor: Colors.green.withValues(alpha: 0.1),
                     title: 'Lista de Precios',
                     subtitle:
                         'Cambiar lista de precios activa (Actual: Lista $currentList)',
@@ -60,7 +60,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
                   ActionCard(
                     icon: Icons.point_of_sale,
                     iconColor: Colors.teal,
-                    backgroundColor: Colors.teal.withOpacity(0.1),
+                    backgroundColor: Colors.teal.withValues(alpha: 0.1),
                     title: 'Configurar PDV',
                     subtitle: 'Configurar datos del punto de venta',
                     onTap: () {
