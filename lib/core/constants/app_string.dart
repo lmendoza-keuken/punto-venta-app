@@ -1,6 +1,6 @@
 class AppStrings {
   // App
-  static const String appName = 'POS System';
+  static const String appName = 'Punto de Venta';
   static const String appNameComplete = 'Punto de Venta';
   static const String keukenName = 'Keuken S.A.';
   static const String keukenDesc = 'Soluciones Informáticas';
@@ -52,8 +52,7 @@ class AppStrings {
   // Search
   static const String searchHint =
       'Buscar productos por descripción o código...';
-  static const String searchBarCodeHint =
-      'Escanear código de barras...';
+  static const String searchBarCodeHint = 'Escanear código de barras...';
 
   // Validations
   static const String requiredField = 'Este campo es requerido';

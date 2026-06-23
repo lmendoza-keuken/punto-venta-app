@@ -15,11 +15,11 @@ class DisconnectPrinter extends PrinterEvent {}
 
 class PrintTicket extends PrinterEvent {
   final PrintJob printJob;
-  final PrinterConfig config;
+  final PrinterConfig? config;
   
   const PrintTicket({
     required this.printJob,
-    required this.config,
+    this.config,
   });
 }
 

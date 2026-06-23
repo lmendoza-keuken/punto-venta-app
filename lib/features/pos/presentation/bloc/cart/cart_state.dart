@@ -18,6 +18,8 @@ class CartLoaded extends CartState {
   final List<CartLogEntry> log;
   final double subtotal;
   final double totalIva;
+  final double internalTax;
+  final double totalConIva;
 
   const CartLoaded({
     required this.items,
@@ -26,6 +28,8 @@ class CartLoaded extends CartState {
     required this.log,
     required this.subtotal,
     required this.totalIva,
+    required this.internalTax,
+    required this.totalConIva,
   });
 
   CartLoaded copyWith({
@@ -35,6 +39,8 @@ class CartLoaded extends CartState {
     List<CartLogEntry>? log,
     double? subtotal,
     double? totalIva,
+    double? internalTax,
+    double? totalConIva,
   }) {
     return CartLoaded(
       items: items ?? this.items,
@@ -43,9 +49,21 @@ class CartLoaded extends CartState {
       log: log ?? this.log,
       subtotal: subtotal ?? this.subtotal,
       totalIva: totalIva ?? this.totalIva,
+      internalTax: internalTax ?? this.internalTax,
+      totalConIva: totalConIva ?? this.totalConIva,
     );
   }
 
   @override
-  List<Object> get props => [items, total, totalItems, log, subtotal, totalIva];
+  List<Object> get props => [
+        items,
+        total,
+        totalItems,
+        log,
+        subtotal,
+        totalIva,
+        internalTax,
+        totalConIva,
+      ];
 }
+

@@ -19,6 +19,5 @@ class AddPaymentMethodButton extends StatelessWidget {
         ),
       ),
     );
-    ;
   }
 }

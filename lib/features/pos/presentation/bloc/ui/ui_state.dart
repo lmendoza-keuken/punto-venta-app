@@ -12,12 +12,14 @@ class UiLoaded extends UiState {
   final bool isDeleteMode;
   final bool isBarcodeSearchEnabled;
   final bool isReturnMode;
+  final bool showConfirmationPanel;
 
   const UiLoaded({
     this.selectedQuantity = 1,
     this.isDeleteMode = false,
     this.isBarcodeSearchEnabled = true,
     this.isReturnMode = false,
+    this.showConfirmationPanel = false,
   });
 
   UiLoaded copyWith({
@@ -25,12 +27,14 @@ class UiLoaded extends UiState {
     bool? isDeleteMode,
     bool? isBarcodeSearchEnabled,
     bool? isReturnMode,
+    bool? showConfirmationPanel,
   }) {
     return UiLoaded(
       selectedQuantity: selectedQuantity ?? this.selectedQuantity,
       isDeleteMode: isDeleteMode ?? this.isDeleteMode,
       isBarcodeSearchEnabled: isBarcodeSearchEnabled ?? this.isBarcodeSearchEnabled,
       isReturnMode: isReturnMode ?? this.isReturnMode,
+      showConfirmationPanel: showConfirmationPanel ?? this.showConfirmationPanel,
     );
   }
 
@@ -40,5 +44,6 @@ class UiLoaded extends UiState {
         isDeleteMode,
         isBarcodeSearchEnabled,
         isReturnMode,
+        showConfirmationPanel,
       ];
 }

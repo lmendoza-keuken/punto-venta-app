@@ -150,6 +150,7 @@ class _SelectClientDialogState extends State<SelectClientDialog> {
                     return const Center(child: CircularProgressIndicator());
                   }
                   if (state is ClientsLoaded) {
+                    _selected ??= state.selectedClient;
                     return _ClientsListView(
                       allClients: state.clients,
                       filteredClients: _filterClients(state.clients),

@@ -5,6 +5,7 @@ import '../../../domain/entities/cart_item.dart';
 import '../../../domain/entities/cart_log_entry.dart';
 import 'cart_event.dart';
 import 'cart_state.dart';
+import 'package:punto_venta_app/features/pos/presentation/utils/internal_tax_calculator.dart';
 
 class CartBloc extends Bloc<CartEvent, CartState> {
   final ManageCartUsecase manageCartUsecase;
@@ -34,6 +35,12 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     final totalIva = totals['totalIva']!;
     final total = subtotal + totalIva;
 
+    final internalTaxResult = InternalTaxCalculator.calculateInternalTax(
+      items: newItems,
+    );
+    final internalTax = internalTaxResult['total'] ?? 0.0;
+    final totalConIva = subtotal + totalIva + internalTax;
+
     final currentLog = _getCurrentLog();
 
     final entry = CartLogEntry(
@@ -59,6 +66,8 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       log: newLog,
       subtotal: subtotal,
       totalIva: totalIva,
+      internalTax: internalTax,
+      totalConIva: totalConIva,
     ));
   }
 
@@ -72,6 +81,12 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     final totalIva = totals['totalIva']!;
     final total = subtotal + totalIva;
 
+    final internalTaxResult = InternalTaxCalculator.calculateInternalTax(
+      items: items,
+    );
+    final internalTax = internalTaxResult['total'] ?? 0.0;
+    final totalConIva = subtotal + totalIva + internalTax;
+
     emit(CartLoaded(
       items: items,
       total: total,
@@ -79,6 +94,8 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       log: log,
       subtotal: subtotal,
       totalIva: totalIva,
+      internalTax: internalTax,
+      totalConIva: totalConIva,
     ));
   }
 
@@ -114,6 +131,12 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     final totalIva = totals['totalIva']!;
     final total = subtotal + totalIva;
 
+    final internalTaxResult = InternalTaxCalculator.calculateInternalTax(
+      items: newItems,
+    );
+    final internalTax = internalTaxResult['total'] ?? 0.0;
+    final totalConIva = subtotal + totalIva + internalTax;
+
     emit(CartLoaded(
       items: newItems,
       total: total,
@@ -121,6 +144,8 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       log: newLog,
       subtotal: subtotal,
       totalIva: totalIva,
+      internalTax: internalTax,
+      totalConIva: totalConIva,
     ));
   }
 
@@ -132,6 +157,8 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       log: [],
       subtotal: 0.0,
       totalIva: 0.0,
+      internalTax: 0.0,
+      totalConIva: 0.0,
     ));
   }
 

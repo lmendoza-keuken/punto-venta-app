@@ -230,6 +230,7 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
               _updateControllersFromConfig(state.config, state.branches);
             });
           } else if (state is PdvConfigSaved) {
+            context.read<ClientsBloc>().add(LoadDefaultClientEvent());
             Navigator.of(context).pop(
               (pdvId: state.config.pdvId, sucursalId: state.config.branchId),
             );

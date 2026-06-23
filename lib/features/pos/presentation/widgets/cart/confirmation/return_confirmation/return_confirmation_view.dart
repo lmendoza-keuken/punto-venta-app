@@ -42,7 +42,7 @@ class ReturnConfirmationView extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.error.withOpacity(0.1),
+              color: AppColors.error.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Text(
@@ -51,6 +51,7 @@ class ReturnConfirmationView extends StatelessWidget {
             ),
           )
         else ...[
+          // si hay motivos , se muestra el dropdown y el demas contenido
           DropdownButtonFormField<int>(
             value: selectedReturnReasonId,
             decoration: const InputDecoration(
@@ -80,10 +81,10 @@ class ReturnConfirmationView extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.warning.withOpacity(0.1),
+              color: AppColors.warning.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: AppColors.warning.withOpacity(0.3),
+                color: AppColors.warning.withValues(alpha: 0.3),
               ),
             ),
             child: Row(

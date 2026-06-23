@@ -131,7 +131,7 @@ class ClientsBloc extends Bloc<ClientsEvent, ClientsState> {
       
       Client? defaultClient;
       for (final client in clients) {
-        if (client.id == defaultClientId.toString()) {
+        if (client.id == defaultClientId) {
           defaultClient = client;
           break;
         }
@@ -140,10 +140,17 @@ class ClientsBloc extends Bloc<ClientsEvent, ClientsState> {
       final currentState = state;
       final currentSelectedClient =
           currentState is ClientsLoaded ? currentState.selectedClient : null;
+      final currentDefaultClient =
+          currentState is ClientsLoaded ? currentState.defaultClient : null;
+
+      final newSelectedClient = (currentSelectedClient == null ||
+              currentSelectedClient.id == currentDefaultClient?.id)
+          ? defaultClient
+          : currentSelectedClient;
 
       emit(ClientsLoaded(
         clients: clients,
-        selectedClient: currentSelectedClient ?? defaultClient,
+        selectedClient: newSelectedClient,
         defaultClient: defaultClient,
       ));
     } catch (e) {

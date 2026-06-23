@@ -464,9 +464,6 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
       if (isCopy == null) return;
     }
 
-    final printerConfig =
-        await di.sl<PrinterLocalDataSource>().getPrinterConfig();
-
     final printJobWithCopyFlag = PrintJob(
       items: _printJob!.items,
       logItems: _printJob!.logItems,
@@ -503,7 +500,6 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
     // Disparar evento de impresión
     context.read<PrinterBloc>().add(PrintTicket(
           printJob: printJobWithCopyFlag,
-          config: printerConfig,
         ));
   }
 

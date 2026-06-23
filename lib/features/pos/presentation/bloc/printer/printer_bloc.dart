@@ -1,12 +1,17 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/print_ticket_usecase.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
 import 'printer_event.dart';
 import 'printer_state.dart';
 
 class PrinterBloc extends Bloc<PrinterEvent, PrinterState> {
   final PrintTicketUsecase printTicketUsecase;
+  final PrinterLocalDataSource printerLocalDataSource;
 
-  PrinterBloc({required this.printTicketUsecase}) : super(PrinterInitial()) {
+  PrinterBloc({
+    required this.printTicketUsecase,
+    required this.printerLocalDataSource,
+  }) : super(PrinterInitial()) {
     on<PrintTicket>(_onPrintTicket);
     on<CheckPrinterStatus>(_onCheckPrinterStatus);
   }
@@ -18,9 +23,10 @@ class PrinterBloc extends Bloc<PrinterEvent, PrinterState> {
     emit(PrinterPrinting());
 
     try {
+      final config = event.config ?? await printerLocalDataSource.getPrinterConfig();
       final success = await printTicketUsecase(
         printJob: event.printJob,
-        config: event.config,
+        config: config,
       );
 
       if (success) {

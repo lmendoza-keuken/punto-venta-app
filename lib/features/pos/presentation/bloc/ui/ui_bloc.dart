@@ -10,6 +10,8 @@ class UiBloc extends Bloc<UiEvent, UiState> {
     on<ResetQuantity>(_onResetQuantity);
     on<ResetUiState>(_onResetUiState);
     on<ToggleReturnMode>(_onToggleReturnMode);
+    on<OpenConfirmationPanel>(_onOpenConfirmationPanel);
+    on<CloseConfirmationPanel>(_onCloseConfirmationPanel);
   }
 
   void _onSetQuantity(SetQuantity event, Emitter<UiState> emit) {
@@ -48,6 +50,20 @@ class UiBloc extends Bloc<UiEvent, UiState> {
     if (state is UiLoaded) {
       final currentState = state as UiLoaded;
       emit(currentState.copyWith(isReturnMode: !currentState.isReturnMode));
+    }
+  }
+
+  void _onOpenConfirmationPanel(OpenConfirmationPanel event, Emitter<UiState> emit) {
+    if (state is UiLoaded) {
+      final currentState = state as UiLoaded;
+      emit(currentState.copyWith(showConfirmationPanel: true));
+    }
+  }
+
+  void _onCloseConfirmationPanel(CloseConfirmationPanel event, Emitter<UiState> emit) {
+    if (state is UiLoaded) {
+      final currentState = state as UiLoaded;
+      emit(currentState.copyWith(showConfirmationPanel: false));
     }
   }
 }

@@ -82,6 +82,7 @@ import 'package:punto_venta_app/features/pos/domain/usecases/print_ticket_usecas
 import 'package:punto_venta_app/features/pos/domain/usecases/send_invoice_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/update_ticket_config_usecase.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/checkout/checkout_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/checkout_confirmation/checkout_confirmation_cubit.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/payment_methods_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/pdv_config/pdv_config_bloc.dart';
@@ -248,6 +249,8 @@ Future<void> init() async {
         processPartialReturnUseCase: sl(),
       ));
 
+
+
   // sl.registerFactory(() => PrinterBloc(printTicketUsecase: sl()));
 
   // Use cases
@@ -394,7 +397,10 @@ Future<void> init() async {
 
   // Bloc (compartido)
   sl.registerFactory(
-    () => PrinterBloc(printTicketUsecase: sl()),
+    () => PrinterBloc(
+      printTicketUsecase: sl(),
+      printerLocalDataSource: sl(),
+    ),
   );
 
   // Data sources

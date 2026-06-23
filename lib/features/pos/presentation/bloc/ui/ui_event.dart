@@ -25,3 +25,7 @@ class ResetQuantity extends UiEvent {}
 class ResetUiState extends UiEvent {}
 
 class ToggleReturnMode extends UiEvent {}
+
+class OpenConfirmationPanel extends UiEvent {}
+
+class CloseConfirmationPanel extends UiEvent {}

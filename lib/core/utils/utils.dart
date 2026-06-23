@@ -57,9 +57,9 @@ double calculateSpacing(int crossAxisCount) {
 }
 
 int calculateCrossAxisCount(double width) {
-    if (width > 1400) return 5;
-    if (width > 1100) return 4;
-    if (width > 800) return 3;
-    if (width > 500) return 2;
-    return 1;
-  }
+  if (width > 1400) return 5;
+  if (width > 1100) return 4;
+  if (width > 800) return 3;
+  if (width > 500) return 2;
+  return 1;
+}
