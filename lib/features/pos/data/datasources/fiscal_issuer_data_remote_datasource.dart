@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:punto_venta_app/core/config/api_config.dart';
-import 'package:punto_venta_app/core/network/dio_client.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 import '../models/fiscal_issuer_data_model.dart';
@@ -47,9 +46,9 @@ class FiscalIssuerDataRemoteDatasourceImpl
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = response.data as Map<String, dynamic>;
-        
+
         data['branchId'] = branchId;
-        
+
         return FiscalIssuerDataModel.fromJson(data);
       } else {
         throw DioException(

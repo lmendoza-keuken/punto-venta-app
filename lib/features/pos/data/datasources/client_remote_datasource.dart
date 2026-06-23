@@ -1,8 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
-import 'package:punto_venta_app/core/config/api_config.dart';
-import 'package:punto_venta_app/core/network/dio_client.dart';
-import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
 import 'package:punto_venta_app/core/network/error_handler.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 import '../../domain/entities/client.dart';

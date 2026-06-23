@@ -82,7 +82,6 @@ import 'package:punto_venta_app/features/pos/domain/usecases/print_ticket_usecas
 import 'package:punto_venta_app/features/pos/domain/usecases/send_invoice_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/update_ticket_config_usecase.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/checkout/checkout_bloc.dart';
-import 'package:punto_venta_app/features/pos/presentation/bloc/checkout_confirmation/checkout_confirmation_cubit.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/payment_methods_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/pdv_config/pdv_config_bloc.dart';
@@ -204,7 +203,6 @@ Future<void> init() async {
     () => PriceListTypesLocalDataSourceImpl(sharedPreferences: sl()),
   );
 
-
   //! Features - POS
   // Bloc
   sl.registerFactory(() =>
@@ -215,12 +213,12 @@ Future<void> init() async {
         saveOrderUsecase: sl(),
         loadSavedOrdersUsecase: sl(),
       ));
-  sl.registerFactory(() => ReportsBloc(getReportsUsecase: sl(), generateCreditNoteUsecase: sl()));
+  sl.registerFactory(() =>
+      ReportsBloc(getReportsUsecase: sl(), generateCreditNoteUsecase: sl()));
   sl.registerFactory(() => SettlementsBloc(getSettlementsUsecase: sl()));
-  sl.registerFactory(
-      () => ClientsBloc(
-        getClients: sl(), 
-        addClient: sl(), 
+  sl.registerFactory(() => ClientsBloc(
+        getClients: sl(),
+        addClient: sl(),
         deleteClient: sl(),
         priceListLocalDataSource: sl(),
         pdvLocalDataSource: sl(),
@@ -236,7 +234,7 @@ Future<void> init() async {
         getVatCategoriesUsecase: sl(),
         repository: sl(),
       ));
-  sl.registerFactory(()=> CheckoutBloc(
+  sl.registerFactory(() => CheckoutBloc(
         authLocalDataSource: sl(),
         pdvLocalDataSource: sl(),
         priceListLocalDataSource: sl(),
@@ -248,8 +246,6 @@ Future<void> init() async {
         sendInvoiceUseCase: sl(),
         processPartialReturnUseCase: sl(),
       ));
-
-
 
   // sl.registerFactory(() => PrinterBloc(printTicketUsecase: sl()));
 
@@ -273,7 +269,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => FetchPaymentMethodsUsecase(sl()));
   sl.registerLazySingleton(() => FetchPdvConfigUsecase(sl()));
   sl.registerLazySingleton(() => FetchPriceListTypesUsecase(sl()));
-  sl.registerLazySingleton(() => FetchBranchesUsecase(sl()));  
+  sl.registerLazySingleton(() => FetchBranchesUsecase(sl()));
   sl.registerLazySingleton(() => FetchReturnReasonsUsecase(sl()));
   sl.registerLazySingleton(() => FetchReturnsUsecase(sl()));
   sl.registerLazySingleton(() => GenerateCreditNoteUsecase(

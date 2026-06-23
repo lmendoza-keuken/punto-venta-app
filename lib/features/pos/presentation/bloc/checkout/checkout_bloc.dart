@@ -337,7 +337,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         internalTaxRate: completedOrder.internalTaxRate,
         paymentMethod: completedOrder.paymentMethod,
         paymentMethods: completedOrder.paymentMethods,
-        cashierName: completedOrder.cashierName ?? user?.name ?? 'Desconocido',
+        cashierName: completedOrder.cashierName,
         cashierId: completedOrder.cashierId ?? int.tryParse(user?.id ?? ''),
         timestamp: completedOrder.completedAt,
         enterprise: enterprise,

@@ -1,17 +1,15 @@
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
-import 'package:punto_venta_app/core/config/api_config.dart';
-import 'package:punto_venta_app/core/network/dio_client.dart';
 import 'package:punto_venta_app/core/network/error_handler.dart';
 import 'package:punto_venta_app/features/pos/data/models/invoice_payload_model.dart';
-import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 part 'completed_orders_remote_datasource.g.dart';
 
 @RestApi()
 abstract class CompletedOrdersService {
-  factory CompletedOrdersService(Dio dio, {String baseUrl}) = _CompletedOrdersService;
+  factory CompletedOrdersService(Dio dio, {String baseUrl}) =
+      _CompletedOrdersService;
 
   @GET('/tickets/')
   Future<List<InvoicePayload>> getAllTickets(

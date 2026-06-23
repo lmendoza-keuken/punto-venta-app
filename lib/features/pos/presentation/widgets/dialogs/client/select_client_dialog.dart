@@ -13,8 +13,6 @@ import '../../../utils/client_selection_helper.dart';
 class SelectClientDialog extends StatefulWidget {
   const SelectClientDialog({super.key});
 
-  static const double _listHeight = 400;
-
   @override
   State<SelectClientDialog> createState() => _SelectClientDialogState();
 }

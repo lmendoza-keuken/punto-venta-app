@@ -1,8 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
-import 'package:punto_venta_app/core/config/api_config.dart';
-import 'package:punto_venta_app/core/network/dio_client.dart';
-import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
 import 'package:punto_venta_app/core/network/exceptions.dart';
 import 'package:punto_venta_app/features/pos/data/models/pdv_config_response_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/branch_response_model.dart';
@@ -20,7 +17,8 @@ abstract class PdvService {
   Future<PdvConfigResponseModel> fetchPdvConfig();
 
   @PUT('/configuration/')
-  Future<PdvConfigResponseModel> updatePdvConfig(@Body() Map<String, dynamic> body);
+  Future<PdvConfigResponseModel> updatePdvConfig(
+      @Body() Map<String, dynamic> body);
 
   @GET('/branches/')
   Future<List<BranchResponseModel>> fetchBranches(
@@ -65,7 +63,8 @@ class PdvRemoteDataSourceImpl implements PdvRemoteDataSource {
   @override
   Future<PdvConfigResponseModel> updateOfflineMode(PdvConfig config) async {
     try {
-      return await _apiService.updatePdvConfig(config.toUpdateOfflineModeJson());
+      return await _apiService
+          .updatePdvConfig(config.toUpdateOfflineModeJson());
     } catch (e) {
       throw Exception(ErrorHandler.handleError(e,
           defaultMessage: 'Error al actualizar modo offline'));

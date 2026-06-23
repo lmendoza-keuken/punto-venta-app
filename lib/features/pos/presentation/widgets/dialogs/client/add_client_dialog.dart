@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/client.dart';
-import 'package:uuid/uuid.dart';
 import '../../../../../../core/constants/app_dimensions.dart';
 import '../../../../../../core/widgets/custom_text_field.dart';
 import '../../../bloc/clients/clients_bloc.dart';
@@ -32,7 +31,7 @@ class _AddClientDialogState extends State<AddClientDialog> {
 
   void _save() {
     if (!_formKey.currentState!.validate()) return;
-    final id = -1;//const Uuid().v4();
+    final id = -1; //const Uuid().v4();
 
     final client = Client(
       id: id,
@@ -58,8 +57,7 @@ class _AddClientDialogState extends State<AddClientDialog> {
         left: 40,
         right: 40,
         top: 40,
-        bottom:
-            keyboardHeight > 0 ? 20 : 40, 
+        bottom: keyboardHeight > 0 ? 20 : 40,
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.all(Radius.circular(20.0)),

@@ -1,7 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_products_usecase.dart';
-import 'package:punto_venta_app/features/pos/presentation/utils/label_template_builder.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/label_image_builder.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/templates/base_ticket_template.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/printer_socket_datasource.dart';
@@ -31,15 +30,15 @@ class ProductLabelsBloc extends Bloc<ProductLabelsEvent, ProductLabelsState> {
     on<SelectAllVisibleProducts>(_onSelectAllVisibleProducts);
   }
 
-    Future<void> _onSelectAllVisibleProducts(
-      SelectAllVisibleProducts event,
-      Emitter<ProductLabelsState> emit,
-    ) async {
-      if (state is! ProductLabelsLoaded) return;
-      final currentState = state as ProductLabelsLoaded;
-      emit(currentState.copyWith(selectedProducts: List<Product>.from(currentState.products)));
-    }
-
+  Future<void> _onSelectAllVisibleProducts(
+    SelectAllVisibleProducts event,
+    Emitter<ProductLabelsState> emit,
+  ) async {
+    if (state is! ProductLabelsLoaded) return;
+    final currentState = state as ProductLabelsLoaded;
+    emit(currentState.copyWith(
+        selectedProducts: List<Product>.from(currentState.products)));
+  }
 
   Future<void> _onLoadProducts(
     LoadProducts event,
@@ -52,9 +51,9 @@ class ProductLabelsBloc extends Bloc<ProductLabelsEvent, ProductLabelsState> {
         currentList = 1;
         await priceListLocalDataSource.savePriceList(currentList);
       }
-      
+
       await getProductsUsecase.updatePriceList(currentList);
-      
+
       final products = await getProductsUsecase();
       final categories = await getProductsUsecase.getCategories();
 
@@ -76,7 +75,7 @@ class ProductLabelsBloc extends Bloc<ProductLabelsEvent, ProductLabelsState> {
 
     final currentState = state as ProductLabelsLoaded;
     emit(ProductLabelsLoading());
-    
+
     try {
       final products = await getProductsUsecase.getByCategory(event.categoryId);
 
@@ -99,7 +98,7 @@ class ProductLabelsBloc extends Bloc<ProductLabelsEvent, ProductLabelsState> {
 
     final currentState = state as ProductLabelsLoaded;
     emit(ProductLabelsLoading());
-    
+
     try {
       final products = await getProductsUsecase.search(event.query);
 
@@ -168,8 +167,9 @@ class ProductLabelsBloc extends Bloc<ProductLabelsEvent, ProductLabelsState> {
       // Obtener configuración de la impresora
       final config = await printerLocalDataSource.getPrinterConfig();
 
-      if(config.ip.isEmpty) {
-        throw Exception('No hay una dirección IP configurada para la impresora');
+      if (config.ip.isEmpty) {
+        throw Exception(
+            'No hay una dirección IP configurada para la impresora');
       }
 
       // Conectar a la impresora
@@ -178,19 +178,20 @@ class ProductLabelsBloc extends Bloc<ProductLabelsEvent, ProductLabelsState> {
         throw Exception('No se pudo conectar con la impresora');
       }
 
-      int labelSize = config.labelType == 0 ? 8*72 : 8*52;
+      int labelSize = config.labelType == 0 ? 8 * 72 : 8 * 52;
 
       // Imprimir etiquetas
       for (final product in selectedProducts) {
         // Generar imagen de la etiqueta
-        final imageBytes = await LabelImageBuilder.buildProductLabelImage(product);
-        
+        final imageBytes =
+            await LabelImageBuilder.buildProductLabelImage(product);
+
         final commands = [
           TicketCommand.image(imageBytes, labelSize),
           TicketCommand.feedLine(),
           TicketCommand.cutPaper(),
         ];
-        
+
         final success = await printerDataSource!.printCommands(commands);
         if (!success) {
           throw Exception('Error al imprimir etiqueta de ${product.name}');
@@ -201,14 +202,14 @@ class ProductLabelsBloc extends Bloc<ProductLabelsEvent, ProductLabelsState> {
       await printerDataSource!.disconnect();
 
       emit(ProductLabelsPrintSuccess(selectedProducts.length));
-      
+
       emit(currentState.copyWith(selectedProducts: []));
     } catch (e) {
       // Asegurar desconexión en caso de error
       try {
         await printerDataSource?.disconnect();
       } catch (_) {}
-      
+
       emit(ProductLabelsPrintError(e.toString()));
       emit(currentState);
     }

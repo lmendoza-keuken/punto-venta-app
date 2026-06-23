@@ -1,7 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:punto_venta_app/features/pos/data/models/pending_collectors_detail_response_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/pending_collectors_response_model.dart';
-import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
 
 abstract class SettlementsState extends Equatable {
   const SettlementsState();

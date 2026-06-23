@@ -294,10 +294,13 @@ class _AppSidebarState extends State<AppSidebar> {
               ),
 
               // Theme switch
-              // _buildThemeToggle(
-              //   context,
-              //   isDark: mode == ThemeMode.dark,
-              // ),
+              Visibility(
+                visible: false,
+                child: _buildThemeToggle(
+                  context,
+                  isDark: mode == ThemeMode.dark,
+                ),
+              ),
               const SizedBox(height: 8),
             ],
           ),

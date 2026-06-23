@@ -7,7 +7,7 @@ import 'package:punto_venta_app/features/pos/presentation/utils/templates/base_t
 import 'package:punto_venta_app/features/pos/presentation/utils/ticket_template_builder.dart';
 import 'package:image/image.dart' as img_lib;
 
-const int maxImageWidth = 8*52;//576 = 8*72;
+const int maxImageWidth = 8 * 52; //576 = 8*72;
 
 abstract class PrinterSocketDatasource {
   Future<bool> connect(PrinterConfig config);
@@ -18,19 +18,18 @@ abstract class PrinterSocketDatasource {
 }
 
 class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
-    /// Cambia el tamaño del texto ESC/POS (1-8x)
-    Future<bool> _setTextSize({int width = 1, int height = 1}) async {
-      // width y height: 1 a 8
-      int n = ((width - 1) << 4) | (height - 1);
-      return await _sendData(Uint8List.fromList([0x1D, 0x21, n]));
-    }
+  /// Cambia el tamaño del texto ESC/POS (1-8x)
+  Future<bool> _setTextSize({int width = 1, int height = 1}) async {
+    // width y height: 1 a 8
+    int n = ((width - 1) << 4) | (height - 1);
+    return await _sendData(Uint8List.fromList([0x1D, 0x21, n]));
+  }
+
   Socket? _socket;
   bool _isConnected = false;
 
   // 58mm = 32 caracteres, 80mm = 48 caracteres
   static const int _lineWidth = 48;
-
-  int _textSizeMode = 0x00;
 
   @override
   Future<bool> connect(PrinterConfig config) async {
@@ -108,12 +107,14 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
     switch (command.type) {
       case TicketCommandType.image:
         PrintImageData printImageData = command.value as PrintImageData;
-        await _printImage(printImageData.bytes, maxImageWidth: printImageData.imageSize);
+        await _printImage(printImageData.bytes,
+            maxImageWidth: printImageData.imageSize);
         break;
       case TicketCommandType.textSize:
-              final data = command.value as Map<String, dynamic>;
-              await _setTextSize(width: data['width'] as int, height: data['height'] as int);
-              break;
+        final data = command.value as Map<String, dynamic>;
+        await _setTextSize(
+            width: data['width'] as int, height: data['height'] as int);
+        break;
       case TicketCommandType.text:
         await _printText(command.value as String);
         break;
@@ -161,13 +162,13 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
         final data = command.value as Map<String, String>;
         await _printLineWithValue(data['label']!, data['value']!);
         break;
-      
     }
   }
 
   // === MÉTODOS AUXILIARES ===
 
-  Future<void> _printImage(Uint8List imageBytes, {int maxImageWidth = maxImageWidth}) async {
+  Future<void> _printImage(Uint8List imageBytes,
+      {int maxImageWidth = maxImageWidth}) async {
     final decodedImage = img_lib.decodeImage(imageBytes);
     if (decodedImage == null) return;
 
@@ -180,23 +181,20 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
 
     final width = image.width;
     final height = image.height;
-    
+
     // El ancho debe ser múltiplo de 8 para el comando GS v 0
     final widthBytes = (width + 7) ~/ 8;
-    final actualWidth = widthBytes * 8;
-    
+
     final xL = widthBytes % 256;
     final xH = widthBytes ~/ 256;
     final yL = height % 256;
     final yH = height ~/ 256;
 
     // GS v 0 m xL xH yL yH d1...dk
-    final header = Uint8List.fromList([
-      0x1D, 0x76, 0x30, 0x00, xL, xH, yL, yH
-    ]);
-    
+    final header = Uint8List.fromList([0x1D, 0x76, 0x30, 0x00, xL, xH, yL, yH]);
+
     final pixels = Uint8List(widthBytes * height);
-    
+
     for (int y = 0; y < height; y++) {
       for (int x = 0; x < width; x++) {
         final pixel = image.getPixel(x, y);
@@ -206,7 +204,7 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
         final g = pixel.g;
         final b = pixel.b;
         final luminance = (0.299 * r + 0.587 * g + 0.114 * b);
-        
+
         if (luminance < 128) {
           final byteIndex = (y * widthBytes) + (x ~/ 8);
           final bitIndex = 7 - (x % 8);
@@ -214,7 +212,7 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
         }
       }
     }
-    
+
     await _sendData(header);
     await _sendData(pixels);
   }
@@ -229,7 +227,6 @@ class PrinterSocketDatasourceImpl implements PrinterSocketDatasource {
   Future<bool> _initPrinter() async {
     try {
       await _sendData(Uint8List.fromList([0x1B, 0x40]));
-      _textSizeMode = 0x00;
 
       await _selectHRICharacterPrintPosition(2);
       await _setBarcodeWidth(3);

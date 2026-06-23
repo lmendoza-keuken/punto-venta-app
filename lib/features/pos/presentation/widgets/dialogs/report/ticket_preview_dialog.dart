@@ -7,7 +7,6 @@ import 'package:punto_venta_app/core/constants/ticket_template_types.dart';
 import 'package:punto_venta_app/core/constants/ticket_types.dart';
 import 'package:punto_venta_app/core/utils/extensions.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
-import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/fiscal_issuer_data.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/fiscal_issuer_data_repository.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/payment_method_repository.dart';

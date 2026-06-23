@@ -1,13 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
-import 'package:punto_venta_app/core/config/api_config.dart';
-import 'package:punto_venta_app/core/network/dio_client.dart';
 import 'package:punto_venta_app/core/network/error_handler.dart';
 import 'package:punto_venta_app/features/pos/data/models/invoice_payload_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/tax_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/tax_repository.dart';
-import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 part 'invoice_remote_datasource.g.dart';
@@ -45,10 +42,10 @@ class InvoiceRemoteDataSourceImpl implements InvoiceRemoteDataSource {
 
     try {
       final Map<String, dynamic> data = await _apiService.sendInvoice(payload);
-      
+
       final ticketId = data['ticketId']?.toString() ?? job.ticketId ?? "";
       final description = data['description']?.toString();
-      
+
       return {'ticketId': ticketId, 'description': description};
     } catch (e) {
       throw Exception(ErrorHandler.handleError(e,

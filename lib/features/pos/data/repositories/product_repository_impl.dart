@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/product_local_data_datasource.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/product_repository.dart';
@@ -29,7 +28,9 @@ class ProductRepositoryImpl implements ProductRepository {
   @override
   Future<List<String>> getCategories() async {
     final categoryModels = await localDataSource.getCategories();
-    return categoryModels.map((category) => category.description ?? '').toList();
+    return categoryModels
+        .map((category) => category.description ?? '')
+        .toList();
   }
 
   @override
@@ -38,17 +39,17 @@ class ProductRepositoryImpl implements ProductRepository {
       (localDataSource as ProductLocalDataSourceImpl).setListaPrecio(listId);
     }
   }
-  
+
   @override
   Future<Product> createProduct(Product product) {
     throw UnimplementedError();
   }
-  
+
   @override
   Future<void> deleteProduct(int codigo) {
     throw UnimplementedError();
   }
-  
+
   @override
   Future<Product> updateProduct(Product product) {
     throw UnimplementedError();

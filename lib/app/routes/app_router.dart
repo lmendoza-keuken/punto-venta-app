@@ -11,7 +11,6 @@ import 'package:punto_venta_app/features/auth/prensetation/pages/login_page.dart
 import 'package:punto_venta_app/features/auth/domain/entities/user.dart';
 import 'package:punto_venta_app/features/pos/presentation/pages/pending_settlements_page.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/settlements/settlements_bloc.dart';
-import 'package:punto_venta_app/features/pos/presentation/bloc/settlements/settlements_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/pages/pos_main_page.dart';
 import 'package:punto_venta_app/features/pos/presentation/pages/reports_page.dart';
 import 'package:punto_venta_app/features/pos/presentation/pages/product_labels_page.dart';

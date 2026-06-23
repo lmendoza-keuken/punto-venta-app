@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import 'package:punto_venta_app/features/pos/data/models/ticket_models/ticket_response_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
 
 abstract class ReportsState extends Equatable {
@@ -41,7 +40,8 @@ class ReportsLoaded extends ReportsState {
   }
 
   @override
-  List<Object> get props => [tickets, summary ?? {}, hasMoreData, isLoadingMore];
+  List<Object> get props =>
+      [tickets, summary ?? {}, hasMoreData, isLoadingMore];
 }
 
 class ReportsError extends ReportsState {
