@@ -62,5 +62,7 @@ app.*.map.json
 /**/*.gen.dart
 /**/*.freezed.dart
 
-# FVM Version Cache
 lib/features/auth/data/models/user_model.g.dart
+
+# FVM Version Cache
+.fvm/
