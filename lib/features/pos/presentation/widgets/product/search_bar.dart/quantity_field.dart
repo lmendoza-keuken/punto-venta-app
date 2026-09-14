@@ -17,10 +17,12 @@ class QuantityField extends StatefulWidget {
 class _QuantityFieldState extends State<QuantityField> {
   final TextEditingController _quantityController =
       TextEditingController(text: '1');
+  final FocusNode _quantityFocusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
+    _quantityFocusNode.addListener(_selectAllOnFocus);
     context.read<UiBloc>().stream.listen((state) {
       if (state is UiLoaded && state.selectedQuantity == 1) {
         if (_quantityController.text != '1') {
@@ -30,8 +32,22 @@ class _QuantityFieldState extends State<QuantityField> {
     });
   }
 
+  void _selectAllOnFocus() {
+    if (!_quantityFocusNode.hasFocus) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_quantityFocusNode.hasFocus) return;
+      _quantityController.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: _quantityController.text.length,
+      );
+    });
+  }
+
   @override
   void dispose() {
+    _quantityFocusNode
+      ..removeListener(_selectAllOnFocus)
+      ..dispose();
     _quantityController.dispose();
     super.dispose();
   }
@@ -49,9 +65,9 @@ class _QuantityFieldState extends State<QuantityField> {
           ),
           child: Column(
             children: [
-              SizedBox(
+              const SizedBox(
                 height: 20,
-                child: const Center(
+                child: Center(
                   child: Text(
                     'Cant.',
                     style: TextStyle(
@@ -65,6 +81,7 @@ class _QuantityFieldState extends State<QuantityField> {
               Expanded(
                 child: TextFormField(
                   controller: _quantityController,
+                  focusNode: _quantityFocusNode,
                   textAlign: TextAlign.center,
                   keyboardType: TextInputType.number,
                   inputFormatters: [
@@ -80,6 +97,7 @@ class _QuantityFieldState extends State<QuantityField> {
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.zero,
                   ),
+                  onTap: _selectAllOnFocus,
                   onChanged: (value) {
                     final quantity = int.tryParse(value) ?? 1;
                     if (quantity > 0) {
