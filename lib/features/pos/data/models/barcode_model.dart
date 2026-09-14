@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:punto_venta_app/features/pos/data/models/barcode_sale_helper.dart';
 
 part 'barcode_model.freezed.dart';
 part 'barcode_model.g.dart';
@@ -21,15 +22,8 @@ class BarcodeModel with _$BarcodeModel {
   bool get isWeighted => barcode.toString().startsWith('20');
 
   String get saleTypeText {
-    switch (type) {
-      case 1:
-        return 'Unidad';
-      case 2:
-        return 'Pack';
-      case 3:
-        return 'Bulto';
-      default:
-        return 'Desconocido';
-    }
+    final info = resolveBarcodeSaleInfo(type: type, units: units);
+    if (info == null || info.label.isEmpty) return 'Desconocido';
+    return info.label;
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/features/pos/data/models/barcode_model.dart';
+import 'package:punto_venta_app/features/pos/data/models/barcode_sale_helper.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product/product_bloc.dart';
@@ -160,26 +161,14 @@ class SearchProcessor {
     }
 
     int finalQuantity = qty;
-    if (matchedBarcode != null && weightKg == null) {
-      finalQuantity = qty * (matchedBarcode.units ?? 1);
 
-      String tipoVentaMsg = '';
-      switch (matchedBarcode.type) {
-        case 1:
-          tipoVentaMsg = 'Unidad';
-          break;
-        case 2:
-          tipoVentaMsg = 'Pack (${matchedBarcode.units} unidades)';
-          break;
-        case 3:
-          tipoVentaMsg = 'Bulto (${matchedBarcode.units} unidades)';
-          break;
-      }
-
-      if (tipoVentaMsg.isNotEmpty) {
+    final saleInfo = resolveBarcodeSaleInfoFromBarcode(matchedBarcode);
+    if (saleInfo != null && weightKg == null) {
+      finalQuantity = saleInfo.quantityFor(qty);
+      if (saleInfo.label.isNotEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Tipo de venta: $tipoVentaMsg'),
+            content: Text('Tipo de venta: ${saleInfo.label}'),
             backgroundColor: AppColors.info,
             duration: const Duration(seconds: 1),
           ),
