@@ -41,6 +41,14 @@ class GetProductsUsecase {
     return _attachImages(products, images);
   }
 
+  Future<Product?> searchByBarcode(String barcode) async {
+    return await repository.searchByBarcode(barcode);
+  }
+
+  Future<Product?> searchByArticleId(int articleId) async {
+    return await repository.searchByArticleId(articleId);
+  }
+
   Future<List<String>> getCategories() async {
     return await repository.getCategories();
   }

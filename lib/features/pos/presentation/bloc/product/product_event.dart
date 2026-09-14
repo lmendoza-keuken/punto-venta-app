@@ -69,3 +69,12 @@ class ChangePriceList extends ProductEvent {
   @override
   List<Object> get props => [listId];
 }
+
+class UpsertProduct extends ProductEvent {
+  final Product product;
+
+  const UpsertProduct(this.product);
+
+  @override
+  List<Object> get props => [product];
+}

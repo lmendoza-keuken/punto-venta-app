@@ -4,6 +4,8 @@ abstract class ProductRepository {
   Stream<List<Product>> getProducts();
   Future<List<Product>> getProductsByCategory(String category);
   Future<List<Product>> searchProducts(String query);
+  Future<Product?> searchByBarcode(String barcode);
+  Future<Product?> searchByArticleId(int articleId);
   Future<List<String>> getCategories();
   Future<Product> createProduct(Product product);
   Future<Product> updateProduct(Product product);

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:punto_venta_app/core/network/error_handler.dart';
 import 'package:punto_venta_app/features/pos/data/models/barcode_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/category_model.dart';
@@ -25,10 +26,22 @@ abstract class ProductService {
     @Query('list_id') int? listId,
   });
 
+  @GET('/articles/{article_id}')
+  Future<ProductModel> getProductById({
+    @Path('article_id') required int articleId,
+    @Query('list_id') required int listId,
+  });
+
   @GET('/barcodes/')
   Future<List<BarcodeModel>> getBarcodes({
     @Query('skip') int skip = 0,
     @Query('limit') int limit = 10000,
+  });
+
+  @GET('/barcodes/{barcode_id}')
+  Future<ProductModel> getProductByBarcode({
+    @Path('barcode_id') required String barcodeId,
+    @Query('list_id') required int listId,
   });
 
   @GET('/prices_list/')
@@ -53,6 +66,7 @@ abstract class ProductLocalDataSource {
   Future<List<ProductModel>> getProductsByCategory(String category);
   Future<List<ProductModel>> searchProducts(String query);
   Future<ProductModel?> searchByBarcode(String barcode);
+  Future<ProductModel?> searchByArticleId(int articleId);
   Future<List<CategoryModel>> getCategories();
 
   // Legacy / Compatibility methods
@@ -108,15 +122,15 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
 
   @override
   Stream<List<ProductModel>> getProducts() async* {
-    print('DEBUG: ProductLocalDataSourceImpl.getProducts() started');
+    debugPrint('DEBUG: ProductLocalDataSourceImpl.getProducts() started');
     if (_cachedMappedProducts != null && _cachedMappedProducts!.isNotEmpty) {
-      print('DEBUG: getProducts() yielding cached products. Count: ${_cachedMappedProducts!.length}');
+      debugPrint('DEBUG: getProducts() yielding cached products. Count: ${_cachedMappedProducts!.length}');
       yield _cachedMappedProducts!;
     }
 
-    print('DEBUG: getProducts() fetching barcodes...');
+    debugPrint('DEBUG: getProducts() fetching barcodes...');
     final barcodes = await _fetchBarcodes();
-    print('DEBUG: getProducts() barcodes fetched. Count: ${barcodes.length}');
+    debugPrint('DEBUG: getProducts() barcodes fetched. Count: ${barcodes.length}');
 
     // Agrupar los códigos de barras por id de producto para una asociación rápida
     final barcodesByProduct = <int, List<BarcodeModel>>{};
@@ -130,26 +144,36 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
       }
     }
 
-    const int chunkSize = 300;
+    const int chunkSize = 400;
     int skip = 0;
     bool hasMore = true;
     final Set<int> seenIds = {};
+    DateTime? firstChunkResponseAt;
+    DateTime? lastChunkResponseAt;
+    int chunkCount = 0;
 
     // Inicializar cachés si es la primera carga
     _cachedMappedProducts ??= [];
     _cachedBarcodeToProductMap ??= {};
 
-    print('DEBUG: getProducts() chunk loop starting...');
+    debugPrint('DEBUG: getProducts() chunk loop starting...');
     while (hasMore) {
       try {
-        print('DEBUG: getProducts() requesting chunk skip: $skip, limit: $chunkSize');
+        debugPrint('DEBUG: getProducts() requesting chunk skip: $skip, limit: $chunkSize');
         final productsChunk = await _apiService.getProducts(
           skip: skip,
           limit: chunkSize,
           listId: _listaActual,
           isSuspendedSale: 'N',
         );
-        print('DEBUG: getProducts() chunk received. Count: ${productsChunk.length}');
+        final chunkReceivedAt = DateTime.now();
+        firstChunkResponseAt ??= chunkReceivedAt;
+        lastChunkResponseAt = chunkReceivedAt;
+        chunkCount++;
+        debugPrint(
+          'DEBUG: getProducts() chunk #$chunkCount received. '
+          'Count: ${productsChunk.length}, skip: $skip, at: $chunkReceivedAt',
+        );
 
         if (productsChunk.isEmpty) {
           hasMore = false;
@@ -233,14 +257,173 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
         rethrow;
       }
     }
+
+    if (firstChunkResponseAt != null && lastChunkResponseAt != null) {
+      final elapsed =
+          lastChunkResponseAt.difference(firstChunkResponseAt);
+      debugPrint(
+        'DEBUG: getProducts() TIMING first→last chunk response: '
+        '${elapsed.inMilliseconds} ms '
+        '(${elapsed.inSeconds}s) | chunks: $chunkCount | '
+        'products: ${_cachedMappedProducts?.length ?? 0} | '
+        'first: $firstChunkResponseAt | last: $lastChunkResponseAt',
+      );
+    }
   }
 
   @override
   Future<ProductModel?> searchByBarcode(String barcode) async {
-    if (_cachedBarcodeToProductMap == null || !_isAllProductsLoaded) {
-      await getProducts().last;
+    final normalized = barcode.trim();
+    if (normalized.isEmpty) return null;
+
+    _cachedBarcodeToProductMap ??= {};
+    _cachedMappedProducts ??= [];
+
+    final cached = _cachedBarcodeToProductMap![normalized];
+    if (cached != null) {
+      debugPrint(
+        'BARCODE_FALLBACK: DS cache HIT key=$normalized productId=${cached.id}',
+      );
+      return cached;
     }
-    return _cachedBarcodeToProductMap?[barcode];
+
+    try {
+        debugPrint(
+        'BARCODE_FALLBACK: DS calling GET /barcodes/$normalized?list_id=$_listaActual',
+      );
+      final remote = await _apiService.getProductByBarcode(
+        barcodeId: normalized,
+        listId: _listaActual,
+      );
+
+      final fractional = remote.fractional ?? 1;
+      final productPrice =
+          remote.price == null ? null : remote.price! * fractional;
+      final productRegularPrice = remote.regularPrice == null
+          ? null
+          : remote.regularPrice! * fractional;
+
+      final barcodeValue = int.tryParse(normalized);
+      final synthesizedBarcode = BarcodeModel(
+        articleId: remote.id,
+        barcode: barcodeValue,
+        units: remote.barcodeUnits ?? 1,
+        type: remote.barcodeType ?? 1,
+      );
+
+      final mappedProduct = remote.copyWith(
+        barcodes: [synthesizedBarcode],
+        price: productPrice,
+        regularPrice: productRegularPrice,
+        barcodeUnits: null,
+        barcodeType: null,
+      );
+
+      _upsertMappedProduct(mappedProduct, lookupKey: normalized);
+      debugPrint(
+        'BARCODE_FALLBACK: DS API OK (barcode) productId=${mappedProduct.id} '
+        'desc=${mappedProduct.description} price=${mappedProduct.price}',
+      );
+      return mappedProduct;
+    } on DioException catch (e) {
+      debugPrint(
+        'BARCODE_FALLBACK: DS API FAIL (barcode) key=$normalized '
+        'status=${e.response?.statusCode} error=$e',
+      );
+      if (e.response?.statusCode == 404) return null;
+      rethrow;
+    }
+  }
+
+  @override
+  Future<ProductModel?> searchByArticleId(int articleId) async {
+    _cachedMappedProducts ??= [];
+    _cachedBarcodeToProductMap ??= {};
+
+    final byId = _cachedMappedProducts!
+        .cast<ProductModel?>()
+        .firstWhere((p) => p?.id == articleId, orElse: () => null);
+    if (byId != null) {
+      debugPrint(
+        'BARCODE_FALLBACK: DS article HIT id=$articleId',
+      );
+      return byId;
+    }
+
+    try {
+      debugPrint(
+        'BARCODE_FALLBACK: DS calling GET /articles/$articleId?list_id=$_listaActual',
+      );
+      final remote = await _apiService.getProductById(
+        articleId: articleId,
+        listId: _listaActual,
+      );
+
+      final fractional = remote.fractional ?? 1;
+      final productPrice =
+          remote.price == null ? null : remote.price! * fractional;
+      final productRegularPrice = remote.regularPrice == null
+          ? null
+          : remote.regularPrice! * fractional;
+
+      // Conservar barcodes si el artículo ya venía con alguno; si no, lista vacía
+      final mappedProduct = remote.copyWith(
+        barcodes: remote.barcodes ?? const [],
+        price: productPrice,
+        regularPrice: productRegularPrice,
+      );
+
+      _upsertMappedProduct(mappedProduct);
+      debugPrint(
+        'BARCODE_FALLBACK: DS API OK (article) productId=${mappedProduct.id} '
+        'desc=${mappedProduct.description} price=${mappedProduct.price}',
+      );
+      return mappedProduct;
+    } on DioException catch (e) {
+      debugPrint(
+        'BARCODE_FALLBACK: DS API FAIL (article) id=$articleId '
+        'status=${e.response?.statusCode} error=$e',
+      );
+      if (e.response?.statusCode == 404) return null;
+      rethrow;
+    }
+  }
+
+  void _upsertMappedProduct(
+    ProductModel product, {
+    String? lookupKey,
+  }) {
+    _cachedMappedProducts ??= [];
+    _cachedBarcodeToProductMap ??= {};
+
+    if (product.id != null) {
+      final existingIndex =
+          _cachedMappedProducts!.indexWhere((cached) => cached.id == product.id);
+      if (existingIndex != -1) {
+        // Si el chunk ya tenía barcodes y el fallback article no, conservar los existentes
+        final existing = _cachedMappedProducts![existingIndex];
+        final merged = (product.barcodes == null || product.barcodes!.isEmpty) &&
+                existing.barcodes != null &&
+                existing.barcodes!.isNotEmpty
+            ? product.copyWith(barcodes: existing.barcodes)
+            : product;
+        _cachedMappedProducts![existingIndex] = merged;
+        product = merged;
+      } else {
+        _cachedMappedProducts!.add(product);
+      }
+    }
+
+    if (lookupKey != null) {
+      _cachedBarcodeToProductMap![lookupKey] = product;
+    }
+    if (product.barcodes != null) {
+      for (final barcodeObj in product.barcodes!) {
+        if (barcodeObj.barcode != null) {
+          _cachedBarcodeToProductMap![barcodeObj.barcode.toString()] = product;
+        }
+      }
+    }
   }
 
   @override
@@ -302,19 +485,19 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
   // ---------------------------------------------------------------------------
 
   Future<List<BarcodeModel>> _fetchBarcodes() async {
-    print('DEBUG: _fetchBarcodes() started');
+    debugPrint('DEBUG: _fetchBarcodes() started');
     if (_cachedBarcodes != null) {
-      print('DEBUG: _fetchBarcodes() returning cached barcodes. Count: ${_cachedBarcodes!.length}');
+      debugPrint('DEBUG: _fetchBarcodes() returning cached barcodes. Count: ${_cachedBarcodes!.length}');
       return _cachedBarcodes!;
     }
 
     try {
-      print('DEBUG: _fetchBarcodes() calling API getBarcodes...');
+      debugPrint('DEBUG: _fetchBarcodes() calling API getBarcodes...');
       _cachedBarcodes = await _apiService.getBarcodes();
-      print('DEBUG: _fetchBarcodes() API call success. Count: ${_cachedBarcodes!.length}');
+      debugPrint('DEBUG: _fetchBarcodes() API call success. Count: ${_cachedBarcodes!.length}');
       return _cachedBarcodes!;
     } catch (e) {
-      print('DEBUG: _fetchBarcodes() API call failed. Error: $e');
+      debugPrint('DEBUG: _fetchBarcodes() API call failed. Error: $e');
       _cachedBarcodes = [];
       return _cachedBarcodes!;
     }

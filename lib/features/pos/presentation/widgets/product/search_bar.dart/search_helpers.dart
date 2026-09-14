@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/features/pos/data/models/barcode_model.dart';
+import 'package:punto_venta_app/features/pos/data/models/barcode_sale_helper.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product/product_bloc.dart';
@@ -41,40 +42,85 @@ class SearchProcessor {
     double? weightKg;
     double? calculatedUnitPrice;
 
-    if (prodState is ProductLoaded) {
-      if (isBarcodeMode) {
-        final weightResult = parseWeightBarcode(code, prodState.products);
-        if (weightResult != null) {
-          weightKg = weightResult.weightKg;
-          found = weightResult.product;
-          calculatedUnitPrice = weightResult.calculatedUnitPrice;
+    final inMemoryProducts =
+        prodState is ProductLoaded ? prodState.products : <Product>[];
+
+    if (isBarcodeMode) {
+      final parsedWeight = tryParseWeightBarcode(code);
+      if (parsedWeight != null) {
+        weightKg = parsedWeight.weightKg;
+        found = matchWeightedProductLocal(
+          inMemoryProducts,
+          parsedWeight.productKey,
+        );
+        if (found != null) {
+          debugPrint(
+            'BARCODE_FALLBACK: peso hit LOCAL plu=${parsedWeight.productKey} '
+            'weightKg=$weightKg productId=${found.id}',
+          );
         } else {
-          final normalizedCode = normalizeBarcode(code);
-          for (var product in prodState.products) {
-            if (product.barcodes != null) {
-              for (var barcode in product.barcodes!) {
-                if (barcodesMatch(barcode.barcode, normalizedCode)) {
-                  found = product;
-                  matchedBarcode = barcode;
-                  break;
-                }
-              }
-              if (found != null) break;
-            }
+          final articleId = int.tryParse(parsedWeight.productKey);
+          if (articleId != null) {
+            debugPrint(
+              'BARCODE_FALLBACK: peso MISS local → API article_id=$articleId '
+              '(plu=${parsedWeight.productKey}) weightKg=$weightKg',
+            );
+            found = await productBloc.findByArticleId(articleId);
           }
         }
+        if (found != null) {
+          calculatedUnitPrice =
+              calculateWeightedLineTotal(found, weightKg);
+        }
       } else {
-        try {
-          final productCode = int.parse(code);
-          found = prodState.products.cast<Product?>().firstWhere(
-                (p) => p!.id == productCode,
-                orElse: () => null,
-              );
-        } catch (_) {
-          found = null;
+        final normalizedCode = normalizeBarcode(code);
+        for (var product in inMemoryProducts) {
+          if (product.barcodes != null) {
+            for (var barcode in product.barcodes!) {
+              if (barcodesMatch(barcode.barcode, normalizedCode)) {
+                found = product;
+                matchedBarcode = barcode;
+                break;
+              }
+            }
+            if (found != null) break;
+          }
+        }
+        if (found != null) {
+          debugPrint(
+            'BARCODE_FALLBACK: barcode hit LOCAL code=$normalizedCode '
+            'productId=${found.id}',
+          );
+        } else {
+          debugPrint(
+            'BARCODE_FALLBACK: barcode MISS local → API code=$normalizedCode',
+          );
+          found = await productBloc.findByBarcode(normalizedCode);
+          if (found != null && found.barcodes != null) {
+            for (var barcode in found.barcodes!) {
+              if (barcodesMatch(barcode.barcode, normalizedCode)) {
+                matchedBarcode = barcode;
+                break;
+              }
+            }
+            matchedBarcode ??=
+                found.barcodes!.isNotEmpty ? found.barcodes!.first : null;
+          }
         }
       }
+    } else if (prodState is ProductLoaded) {
+      try {
+        final productCode = int.parse(code);
+        found = prodState.products.cast<Product?>().firstWhere(
+              (p) => p!.id == productCode,
+              orElse: () => null,
+            );
+      } catch (_) {
+        found = null;
+      }
     }
+
+    if (!context.mounted) return;
 
     if (found == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -115,26 +161,14 @@ class SearchProcessor {
     }
 
     int finalQuantity = qty;
-    if (matchedBarcode != null && weightKg == null) {
-      finalQuantity = qty * (matchedBarcode.units ?? 1);
 
-      String tipoVentaMsg = '';
-      switch (matchedBarcode.type) {
-        case 1:
-          tipoVentaMsg = 'Unidad';
-          break;
-        case 2:
-          tipoVentaMsg = 'Pack (${matchedBarcode.units} unidades)';
-          break;
-        case 3:
-          tipoVentaMsg = 'Bulto (${matchedBarcode.units} unidades)';
-          break;
-      }
-
-      if (tipoVentaMsg.isNotEmpty) {
+    final saleInfo = resolveBarcodeSaleInfoFromBarcode(matchedBarcode);
+    if (saleInfo != null && weightKg == null) {
+      finalQuantity = saleInfo.quantityFor(qty);
+      if (saleInfo.label.isNotEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Tipo de venta: $tipoVentaMsg'),
+            content: Text('Tipo de venta: ${saleInfo.label}'),
             backgroundColor: AppColors.info,
             duration: const Duration(seconds: 1),
           ),
