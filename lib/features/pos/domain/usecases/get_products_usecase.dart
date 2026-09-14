@@ -21,6 +21,14 @@ class GetProductsUsecase {
     return await repository.searchProducts(query);
   }
 
+  Future<Product?> searchByBarcode(String barcode) async {
+    return await repository.searchByBarcode(barcode);
+  }
+
+  Future<Product?> searchByArticleId(int articleId) async {
+    return await repository.searchByArticleId(articleId);
+  }
+
   Future<List<String>> getCategories() async {
     return await repository.getCategories();
   }

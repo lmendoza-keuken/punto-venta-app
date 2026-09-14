@@ -22,6 +22,48 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     on<SearchProducts>(_onSearchProducts);
     on<LoadCategories>(_onLoadCategories);
     on<ChangePriceList>(_onChangePriceList);
+    on<UpsertProduct>(_onUpsertProduct);
+  }
+
+  /// Lookup local/API por barcode. Upsertea en el estado si hay producto.
+  Future<Product?> findByBarcode(String code) async {
+    try {
+      final product = await getProductsUsecase.searchByBarcode(code);
+      if (product == null) return null;
+      add(UpsertProduct(product));
+      return product;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Lookup local/API por id de artículo (PLU de códigos de peso).
+  Future<Product?> findByArticleId(int articleId) async {
+    try {
+      final product = await getProductsUsecase.searchByArticleId(articleId);
+      if (product == null) return null;
+      add(UpsertProduct(product));
+      return product;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void _onUpsertProduct(
+    UpsertProduct event,
+    Emitter<ProductState> emit,
+  ) {
+    if (state is! ProductLoaded) return;
+    final currentState = state as ProductLoaded;
+    final products = List<Product>.from(currentState.allProducts);
+    final existingIndex =
+        products.indexWhere((p) => p.id == event.product.id);
+    if (existingIndex != -1) {
+      products[existingIndex] = event.product;
+    } else {
+      products.add(event.product);
+    }
+    emit(currentState.copyWith(allProducts: products));
   }
 
   Future<void> _onLoadProducts(

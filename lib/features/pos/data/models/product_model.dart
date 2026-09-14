@@ -36,6 +36,9 @@ class ProductModel with _$ProductModel {
     double? price, // precio actual (siempre mostrar este)
     @JsonKey(name: 'is_on_sale', fromJson: _intFromJson) int? isOnSale, // 1 si está en oferta, 0 si no
     @JsonKey(name: 'barcodes') List<BarcodeModel>? barcodes,
+    /// Solo presentes en GET /barcodes/{barcode_id}; null en el listado masivo.
+    @JsonKey(name: 'barcode_units') int? barcodeUnits,
+    @JsonKey(name: 'barcode_type') int? barcodeType,
   }) = _ProductModel;
 
   factory ProductModel.fromJson(Map<String, dynamic> json) =>

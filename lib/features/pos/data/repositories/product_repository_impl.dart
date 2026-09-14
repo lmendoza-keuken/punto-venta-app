@@ -16,6 +16,18 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
+  Future<Product?> searchByBarcode(String barcode) async {
+    final productModel = await localDataSource.searchByBarcode(barcode);
+    return productModel?.toEntity();
+  }
+
+  @override
+  Future<Product?> searchByArticleId(int articleId) async {
+    final productModel = await localDataSource.searchByArticleId(articleId);
+    return productModel?.toEntity();
+  }
+
+  @override
   Future<List<Product>> getProductsByCategory(String category) async {
     final productModels = await localDataSource.getProductsByCategory(category);
     return productModels.map((model) => model.toEntity()).toList();
