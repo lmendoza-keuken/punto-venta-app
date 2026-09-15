@@ -1,3 +1,4 @@
+import 'package:punto_venta_app/features/pos/data/models/pending_canceled_items_response_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/pending_collectors_detail_response_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/pending_collectors_response_model.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/settlements_repository.dart';
@@ -15,5 +16,20 @@ class GetSettlementsUsecase {
   Future<PendingCollectorsDetailResponseModel> getPendingCollectorDetail(
       String collectorId, String date) async {
     return await repository.getPendingCollectorDetail(collectorId, date);
+  }
+
+  Future<List<PendingCanceledTicketModel>> getPendingCanceledItems(
+      String collectorId, String date) async {
+    final tickets =
+        await repository.getPendingCanceledItems(collectorId, date);
+
+    final sorted = List<PendingCanceledTicketModel>.from(tickets)
+      ..sort((a, b) {
+        final aDate = DateTime.tryParse(a.timestamp ?? '') ?? DateTime(0);
+        final bDate = DateTime.tryParse(b.timestamp ?? '') ?? DateTime(0);
+        return bDate.compareTo(aDate);
+      });
+
+    return sorted;
   }
 }

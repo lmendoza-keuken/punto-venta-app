@@ -5,6 +5,7 @@ import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/settlements/settlements_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/settlements/settlements_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/settlements/settlements_state.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/settlements/collector_detail_dialog/canceled_items_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/settlements/collector_detail_dialog/settlement_payments_breakdown.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/settlements/collector_detail_dialog/settlement_summary_grid.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
@@ -180,6 +181,16 @@ class _CollectorDetailDialogContent extends StatelessWidget {
                     children: [
                       SettlementSummaryGrid(
                         detail: state.pendingCollectorsDetail,
+                        onCanceledItemsTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (_) => CanceledItemsDialog(
+                              collectorId: collectorId,
+                              collectorName: collectorName,
+                              date: date,
+                            ),
+                          );
+                        },
                       ),
                       const SizedBox(height: AppDimensions.paddingL),
                       Text(

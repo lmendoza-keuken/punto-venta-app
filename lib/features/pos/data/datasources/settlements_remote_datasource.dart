@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 import 'package:punto_venta_app/core/network/error_handler.dart';
+import 'package:punto_venta_app/features/pos/data/models/pending_canceled_items_response_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/pending_collectors_response_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/pending_collectors_detail_response_model.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
@@ -20,12 +21,20 @@ abstract class SettlementsService {
       {@Path('collector_id') required String collectorId,
         @Query('date') required String date
       });
+
+  @GET('/settlements/pending/{collector_id}/canceled_items')
+  Future<List<PendingCanceledTicketModel>> getPendingCanceledItems({
+    @Path('collector_id') required String collectorId,
+    @Query('date') required String date,
+  });
 }
 
 abstract class SettlementsRemoteDataSource {
   Future<List<PendingCollectorsResponseModel>> getPendingCollectors(
       {required String date});
   Future<PendingCollectorsDetailResponseModel> getPendingCollectorDetail(
+      {required String collectorId, required String date});
+  Future<List<PendingCanceledTicketModel>> getPendingCanceledItems(
       {required String collectorId, required String date});
 }
 
@@ -55,6 +64,20 @@ class SettlementsRemoteDataSourceImpl implements SettlementsRemoteDataSource {
     } catch (e) {
       throw Exception(ErrorHandler.handleError(e,
           defaultMessage: 'Error al obtener detalle de cobrador'));
+    }
+  }
+
+  @override
+  Future<List<PendingCanceledTicketModel>> getPendingCanceledItems(
+      {required String collectorId, required String date}) async {
+    try {
+      return await _apiService.getPendingCanceledItems(
+        collectorId: collectorId,
+        date: date,
+      );
+    } catch (e) {
+      throw Exception(ErrorHandler.handleError(e,
+          defaultMessage: 'Error al obtener artículos cancelados'));
     }
   }
 }

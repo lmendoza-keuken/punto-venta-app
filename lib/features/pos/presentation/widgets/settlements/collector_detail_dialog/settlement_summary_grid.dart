@@ -6,15 +6,18 @@ import 'package:punto_venta_app/features/pos/data/models/pending_collectors_deta
 
 class SettlementSummaryGrid extends StatelessWidget {
   final PendingCollectorsDetailResponseModel detail;
+  final VoidCallback? onCanceledItemsTap;
 
   const SettlementSummaryGrid({
     super.key,
     required this.detail,
+    this.onCanceledItemsTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final canceledCount = detail.canceledItemsCount ?? 0;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -30,7 +33,6 @@ class SettlementSummaryGrid extends StatelessWidget {
             childAspectRatio: crossAxisCount == 3 ? 1.4 : 3.5,
           ),
           children: [
-            // Invoice Card
             _buildMetricCard(
               title: 'Facturación',
               count: detail.invoiceCount ?? 0,
@@ -38,7 +40,6 @@ class SettlementSummaryGrid extends StatelessWidget {
               iconColor: AppColors.primary,
               isDark: isDark,
             ),
-            // Credit Note Card
             _buildMetricCard(
               title: 'Notas de Crédito',
               count: detail.creditNoteCount ?? 0,
@@ -46,14 +47,14 @@ class SettlementSummaryGrid extends StatelessWidget {
               iconColor: AppColors.error,
               isDark: isDark,
             ),
-            // Canceled Items Card
             _buildMetricCard(
               title: 'Artículos Cancelados',
-              count: detail.canceledItemsCount ?? 0,
-              total: '${detail.canceledItemsCount ?? 0} unid.',
+              count: canceledCount,
+              total: '$canceledCount unid.',
               iconColor: AppColors.accent,
               isDark: isDark,
               showTotalOnly: true,
+              onTap: canceledCount > 0 ? onCanceledItemsTap : null,
             ),
           ],
         );
@@ -68,8 +69,9 @@ class SettlementSummaryGrid extends StatelessWidget {
     required Color iconColor,
     required bool isDark,
     bool showTotalOnly = false,
+    VoidCallback? onTap,
   }) {
-    return Container(
+    final card = Container(
       padding: const EdgeInsets.all(AppDimensions.paddingM),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCard : AppColors.cardBackground,
@@ -99,6 +101,14 @@ class SettlementSummaryGrid extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              if (onTap != null)
+                Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.textSecondary,
+                ),
             ],
           ),
           const SizedBox(height: 8),
@@ -123,6 +133,17 @@ class SettlementSummaryGrid extends StatelessWidget {
             ),
           ],
         ],
+      ),
+    );
+
+    if (onTap == null) return card;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppDimensions.borderRadiusS),
+        child: card,
       ),
     );
   }

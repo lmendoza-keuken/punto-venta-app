@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:punto_venta_app/features/pos/data/models/pending_canceled_items_response_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/pending_collectors_detail_response_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/pending_collectors_response_model.dart';
 
@@ -29,6 +30,15 @@ class PendingCollectorsDetailLoaded extends SettlementsState {
 
   @override
   List<Object> get props => [pendingCollectorsDetail];
+}
+
+class PendingCanceledItemsLoaded extends SettlementsState {
+  final List<PendingCanceledTicketModel> canceledTickets;
+
+  const PendingCanceledItemsLoaded(this.canceledTickets);
+
+  @override
+  List<Object> get props => [canceledTickets];
 }
 
 class SettlementsError extends SettlementsState {

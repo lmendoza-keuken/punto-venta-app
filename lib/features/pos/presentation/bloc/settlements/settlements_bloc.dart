@@ -10,6 +10,7 @@ class SettlementsBloc extends Bloc<SettlementsEvent, SettlementsState> {
       : super(SettlementsInitial()) {
     on<FetchPendingCollectors>(_fetchPendingCollectors);
     on<FetchPendingCollectorDetail>(_fetchPendingCollectorDetail);
+    on<FetchPendingCanceledItems>(_fetchPendingCanceledItems);
   }
 
   Future<void> _fetchPendingCollectors(
@@ -39,6 +40,22 @@ class SettlementsBloc extends Bloc<SettlementsEvent, SettlementsState> {
           .getPendingCollectorDetail(event.collectorId, event.date);
 
       emit(PendingCollectorsDetailLoaded(pendingCollectorDetail));
+    } catch (e) {
+      emit(SettlementsError(e.toString()));
+    }
+  }
+
+  Future<void> _fetchPendingCanceledItems(
+    FetchPendingCanceledItems event,
+    Emitter<SettlementsState> emit,
+  ) async {
+    emit(SettlementsLoading());
+
+    try {
+      final canceledTickets = await getSettlementsUsecase
+          .getPendingCanceledItems(event.collectorId, event.date);
+
+      emit(PendingCanceledItemsLoaded(canceledTickets));
     } catch (e) {
       emit(SettlementsError(e.toString()));
     }

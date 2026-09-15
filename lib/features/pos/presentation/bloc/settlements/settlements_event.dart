@@ -25,3 +25,16 @@ class FetchPendingCollectorDetail extends SettlementsEvent {
   @override
   List<Object?> get props => [collectorId, date];
 }
+
+class FetchPendingCanceledItems extends SettlementsEvent {
+  final String collectorId;
+  final String date;
+
+  const FetchPendingCanceledItems({
+    required this.collectorId,
+    required this.date,
+  });
+
+  @override
+  List<Object?> get props => [collectorId, date];
+}
