@@ -1,3 +1,4 @@
+import 'package:punto_venta_app/core/constants/ticket_types.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/completed_orders_repository.dart';
 
@@ -24,17 +25,33 @@ class GetReportsUsecase {
     // Obtener órdenes del día
     final orders = await repository.getOrdersByDateRange(startDate, endDate);
 
-    // stats diarios
-    final totalSales = orders.fold(0.0, (sum, order) => sum + order.total);
-    final totalOrders = orders.length;
-    final totalItems = orders.fold(0, (sum, order) => sum + order.totalItems);
-    final totalTax = orders.fold(0.0, (sum, order) => sum + order.totalTax);
+    return buildSummaryFromOrders(orders);
+  }
 
+  Map<String, dynamic> buildSummaryFromOrders(List<CompletedOrder> orders) {
     return {
-      'total_sales': totalSales,
-      'total_orders': totalOrders,
-      'total_items': totalItems,
-      'total_tax': totalTax,
+      'total_sales': orders.fold(0.0, (sum, order) {
+        if (TicketType.isNotaCredito(order.typeCode)) {
+          return sum - order.total;
+        } else {
+          return sum + order.total;
+        }
+      }),
+      'total_orders': orders.length,
+      'total_items': orders.fold(0, (sum, order) {
+        if (TicketType.isNotaCredito(order.typeCode)) {
+          return sum - order.totalItems;
+        } else {
+          return sum + order.totalItems;
+        }
+      }),
+      'total_tax': orders.fold(0.0, (sum, order) {
+        if (TicketType.isNotaCredito(order.typeCode)) {
+          return sum - order.totalTax;
+        } else {
+          return sum + order.totalTax;
+        }
+      }),
       'orders': orders,
     };
   }
@@ -69,19 +86,43 @@ class GetReportsUsecase {
     final orders = await repository.getOrdersByDateRangeFromRemote(startDate,
         skip: skip, limit: limit, typeCode: typeCode);
 
-    // stats diarios
-    final totalSales = orders.fold(0.0, (sum, order) => sum + order.total);
-    final totalOrders = orders.length;
-    final totalItems = orders.fold(0, (sum, order) => sum + order.totalItems);
-    final totalTax = orders.fold(0.0, (sum, order) => sum + order.totalTax);
+    return buildSummaryFromOrders(orders);
+  }
 
-    return {
-      'total_sales': totalSales,
-      'total_orders': totalOrders,
-      'total_items': totalItems,
-      'total_tax': totalTax,
-      'orders': orders,
-    };
+  /// Carga órdenes por chunks y emite el summary acumulado tras cada página
+  /// (mismo patrón que productos).
+  Stream<({Map<String, dynamic> summary, bool hasMore})>
+      streamOrdersSummaryByDateRange(
+    DateTime startDate, {
+    DateTime? endDate,
+    int chunkSize = 10,
+    String? typeCode,
+  }) async* {
+    final allOrders = <CompletedOrder>[];
+    int skip = 0;
+    bool hasMore = true;
+
+    while (hasMore) {
+      final chunk = await repository.getOrdersByDateRangeFromRemote(
+        startDate,
+        endDate: endDate,
+        skip: skip,
+        limit: chunkSize,
+        typeCode: typeCode,
+      );
+
+      allOrders.addAll(chunk);
+      hasMore = chunk.length >= chunkSize;
+
+      yield (
+        summary: buildSummaryFromOrders(List<CompletedOrder>.from(allOrders)),
+        hasMore: hasMore,
+      );
+
+      if (hasMore) {
+        skip += chunkSize;
+      }
+    }
   }
 
   Future<CompletedOrder?> getOrderByIdFromRemote(String orderId) async {

@@ -17,6 +17,9 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
   bool _isAllReportsMode = false;
   String? _currentTypeCode;
 
+  /// Cancela cargas por chunks si el usuario cambia de vista/fecha.
+  int _loadGeneration = 0;
+
   ReportsBloc(
       {required this.getReportsUsecase,
       required this.generateCreditNoteUsecase})
@@ -32,6 +35,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     LoadAllReports event,
     Emitter<ReportsState> emit,
   ) async {
+    _loadGeneration++;
     emit(ReportsLoading());
     _currentPage = 1;
     _isAllReportsMode = true;
@@ -98,9 +102,13 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
       final updatedOrders = List<CompletedOrder>.from(currentState.tickets)
         ..addAll(newOrders);
 
+      final updatedSummary = currentState.summary != null
+          ? getReportsUsecase.buildSummaryFromOrders(updatedOrders)
+          : null;
+
       emit(ReportsLoaded(
         updatedOrders,
-        summary: currentState.summary,
+        summary: updatedSummary,
         hasMoreData: newOrders.length >= _pageSize,
         isLoadingMore: false,
       ));
@@ -114,6 +122,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     LoadReportsByDateRange event,
     Emitter<ReportsState> emit,
   ) async {
+    final generation = ++_loadGeneration;
     emit(ReportsLoading());
     _currentPage = 1;
     _isAllReportsMode = false;
@@ -122,25 +131,15 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     _currentTypeCode = event.typeCode;
 
     try {
-      try {
-        final skip = (_currentPage - 1) * _pageSize;
-
-        final orders = await getReportsUsecase.getOrdersByDateRangeFromRemote(
-            event.startDate,
-            endDate: event.endDate,
-            skip: skip,
-            limit: _pageSize,
-            typeCode: event.typeCode);
-        emit(ReportsLoaded(orders, hasMoreData: orders.length >= _pageSize));
-      } catch (remoteError) {
-        // TODO: CAMBIAR PARA USAR EL MISMO MODELO TicketResponseModel
-
-        // print('Error fetching from remote, using local data: $remoteError');
-        // final orders = await getReportsUsecase.getOrdersByDateRange(
-        //     event.startDate, event.endDate);
-        // emit(ReportsLoaded(orders, hasMoreData: false));
-      }
+      await _emitChunkedDateRangeSummary(
+        emit: emit,
+        generation: generation,
+        startDate: event.startDate,
+        endDate: event.endDate,
+        typeCode: event.typeCode,
+      );
     } catch (e) {
+      if (generation != _loadGeneration) return;
       emit(ReportsError(e.toString()));
     }
   }
@@ -149,6 +148,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     LoadDailySummary event,
     Emitter<ReportsState> emit,
   ) async {
+    final generation = ++_loadGeneration;
     emit(ReportsLoading());
     _currentPage = 1;
     _isAllReportsMode = false;
@@ -158,29 +158,43 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     _currentTypeCode = event.typeCode;
 
     try {
-      try {
-        final skip = (_currentPage - 1) * _pageSize;
-
-        final summary = await getReportsUsecase.getDailySummaryFromRemote(
-            event.date,
-            skip: skip,
-            limit: _pageSize,
-            typeCode: event.typeCode);
-
-        final orders = summary['orders'] as List<CompletedOrder>;
-
-        emit(ReportsLoaded(orders,
-            summary: summary, hasMoreData: orders.length >= _pageSize));
-      } catch (remoteError) {
-        // TODO: CAMBIAR PARA USAR EL MISMO MODELO TicketResponseModel
-
-        // print('Error fetching from remote, using local data: $remoteError');
-        // final summary = await getReportsUsecase.getDailySummary(event.date);
-        // final orders = summary['orders'] as List<CompletedOrder>;
-        // emit(ReportsLoaded(orders, summary: summary, hasMoreData: false));
-      }
+      await _emitChunkedDateRangeSummary(
+        emit: emit,
+        generation: generation,
+        startDate: _currentStartDate!,
+        endDate: null,
+        typeCode: event.typeCode,
+      );
     } catch (e) {
+      if (generation != _loadGeneration) return;
       emit(ReportsError(e.toString()));
+    }
+  }
+
+  /// Carga por chunks y emite lista + summary acumulado tras cada página.
+  Future<void> _emitChunkedDateRangeSummary({
+    required Emitter<ReportsState> emit,
+    required int generation,
+    required DateTime startDate,
+    DateTime? endDate,
+    String? typeCode,
+  }) async {
+    await for (final chunk
+        in getReportsUsecase.streamOrdersSummaryByDateRange(
+      startDate,
+      endDate: endDate,
+      chunkSize: _pageSize,
+      typeCode: typeCode,
+    )) {
+      if (generation != _loadGeneration) return;
+
+      final orders = chunk.summary['orders'] as List<CompletedOrder>;
+      emit(ReportsLoaded(
+        orders,
+        summary: chunk.summary,
+        hasMoreData: chunk.hasMore,
+        isLoadingMore: chunk.hasMore,
+      ));
     }
   }
 

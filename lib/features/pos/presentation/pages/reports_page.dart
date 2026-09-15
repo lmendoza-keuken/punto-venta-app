@@ -31,20 +31,8 @@ class _ReportsPageState extends State<ReportsPage>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(_handleTabChange);
-    _dailyScrollController.addListener(_onDailyScroll);
     _historyScrollController.addListener(_onHistoryScroll);
     context.read<ReportsBloc>().add(LoadDailySummary(selectedDate));
-  }
-
-  void _onDailyScroll() {
-    if (_dailyScrollController.hasClients &&
-        _dailyScrollController.position.pixels >=
-            _dailyScrollController.position.maxScrollExtent * 0.9) {
-      final state = context.read<ReportsBloc>().state;
-      if (state is ReportsLoaded && !state.isLoadingMore && state.hasMoreData) {
-        context.read<ReportsBloc>().add(const LoadMoreReports());
-      }
-    }
   }
 
   void _onHistoryScroll() {

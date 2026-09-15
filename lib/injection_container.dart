@@ -39,7 +39,7 @@ import 'package:punto_venta_app/features/pos/data/datasources/printer_local_data
 import 'package:punto_venta_app/features/pos/data/datasources/pdv_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/pdv_remote_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/printer_socket_datasource.dart';
-import 'package:punto_venta_app/features/pos/data/datasources/product_local_data_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/product_remote_data_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/saved_orders_local_dasource.dart';
 import 'package:punto_venta_app/features/pos/data/repositories/client_repository_impl.dart';
 import 'package:punto_venta_app/features/pos/data/repositories/price_list_types_repository_impl.dart';
@@ -475,8 +475,8 @@ Future<void> init() async {
   sl.registerLazySingleton<ProductService>(
     () => ProductService(sl()),
   );
-  sl.registerLazySingleton<ProductLocalDataSource>(
-    () => ProductLocalDataSourceImpl(),
+  sl.registerLazySingleton<ProductRemoteDataSource>(
+    () => ProductRemoteDataSourceImpl(),
   );
   sl.registerLazySingleton<SavedOrdersLocalDataSource>(
     () => SavedOrdersLocalDataSourceImpl(sharedPreferences: sl()),

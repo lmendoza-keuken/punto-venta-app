@@ -27,7 +27,7 @@ class SummaryRow extends StatelessWidget {
           Expanded(
               child: _buildSummaryCard(
                   context,
-                  'Órdenes',
+                  'Tickets',
                   '${summary['total_orders']}',
                   Icons.receipt,
                   AppColors.primary)),

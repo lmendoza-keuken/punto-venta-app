@@ -1,9 +1,9 @@
-import 'package:punto_venta_app/features/pos/data/datasources/product_local_data_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/product_remote_data_datasource.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/product_repository.dart';
 
 class ProductRepositoryImpl implements ProductRepository {
-  final ProductLocalDataSource localDataSource;
+  final ProductRemoteDataSource localDataSource;
 
   ProductRepositoryImpl({required this.localDataSource});
 
@@ -49,8 +49,8 @@ class ProductRepositoryImpl implements ProductRepository {
 
   @override
   Future<void> updatePriceList(int listId) async {
-    if (localDataSource is ProductLocalDataSourceImpl) {
-      (localDataSource as ProductLocalDataSourceImpl).setListaPrecio(listId);
+    if (localDataSource is ProductRemoteDataSourceImpl) {
+      (localDataSource as ProductRemoteDataSourceImpl).setListaPrecio(listId);
     }
   }
 

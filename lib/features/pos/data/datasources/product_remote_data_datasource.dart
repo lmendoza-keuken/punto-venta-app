@@ -8,7 +8,7 @@ import 'package:punto_venta_app/features/pos/data/models/product_model.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 import 'package:retrofit/retrofit.dart';
 
-part 'product_local_data_datasource.g.dart';
+part 'product_remote_data_datasource.g.dart';
 
 // =============================================================================
 // Retrofit API Service
@@ -61,7 +61,7 @@ abstract class ProductService {
 // Local Data Source Interface
 // =============================================================================
 
-abstract class ProductLocalDataSource {
+abstract class ProductRemoteDataSource {
   Stream<List<ProductModel>> getProducts();
   Future<List<ProductModel>> getProductsByCategory(String category);
   Future<List<ProductModel>> searchProducts(String query);
@@ -81,7 +81,7 @@ abstract class ProductLocalDataSource {
 // Local Data Source Implementation
 // =============================================================================
 
-class ProductLocalDataSourceImpl implements ProductLocalDataSource {
+class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
   final ProductService _apiService;
   int _listaActual;
 
@@ -96,7 +96,7 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
   Map<String, ProductModel>? _cachedBarcodeToProductMap;
   bool _isAllProductsLoaded = false;
 
-  ProductLocalDataSourceImpl({
+  ProductRemoteDataSourceImpl({
     int listaInicial = 1,
     ProductService? apiService,
   })  : _listaActual = listaInicial,

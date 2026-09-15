@@ -5,6 +5,7 @@ import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/core/constants/ticket_types.dart';
 import 'package:punto_venta_app/core/utils/extensions.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_state.dart';
@@ -55,9 +56,8 @@ class _DailySummaryViewState extends State<DailySummaryView> {
               ? state.tickets
               : state.tickets
                   .where((ticket) =>
-                      (ticket.description ?? '')
-                          .toLowerCase()
-                          .contains(widget.searchController.text.toLowerCase()) ||
+                      (ticket.description ?? '').toLowerCase().contains(
+                          widget.searchController.text.toLowerCase()) ||
                       (ticket.clientName ?? '')
                           .toLowerCase()
                           .contains(widget.searchController.text.toLowerCase()))
@@ -193,17 +193,21 @@ class _DailySummaryViewState extends State<DailySummaryView> {
                 final isCreditNote = TicketType.isNotaCredito(ticket.typeCode);
                 final isAnnulled =
                     ticket.isAnnulled && TicketType.isFactura(ticket.typeCode);
+                final hasCanceledItems = ticket.logs
+                    .any((item) => item.type == CartActionType.remove);
 
                 return GestureDetector(
                   onTap: () => _showTicketPreview(ticket),
                   child: Card(
-                    margin: const EdgeInsets.only(bottom: AppDimensions.paddingS),
+                    margin:
+                        const EdgeInsets.only(bottom: AppDimensions.paddingS),
                     color: isCreditNote ? Colors.red.shade50 : null,
                     child: ListTile(
                       leading: Icon(
                         isCreditNote ? Icons.receipt_long : Icons.receipt,
-                        color:
-                            isCreditNote ? Colors.red.shade700 : AppColors.primary,
+                        color: isCreditNote
+                            ? Colors.red.shade700
+                            : AppColors.primary,
                         size: 32,
                       ),
                       title: Row(
@@ -250,6 +254,27 @@ class _DailySummaryViewState extends State<DailySummaryView> {
                             ),
                           if (isAnnulled)
                             const SizedBox(width: AppDimensions.paddingS),
+                          if (hasCanceledItems)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.shade500,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                'Items cancelados',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          if (hasCanceledItems)
+                            const SizedBox(width: AppDimensions.paddingS),
                           Expanded(
                             child: Text(
                               showDate
@@ -257,7 +282,8 @@ class _DailySummaryViewState extends State<DailySummaryView> {
                                   : "${ticket.description} | ${DateFormat('HH:mm').format(ticket.completedAt)}",
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: isCreditNote ? Colors.grey.shade900 : null,
+                                color:
+                                    isCreditNote ? Colors.grey.shade900 : null,
                               ),
                             ),
                           ),
@@ -293,13 +319,15 @@ class _DailySummaryViewState extends State<DailySummaryView> {
                         children: [
                           Text(
                             (ticket.total).formatToCurrency(),
-                            style:
-                                Theme.of(context).textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: isCreditNote
-                                          ? Colors.red.shade700
-                                          : AppColors.primary,
-                                    ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: isCreditNote
+                                      ? Colors.red.shade700
+                                      : AppColors.primary,
+                                ),
                           ),
                         ],
                       ),
@@ -350,14 +378,16 @@ class _DailySummaryViewState extends State<DailySummaryView> {
   }
 }
 
-class _SearchBarPersistentHeaderDelegate extends SliverPersistentHeaderDelegate {
+class _SearchBarPersistentHeaderDelegate
+    extends SliverPersistentHeaderDelegate {
   final Widget child;
   static const double _height = 72.0;
 
   _SearchBarPersistentHeaderDelegate({required this.child});
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
     return SizedBox(
       height: _height,
       child: child,
