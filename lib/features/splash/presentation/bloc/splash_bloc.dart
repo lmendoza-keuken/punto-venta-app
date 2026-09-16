@@ -25,6 +25,10 @@ class SplashBloc extends Bloc<SplashEvent, SplashState> {
     await Future<void>.delayed(const Duration(seconds: 2));
 
     if (!_isWindows || checkForUpdate == null) {
+      AppLogger.info(
+        'AppUpdate: splash skip check '
+        'isWindows=$_isWindows hasUseCase=${checkForUpdate != null}',
+      );
       emit(SplashCompleted());
       return;
     }
@@ -32,6 +36,13 @@ class SplashBloc extends Bloc<SplashEvent, SplashState> {
     try {
       final result =
           await checkForUpdate!().timeout(const Duration(seconds: 8));
+
+      AppLogger.info(
+        'AppUpdate: splash result available=${result.updateAvailable} '
+        'local=${result.currentVersion}+${result.currentBuildNumber} '
+        'remoteBuild=${result.release?.buildNumber} '
+        'mandatory=${result.release?.mandatory}',
+      );
 
       if (result.updateAvailable && result.release != null) {
         emit(SplashUpdateAvailable(

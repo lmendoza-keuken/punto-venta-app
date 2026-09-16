@@ -101,7 +101,7 @@ class UpdateDownloaderImpl implements UpdateDownloader {
 
     await Process.start(
       setupFile.path,
-      const ['/SILENT', '/CLOSEAPPLICATIONS', '/NORESTART'],
+      const ['/SILENT', '/CLOSEAPPLICATIONS', '/NORESTART', '/VERYSILENT'],
       mode: ProcessStartMode.detached,
       runInShell: false,
     );

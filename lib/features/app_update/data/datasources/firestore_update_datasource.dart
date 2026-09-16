@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:punto_venta_app/core/utils/app_logger.dart';
@@ -17,16 +18,22 @@ class FirestoreUpdateDatasourceImpl implements FirestoreUpdateDatasource {
   static const Duration _timeout = Duration(seconds: 8);
 
   final FirebaseFirestore _firestore;
+  final FirebaseAuth _auth;
 
   FirestoreUpdateDatasourceImpl({
     FirebaseFirestore? firestore,
-  }) : _firestore = firestore ?? FirebaseFirestore.instance;
+    FirebaseAuth? auth,
+  })  : _firestore = firestore ?? FirebaseFirestore.instance,
+        _auth = auth ?? FirebaseAuth.instance;
 
   bool get _isWindows =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
 
   @override
   Future<AppReleaseModel?> fetchWindowsRelease() async {
+    AppLogger.info(
+      'AppUpdate: fetching $collectionName/$documentId isWindows=$_isWindows',
+    );
     if (_isWindows) {
       return _fetchViaRest();
     }
@@ -39,10 +46,17 @@ class FirestoreUpdateDatasourceImpl implements FirestoreUpdateDatasource {
           .timeout(_timeout);
 
       if (!doc.exists || doc.data() == null) {
+        AppLogger.warn('AppUpdate: document missing (native)');
         return null;
       }
 
-      return AppReleaseModel.fromMap(doc.data()!);
+      final model = AppReleaseModel.fromMap(doc.data()!);
+      AppLogger.info(
+        'AppUpdate: native doc version=${model.version} '
+        'buildNumber=${model.buildNumber} '
+        'minSupported=${model.minSupportedBuildVersion}',
+      );
+      return model;
     } catch (e, stackTrace) {
       AppLogger.error(
         'AppUpdate: native Firestore failed, trying REST',
@@ -59,6 +73,10 @@ class FirestoreUpdateDatasourceImpl implements FirestoreUpdateDatasource {
       final headers = <String, String>{};
       if (token != null) {
         headers['Authorization'] = 'Bearer $token';
+      } else {
+        AppLogger.warn(
+          'AppUpdate: sin token auth; Firestore puede devolver 403',
+        );
       }
 
       final projectId = DefaultFirebaseOptions.currentPlatform.projectId;
@@ -74,6 +92,10 @@ class FirestoreUpdateDatasourceImpl implements FirestoreUpdateDatasource {
       );
 
       if (response.statusCode == 404) {
+        AppLogger.warn(
+          'AppUpdate: 404 en $collectionName/$documentId '
+          '(¿el doc existe en este proyecto?)',
+        );
         return null;
       }
       if (response.statusCode != 200) {
@@ -84,16 +106,42 @@ class FirestoreUpdateDatasourceImpl implements FirestoreUpdateDatasource {
       final fields = _parseFirestoreRestFields(
         jsonBody['fields'] as Map<String, dynamic>?,
       );
+      AppLogger.info('AppUpdate: REST fields keys=${fields.keys.toList()}');
       if (fields.isEmpty) return null;
-      return AppReleaseModel.fromMap(fields);
+
+      final model = AppReleaseModel.fromMap(fields);
+      AppLogger.info(
+        'AppUpdate: REST doc version=${model.version} '
+        'buildNumber=${model.buildNumber} '
+        'minSupported=${model.minSupportedBuildVersion} '
+        'downloadUrlEmpty=${model.downloadUrl.isEmpty}',
+      );
+      return model;
     } catch (e, stackTrace) {
       AppLogger.error('AppUpdate: Firestore REST failed', e, stackTrace);
       rethrow;
     }
   }
 
-  /// Obtiene un token anónimo REST de Firebase Auth para llamadas REST a Firestore.
+  /// Prefer the anonymous session from [main], then REST signUp like auth datasource.
   Future<String?> _getAuthToken() async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        final token = await user.getIdToken();
+        if (token != null && token.isNotEmpty) {
+          AppLogger.info('AppUpdate: using FirebaseAuth.currentUser token');
+          return token;
+        }
+      }
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'AppUpdate: currentUser.getIdToken failed, trying REST signup',
+        e,
+        stackTrace,
+      );
+    }
+
     try {
       final apiKey = DefaultFirebaseOptions.currentPlatform.apiKey;
       final response = await http
@@ -108,10 +156,12 @@ class FirestoreUpdateDatasourceImpl implements FirestoreUpdateDatasource {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as Map<String, dynamic>;
+        AppLogger.info('AppUpdate: using REST anonymous signup token');
         return data['idToken'] as String?;
       } else {
         AppLogger.warn(
-          'AppUpdate: Firebase Auth REST signup status=${response.statusCode}',
+          'AppUpdate: Firebase Auth REST signup status=${response.statusCode} '
+          'body=${response.body}',
         );
       }
     } catch (e, stackTrace) {
