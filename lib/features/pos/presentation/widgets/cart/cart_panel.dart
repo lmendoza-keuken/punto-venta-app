@@ -27,6 +27,7 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_s
 import 'package:punto_venta_app/features/pos/presentation/widgets/common/error_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cash_register/cash_register_cubit.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cash_register/cash_register_state.dart';
+import 'package:punto_venta_app/features/app_update/presentation/widgets/update_available_dialog.dart';
 
 class CartPanel extends StatefulWidget {
   const CartPanel({super.key});
@@ -55,6 +56,7 @@ class _CartPanelState extends State<CartPanel> {
               final uiState = context.read<UiBloc>().state;
               final isReturnMode =
                   uiState is UiLoaded ? uiState.isReturnMode : false;
+              final pendingUpdate = checkoutState.pendingUpdate;
 
               // Imprimir ticket de venta
               if (!isReturnMode) {
@@ -81,6 +83,20 @@ class _CartPanelState extends State<CartPanel> {
                   backgroundColor: AppColors.success,
                 ),
               );
+
+              if (!isReturnMode &&
+                  pendingUpdate != null &&
+                  pendingUpdate.updateAvailable &&
+                  pendingUpdate.release != null) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!context.mounted) return;
+                  showUpdateAvailableDialog(
+                    context: context,
+                    release: pendingUpdate.release!,
+                    currentVersion: pendingUpdate.currentVersion,
+                  );
+                });
+              }
             } else if (checkoutState is CheckoutError) {
               showDialog(
                 context: context,

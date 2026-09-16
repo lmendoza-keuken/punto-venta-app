@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:punto_venta_app/app/routes/route_paths.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_string.dart';
+import 'package:punto_venta_app/features/app_update/presentation/widgets/update_available_dialog.dart';
 import 'package:punto_venta_app/features/splash/presentation/bloc/splash_bloc.dart';
 import 'package:punto_venta_app/features/splash/presentation/bloc/splash_event.dart';
 import 'package:punto_venta_app/features/splash/presentation/bloc/splash_state.dart';
@@ -21,6 +22,7 @@ class _SplashPageState extends State<SplashPage>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
+  bool _handlingUpdate = false;
 
   @override
   void initState() {
@@ -49,7 +51,6 @@ class _SplashPageState extends State<SplashPage>
 
     _animationController.forward();
 
-    // Iniciar el splash
     context.read<SplashBloc>().add(StartSplash());
   }
 
@@ -59,12 +60,41 @@ class _SplashPageState extends State<SplashPage>
     super.dispose();
   }
 
+  Future<void> _onUpdateAvailable(
+    BuildContext context,
+    SplashUpdateAvailable state,
+  ) async {
+    if (_handlingUpdate) return;
+    _handlingUpdate = true;
+
+    final splashBloc = context.read<SplashBloc>();
+    final isMandatory = state.release.mandatory;
+
+    // false = Más tarde / dismiss; on success the process exits via installer.
+    await showUpdateAvailableDialog(
+      context: context,
+      release: state.release,
+      currentVersion: state.currentVersion,
+    );
+
+    if (!mounted) return;
+
+    // Mandatory updates keep the dialog open until install or retry.
+    if (!isMandatory) {
+      splashBloc.add(ContinueAfterUpdatePrompt());
+    }
+
+    _handlingUpdate = false;
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocListener<SplashBloc, SplashState>(
       listener: (context, state) {
         if (state is SplashCompleted) {
           context.go(RoutePaths.login);
+        } else if (state is SplashUpdateAvailable) {
+          _onUpdateAvailable(context, state);
         }
       },
       child: Scaffold(

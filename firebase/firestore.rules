@@ -1,0 +1,23 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Existing: public read for enterprises
+    match /enterprises/{enterpriseID} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Windows auto-update metadata (appVersionsInfo/punto_venta).
+    // Clients can read; writes only from Console / Admin SDK.
+    match /appVersionsInfo/{document} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // Default: authenticated access (anonymous sign-in counts).
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

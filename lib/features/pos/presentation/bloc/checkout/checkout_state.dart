@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:punto_venta_app/features/app_update/domain/entities/update_check_result.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
 
 abstract class CheckoutState extends Equatable {
@@ -18,11 +19,15 @@ class CheckoutProcessing extends CheckoutState {
 
 class CheckoutSuccess extends CheckoutState {
   final PrintJob printJob;
+  final UpdateCheckResult? pendingUpdate;
 
-  const CheckoutSuccess({required this.printJob});
+  const CheckoutSuccess({
+    required this.printJob,
+    this.pendingUpdate,
+  });
 
   @override
-  List<Object> get props => [printJob];
+  List<Object?> get props => [printJob, pendingUpdate];
 }
 
 class CheckoutError extends CheckoutState {

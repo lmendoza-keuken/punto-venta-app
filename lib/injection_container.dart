@@ -2,6 +2,14 @@ import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:punto_venta_app/core/database/database_helper.dart';
 import 'package:punto_venta_app/core/network/dio_client.dart';
+import 'package:punto_venta_app/features/app_update/data/datasources/firestore_update_datasource.dart';
+import 'package:punto_venta_app/features/app_update/data/datasources/update_downloader.dart';
+import 'package:punto_venta_app/features/app_update/data/repositories/app_update_repository_impl.dart';
+import 'package:punto_venta_app/features/app_update/domain/repositories/app_update_repository.dart';
+import 'package:punto_venta_app/features/app_update/domain/usecases/check_for_update_usecase.dart';
+import 'package:punto_venta_app/features/app_update/domain/usecases/download_and_install_update_usecase.dart';
+import 'package:punto_venta_app/features/app_update/domain/usecases/track_comprobante_and_maybe_check_update_usecase.dart';
+import 'package:punto_venta_app/features/app_update/presentation/cubit/app_update_cubit.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/google_auth_datasource.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/firestore_user_datasource.dart';
@@ -153,8 +161,27 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/settlements/settl
 final sl = GetIt.instance;
 
 Future<void> init() async {
+  //! Features - App Update
+  sl.registerLazySingleton<FirestoreUpdateDatasource>(
+    () => FirestoreUpdateDatasourceImpl(),
+  );
+  sl.registerLazySingleton<UpdateDownloader>(
+    () => UpdateDownloaderImpl(),
+  );
+  sl.registerLazySingleton<AppUpdateRepository>(
+    () => AppUpdateRepositoryImpl(
+      firestoreDatasource: sl(),
+      downloader: sl(),
+    ),
+  );
+  sl.registerLazySingleton(() => CheckForUpdateUseCase(sl()));
+  sl.registerLazySingleton(() => DownloadAndInstallUpdateUseCase(sl()));
+  sl.registerFactory(
+    () => AppUpdateCubit(downloadAndInstallUpdate: sl()),
+  );
+
   //! Features - Splash
-  sl.registerFactory(() => SplashBloc());
+  sl.registerFactory(() => SplashBloc(checkForUpdate: sl()));
 
   //! Features - Auth
   // Bloc
@@ -290,6 +317,7 @@ Future<void> init() async {
         sendInvoiceUseCase: sl(),
         processPartialReturnUseCase: sl(),
         calculateOrderTaxesUseCase: sl(),
+        trackComprobanteAndMaybeCheckUpdate: sl(),
         sharedPreferences: sl(),
       ));
 
@@ -628,4 +656,13 @@ Future<void> init() async {
 
   // HTTP client
   sl.registerLazySingleton(() => http.Client());
+
+  // Depends on SharedPreferences + PdvLocalDataSource
+  sl.registerLazySingleton(
+    () => TrackComprobanteAndMaybeCheckUpdateUseCase(
+      sharedPreferences: sl(),
+      pdvLocalDataSource: sl(),
+      checkForUpdate: sl(),
+    ),
+  );
 }

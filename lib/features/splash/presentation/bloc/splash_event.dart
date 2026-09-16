@@ -8,3 +8,5 @@ abstract class SplashEvent extends Equatable {
 }
 
 class StartSplash extends SplashEvent {}
+
+class ContinueAfterUpdatePrompt extends SplashEvent {}

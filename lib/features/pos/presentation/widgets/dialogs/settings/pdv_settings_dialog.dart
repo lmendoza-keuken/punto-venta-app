@@ -49,6 +49,8 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
   final formKey = GlobalKey<FormState>();
   final TextEditingController _clientSearchController = TextEditingController();
   final TextEditingController _daysLimitController = TextEditingController();
+  final TextEditingController _checkUpdatePeriodController =
+      TextEditingController();
   Timer? _searchDebounce;
 
   List<Branch> _branches = [];
@@ -61,6 +63,7 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
   String? _localError;
   PdvConfig? _pdvConfig;
   int? _creditNoteDaysLimit;
+  int? _checkUpdatePeriod;
 
   @override
   void initState() {
@@ -79,6 +82,7 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
     _searchDebounce?.cancel();
     _clientSearchController.dispose();
     _daysLimitController.dispose();
+    _checkUpdatePeriodController.dispose();
     super.dispose();
   }
 
@@ -125,6 +129,9 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
 
     _creditNoteDaysLimit = config.creditNoteDaysLimit;
     _daysLimitController.text = config.creditNoteDaysLimit?.toString() ?? '';
+    _checkUpdatePeriod = config.checkUpdatePeriod;
+    _checkUpdatePeriodController.text =
+        config.checkUpdatePeriod?.toString() ?? '';
 
     _syncSelectedClientFromConfig();
   }
@@ -367,6 +374,41 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                                 searchQuery: _clientSearchQuery,
                                 onClientSelected: _onClientSelected,
                               ),
+                              const SizedBox(height: AppDimensions.paddingM),
+                              const Text(
+                                'Actualizaciones',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: AppDimensions.paddingM),
+                              TextFormField(
+                                controller: _checkUpdatePeriodController,
+                                decoration: const InputDecoration(
+                                  labelText:
+                                      'Comprobantes para verificar update',
+                                  hintText: 'Ej. 50',
+                                  prefixIcon: Icon(Icons.system_update),
+                                  border: OutlineInputBorder(),
+                                  helperText:
+                                      'Cantidad de comprobantes emitidos antes de verificar una actualización',
+                                ),
+                                keyboardType: TextInputType.number,
+                                validator: (v) {
+                                  if (v == null || v.trim().isEmpty) {
+                                    return null;
+                                  }
+                                  final parsed = int.tryParse(v);
+                                  if (parsed == null || parsed < 0) {
+                                    return 'Ingresa un número entero positivo';
+                                  }
+                                  return null;
+                                },
+                                onChanged: (v) {
+                                  _checkUpdatePeriod = int.tryParse(v);
+                                },
+                              ),
                               const SizedBox(height: 8),
                             ],
                           ],
@@ -410,6 +452,8 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                           branchId: branchId,
                           branchNumber: _pdvConfig?.branchNumber ?? '',
                           creditNoteDaysLimit: _creditNoteDaysLimit,
+                          checkUpdatePeriod: _checkUpdatePeriod ??
+                              _pdvConfig?.checkUpdatePeriod,
                         );
 
                         context

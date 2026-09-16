@@ -37,6 +37,7 @@ class PdvConfigResponseModel with _$PdvConfigResponseModel {
     @JsonKey(name: 'offline_mode') bool? offlineMode,
     @JsonKey(name: 'branch_id') int? branchId,
     @JsonKey(name: 'credit_note_days_limit') int? creditNoteDaysLimit,
+    @JsonKey(name: 'check_update_period') int? checkUpdatePeriod,
     @JsonKey(name: 'id') int? id,
   }) = _PdvConfigResponseModel;
 

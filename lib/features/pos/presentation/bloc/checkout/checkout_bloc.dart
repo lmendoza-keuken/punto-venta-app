@@ -20,6 +20,8 @@ import 'checkout_state.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/process_partial_return_usecase.dart';
 import 'package:punto_venta_app/features/pos/data/models/partial_return_request_model.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/calculate_order_taxes_usecase.dart';
+import 'package:punto_venta_app/features/app_update/domain/entities/update_check_result.dart';
+import 'package:punto_venta_app/features/app_update/domain/usecases/track_comprobante_and_maybe_check_update_usecase.dart';
 
 class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
   final AuthLocalDataSource authLocalDataSource;
@@ -33,6 +35,8 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
   final SendInvoiceUseCase sendInvoiceUseCase;
   final ProcessPartialReturnUseCase processPartialReturnUseCase;
   final CalculateOrderTaxesUseCase calculateOrderTaxesUseCase;
+  final TrackComprobanteAndMaybeCheckUpdateUseCase
+      trackComprobanteAndMaybeCheckUpdate;
   final SharedPreferences sharedPreferences;
 
   CheckoutBloc({
@@ -47,6 +51,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
     required this.sendInvoiceUseCase,
     required this.processPartialReturnUseCase,
     required this.calculateOrderTaxesUseCase,
+    required this.trackComprobanteAndMaybeCheckUpdate,
     required this.sharedPreferences,
   }) : super(const CheckoutInitial()) {
     on<ProcessSale>(_onProcessSale);
@@ -193,7 +198,17 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
 
       await completeOrderUsecase.fromPrintJob(finalPrintJob);
 
-      emit(CheckoutSuccess(printJob: finalPrintJob));
+      UpdateCheckResult? pendingUpdate;
+      try {
+        pendingUpdate = await trackComprobanteAndMaybeCheckUpdate();
+      } catch (_) {
+        pendingUpdate = null;
+      }
+
+      emit(CheckoutSuccess(
+        printJob: finalPrintJob,
+        pendingUpdate: pendingUpdate,
+      ));
     } catch (e) {
       emit(CheckoutError(message: _extractErrorMessage(e)));
     }
