@@ -18,13 +18,24 @@ class AppUpdateRepositoryImpl implements AppUpdateRepository {
   @override
   Future<AppRelease?> fetchLatestRelease() async {
     final model = await firestoreDatasource.fetchWindowsRelease();
-    if (model == null) return null;
-
-    if (model.version.isEmpty || model.downloadUrl.isEmpty) {
-      AppLogger.warn('AppUpdate: release document missing version or downloadUrl');
+    if (model == null) {
+      AppLogger.warn('AppUpdate: repository got null model from datasource');
       return null;
     }
 
+    if (model.version.isEmpty || model.downloadUrl.isEmpty) {
+      AppLogger.warn(
+        'AppUpdate: release incompleto versionEmpty=${model.version.isEmpty} '
+        'downloadUrlEmpty=${model.downloadUrl.isEmpty} '
+        'buildNumber=${model.buildNumber}',
+      );
+      return null;
+    }
+
+    AppLogger.info(
+      'AppUpdate: repository release ok version=${model.version} '
+      'build=${model.buildNumber}',
+    );
     return model.toEntity();
   }
 

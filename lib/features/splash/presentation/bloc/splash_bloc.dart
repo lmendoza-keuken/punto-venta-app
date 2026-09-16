@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/utils/app_logger.dart';
 import 'package:punto_venta_app/features/app_update/domain/entities/update_check_result.dart';
 import 'package:punto_venta_app/features/app_update/domain/usecases/check_for_update_usecase.dart';
+import 'package:punto_venta_app/features/app_update/domain/utils/app_update_error.dart';
 import 'package:punto_venta_app/features/splash/presentation/bloc/splash_event.dart';
 import 'package:punto_venta_app/features/splash/presentation/bloc/splash_state.dart';
 
@@ -26,21 +27,24 @@ class SplashBloc extends Bloc<SplashEvent, SplashState> {
   ) async {
     emit(SplashLoading());
 
-    final Future<UpdateCheckResult>? updateFuture =
-        (_isWindows && checkForUpdate != null)
-            ? checkForUpdate!().timeout(_updateCheckTimeout)
-            : null;
-
-    await Future<void>.delayed(_splashDelay);
-
-    if (updateFuture == null) {
+    if (!_isWindows || checkForUpdate == null) {
       AppLogger.info(
         'AppUpdate: splash skip check '
         'isWindows=$_isWindows hasUseCase=${checkForUpdate != null}',
       );
+      await Future<void>.delayed(_splashDelay);
       emit(SplashCompleted());
       return;
     }
+
+    AppLogger.info(
+      'AppUpdate: splash check start timeoutMs=${_updateCheckTimeout.inMilliseconds}',
+    );
+    final checkSw = Stopwatch()..start();
+    final Future<UpdateCheckResult> updateFuture =
+        checkForUpdate!().timeout(_updateCheckTimeout);
+
+    await Future<void>.delayed(_splashDelay);
 
     try {
       final result = await updateFuture;
@@ -49,7 +53,8 @@ class SplashBloc extends Bloc<SplashEvent, SplashState> {
         'AppUpdate: splash result available=${result.updateAvailable} '
         'local=${result.currentVersion}+${result.currentBuildNumber} '
         'remoteBuild=${result.release?.buildNumber} '
-        'mandatory=${result.release?.mandatory}',
+        'mandatory=${result.release?.mandatory} '
+        'elapsedMs=${checkSw.elapsedMilliseconds}',
       );
 
       if (result.updateAvailable && result.release != null) {
@@ -59,12 +64,20 @@ class SplashBloc extends Bloc<SplashEvent, SplashState> {
         ));
         return;
       }
+
+      AppLogger.info(
+        'AppUpdate: splash no dialog reason='
+        '${result.release == null ? "sin_release_usable" : "build_local_al_dia"} '
+        'elapsedMs=${checkSw.elapsedMilliseconds}',
+      );
     } catch (e, stackTrace) {
-      AppLogger.error(
-        'AppUpdate: check failed, continuing to login',
+      logAppUpdateFailure(
+        'splashCheck',
         e,
         stackTrace,
+        elapsedMs: checkSw.elapsedMilliseconds,
       );
+      AppLogger.info('AppUpdate: continuing to login after check failure');
     }
 
     emit(SplashCompleted());
