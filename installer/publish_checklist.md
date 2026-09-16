@@ -3,7 +3,7 @@
 Usar después de generar el instalador Inno Setup.
 
 Documento Firestore: `appVersionsInfo/punto_venta`  
-Storage path: `releases/windows/PuntoDeVenta-Setup-{version}.exe`  
+Storage path: `releases/punto_venta/windows/PuntoDeVenta-Setup-{version}.exe`  
 Ejemplo de campos: [firestore_windows_release.example.json](firestore_windows_release.example.json)
 
 Reglas sugeridas: [../firebase/firestore.rules](../firebase/firestore.rules) y [../firebase/storage.rules](../firebase/storage.rules)
@@ -21,7 +21,7 @@ Reglas sugeridas: [../firebase/firestore.rules](../firebase/firestore.rules) y [
 
 ### 1. Subir a Firebase Storage
 
-- Path: `releases/windows/PuntoDeVenta-Setup-1.0.12.exe`
+- Path: `releases/punto_venta/windows/PuntoDeVenta-Setup-1.0.12.exe`
 - Un archivo por versión (no sobrescribir).
 - Consola → archivo → **Copiar URL de descarga** → ese valor es `downloadUrl` (y opcionalmente `url`).
 
@@ -54,7 +54,7 @@ Avisar a locales / operadores.
 
 ## Checklist rápida
 
-1. Upload Storage `releases/windows/...`
+1. Upload Storage `releases/punto_venta/windows/...`
 2. Copiar `downloadUrl`
 3. Editar Firestore `appVersionsInfo/punto_venta` (`version`, `buildNumber`, urls, `minSupportedBuildVersion`, `mandatory`, notes)
 4. Probar en una PC vieja
