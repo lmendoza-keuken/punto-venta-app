@@ -1,11 +1,15 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/utils/app_logger.dart';
+import 'package:punto_venta_app/features/app_update/domain/entities/update_check_result.dart';
 import 'package:punto_venta_app/features/app_update/domain/usecases/check_for_update_usecase.dart';
 import 'package:punto_venta_app/features/splash/presentation/bloc/splash_event.dart';
 import 'package:punto_venta_app/features/splash/presentation/bloc/splash_state.dart';
 
 class SplashBloc extends Bloc<SplashEvent, SplashState> {
+  static const Duration _splashDelay = Duration(seconds: 2);
+  static const Duration _updateCheckTimeout = Duration(seconds: 20);
+
   final CheckForUpdateUseCase? checkForUpdate;
 
   SplashBloc({this.checkForUpdate}) : super(SplashInitial()) {
@@ -22,9 +26,14 @@ class SplashBloc extends Bloc<SplashEvent, SplashState> {
   ) async {
     emit(SplashLoading());
 
-    await Future<void>.delayed(const Duration(seconds: 2));
+    final Future<UpdateCheckResult>? updateFuture =
+        (_isWindows && checkForUpdate != null)
+            ? checkForUpdate!().timeout(_updateCheckTimeout)
+            : null;
 
-    if (!_isWindows || checkForUpdate == null) {
+    await Future<void>.delayed(_splashDelay);
+
+    if (updateFuture == null) {
       AppLogger.info(
         'AppUpdate: splash skip check '
         'isWindows=$_isWindows hasUseCase=${checkForUpdate != null}',
@@ -34,8 +43,7 @@ class SplashBloc extends Bloc<SplashEvent, SplashState> {
     }
 
     try {
-      final result =
-          await checkForUpdate!().timeout(const Duration(seconds: 8));
+      final result = await updateFuture;
 
       AppLogger.info(
         'AppUpdate: splash result available=${result.updateAvailable} '

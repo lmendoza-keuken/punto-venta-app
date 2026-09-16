@@ -15,7 +15,7 @@ abstract class FirestoreUpdateDatasource {
 class FirestoreUpdateDatasourceImpl implements FirestoreUpdateDatasource {
   static const String collectionName = 'appVersionsInfo';
   static const String documentId = 'punto_venta';
-  static const Duration _timeout = Duration(seconds: 8);
+  static const Duration _timeout = Duration(seconds: 20);
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;

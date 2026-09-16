@@ -11,7 +11,7 @@ import 'package:punto_venta_app/features/pos/data/datasources/pdv_local_datasour
 /// for a newer Windows release (same path as splash).
 class TrackComprobanteAndMaybeCheckUpdateUseCase {
   static const String counterKey = 'COMPROBANTE_UPDATE_CHECK_COUNT';
-  static const Duration checkTimeout = Duration(seconds: 8);
+  static const Duration checkTimeout = Duration(seconds: 20);
 
   final SharedPreferences sharedPreferences;
   final PdvLocalDataSource pdvLocalDataSource;
