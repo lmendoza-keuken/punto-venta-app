@@ -3,7 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_state.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/fetch_pdv_config_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_ticket_config_usecase.dart';
+import 'package:punto_venta_app/core/utils/app_logger.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_state.dart';
@@ -50,7 +52,6 @@ class _PosMainPageState extends State<PosMainPage> {
     super.initState();
 
     context.read<PaymentMethodsBloc>().add(LoadPaymentMethods());
-    context.read<ClientsBloc>().add(LoadDefaultClientEvent());
 
     if (context.read<CartBloc>().state is! CartLoaded) {
       context.read<CartBloc>().add(ClearCart());
@@ -59,6 +60,24 @@ class _PosMainPageState extends State<PosMainPage> {
     _fetchAppConfig();
 
     context.read<ProductBloc>().add(const LoadProducts());
+  }
+
+  Future<void> _initPdvConfigAndDefaultClient() async {
+    try {
+      final config = await di.sl<FetchPdvConfigUsecase>()();
+      AppLogger.info(
+        'PDV config sync ok pdvId=${config.pdvId} branchId=${config.branchId}',
+      );
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'PDV config sync failed, using local cache if any',
+        e,
+        stackTrace,
+      );
+    }
+
+    if (!mounted) return;
+    context.read<ClientsBloc>().add(LoadDefaultClientEvent());
   }
 
   Future<void> _fetchAppConfig() async {
