@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:punto_venta_app/core/utils/app_logger.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/client.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/add_client_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/delete_client_usecase.dart';
@@ -122,13 +123,20 @@ class ClientsBloc extends Bloc<ClientsEvent, ClientsState> {
     try {
       final pdvConfig = await pdvLocalDataSource.getPdvConfig();
       final defaultClientId = pdvConfig?.pdvId;
+      AppLogger.info(
+        'ClientsBloc: LoadDefaultClient pdvId=$defaultClientId '
+        'branchId=${pdvConfig?.branchId}',
+      );
 
       if (defaultClientId == null) {
+        AppLogger.warn(
+          'ClientsBloc: LoadDefaultClient abort — pdvId null (sin cliente default)',
+        );
         return;
       }
 
       final clients = await getClients();
-      
+
       Client? defaultClient;
       for (final client in clients) {
         if (client.id == defaultClientId) {
@@ -136,6 +144,11 @@ class ClientsBloc extends Bloc<ClientsEvent, ClientsState> {
           break;
         }
       }
+
+      AppLogger.info(
+        'ClientsBloc: defaultClient encontrado=${defaultClient != null} '
+        'id=${defaultClient?.id} totalClients=${clients.length}',
+      );
 
       final currentState = state;
       final currentSelectedClient =
@@ -153,7 +166,8 @@ class ClientsBloc extends Bloc<ClientsEvent, ClientsState> {
         selectedClient: newSelectedClient,
         defaultClient: defaultClient,
       ));
-    } catch (e) {
+    } catch (e, stackTrace) {
+      AppLogger.error('ClientsBloc: LoadDefaultClient falló', e, stackTrace);
       emit(ClientsError(e.toString()));
     }
   }

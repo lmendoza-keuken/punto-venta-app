@@ -57,20 +57,25 @@ class _PosMainPageState extends State<PosMainPage> {
       context.read<CartBloc>().add(ClearCart());
     }
 
+    _initPdvConfigAndDefaultClient();
     _fetchAppConfig();
 
     context.read<ProductBloc>().add(const LoadProducts());
   }
 
   Future<void> _initPdvConfigAndDefaultClient() async {
+    AppLogger.info(
+      'PosMainPage: init PDV config — log file=${AppLogger.logPath}',
+    );
     try {
       final config = await di.sl<FetchPdvConfigUsecase>()();
       AppLogger.info(
-        'PDV config sync ok pdvId=${config.pdvId} branchId=${config.branchId}',
+        'PosMainPage: PDV sync ok pdvId=${config.pdvId} '
+        'branchId=${config.branchId} → LoadDefaultClient',
       );
     } catch (e, stackTrace) {
       AppLogger.error(
-        'PDV config sync failed, using local cache if any',
+        'PosMainPage: PDV sync failed, LoadDefaultClient con cache si hay',
         e,
         stackTrace,
       );

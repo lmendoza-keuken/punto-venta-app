@@ -68,6 +68,7 @@ class _CartPanelState extends State<CartPanel> {
               // Limpiar el carrito y cerrar el panel de confirmación
               context.read<CartBloc>().add(ClearCart());
               context.read<CheckoutBloc>().add(const ResetCheckout());
+              // Resetear el cliente por defecto
               context.read<ClientsBloc>().add(ResetToDefaultClientEvent());
 
               if (isReturnMode) {
