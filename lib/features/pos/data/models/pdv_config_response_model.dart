@@ -39,6 +39,7 @@ class PdvConfigResponseModel with _$PdvConfigResponseModel {
     @JsonKey(name: 'credit_note_days_limit') int? creditNoteDaysLimit,
     @JsonKey(name: 'check_update_period') int? checkUpdatePeriod,
     @JsonKey(name: 'id') int? id,
+    @JsonKey(name: 'non_default_client_branch_id') int? nonDefaultClientBranchId,
   }) = _PdvConfigResponseModel;
 
   factory PdvConfigResponseModel.fromJson(Map<String, dynamic> json) =>

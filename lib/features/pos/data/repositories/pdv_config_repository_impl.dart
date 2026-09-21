@@ -32,7 +32,9 @@ class PdvConfigRepositoryImpl implements PdvConfigRepository {
       final data = await remoteDataSource.fetchPdvConfig();
       AppLogger.info(
         'PdvConfigRepo: remoto ok deliveryLocationId=${data.deliveryLocationId} '
-        'branchId=${data.branchId} offlineMode=${data.offlineMode} '
+        'branchId=${data.branchId} '
+        'nonDefaultClientBranchId=${data.nonDefaultClientBranchId} '
+        'offlineMode=${data.offlineMode} '
         'creditNoteDaysLimit=${data.creditNoteDaysLimit} '
         'checkUpdatePeriod=${data.checkUpdatePeriod}',
       );
@@ -43,11 +45,13 @@ class PdvConfigRepositoryImpl implements PdvConfigRepository {
         offlineMode: data.offlineMode,
         creditNoteDaysLimit: data.creditNoteDaysLimit,
         checkUpdatePeriod: data.checkUpdatePeriod,
+        nonDefaultClientBranchId: data.nonDefaultClientBranchId,
       );
 
       final finalData = PdvConfig(
         pdvId: remoteConfig.pdvId ?? localConfig?.pdvId,
         branchId: remoteConfig.branchId ?? localConfig?.branchId,
+        nonDefaultClientBranchId: remoteConfig.nonDefaultClientBranchId ?? localConfig?.nonDefaultClientBranchId,
         branchNumber: remoteConfig.branchNumber ?? localConfig?.branchNumber,
         offlineMode: remoteConfig.offlineMode ?? localConfig?.offlineMode,
         creditNoteDaysLimit:
@@ -57,7 +61,9 @@ class PdvConfigRepositoryImpl implements PdvConfigRepository {
       );
       AppLogger.info(
         'PdvConfigRepo: merge final pdvId=${finalData.pdvId} '
-        'branchId=${finalData.branchId} offlineMode=${finalData.offlineMode} '
+        'branchId=${finalData.branchId} '
+        'nonDefaultClientBranchId=${finalData.nonDefaultClientBranchId} '
+        'offlineMode=${finalData.offlineMode} '
         '(remoto pdvId=${remoteConfig.pdvId} local pdvId=${localConfig?.pdvId})',
       );
       await localDataSource.savePdvConfig(finalData);
@@ -93,7 +99,8 @@ class PdvConfigRepositoryImpl implements PdvConfigRepository {
   Future<void> savePdvConfig(PdvConfig config) async {
     AppLogger.info(
       'PdvConfigRepo: savePdvConfig remoto+local pdvId=${config.pdvId} '
-      'branchId=${config.branchId}',
+      'branchId=${config.branchId} '
+      'nonDefaultClientBranchId=${config.nonDefaultClientBranchId}',
     );
     await remoteDataSource.updatePdvConfig(config);
     await localDataSource.savePdvConfig(config);

@@ -357,12 +357,75 @@ class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
     }
   }
 
+  bool get _isNonDefaultClient {
+    final clientsState = clientsBloc.state;
+    if (clientsState is! ClientsLoaded) return false;
+    final selected = clientsState.selectedClient;
+    final defaultClient = clientsState.defaultClient;
+    if (selected == null || defaultClient == null) return false;
+    return selected.id != defaultClient.id;
+  }
+
+  void _emitActiveBranch({
+    required int? activeBranchId,
+    required List<Branch> allowedBranches,
+  }) {
+    String? activeBranchName;
+    if (activeBranchId != null) {
+      final activeBranch = _allBranches.firstWhere(
+        (b) => b.id == activeBranchId,
+        orElse: () => const Branch(
+            id: -1,
+            name: '',
+            afipAvailable: false,
+            applyPerIibb: false,
+            applyPerVat: false),
+      );
+      if (activeBranch.id != -1) {
+        activeBranchName = activeBranch.name;
+      }
+    }
+
+    emit(state.copyWith(
+      activeBranchId: activeBranchId,
+      activeBranchName: activeBranchName,
+      allowedBranches: allowedBranches,
+    ));
+  }
+
   void _updateActiveBranch() {
     if (_allBranches.isEmpty || _pdvConfig == null) return;
 
+    // Cliente distinto al default: solo la sucursal configurada para otros clientes.
+    if (_isNonDefaultClient) {
+      final forcedBranchId =
+          _pdvConfig?.nonDefaultClientBranchId ?? _pdvConfig?.branchId;
+      final forcedBranch = _allBranches.firstWhere(
+        (b) => b.id == forcedBranchId,
+        orElse: () => const Branch(
+            id: -1,
+            name: '',
+            afipAvailable: false,
+            applyPerIibb: false,
+            applyPerVat: false),
+      );
+
+      if (forcedBranch.id != -1) {
+        _emitActiveBranch(
+          activeBranchId: forcedBranch.id,
+          allowedBranches: [forcedBranch],
+        );
+      } else {
+        _emitActiveBranch(
+          activeBranchId: forcedBranchId,
+          allowedBranches: const [],
+        );
+      }
+      return;
+    }
+
     final payments = state.selectedPayments;
     int? activeBranchId;
-    String? activeBranchName;
     List<Branch> allowedBranches = [];
 
     // Si es devolución o no hay métodos de pago seleccionados, permitimos seleccionar todas las sucursales, seleccionando por defecto la del PDV
@@ -479,7 +542,8 @@ class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
             allowedBranches.any((b) => b.id == state.activeBranchId);
         if (!currentActiveInAllowed) {
           // De lo contrario, seleccionamos por defecto la de la configuración del PDV si está entre las permitidas
-          final hasPdvBranch = allowedBranches.any((b) => b.id == _pdvConfig?.branchId);
+          final hasPdvBranch =
+              allowedBranches.any((b) => b.id == _pdvConfig?.branchId);
           if (hasPdvBranch) {
             activeBranchId = _pdvConfig?.branchId;
           } else {
@@ -499,27 +563,10 @@ class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
       }
     }
 
-    // Buscar el nombre de la sucursal activa seleccionada para mostrar en el panel de confirmación
-    if (activeBranchId != null) {
-      final activeBranch = _allBranches.firstWhere(
-        (b) => b.id == activeBranchId,
-        orElse: () => const Branch(
-            id: -1,
-            name: '',
-            afipAvailable: false,
-            applyPerIibb: false,
-            applyPerVat: false),
-      );
-      if (activeBranch.id != -1) {
-        activeBranchName = activeBranch.name;
-      }
-    }
-
-    emit(state.copyWith(
+    _emitActiveBranch(
       activeBranchId: activeBranchId,
-      activeBranchName: activeBranchName,
       allowedBranches: allowedBranches,
-    ));
+    );
   }
 
   ConfirmReturn buildConfirmReturnEvent() {

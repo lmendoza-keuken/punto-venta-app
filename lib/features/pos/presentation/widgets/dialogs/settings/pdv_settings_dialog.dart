@@ -55,6 +55,7 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
 
   List<Branch> _branches = [];
   Branch? _selectedBranch;
+  Branch? _selectedNonDefaultClientBranch;
 
   List<Client> _clients = [];
   bool _isClientsLoading = true;
@@ -120,11 +121,20 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
     _branches = branches;
     _pdvConfig = config;
 
-    if (config.branchId != null) {
+    if (config.branchId != null && branches.isNotEmpty) {
       _selectedBranch = branches.firstWhere(
         (b) => b.id == config.branchId,
-        orElse: () => branches.isNotEmpty ? branches.first : _selectedBranch!,
+        orElse: () => branches.first,
       );
+    }
+
+    if (config.nonDefaultClientBranchId != null && branches.isNotEmpty) {
+      _selectedNonDefaultClientBranch = branches.firstWhere(
+        (b) => b.id == config.nonDefaultClientBranchId,
+        orElse: () => branches.first,
+      );
+    } else {
+      _selectedNonDefaultClientBranch = _selectedBranch;
     }
 
     _creditNoteDaysLimit = config.creditNoteDaysLimit;
@@ -147,6 +157,12 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
   void _onBranchSelected(Branch? branch) {
     setState(() {
       _selectedBranch = branch;
+    });
+  }
+
+  void _onNonDefaultClientBranchSelected(Branch? branch) {
+    setState(() {
+      _selectedNonDefaultClientBranch = branch;
     });
   }
 
@@ -270,7 +286,7 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                         )
                       else ...[
                         DropdownButtonFormField<Branch>(
-                          value: _selectedBranch,
+                          initialValue: _selectedBranch,
                           decoration: const InputDecoration(
                             labelText: 'Seleccionar Sucursal',
                             prefixIcon: Icon(Icons.business),
@@ -286,6 +302,30 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                           validator: (v) {
                             if (v == null) {
                               return 'Selecciona una sucursal';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: AppDimensions.paddingM),
+                        DropdownButtonFormField<Branch>(
+                          initialValue: _selectedNonDefaultClientBranch,
+                          decoration: const InputDecoration(
+                            labelText: 'Sucursal (otros clientes)',
+                            prefixIcon: Icon(Icons.storefront_outlined),
+                            border: OutlineInputBorder(),
+                            helperText:
+                                'Sucursal fija cuando se factura a un cliente distinto al default',
+                          ),
+                          items: _branches.map((branch) {
+                            return DropdownMenuItem<Branch>(
+                              value: branch,
+                              child: Text('${branch.name} - Id: ${branch.id}'),
+                            );
+                          }).toList(),
+                          onChanged: _onNonDefaultClientBranchSelected,
+                          validator: (v) {
+                            if (v == null) {
+                              return 'Selecciona una sucursal para otros clientes';
                             }
                             return null;
                           },
@@ -445,11 +485,14 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
 
                         final pdvId = _selectedClient!.id;
                         final branchId = _selectedBranch!.id;
+                        final nonDefaultClientBranchId =
+                            _selectedNonDefaultClientBranch!.id;
 
                         final newConfig =
                             (_pdvConfig ?? const PdvConfig()).copyWith(
                           pdvId: pdvId,
                           branchId: branchId,
+                          nonDefaultClientBranchId: nonDefaultClientBranchId,
                           branchNumber: _pdvConfig?.branchNumber ?? '',
                           creditNoteDaysLimit: _creditNoteDaysLimit,
                           checkUpdatePeriod: _checkUpdatePeriod ??

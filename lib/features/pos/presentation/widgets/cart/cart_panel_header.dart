@@ -95,8 +95,8 @@ class CartPanelHeader extends StatelessWidget {
       child: BlocBuilder<CartBloc, CartState>(
         builder: (context, cartState) {
           final total = cartState is CartLoaded ? cartState.totalConIva : 0.0;
-          final hasItems =
-              cartState is CartLoaded && cartState.items.isNotEmpty;
+          final hasItems = cartState is CartLoaded &&
+              (cartState.items.isNotEmpty || cartState.log.isNotEmpty);
 
           return BlocBuilder<UiBloc, UiState>(
             builder: (context, uiState) {

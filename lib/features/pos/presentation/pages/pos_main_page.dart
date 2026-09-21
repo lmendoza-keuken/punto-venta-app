@@ -24,6 +24,7 @@ import 'package:punto_venta_app/features/pos/presentation/widgets/cart/cart_pane
 import 'package:punto_venta_app/features/pos/presentation/widgets/cart/cart_log_item_widget.dart';
 import 'package:punto_venta_app/core/widgets/scroll_bottom_extension.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/catalog/catalog_card.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/client/client_info_bar.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/product/integrated_search_bar.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/product/category_tabs_section.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/product/product_grid_section.dart';
@@ -137,7 +138,7 @@ class _PosMainPageState extends State<PosMainPage> {
                     child: Column(
                       children: [
                         PosAppBar(user: user),
-                        // const ClientInfoBar(),
+                        const ClientInfoBar(),
                         Expanded(
                           child:
                               BlocBuilder<CashRegisterCubit, CashRegisterState>(

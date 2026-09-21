@@ -1,6 +1,7 @@
 class PdvConfig {
   final int? pdvId;
   final int? branchId;
+  final int? nonDefaultClientBranchId;
   final String? branchNumber;
   final bool? offlineMode;
   final int? creditNoteDaysLimit;
@@ -9,6 +10,7 @@ class PdvConfig {
   const PdvConfig({
     this.pdvId,
     this.branchId,
+    this.nonDefaultClientBranchId,
     this.branchNumber,
     this.offlineMode,
     this.creditNoteDaysLimit,
@@ -18,6 +20,7 @@ class PdvConfig {
   PdvConfig copyWith({
     int? pdvId,
     int? branchId,
+    int? nonDefaultClientBranchId,
     String? branchNumber,
     bool? offlineMode,
     int? creditNoteDaysLimit,
@@ -26,6 +29,8 @@ class PdvConfig {
     return PdvConfig(
       pdvId: pdvId ?? this.pdvId,
       branchId: branchId ?? this.branchId,
+      nonDefaultClientBranchId:
+          nonDefaultClientBranchId ?? this.nonDefaultClientBranchId,
       branchNumber: branchNumber ?? this.branchNumber,
       offlineMode: offlineMode ?? this.offlineMode,
       creditNoteDaysLimit: creditNoteDaysLimit ?? this.creditNoteDaysLimit,
@@ -36,6 +41,7 @@ class PdvConfig {
   Map<String, dynamic> toJson() => {
         'delivery_location_id': pdvId,
         'branch_id': branchId,
+        'non_default_client_branch_id': nonDefaultClientBranchId,
         'branch_number': branchNumber,
         'offline_mode': offlineMode,
         'credit_note_days_limit': creditNoteDaysLimit,
@@ -46,6 +52,9 @@ class PdvConfig {
     final Map<String, dynamic> data = {};
     if (pdvId != null) data['delivery_location_id'] = pdvId;
     if (branchId != null) data['branch_id'] = branchId;
+    if (nonDefaultClientBranchId != null) {
+      data['non_default_client_branch_id'] = nonDefaultClientBranchId;
+    }
     if (creditNoteDaysLimit != null) {
       data['credit_note_days_limit'] = creditNoteDaysLimit;
     }
@@ -64,6 +73,8 @@ class PdvConfig {
   factory PdvConfig.fromJson(Map<String, dynamic> json) => PdvConfig(
         pdvId: json['delivery_location_id'] as int?,
         branchId: json['branch_id'] as int?,
+        nonDefaultClientBranchId:
+            json['non_default_client_branch_id'] as int?,
         branchNumber: json['branch_number'] as String?,
         offlineMode: json['offline_mode'] as bool?,
         creditNoteDaysLimit: json['credit_note_days_limit'] as int?,
