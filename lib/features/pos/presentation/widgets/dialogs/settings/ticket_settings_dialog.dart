@@ -7,6 +7,7 @@ import 'package:punto_venta_app/injection_container.dart' as di;
 
 void showTicketSettingsDialog(BuildContext context) {
   showDialog(
+    barrierDismissible: false,
     context: context,
     builder: (context) => const TicketSettingsDialog(),
   );

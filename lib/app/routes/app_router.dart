@@ -64,7 +64,8 @@ class AppRouter {
               companyName: extra['companyName'] as String,
             );
           } catch (e, stackTrace) {
-            AppLogger.error('Fallo al construir CredentialsPage', e, stackTrace);
+            AppLogger.error(
+                'Fallo al construir CredentialsPage', e, stackTrace);
             rethrow;
           }
         },
@@ -166,6 +167,7 @@ class MainLayoutShell extends StatelessWidget {
           onPopInvokedWithResult: (didPop, result) {
             if (!didPop) {
               showDialog(
+                barrierDismissible: false,
                 context: context,
                 builder: (context) => AlertDialog(
                   title: const Text('Salir'),

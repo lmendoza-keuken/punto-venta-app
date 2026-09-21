@@ -224,6 +224,7 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
               );
             } else if (state is PrinterError) {
               showDialog<void>(
+                barrierDismissible: false,
                 context: context,
                 builder: (context) => AlertDialog(
                   title: const Row(
@@ -266,6 +267,7 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                 setState(() => _isGeneratingCreditNote = false);
               }
               showDialog<void>(
+                barrierDismissible: false,
                 context: context,
                 builder: (context) => AlertDialog(
                   title: const Row(
@@ -484,8 +486,8 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
 
     if (_printJob!.templateType == TicketTemplateType.whiteMarket) {
       isCopy = await showDialog<bool>(
-        context: context,
         barrierDismissible: false,
+        context: context,
         builder: (context) => const PrintTypeDialog(),
       );
 
@@ -559,6 +561,7 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
       }
 
       final selectedReasonId = await showDialog<int>(
+        barrierDismissible: false,
         context: context,
         builder: (_) => ReturnReasonDialog(reasons: reasons),
       );

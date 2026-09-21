@@ -24,6 +24,7 @@ Future<({int pdvId, int sucursalId})?> showPdvSettingsDialog(
     BuildContext context, bool isAdmin) async {
   return await showDialog<({int pdvId, int sucursalId})>(
     context: context,
+    barrierDismissible: false,
     builder: (ctx) => BlocProvider(
       create: (_) => PdvConfigBloc(
         fetchPdvConfigUsecase: di.sl<FetchPdvConfigUsecase>(),

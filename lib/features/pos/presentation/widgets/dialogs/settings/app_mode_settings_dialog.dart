@@ -8,6 +8,7 @@ import 'package:punto_venta_app/injection_container.dart' as di;
 
 Future<void> showAppModeSettingsDialog(BuildContext context) async {
   return await showDialog(
+    barrierDismissible: false,
     context: context,
     builder: (ctx) => BlocProvider(
       create: (_) => di.sl<PdvConfigBloc>()..add(FetchPdvConfigEvent()),

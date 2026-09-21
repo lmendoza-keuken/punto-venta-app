@@ -346,6 +346,7 @@ class _DailySummaryViewState extends State<DailySummaryView> {
   void _showTicketPreview(CompletedOrder ticket) {
     final reportsBloc = context.read<ReportsBloc>();
     showDialog(
+      barrierDismissible: false,
       context: context,
       builder: (context) => BlocProvider.value(
         value: reportsBloc,

@@ -30,6 +30,7 @@ class CartPanelHeader extends StatelessWidget {
     }
 
     showDialog(
+      barrierDismissible: false,
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Limpiar Pedido'),
@@ -56,6 +57,7 @@ class CartPanelHeader extends StatelessWidget {
 
   void _showClearCartConfirmation(BuildContext context) {
     showDialog(
+      barrierDismissible: false,
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Limpiar Pedido'),

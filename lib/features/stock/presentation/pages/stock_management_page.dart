@@ -292,6 +292,7 @@ class _StockManagementViewState extends State<_StockManagementView> {
 
   void _showCreateDialog(BuildContext context) {
     showDialog(
+      barrierDismissible: false,
       context: context,
       builder: (dialogContext) => BlocProvider.value(
         value: context.read<StockBloc>(),
@@ -302,6 +303,7 @@ class _StockManagementViewState extends State<_StockManagementView> {
 
   void _showEditDialog(BuildContext context, dynamic product) {
     showDialog(
+      barrierDismissible: false,
       context: context,
       builder: (dialogContext) => BlocProvider.value(
         value: context.read<StockBloc>(),

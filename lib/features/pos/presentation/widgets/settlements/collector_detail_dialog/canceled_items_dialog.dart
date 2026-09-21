@@ -366,6 +366,7 @@ class _CanceledItemsDialogContentState extends State<_CanceledItemsDialogContent
     _AggregatedCanceledItem item,
   ) {
     showDialog(
+      barrierDismissible: false,
       context: context,
       builder: (_) => _RelatedTicketsDialog(item: item),
     );
@@ -376,6 +377,7 @@ class _CanceledItemsDialogContentState extends State<_CanceledItemsDialogContent
     PendingCanceledTicketModel ticket,
   ) {
     showDialog(
+      barrierDismissible: false,
       context: context,
       builder: (_) => _CanceledTicketItemsDialog(ticket: ticket),
     );
@@ -629,6 +631,7 @@ class _RelatedTicketsDialog extends StatelessWidget {
                     isDark: isDark,
                     onTap: () {
                       showDialog(
+                        barrierDismissible: false,
                         context: context,
                         builder: (_) =>
                             _CanceledTicketItemsDialog(ticket: ticket),

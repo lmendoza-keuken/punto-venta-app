@@ -331,6 +331,7 @@ class _HistoryViewState extends State<HistoryView> {
   void _showTicketPreview(CompletedOrder ticket) {
     final reportsBloc = context.read<ReportsBloc>();
     showDialog(
+      barrierDismissible: false,
       context: context,
       builder: (context) => BlocProvider.value(
         value: reportsBloc,

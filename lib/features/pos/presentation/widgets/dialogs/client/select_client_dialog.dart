@@ -207,6 +207,7 @@ class _SelectClientDialogState extends State<SelectClientDialog> {
 
   void _confirmDelete(Client client) {
     showDialog(
+      barrierDismissible: false,
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Eliminar cliente'),

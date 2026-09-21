@@ -46,6 +46,7 @@ class _SupplierPaymentsPageState extends State<SupplierPaymentsPage> {
 
     if (hasUnsavedChanges && currentSupplier.id != newSupplier?.id) {
       final result = await showDialog<String>(
+        barrierDismissible: false,
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('Cambio de Proveedor'),

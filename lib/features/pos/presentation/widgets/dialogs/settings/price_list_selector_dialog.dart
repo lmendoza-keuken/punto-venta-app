@@ -172,6 +172,7 @@ class _PriceListSelectorDialogState extends State<PriceListSelectorDialog> {
 void showPriceListSelectorDialog(BuildContext context, int currentList) {
   showDialog(
     context: context,
+    barrierDismissible: false,
     builder: (context) => BlocProvider.value(
       value: di.sl<PriceListTypesBloc>()..add(FetchPriceListTypesEvent()),
       child: PriceListSelectorDialog(

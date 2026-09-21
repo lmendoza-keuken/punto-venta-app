@@ -264,6 +264,7 @@ class _AppSidebarState extends State<AppSidebar> {
                           setState(() => _isSettingsDialogOpen = true);
                           await showDialog(
                             context: context,
+                            barrierDismissible: false,
                             builder: (context) => BlocProvider.value(
                               value: context.read<ClientsBloc>(),
                               child: const SettingsDialog(),
@@ -392,6 +393,7 @@ class _AppSidebarState extends State<AppSidebar> {
     if (cartState is CartLoaded && cartState.items.isNotEmpty) {
       setState(() => _isSaveOrderDialogOpen = true);
       await showDialog(
+        barrierDismissible: false,
         context: context,
         builder: (context) => SaveOrderDialog(
           cartItems: cartState.items,
@@ -420,6 +422,7 @@ class _AppSidebarState extends State<AppSidebar> {
       // Preguntar si desea guardar el pedido actual
 
       final shouldSave = await showDialog<bool>(
+        barrierDismissible: false,
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('Pedido en curso'),
@@ -442,6 +445,7 @@ class _AppSidebarState extends State<AppSidebar> {
       // Si el usuario eligió guardar, abrir el diálogo de guardar
       if (shouldSave == true && mounted) {
         await showDialog(
+          barrierDismissible: false,
           context: context,
           builder: (context) => SaveOrderDialog(
             cartItems: cartState.items,
@@ -459,6 +463,7 @@ class _AppSidebarState extends State<AppSidebar> {
     // Proceder a cargar el pedido guardado
     setState(() => _isLoadSavedOrdersDialogOpen = true);
     final result = await showDialog<SavedOrder>(
+      barrierDismissible: false,
       context: context,
       builder: (context) => const LoadSavedOrdersDialog(),
     );
@@ -486,6 +491,7 @@ class _AppSidebarState extends State<AppSidebar> {
   void _handleSelectClient(BuildContext context) async {
     setState(() => _isSelectClientDialogOpen = true);
     final result = await showDialog(
+      barrierDismissible: false,
       context: context,
       builder: (context) => BlocProvider.value(
         value: context.read<ClientsBloc>(),
@@ -509,6 +515,7 @@ class _AppSidebarState extends State<AppSidebar> {
   void _handleAddClient(BuildContext context) async {
     setState(() => _isAddClientDialogOpen = true);
     final added = await showDialog(
+      barrierDismissible: false,
       context: context,
       builder: (context) => BlocProvider.value(
         value: context.read<ClientsBloc>(),

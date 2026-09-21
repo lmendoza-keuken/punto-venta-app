@@ -255,6 +255,7 @@ class _LoadSavedOrdersDialogState extends State<LoadSavedOrdersDialog> {
 
   void _deleteOrder(SavedOrder order) {
     showDialog(
+      barrierDismissible: false,
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Eliminar Pedido'),

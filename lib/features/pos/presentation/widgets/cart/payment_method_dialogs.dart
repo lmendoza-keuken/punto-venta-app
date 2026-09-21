@@ -12,6 +12,7 @@ void showPaymentMethodsSelectorDialog({
   required Function(PaymentMethod pm) onSelected,
 }) {
   showDialog(
+    barrierDismissible: false,
     context: context,
     builder: (BuildContext dialogContext) {
       return AlertDialog(
@@ -144,6 +145,7 @@ void showAddPaymentMethodDialog({
   }).toList();
 
   showDialog(
+    barrierDismissible: false,
     context: context,
     builder: (BuildContext dialogContext) {
       return AlertDialog(

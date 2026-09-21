@@ -24,6 +24,7 @@ Future<void> showPrinterSettingsDialog(BuildContext context) async {
 
   await showDialog(
     context: context,
+    barrierDismissible: false,
     builder: (ctx) {
       final formKey = GlobalKey<FormState>();
 

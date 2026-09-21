@@ -183,6 +183,7 @@ class _CollectorDetailDialogContent extends StatelessWidget {
                         detail: state.pendingCollectorsDetail,
                         onCanceledItemsTap: () {
                           showDialog(
+                            barrierDismissible: false,
                             context: context,
                             builder: (_) => CanceledItemsDialog(
                               collectorId: collectorId,

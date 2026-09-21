@@ -16,8 +16,8 @@ import 'package:punto_venta_app/injection_container.dart' as di;
 
 Future<void> showPaymentMethodsSettingsDialog(BuildContext context) async {
   await showDialog<void>(
-    context: context,
     barrierDismissible: false,
+    context: context,
     builder: (ctx) => const PaymentMethodsSettingsDialog(),
   );
 }

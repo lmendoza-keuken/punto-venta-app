@@ -19,6 +19,7 @@ Future<void> showLogoutDialog(BuildContext context) async {
   if (!context.mounted) return;
 
   showDialog(
+    barrierDismissible: false,
     context: context,
     builder: (BuildContext dialogContext) {
       return BlocBuilder<AuthBloc, AuthState>(
