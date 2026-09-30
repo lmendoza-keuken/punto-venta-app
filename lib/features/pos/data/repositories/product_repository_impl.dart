@@ -55,6 +55,11 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
+  void clearCache() {
+    localDataSource.clearCache();
+  }
+
+  @override
   Future<Product> createProduct(Product product) {
     throw UnimplementedError();
   }

@@ -10,11 +10,12 @@ abstract class ProductEvent extends Equatable {
 
 class LoadProducts extends ProductEvent {
   final int? priceListId;
+  final bool forceRefresh;
 
-  const LoadProducts({this.priceListId});
+  const LoadProducts({this.priceListId, this.forceRefresh = false});
 
   @override
-  List<Object?> get props => [priceListId];
+  List<Object?> get props => [priceListId, forceRefresh];
 }
 
 class ProductsUpdated extends ProductEvent {

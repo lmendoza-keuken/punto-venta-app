@@ -75,6 +75,7 @@ abstract class ProductRemoteDataSource {
 
   void setListaPrecio(int lista);
   int getListaPrecio();
+  void clearCache();
 }
 
 // =============================================================================

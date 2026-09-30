@@ -11,4 +11,5 @@ abstract class ProductRepository {
   Future<Product> updateProduct(Product product);
   Future<void> deleteProduct(int codigo);
   Future<void> updatePriceList(int listId);
+  void clearCache();
 }

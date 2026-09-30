@@ -36,4 +36,8 @@ class GetProductsUsecase {
   Future<void> updatePriceList(int listId) async {
     await repository.updatePriceList(listId);
   }
+
+  void clearCache() {
+    repository.clearCache();
+  }
 }

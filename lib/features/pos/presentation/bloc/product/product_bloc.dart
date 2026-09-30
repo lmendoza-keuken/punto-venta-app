@@ -73,6 +73,10 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     await _productsSubscription?.cancel();
     _productsSubscription = null;
 
+    if (event.forceRefresh) {
+      getProductsUsecase.clearCache();
+    }
+
     emit(ProductLoading());
     try {
       int currentList;
