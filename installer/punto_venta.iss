@@ -1,5 +1,5 @@
 #define MyAppName "Punto de Venta"
-#define MyAppVersion "1.0.16"
+#define MyAppVersion "1.0.17"
 #define MyAppExeName "punto_venta_app.exe"
 #define MyAppPublisher "Keuken"
 
