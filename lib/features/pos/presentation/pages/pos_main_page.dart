@@ -132,100 +132,103 @@ class _PosMainPageState extends State<PosMainPage> {
               resizeToAvoidBottomInset: true,
               body: Row(
                 children: [
-                  // Catálogo de productos
                   Expanded(
                     flex: 2,
-                    child: Column(
-                      children: [
-                        PosAppBar(user: user),
-                        const ClientInfoBar(),
-                        Expanded(
-                          child:
-                              BlocBuilder<CashRegisterCubit, CashRegisterState>(
-                            builder: (context, registerState) {
-                              if (registerState is CashRegisterLoading) {
-                                final currentStatus = context
-                                    .read<CashRegisterCubit>()
-                                    .currentStatus;
-                                if (currentStatus == null) {
-                                  return const Center(
-                                    child: CircularProgressIndicator(),
-                                  );
-                                }
-                              }
+                    child: ScaffoldMessenger(
+                      child: Scaffold(
+                        resizeToAvoidBottomInset: true,
+                        body: Column(
+                          children: [
+                            PosAppBar(user: user),
+                            const ClientInfoBar(),
+                            Expanded(
+                              child: BlocBuilder<CashRegisterCubit,
+                                  CashRegisterState>(
+                                builder: (context, registerState) {
+                                  if (registerState is CashRegisterLoading) {
+                                    final currentStatus = context
+                                        .read<CashRegisterCubit>()
+                                        .currentStatus;
+                                    if (currentStatus == null) {
+                                      return const Center(
+                                        child: CircularProgressIndicator(),
+                                      );
+                                    }
+                                  }
 
-                              final currentStatus =
-                                  registerState is CashRegisterLoaded
-                                      ? registerState.status
-                                      : (registerState is CashRegisterError
-                                          ? registerState.lastStatus
-                                          : context
-                                              .read<CashRegisterCubit>()
-                                              .currentStatus);
+                                  final currentStatus =
+                                      registerState is CashRegisterLoaded
+                                          ? registerState.status
+                                          : (registerState is CashRegisterError
+                                              ? registerState.lastStatus
+                                              : context
+                                                  .read<CashRegisterCubit>()
+                                                  .currentStatus);
 
-                              final isRegisterOpen =
-                                  currentStatus?.isOpen ?? false;
+                                  final isRegisterOpen =
+                                      currentStatus?.isOpen ?? false;
 
-                              if (!isRegisterOpen) {
-                                return const ClosedRegisterView();
-                              }
+                                  if (!isRegisterOpen) {
+                                    return const ClosedRegisterView();
+                                  }
 
-                              return BlocBuilder<UiBloc, UiState>(
-                                builder: (context, uiState) {
-                                  final isBarcodeMode = uiState is UiLoaded
-                                      ? uiState.isBarcodeSearchEnabled
-                                      : true;
+                                  return BlocBuilder<UiBloc, UiState>(
+                                    builder: (context, uiState) {
+                                      final isBarcodeMode = uiState is UiLoaded
+                                          ? uiState.isBarcodeSearchEnabled
+                                          : true;
 
-                                  return CatalogCard(
-                                    // barra de búsqueda
-                                    searchBar: IntegratedSearchBar(
-                                      controller: _searchController,
-                                      autofocus: false,
-                                      onSearchChanged: (query) {
-                                        setState(() {});
-                                        context
-                                            .read<ProductBloc>()
-                                            .add(SearchProducts(query));
-                                      },
-                                      onClearSearch: () {
-                                        _searchController.clear();
-                                        context
-                                            .read<ProductBloc>()
-                                            .add(const SearchProducts(''));
-                                        setState(() {});
-                                      },
-                                    ),
-                                    // categorias (solo en modo manual)
-                                    categoryTabs: isBarcodeMode
-                                        ? const SizedBox.shrink()
-                                        : CategoryTabsSection(
-                                            onCategorySelected: (_) {},
-                                            onClearSearch: () {
-                                              _searchController.clear();
-                                              context.read<ProductBloc>().add(
-                                                  const SearchProducts(''));
-                                            },
-                                          ),
-                                    // grilla de productos o logs del carrito
-                                    productGrid: isBarcodeMode
-                                        ? _buildCartLogsInCatalog()
-                                        : ProductGridSection(
-                                            onProductTap: (product, quantity,
-                                                isDeleteMode) async {
-                                              await _handleProductTap(
-                                                product: product,
-                                                quantity: quantity,
-                                                isDeleteMode: isDeleteMode,
-                                              );
-                                            },
-                                          ),
+                                      return CatalogCard(
+                                        searchBar: IntegratedSearchBar(
+                                          controller: _searchController,
+                                          autofocus: false,
+                                          onSearchChanged: (query) {
+                                            setState(() {});
+                                            context
+                                                .read<ProductBloc>()
+                                                .add(SearchProducts(query));
+                                          },
+                                          onClearSearch: () {
+                                            _searchController.clear();
+                                            context.read<ProductBloc>().add(
+                                                const SearchProducts(''));
+                                            setState(() {});
+                                          },
+                                        ),
+                                        categoryTabs: isBarcodeMode
+                                            ? const SizedBox.shrink()
+                                            : CategoryTabsSection(
+                                                onCategorySelected: (_) {},
+                                                onClearSearch: () {
+                                                  _searchController.clear();
+                                                  context
+                                                      .read<ProductBloc>()
+                                                      .add(const SearchProducts(
+                                                          ''));
+                                                },
+                                              ),
+                                        productGrid: isBarcodeMode
+                                            ? _buildCartLogsInCatalog()
+                                            : ProductGridSection(
+                                                onProductTap: (product,
+                                                    quantity,
+                                                    isDeleteMode) async {
+                                                  await _handleProductTap(
+                                                    product: product,
+                                                    quantity: quantity,
+                                                    isDeleteMode: isDeleteMode,
+                                                  );
+                                                },
+                                              ),
+                                      );
+                                    },
                                   );
                                 },
-                              );
-                            },
-                          ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                   // Panel de carrito
