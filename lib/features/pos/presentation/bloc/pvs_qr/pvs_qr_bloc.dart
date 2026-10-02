@@ -18,6 +18,7 @@ class PvsQrBloc extends Bloc<PvsQrEvent, PvsQrState> {
   String? _accessToken;
   String? _qrImageBase64;
   String? _qrRaw;
+  String? _lastQrId;
   DateTime? _expiresAt;
   double? _lastAmount;
   int? _lastPaymentMethodId;
@@ -101,6 +102,7 @@ class PvsQrBloc extends Bloc<PvsQrEvent, PvsQrState> {
 
       _qrRaw = qrRaw;
       _qrImageBase64 = qrImage;
+      _lastQrId = qrId;
       _expiresAt = DateTime.now().add(Duration(seconds: expirationSeconds));
 
       emit(PvsQrGenerated(
@@ -168,8 +170,13 @@ class PvsQrBloc extends Bloc<PvsQrEvent, PvsQrState> {
         default:
           break;
       }
-    } catch (_) {
-      // Keep showing QR on transient poll errors.
+    } catch (e) {
+      // Transient poll errors: keep QR. Log so parse bugs aren't silent.
+      assert(() {
+        // ignore: avoid_print
+        print('[PVS] check status failed: $e');
+        return true;
+      }());
     }
   }
 
@@ -181,6 +188,7 @@ class PvsQrBloc extends Bloc<PvsQrEvent, PvsQrState> {
     _accessToken = null;
     _qrImageBase64 = null;
     _qrRaw = null;
+    _lastQrId = null;
     _expiresAt = null;
     emit(const PvsQrInitial());
   }
@@ -193,6 +201,7 @@ class PvsQrBloc extends Bloc<PvsQrEvent, PvsQrState> {
     _accessToken = null;
     _qrImageBase64 = null;
     _qrRaw = null;
+    _lastQrId = null;
     _expiresAt = null;
     emit(const PvsQrInitial());
   }

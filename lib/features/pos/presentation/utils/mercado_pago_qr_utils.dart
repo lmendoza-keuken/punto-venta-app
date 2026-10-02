@@ -2,11 +2,21 @@ import 'package:punto_venta_app/core/utils/enums.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/payment_method.dart';
 
 bool isMercadoPagoQrMethod(PaymentMethod paymentMethod) {
-  return paymentMethod.qrType == QrType.mp;
+  if (paymentMethod.qrType == QrType.mp) return true;
+  if (paymentMethod.qrType == QrType.pvs) return false;
+  final text =
+      '${paymentMethod.description} ${paymentMethod.shortDescription}'
+          .toLowerCase();
+  return text.contains('mercadopago') || text.contains('mercado pago');
 }
 
 bool isPvsQrMethod(PaymentMethod paymentMethod) {
-  return paymentMethod.qrType == QrType.pvs;
+  if (paymentMethod.qrType == QrType.pvs) return true;
+  if (paymentMethod.qrType == QrType.mp) return false;
+  final text =
+      '${paymentMethod.description} ${paymentMethod.shortDescription}'
+          .toLowerCase();
+  return text.contains('pvs');
 }
 
 bool isDynamicQrMethod(PaymentMethod paymentMethod) {

@@ -3,6 +3,16 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'pvs_transaction_status_response_model.freezed.dart';
 part 'pvs_transaction_status_response_model.g.dart';
 
+String? pvsWalletNameFromJson(dynamic value) {
+  if (value == null) return null;
+  if (value is String) return value;
+  if (value is Map) {
+    final name = value['name'];
+    return name?.toString();
+  }
+  return value.toString();
+}
+
 @freezed
 class PvsTransactionStatusResponse with _$PvsTransactionStatusResponse {
   const factory PvsTransactionStatusResponse({
@@ -25,7 +35,7 @@ class PvsTransactionData with _$PvsTransactionData {
     @JsonKey(name: 'amount') String? amount,
     @JsonKey(name: 'currencyCode') String? currencyCode,
     @JsonKey(name: 'paymentStatus') String? paymentStatus,
-    @JsonKey(name: 'wallet') String? wallet,
+    @JsonKey(name: 'wallet', fromJson: pvsWalletNameFromJson) String? wallet,
     @JsonKey(name: 'createdAt') String? createdAt,
   }) = _PvsTransactionData;
 

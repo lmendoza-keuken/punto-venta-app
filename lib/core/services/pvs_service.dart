@@ -119,7 +119,7 @@ class PvsService {
   }) async {
     try {
       final response = await _dio.post(
-        '/external/connect/api/v1/qr/pvs/reverse/$qrId',
+        '/external/connect/api/v1/qr/pvs/reverse',
         data: {'qrId': qrId},
         options: Options(
           headers: {

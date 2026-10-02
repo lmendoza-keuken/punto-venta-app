@@ -37,7 +37,18 @@ class PaymentMethodModel with _$PaymentMethodModel {
       description: description ?? "",
       shortDescription: shortDescription ?? "",
       deleteAt: deletedAt ?? "",
-      qrType: qrType,
+      qrType: qrType ?? _inferQrType(description, shortDescription),
     );
   }
+}
+
+/// Mientras el backend no envíe `qr_type`, se infiere por descripción.
+QrType? _inferQrType(String? description, String? shortDescription) {
+  final text =
+      '${description ?? ''} ${shortDescription ?? ''}'.toLowerCase();
+  if (text.contains('pvs')) return QrType.pvs;
+  if (text.contains('mercadopago') || text.contains('mercado pago')) {
+    return QrType.mp;
+  }
+  return null;
 }

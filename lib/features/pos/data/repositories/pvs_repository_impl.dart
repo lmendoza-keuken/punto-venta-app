@@ -79,7 +79,7 @@ class PvsRepositoryImpl implements PvsRepository {
     final response = await pvsService.generateQr(
       accessToken: accessToken,
       request: PvsQrGenerateRequest(
-        amount: amount,
+        amount: formatPvsAmount(amount),
         externalId: externalId,
         reference: reference,
       ),
