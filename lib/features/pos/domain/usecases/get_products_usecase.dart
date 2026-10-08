@@ -1,3 +1,4 @@
+import 'package:punto_venta_app/features/pos/data/models/category_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/product_repository.dart';
 
@@ -29,7 +30,7 @@ class GetProductsUsecase {
     return await repository.searchByArticleId(articleId);
   }
 
-  Future<List<String>> getCategories() async {
+  Future<List<CategoryModel>> getCategories() async {
     return await repository.getCategories();
   }
 

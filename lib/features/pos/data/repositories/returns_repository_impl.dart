@@ -1,5 +1,6 @@
 import 'package:punto_venta_app/features/pos/data/datasources/returns_remote_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/models/invoice_payload_model.dart';
+import 'package:punto_venta_app/features/pos/data/models/mercado_pago/associate_qr_refund_request_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/partial_return_request_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/return_reason.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/sale_return.dart';
@@ -30,5 +31,10 @@ class ReturnsRepositoryImpl implements ReturnsRepository {
   @override
   Future<InvoicePayload> processPartialReturn(PartialReturnRequestModel request) async {
     return remoteDataSource.processPartialReturn(request);
+  }
+
+  @override
+  Future<void> associateQrRefund(AssociateQrRefundRequest request) {
+    return remoteDataSource.associateQrRefund(request);
   }
 }

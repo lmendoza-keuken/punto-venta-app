@@ -5,6 +5,7 @@ import 'package:punto_venta_app/app/routes/route_paths.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_string.dart';
+import 'package:punto_venta_app/features/pos/presentation/utils/mercado_pago_bootstrap.dart';
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_event.dart';
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_state.dart';
@@ -54,8 +55,10 @@ class _CredentialsPageState extends State<CredentialsPage> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<AuthBloc, AuthState>(
-      listener: (context, state) {
+      listener: (context, state) async {
         if (state is AuthAuthenticated) {
+          await bootstrapMercadoPagoForCashier(context);
+          if (!context.mounted) return;
           context.go(RoutePaths.pos);
         } else if (state is AuthError) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -65,7 +68,7 @@ class _CredentialsPageState extends State<CredentialsPage> {
               behavior: SnackBarBehavior.floating,
             ),
           );
-        } else if(state is AuthUnauthenticated) {
+        } else if (state is AuthUnauthenticated) {
           context.go(RoutePaths.login);
         }
       },
@@ -73,12 +76,18 @@ class _CredentialsPageState extends State<CredentialsPage> {
         final isLoading = state is AuthLoading;
 
         return Scaffold(
-         backgroundColor: AppColors.cartLightBackground,
+          backgroundColor: AppColors.cartLightBackground,
           appBar: AppBar(
             backgroundColor: AppColors.cartLightBackground,
-            title: const Text('Iniciar Sesión de Cajero', style: TextStyle(color: AppColors.textSecondary),),
+            title: const Text(
+              'Iniciar Sesión de Cajero',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: AppColors.textSecondary,),
+              icon: const Icon(
+                Icons.arrow_back,
+                color: AppColors.textSecondary,
+              ),
               onPressed: isLoading
                   ? null
                   : () {
@@ -124,7 +133,8 @@ class _CredentialsPageState extends State<CredentialsPage> {
                                     controller: _usernameController,
                                     enabled: !isLoading,
                                     textInputAction: TextInputAction.next,
-                                    onFieldSubmitted: (_) => _passwordFocusNode.requestFocus(),
+                                    onFieldSubmitted: (_) =>
+                                        _passwordFocusNode.requestFocus(),
                                     decoration: InputDecoration(
                                       labelText: 'Usuario',
                                       prefixIcon:
@@ -224,9 +234,8 @@ class _CredentialsPageState extends State<CredentialsPage> {
                       Text(
                         AppStrings.keukenName,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.darkTextPrimary
-                            ),
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.darkTextPrimary),
                       ),
                       const SizedBox(height: AppDimensions.paddingXS),
                       Text(

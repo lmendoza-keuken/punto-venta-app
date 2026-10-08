@@ -151,6 +151,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
       final currentState = state as ProductLoaded;
       emit(currentState.copyWith(
         selectedCategory: event.category,
+        resetSelectedCategory: true,
         searchQuery: '',
       ));
     }
@@ -164,8 +165,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
       final currentState = state as ProductLoaded;
       emit(currentState.copyWith(
         searchQuery: event.query,
-        selectedCategory:
-            event.query.isEmpty ? currentState.selectedCategory : 'Todo',
+        resetSelectedCategory: event.query.isNotEmpty,
       ));
     }
   }

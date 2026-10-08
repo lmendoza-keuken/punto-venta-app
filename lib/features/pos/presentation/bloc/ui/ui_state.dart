@@ -13,6 +13,7 @@ class UiLoaded extends UiState {
   final bool isBarcodeSearchEnabled;
   final bool isReturnMode;
   final bool showConfirmationPanel;
+  final bool isMpQrActive;
 
   const UiLoaded({
     this.selectedQuantity = 1,
@@ -20,6 +21,7 @@ class UiLoaded extends UiState {
     this.isBarcodeSearchEnabled = true,
     this.isReturnMode = false,
     this.showConfirmationPanel = false,
+    this.isMpQrActive = false,
   });
 
   UiLoaded copyWith({
@@ -28,13 +30,17 @@ class UiLoaded extends UiState {
     bool? isBarcodeSearchEnabled,
     bool? isReturnMode,
     bool? showConfirmationPanel,
+    bool? isMpQrActive,
   }) {
     return UiLoaded(
       selectedQuantity: selectedQuantity ?? this.selectedQuantity,
       isDeleteMode: isDeleteMode ?? this.isDeleteMode,
-      isBarcodeSearchEnabled: isBarcodeSearchEnabled ?? this.isBarcodeSearchEnabled,
+      isBarcodeSearchEnabled:
+          isBarcodeSearchEnabled ?? this.isBarcodeSearchEnabled,
       isReturnMode: isReturnMode ?? this.isReturnMode,
-      showConfirmationPanel: showConfirmationPanel ?? this.showConfirmationPanel,
+      showConfirmationPanel:
+          showConfirmationPanel ?? this.showConfirmationPanel,
+      isMpQrActive: isMpQrActive ?? this.isMpQrActive,
     );
   }
 
@@ -45,5 +51,6 @@ class UiLoaded extends UiState {
         isBarcodeSearchEnabled,
         isReturnMode,
         showConfirmationPanel,
+        isMpQrActive,
       ];
 }

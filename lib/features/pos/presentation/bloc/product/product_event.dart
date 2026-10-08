@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:punto_venta_app/features/pos/data/models/category_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
 
 abstract class ProductEvent extends Equatable {
@@ -20,7 +21,7 @@ class LoadProducts extends ProductEvent {
 
 class ProductsUpdated extends ProductEvent {
   final List<Product> products;
-  final List<String> categories;
+  final List<CategoryModel> categories;
   final int priceListId;
 
   const ProductsUpdated({
@@ -43,12 +44,12 @@ class ProductsErrorOccurred extends ProductEvent {
 }
 
 class LoadProductsByCategory extends ProductEvent {
-  final String category;
+  final CategoryModel? category;
 
   const LoadProductsByCategory(this.category);
 
   @override
-  List<Object> get props => [category];
+  List<Object?> get props => [category];
 }
 
 class SearchProducts extends ProductEvent {

@@ -1,4 +1,5 @@
 import 'package:punto_venta_app/features/pos/data/datasources/product_remote_data_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/models/category_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/product_repository.dart';
 
@@ -40,11 +41,8 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
-  Future<List<String>> getCategories() async {
-    final categoryModels = await localDataSource.getCategories();
-    return categoryModels
-        .map((category) => category.description ?? '')
-        .toList();
+  Future<List<CategoryModel>> getCategories() async {
+    return localDataSource.getCategories();
   }
 
   @override

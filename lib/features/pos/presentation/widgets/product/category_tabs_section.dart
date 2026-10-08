@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:punto_venta_app/features/pos/data/models/category_model.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product/product_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product/product_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product/product_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/product/category_tabs.dart';
 
 class CategoryTabsSection extends StatelessWidget {
-  final void Function(String category) onCategorySelected;
+  final void Function(CategoryModel? category) onCategorySelected;
   final VoidCallback onClearSearch;
 
   const CategoryTabsSection({

@@ -1,5 +1,6 @@
 
 import 'package:equatable/equatable.dart';
+import 'package:punto_venta_app/features/pos/data/models/category_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
 
 abstract class ProductLabelsEvent extends Equatable {
@@ -15,7 +16,7 @@ class LoadProducts extends ProductLabelsEvent {
 
 class ProductsUpdated extends ProductLabelsEvent {
   final List<Product> products;
-  final List<String> categories;
+  final List<CategoryModel> categories;
 
   const ProductsUpdated({required this.products, required this.categories});
 

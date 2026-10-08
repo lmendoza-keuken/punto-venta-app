@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 import 'package:punto_venta_app/core/network/error_handler.dart';
 import 'package:punto_venta_app/features/pos/data/models/invoice_payload_model.dart';
+import 'package:punto_venta_app/features/pos/data/models/mercado_pago/associate_qr_refund_request_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/return_reason_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/sale_return_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/total_return_create_model.dart';
@@ -25,6 +26,9 @@ abstract class ReturnsService {
 
   @POST('/returns/partial')
   Future<dynamic> processPartialReturn(@Body() Map<String, dynamic> body);
+
+  @POST('/returns/qr-refund')
+  Future<dynamic> associateQrRefund(@Body() Map<String, dynamic> body);
 }
 
 abstract class ReturnsRemoteDataSource {
@@ -32,6 +36,7 @@ abstract class ReturnsRemoteDataSource {
   Future<List<SaleReturnModel>> getReturns({String? date});
   Future<InvoicePayload> processTotalReturn(int saleId, int reasonId);
   Future<InvoicePayload> processPartialReturn(PartialReturnRequestModel request);
+  Future<void> associateQrRefund(AssociateQrRefundRequest request);
 }
 
 class ReturnsRemoteDataSourceImpl implements ReturnsRemoteDataSource {
@@ -85,6 +90,16 @@ class ReturnsRemoteDataSourceImpl implements ReturnsRemoteDataSource {
     } catch (e) {
       throw Exception(ErrorHandler.handleError(e,
           defaultMessage: 'Error al procesar devolución parcial'));
+    }
+  }
+
+  @override
+  Future<void> associateQrRefund(AssociateQrRefundRequest request) async {
+    try {
+      await _apiService.associateQrRefund(request.toJson());
+    } catch (e) {
+      throw Exception(ErrorHandler.handleError(e,
+          defaultMessage: 'Error al asociar reembolso de QR'));
     }
   }
 }

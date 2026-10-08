@@ -385,6 +385,7 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
                   checkNumber: reqPm.details!.checkNumber,
                   transferId: reqPm.details!.transferId,
                   verificationId: reqPm.details!.verificationId,
+                  orderId: reqPm.details!.orderId,
                 )
               : null,
         );
@@ -406,6 +407,7 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
                   checkNumber: reqPm.details!.checkNumber,
                   transferId: reqPm.details!.transferId,
                   verificationId: reqPm.details!.verificationId,
+                  orderId: reqPm.details!.orderId,
                 )
               : null,
         );

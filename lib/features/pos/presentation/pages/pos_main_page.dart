@@ -34,6 +34,7 @@ import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cash_register/cash_register_cubit.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cash_register/cash_register_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/cash_register/closed_register_view.dart';
+import 'package:punto_venta_app/features/pos/presentation/utils/pvs_bootstrap.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 class PosMainPage extends StatefulWidget {
@@ -60,6 +61,7 @@ class _PosMainPageState extends State<PosMainPage> {
 
     _initPdvConfigAndDefaultClient();
     _fetchAppConfig();
+    bootstrapPvsCredentials();
 
     context.read<ProductBloc>().add(const LoadProducts());
   }
@@ -130,116 +132,160 @@ class _PosMainPageState extends State<PosMainPage> {
 
             return Scaffold(
               resizeToAvoidBottomInset: true,
-              body: Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: ScaffoldMessenger(
-                      child: Scaffold(
-                        resizeToAvoidBottomInset: true,
-                        body: Column(
-                          children: [
-                            PosAppBar(user: user),
-                            const ClientInfoBar(),
-                            Expanded(
-                              child: BlocBuilder<CashRegisterCubit,
-                                  CashRegisterState>(
-                                builder: (context, registerState) {
-                                  if (registerState is CashRegisterLoading) {
-                                    final currentStatus = context
-                                        .read<CashRegisterCubit>()
-                                        .currentStatus;
-                                    if (currentStatus == null) {
-                                      return const Center(
-                                        child: CircularProgressIndicator(),
-                                      );
-                                    }
-                                  }
+              body: BlocBuilder<UiBloc, UiState>(
+                buildWhen: (previous, current) {
+                  final prevActive =
+                      previous is UiLoaded && previous.isMpQrActive;
+                  final currActive =
+                      current is UiLoaded && current.isMpQrActive;
+                  return prevActive != currActive;
+                },
+                builder: (context, uiState) {
+                  final isMpQrActive =
+                      uiState is UiLoaded && uiState.isMpQrActive;
 
-                                  final currentStatus =
-                                      registerState is CashRegisterLoaded
-                                          ? registerState.status
-                                          : (registerState is CashRegisterError
-                                              ? registerState.lastStatus
-                                              : context
-                                                  .read<CashRegisterCubit>()
-                                                  .currentStatus);
+                  return Row(
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: ScaffoldMessenger(
+                          child: Scaffold(
+                            resizeToAvoidBottomInset: true,
+                            body: Stack(
+                              children: [
+                                Column(
+                                  children: [
+                                    PosAppBar(user: user),
+                                    const ClientInfoBar(),
+                                    Expanded(
+                                      child: BlocBuilder<CashRegisterCubit,
+                                          CashRegisterState>(
+                                        builder: (context, registerState) {
+                                          if (registerState
+                                              is CashRegisterLoading) {
+                                            final currentStatus = context
+                                                .read<CashRegisterCubit>()
+                                                .currentStatus;
+                                            if (currentStatus == null) {
+                                              return const Center(
+                                                child:
+                                                    CircularProgressIndicator(),
+                                              );
+                                            }
+                                          }
 
-                                  final isRegisterOpen =
-                                      currentStatus?.isOpen ?? false;
+                                          final currentStatus = registerState
+                                                  is CashRegisterLoaded
+                                              ? registerState.status
+                                              : (registerState
+                                                      is CashRegisterError
+                                                  ? registerState.lastStatus
+                                                  : context
+                                                      .read<
+                                                          CashRegisterCubit>()
+                                                      .currentStatus);
 
-                                  if (!isRegisterOpen) {
-                                    return const ClosedRegisterView();
-                                  }
+                                          final isRegisterOpen =
+                                              currentStatus?.isOpen ?? false;
 
-                                  return BlocBuilder<UiBloc, UiState>(
-                                    builder: (context, uiState) {
-                                      final isBarcodeMode = uiState is UiLoaded
-                                          ? uiState.isBarcodeSearchEnabled
-                                          : true;
+                                          if (!isRegisterOpen) {
+                                            return const ClosedRegisterView();
+                                          }
 
-                                      return CatalogCard(
-                                        searchBar: IntegratedSearchBar(
-                                          controller: _searchController,
-                                          autofocus: false,
-                                          onSearchChanged: (query) {
-                                            setState(() {});
-                                            context
-                                                .read<ProductBloc>()
-                                                .add(SearchProducts(query));
-                                          },
-                                          onClearSearch: () {
-                                            _searchController.clear();
-                                            context.read<ProductBloc>().add(
-                                                const SearchProducts(''));
-                                            setState(() {});
-                                          },
-                                        ),
-                                        categoryTabs: isBarcodeMode
-                                            ? const SizedBox.shrink()
-                                            : CategoryTabsSection(
-                                                onCategorySelected: (_) {},
-                                                onClearSearch: () {
-                                                  _searchController.clear();
-                                                  context
-                                                      .read<ProductBloc>()
-                                                      .add(const SearchProducts(
-                                                          ''));
-                                                },
-                                              ),
-                                        productGrid: isBarcodeMode
-                                            ? _buildCartLogsInCatalog()
-                                            : ProductGridSection(
-                                                onProductTap: (product,
-                                                    quantity,
-                                                    isDeleteMode) async {
-                                                  await _handleProductTap(
-                                                    product: product,
-                                                    quantity: quantity,
-                                                    isDeleteMode: isDeleteMode,
-                                                  );
-                                                },
-                                              ),
-                                      );
-                                    },
-                                  );
-                                },
-                              ),
+                                          return BlocBuilder<UiBloc, UiState>(
+                                            builder:
+                                                (context, catalogUiState) {
+                                              final isBarcodeMode =
+                                                  catalogUiState is UiLoaded
+                                                      ? catalogUiState
+                                                          .isBarcodeSearchEnabled
+                                                      : true;
+
+                                              return CatalogCard(
+                                                searchBar: IntegratedSearchBar(
+                                                  controller:
+                                                      _searchController,
+                                                  autofocus: false,
+                                                  onSearchChanged: (query) {
+                                                    setState(() {});
+                                                    context
+                                                        .read<ProductBloc>()
+                                                        .add(SearchProducts(
+                                                            query));
+                                                  },
+                                                  onClearSearch: () {
+                                                    _searchController.clear();
+                                                    context
+                                                        .read<ProductBloc>()
+                                                        .add(
+                                                            const SearchProducts(
+                                                                ''));
+                                                    setState(() {});
+                                                  },
+                                                ),
+                                                categoryTabs: isBarcodeMode
+                                                    ? const SizedBox.shrink()
+                                                    : CategoryTabsSection(
+                                                        onCategorySelected:
+                                                            (_) {},
+                                                        onClearSearch: () {
+                                                          _searchController
+                                                              .clear();
+                                                          context
+                                                              .read<
+                                                                  ProductBloc>()
+                                                              .add(
+                                                                  const SearchProducts(
+                                                                      ''));
+                                                        },
+                                                      ),
+                                                productGrid: isBarcodeMode
+                                                    ? _buildCartLogsInCatalog()
+                                                    : ProductGridSection(
+                                                        onProductTap: (product,
+                                                            quantity,
+                                                            isDeleteMode) async {
+                                                          await _handleProductTap(
+                                                            product: product,
+                                                            quantity: quantity,
+                                                            isDeleteMode:
+                                                                isDeleteMode,
+                                                          );
+                                                        },
+                                                      ),
+                                              );
+                                            },
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                if (isMpQrActive)
+                                  Positioned.fill(
+                                    child: AbsorbPointer(
+                                      child: ColoredBox(
+                                        color: Colors.black
+                                            .withValues(alpha: 0.28),
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                  // Panel de carrito
-                  const Expanded(
-                    flex: 1,
-                    child: SizedBox(
-                      width: 380,
-                      child: CartPanel(),
-                    ),
-                  ),
-                ],
+                      // Panel de carrito
+                      const Expanded(
+                        flex: 1,
+                        child: SizedBox(
+                          width: 380,
+                          child: CartPanel(),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             );
           },
