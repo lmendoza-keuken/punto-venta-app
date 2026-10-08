@@ -6,7 +6,7 @@ class FetchReturnReasonsUsecase {
 
   FetchReturnReasonsUsecase(this.repository);
 
-  Future<List<ReturnReason>> call() async {
-    return repository.fetchReturnReasons();
+  Future<List<ReturnReason>> call({bool forceRefresh = false}) async {
+    return repository.fetchReturnReasons(forceRefresh: forceRefresh);
   }
 }

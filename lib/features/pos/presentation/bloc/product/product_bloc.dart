@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/fetch_branches_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/fetch_return_reasons_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_products_usecase.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/price_list_local_datasource.dart';
 import 'product_event.dart';
@@ -9,11 +11,15 @@ import 'product_state.dart';
 class ProductBloc extends Bloc<ProductEvent, ProductState> {
   final GetProductsUsecase getProductsUsecase;
   final PriceListLocalDataSource priceListLocalDataSource;
+  final FetchBranchesUsecase fetchBranchesUsecase;
+  final FetchReturnReasonsUsecase fetchReturnReasonsUsecase;
   StreamSubscription<List<Product>>? _productsSubscription;
 
   ProductBloc({
     required this.getProductsUsecase,
     required this.priceListLocalDataSource,
+    required this.fetchBranchesUsecase,
+    required this.fetchReturnReasonsUsecase,
   }) : super(ProductInitial()) {
     on<LoadProducts>(_onLoadProducts);
     on<ProductsUpdated>(_onProductsUpdated);
@@ -23,6 +29,19 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     on<LoadCategories>(_onLoadCategories);
     on<ChangePriceList>(_onChangePriceList);
     on<UpsertProduct>(_onUpsertProduct);
+  }
+
+  void _prefetchCheckoutLookups({required bool forceRefresh}) {
+    unawaited(() async {
+      try {
+        await fetchBranchesUsecase(forceRefresh: forceRefresh);
+      } catch (_) {}
+    }());
+    unawaited(() async {
+      try {
+        await fetchReturnReasonsUsecase(forceRefresh: forceRefresh);
+      } catch (_) {}
+    }());
   }
 
   /// Lookup local/API por barcode. Upsertea en el estado si hay producto.
@@ -76,6 +95,10 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     if (event.forceRefresh) {
       getProductsUsecase.clearCache();
     }
+
+    // Branches / motivos de devolución: se refrescan con los artículos
+    // y quedan cacheados para el panel de confirmación.
+    _prefetchCheckoutLookups(forceRefresh: true);
 
     emit(ProductLoading());
     try {

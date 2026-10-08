@@ -31,6 +31,7 @@ import 'package:punto_venta_app/features/pos/data/datasources/fiscal_issuer_data
 import 'package:punto_venta_app/features/pos/data/datasources/branch_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/completed_orders_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/completed_orders_remote_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/return_reason_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/returns_remote_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/refunds_remote_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/repositories/returns_repository_impl.dart';
@@ -259,7 +260,12 @@ Future<void> init() async {
         closeUseCase: sl(),
       ));
   sl.registerFactory(() =>
-      ProductBloc(getProductsUsecase: sl(), priceListLocalDataSource: sl()));
+      ProductBloc(
+        getProductsUsecase: sl(),
+        priceListLocalDataSource: sl(),
+        fetchBranchesUsecase: sl(),
+        fetchReturnReasonsUsecase: sl(),
+      ));
   sl.registerFactory(() => CartBloc(
         manageCartUsecase: sl(),
         sharedPreferences: sl(),
@@ -381,7 +387,10 @@ Future<void> init() async {
     () => SavedOrdersRepositoryImpl(localDataSource: sl()),
   );
   sl.registerLazySingleton<ReturnsRepository>(
-    () => ReturnsRepositoryImpl(remoteDataSource: sl()),
+    () => ReturnsRepositoryImpl(
+      remoteDataSource: sl(),
+      localDataSource: sl(),
+    ),
   );
   sl.registerLazySingleton<RefundsRepository>(
     () => RefundsRepositoryImpl(remoteDataSource: sl()),
@@ -577,6 +586,8 @@ Future<void> init() async {
       () => FiscalIssuerDataRemoteDatasourceImpl());
   sl.registerLazySingleton<BranchLocalDataSource>(
       () => BranchLocalDataSourceImpl(sharedPreferences: sl()));
+  sl.registerLazySingleton<ReturnReasonLocalDataSource>(
+      () => ReturnReasonLocalDataSourceImpl(sharedPreferences: sl()));
   sl.registerLazySingleton<InvoiceService>(
     () => InvoiceService(sl()),
   );
