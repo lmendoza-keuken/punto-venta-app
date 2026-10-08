@@ -266,7 +266,8 @@ class _CartPanelState extends State<CartPanel> {
                         ),
                       ),
 
-                      // Panel de confirmación expandido ( dependiendo de showConfirmation)
+                      // Panel de confirmación: solo monta el cubit al abrir
+                      // (evita load() al cerrar / con el panel fuera de pantalla).
                       AnimatedPositioned(
                         duration: const Duration(milliseconds: 300),
                         curve: Curves.easeInOut,
@@ -288,14 +289,15 @@ class _CartPanelState extends State<CartPanel> {
                               ),
                             ],
                           ),
-                          child: ConfirmationPanel(
-                            key: ValueKey(showConfirmation),
-                            onClose: () {
-                              context
-                                  .read<UiBloc>()
-                                  .add(CloseConfirmationPanel());
-                            },
-                          ),
+                          child: showConfirmation
+                              ? ConfirmationPanel(
+                                  onClose: () {
+                                    context
+                                        .read<UiBloc>()
+                                        .add(CloseConfirmationPanel());
+                                  },
+                                )
+                              : const SizedBox.shrink(),
                         ),
                       ),
                     ],
