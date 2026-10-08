@@ -13,8 +13,10 @@ void showPaymentMethodsSelectorDialog({
 }) {
   showDialog(
     barrierDismissible: false,
+    useRootNavigator: true,
     context: context,
     builder: (BuildContext dialogContext) {
+      final maxHeight = MediaQuery.sizeOf(dialogContext).height * 0.6;
       return AlertDialog(
         title: const Text(
           'Seleccionar Método de Pago',
@@ -23,90 +25,104 @@ void showPaymentMethodsSelectorDialog({
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: paymentMethods.map((pm) {
-                final isSelected = selectedPaymentMethod?.id == pm.id;
-                final icon =
-                    getPaymentMethodIcon(pm.description, pm.shortDescription);
+        content: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: double.maxFinite,
+            maxHeight: maxHeight,
+          ),
+          child: SizedBox(
+            width: double.maxFinite,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: paymentMethods.map((pm) {
+                  final isSelected = selectedPaymentMethod?.id == pm.id;
+                  final icon = getPaymentMethodIcon(
+                      pm.description, pm.shortDescription);
 
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
-                  child: InkWell(
-                    onTap: () {
-                      onSelected(pm);
-                      Navigator.of(dialogContext).pop();
-                    },
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? AppColors.primary.withValues(alpha: 0.1)
-                            : Colors.transparent,
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: Material(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                      clipBehavior: Clip.antiAlias,
+                      child: InkWell(
+                        onTap: () {
+                          onSelected(pm);
+                          Navigator.of(dialogContext).pop();
+                        },
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isSelected
-                              ? AppColors.primary
-                              : Colors.grey.shade300,
-                          width: isSelected ? 2 : 1,
+                        mouseCursor: SystemMouseCursors.click,
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? AppColors.primary.withValues(alpha: 0.1)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : Colors.grey.shade300,
+                              width: isSelected ? 2 : 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? AppColors.primary
+                                          .withValues(alpha: 0.15)
+                                      : Colors.grey.shade100,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  icon,
+                                  color: isSelected
+                                      ? AppColors.primary
+                                      : Colors.grey,
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      pm.description,
+                                      style: TextStyle(
+                                        fontWeight: isSelected
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                    Text(
+                                      pm.shortDescription,
+                                      style: const TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (isSelected)
+                                const Icon(
+                                  Icons.check_circle,
+                                  color: AppColors.primary,
+                                ),
+                            ],
+                          ),
                         ),
                       ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? AppColors.primary.withValues(alpha: 0.15)
-                                  : Colors.grey.shade100,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              icon,
-                              color:
-                                  isSelected ? AppColors.primary : Colors.grey,
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  pm.description,
-                                  style: TextStyle(
-                                    fontWeight: isSelected
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
-                                    fontSize: 15,
-                                  ),
-                                ),
-                                Text(
-                                  pm.shortDescription,
-                                  style: const TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (isSelected)
-                            const Icon(
-                              Icons.check_circle,
-                              color: AppColors.primary,
-                            ),
-                        ],
-                      ),
                     ),
-                  ),
-                );
-              }).toList(),
+                  );
+                }).toList(),
+              ),
             ),
           ),
         ),
@@ -146,8 +162,10 @@ void showAddPaymentMethodDialog({
 
   showDialog(
     barrierDismissible: false,
+    useRootNavigator: true,
     context: context,
     builder: (BuildContext dialogContext) {
+      final maxHeight = MediaQuery.sizeOf(dialogContext).height * 0.6;
       return AlertDialog(
         title: const Text(
           'Agregar Método de Pago',
@@ -156,80 +174,90 @@ void showAddPaymentMethodDialog({
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: available.map((pm) {
-                final icon =
-                    getPaymentMethodIcon(pm.description, pm.shortDescription);
+        content: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: double.maxFinite,
+            maxHeight: maxHeight,
+          ),
+          child: SizedBox(
+            width: double.maxFinite,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: available.map((pm) {
+                  final icon = getPaymentMethodIcon(
+                      pm.description, pm.shortDescription);
 
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
-                  child: InkWell(
-                    onTap: () {
-                      // se pasa el restante al nuevo metodo de pago y se cierra el dialog.
-                      final remaining = totalAmount - totalAllocated;
-                      final defaultAmount = remaining > 0 ? remaining : 0.0;
-
-                      onMethodAdded(pm, defaultAmount);
-
-                      Navigator.of(dialogContext).pop();
-                    },
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.transparent,
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: Material(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                      clipBehavior: Clip.antiAlias,
+                      child: InkWell(
+                        onTap: () {
+                          final remaining = totalAmount - totalAllocated;
+                          final defaultAmount =
+                              remaining > 0 ? remaining : 0.0;
+                          onMethodAdded(pm, defaultAmount);
+                          Navigator.of(dialogContext).pop();
+                        },
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.grey.shade300,
-                          width: 1,
+                        mouseCursor: SystemMouseCursors.click,
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.transparent,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.grey.shade300,
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade100,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  icon,
+                                  color: Colors.grey,
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      pm.description,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.normal,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                    Text(
+                                      pm.shortDescription,
+                                      style: const TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade100,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              icon,
-                              color: Colors.grey,
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  pm.description,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.normal,
-                                    fontSize: 15,
-                                  ),
-                                ),
-                                Text(
-                                  pm.shortDescription,
-                                  style: const TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
-                  ),
-                );
-              }).toList(),
+                  );
+                }).toList(),
+              ),
             ),
           ),
         ),
