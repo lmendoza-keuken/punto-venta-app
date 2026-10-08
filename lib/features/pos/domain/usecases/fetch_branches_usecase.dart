@@ -6,7 +6,7 @@ class FetchBranchesUsecase {
 
   FetchBranchesUsecase(this.repository);
 
-  Future<List<Branch>> call() async {
-    return await repository.fetchBranches();
+  Future<List<Branch>> call({bool forceRefresh = false}) async {
+    return await repository.fetchBranches(forceRefresh: forceRefresh);
   }
 }

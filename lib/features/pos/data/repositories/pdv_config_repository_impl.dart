@@ -119,14 +119,23 @@ class PdvConfigRepositoryImpl implements PdvConfigRepository {
   }
 
   @override
-  Future<List<Branch>> fetchBranches() async {
+  Future<List<Branch>> fetchBranches({bool forceRefresh = false}) async {
+    if (!forceRefresh) {
+      final cached = await branchLocalDataSource.getCachedBranches();
+      if (cached != null && cached.isNotEmpty) {
+        return cached.map((model) => Branch.fromModel(model)).toList();
+      }
+    }
+
     try {
       final branches = await remoteDataSource.fetchBranches();
-      
       await branchLocalDataSource.cacheBranches(branches);
-      
       return branches.map((model) => Branch.fromModel(model)).toList();
     } catch (e) {
+      final cached = await branchLocalDataSource.getCachedBranches();
+      if (cached != null && cached.isNotEmpty) {
+        return cached.map((model) => Branch.fromModel(model)).toList();
+      }
       throw Exception('Error al obtener sucursales: $e');
     }
   }
