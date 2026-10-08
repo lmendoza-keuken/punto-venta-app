@@ -76,14 +76,14 @@ class _CartPanelState extends State<CartPanel> {
               }
               context.read<UiBloc>().add(CloseConfirmationPanel());
 
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(isReturnMode
-                      ? 'Devolución procesada exitosamente'
-                      : 'Venta procesada exitosamente'),
-                  backgroundColor: AppColors.success,
-                ),
-              );
+              // ScaffoldMessenger.of(context).showSnackBar(
+              //   SnackBar(
+              //     content: Text(isReturnMode
+              //         ? 'Devolución procesada exitosamente'
+              //         : 'Venta procesada exitosamente'),
+              //     backgroundColor: AppColors.success,
+              //   ),
+              // );
 
               if (!isReturnMode &&
                   pendingUpdate != null &&
