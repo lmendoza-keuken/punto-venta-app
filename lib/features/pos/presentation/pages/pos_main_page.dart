@@ -47,6 +47,8 @@ class PosMainPage extends StatefulWidget {
 class _PosMainPageState extends State<PosMainPage> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _catalogLogScrollController = ScrollController();
+  final GlobalKey<ScaffoldMessengerState> _posMessengerKey =
+      GlobalKey<ScaffoldMessengerState>();
   int _lastLogLength = 0;
 
   @override
@@ -144,11 +146,12 @@ class _PosMainPageState extends State<PosMainPage> {
                   final isMpQrActive =
                       uiState is UiLoaded && uiState.isMpQrActive;
 
-                  return Row(
-                    children: [
-                      Expanded(
-                        flex: 2,
-                        child: ScaffoldMessenger(
+                  return ScaffoldMessenger(
+                    key: _posMessengerKey,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
                           child: Scaffold(
                             resizeToAvoidBottomInset: true,
                             body: Stack(
@@ -274,16 +277,16 @@ class _PosMainPageState extends State<PosMainPage> {
                             ),
                           ),
                         ),
-                      ),
-                      // Panel de carrito
-                      const Expanded(
-                        flex: 1,
-                        child: SizedBox(
-                          width: 380,
-                          child: CartPanel(),
+                        // Panel de carrito (bajo el mismo ScaffoldMessenger)
+                        const Expanded(
+                          flex: 1,
+                          child: SizedBox(
+                            width: 380,
+                            child: CartPanel(),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   );
                 },
               ),
@@ -345,7 +348,7 @@ class _PosMainPageState extends State<PosMainPage> {
       if (quantityInCart >= quantity) {
         cartBloc.add(RemoveQuantityFromCart(product.id.toString(), quantity));
       } else if (quantityInCart > 0) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        _posMessengerKey.currentState?.showSnackBar(
           SnackBar(
             content: Text(
               'Solo hay $quantityInCart unidades de ${product.name} en el carrito. No se puede eliminar $quantity.',
@@ -356,7 +359,7 @@ class _PosMainPageState extends State<PosMainPage> {
           ),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
+        _posMessengerKey.currentState?.showSnackBar(
           SnackBar(
             content: Text('${product.name} no está en el carrito'),
             duration: const Duration(seconds: 1),

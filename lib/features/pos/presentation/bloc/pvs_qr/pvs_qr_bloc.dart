@@ -7,6 +7,7 @@ import 'package:punto_venta_app/features/pos/domain/repositories/pdv_config_repo
 import 'package:punto_venta_app/features/pos/domain/repositories/pvs_repository.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/pvs_qr/pvs_qr_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/pvs_qr/pvs_qr_state.dart';
+import 'package:punto_venta_app/features/pos/presentation/utils/pvs_qr_mock.dart';
 
 class PvsQrBloc extends Bloc<PvsQrEvent, PvsQrState> {
   final PvsRepository pvsRepository;
@@ -24,6 +25,7 @@ class PvsQrBloc extends Bloc<PvsQrEvent, PvsQrState> {
   int? _lastPaymentMethodId;
   String? _lastDescription;
   String? _lastExternalId;
+  bool _simulatingPayment = false;
 
   static const _pollInterval = Duration(seconds: 3);
   static const _defaultExpirationSeconds = 180;
@@ -39,6 +41,7 @@ class PvsQrBloc extends Bloc<PvsQrEvent, PvsQrState> {
     on<ResetPvsQr>(_onReset);
     on<ExpirePvsQr>(_onExpire);
     on<TickPvsQrCountdown>(_onTickCountdown);
+    on<SimulatePvsHomoPayment>(_onSimulateHomoPayment);
   }
 
   Future<void> _onGenerate(
@@ -115,6 +118,44 @@ class PvsQrBloc extends Bloc<PvsQrEvent, PvsQrState> {
       _startCountdownTimer();
     } catch (e) {
       emit(PvsQrError(message: _cleanError(e)));
+    }
+  }
+
+  Future<void> _onSimulateHomoPayment(
+    SimulatePvsHomoPayment event,
+    Emitter<PvsQrState> emit,
+  ) async {
+    if (!kPvsQrMockEnabled || _simulatingPayment) return;
+
+    final qrRaw = _qrRaw;
+    final qrId = _lastQrId;
+    if (qrRaw == null || qrRaw.isEmpty) {
+      emit(const PvsQrError(
+        message: 'No hay qrRaw para simular el pago',
+      ));
+      return;
+    }
+
+    _simulatingPayment = true;
+    try {
+      final current = state;
+      if (current is PvsQrGenerated) {
+        emit(PvsQrPaymentPending(
+          qrId: current.qrId,
+          qrRaw: current.qrRaw,
+          qrImageBase64: current.qrImageBase64,
+          secondsRemaining: current.secondsRemaining,
+        ));
+      }
+
+      await pvsRepository.simulateHomoPayment(qrRaw: qrRaw);
+      if (qrId != null && qrId.isNotEmpty) {
+        add(CheckPvsStatus(qrId: qrId));
+      }
+    } catch (_) {
+      // Mantener el QR visible; el error queda en el LogInterceptor de Dio.
+    } finally {
+      _simulatingPayment = false;
     }
   }
 

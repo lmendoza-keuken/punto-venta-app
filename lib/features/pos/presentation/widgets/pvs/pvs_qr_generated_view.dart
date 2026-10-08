@@ -8,6 +8,7 @@ import 'package:punto_venta_app/core/utils/extensions.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/pvs_qr/pvs_qr_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/pvs_qr/pvs_qr_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/pvs_qr/pvs_qr_state.dart';
+import 'package:punto_venta_app/features/pos/presentation/utils/pvs_qr_mock.dart';
 
 /// Muestra el QR oficial de PVS desde `qrImage` (PNG Base64).
 /// Equivalente a: `<img src="data:image/png;base64,{qrImage}" />`
@@ -148,6 +149,36 @@ class _PvsQrGeneratedViewState extends State<PvsQrGeneratedView> {
                 child: SingleChildScrollView(child: content),
               ),
               const SizedBox(height: 10),
+              if (kPvsQrMockEnabled) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: widget.isPending
+                        ? null
+                        : () {
+                            context
+                                .read<PvsQrBloc>()
+                                .add(const SimulatePvsHomoPayment());
+                          },
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      side: const BorderSide(color: AppColors.primary),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'Simular pago (homo)',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(

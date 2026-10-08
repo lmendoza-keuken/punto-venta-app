@@ -32,4 +32,7 @@ abstract class PvsRepository {
     required String accessToken,
     required String qrId,
   });
+
+  /// TEMP MOCK — POST /qrhomo/v1/homo/payment.
+  Future<void> simulateHomoPayment({required String qrRaw});
 }

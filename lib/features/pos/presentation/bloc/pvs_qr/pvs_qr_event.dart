@@ -48,3 +48,8 @@ class ExpirePvsQr extends PvsQrEvent {
 class TickPvsQrCountdown extends PvsQrEvent {
   const TickPvsQrCountdown();
 }
+
+/// TEMP MOCK — simula el pago vía endpoint homo de PVS.
+class SimulatePvsHomoPayment extends PvsQrEvent {
+  const SimulatePvsHomoPayment();
+}

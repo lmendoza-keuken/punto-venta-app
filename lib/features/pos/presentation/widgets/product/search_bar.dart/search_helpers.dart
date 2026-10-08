@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/features/pos/data/models/barcode_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/barcode_sale_helper.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
@@ -69,8 +68,7 @@ class SearchProcessor {
           }
         }
         if (found != null) {
-          calculatedUnitPrice =
-              calculateWeightedLineTotal(found, weightKg);
+          calculatedUnitPrice = calculateWeightedLineTotal(found, weightKg);
         }
       } else {
         final normalizedCode = normalizeBarcode(code);
@@ -123,21 +121,13 @@ class SearchProcessor {
     if (!context.mounted) return;
 
     if (found == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Producto no encontrado: $code'),
-          backgroundColor: AppColors.error,
-          duration: const Duration(seconds: 2),
-        ),
-      );
       searchController.clear();
       return;
     }
 
     // Pesaje manual: barcode 20/21 sin peso, o producto ponderable por código normal.
-    final needsManualWeight =
-        (weightKg != null && weightKg <= 0) ||
-            (weightKg == null && isProductWeighted(found));
+    final needsManualWeight = (weightKg != null && weightKg <= 0) ||
+        (weightKg == null && isProductWeighted(found));
 
     if (needsManualWeight) {
       searchController.clear();
@@ -165,15 +155,6 @@ class SearchProcessor {
     final saleInfo = resolveBarcodeSaleInfoFromBarcode(matchedBarcode);
     if (saleInfo != null && weightKg == null) {
       finalQuantity = saleInfo.quantityFor(qty);
-      if (saleInfo.label.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Tipo de venta: ${saleInfo.label}'),
-            backgroundColor: AppColors.info,
-            duration: const Duration(seconds: 1),
-          ),
-        );
-      }
     }
 
     if (weightKg != null) {
@@ -194,13 +175,6 @@ class SearchProcessor {
         cartBloc
             .add(RemoveQuantityFromCart(found.id.toString(), finalQuantity));
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${found.name} eliminado del carrito'),
-          backgroundColor: AppColors.error,
-          duration: const Duration(seconds: 1),
-        ),
-      );
     } else {
       if (weightKg != null && calculatedUnitPrice != null) {
         cartBloc.add(AddToCart(
@@ -210,24 +184,8 @@ class SearchProcessor {
           weightKg: weightKg,
           pricePerKg: calculatedUnitPrice,
         ));
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '${weightKg.toStringAsFixed(3)} kg × ${found.name} agregado',
-            ),
-            backgroundColor: AppColors.success,
-            duration: const Duration(seconds: 1),
-          ),
-        );
       } else {
         cartBloc.add(AddToCart(found, quantity: finalQuantity));
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('$finalQuantity x ${found.name} agregado'),
-            backgroundColor: AppColors.success,
-            duration: const Duration(seconds: 1),
-          ),
-        );
       }
     }
 

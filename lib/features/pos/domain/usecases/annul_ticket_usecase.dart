@@ -111,7 +111,10 @@ class AnnulTicketUsecase {
 
     final nc = await generateCreditNoteUsecase(ticketId, reasonId);
 
-    final shouldAssociateQr = nc != null &&
+    // TEMP — no invocar /returns/qr-refund por ahora.
+    const associateQrRefundEnabled = false;
+    final shouldAssociateQr = associateQrRefundEnabled &&
+        nc != null &&
         (refundToMercadoPagoAccount || refundToPvsAccount || refundInCash);
     if (shouldAssociateQr) {
       final ncSaleId = int.tryParse(nc.id);

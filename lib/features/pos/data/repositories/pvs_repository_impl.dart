@@ -6,6 +6,7 @@ import 'package:punto_venta_app/features/pos/data/models/pvs/pvs_qr_generate_res
 import 'package:punto_venta_app/features/pos/data/models/pvs/pvs_reverse_response_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/pvs/pvs_transaction_status_response_model.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/pvs_repository.dart';
+import 'package:punto_venta_app/features/pos/presentation/utils/pvs_qr_mock.dart';
 
 class PvsRepositoryImpl implements PvsRepository {
   final MercadoPagoRemoteDataSource mercadoPagoRemoteDataSource;
@@ -38,10 +39,16 @@ class PvsRepositoryImpl implements PvsRepository {
     }
 
     final list = _cachedCredentials;
-    if (list == null || list.isEmpty) return null;
-    for (final cred in list) {
-      if (cred.paymentMethodId == paymentMethodId) return cred;
+    if (list != null) {
+      for (final cred in list) {
+        if (cred.paymentMethodId == paymentMethodId) return cred;
+      }
     }
+
+    if (kPvsQrMockEnabled) {
+      return kPvsMockCredentialsFor(paymentMethodId);
+    }
+
     return null;
   }
 
@@ -109,5 +116,10 @@ class PvsRepositoryImpl implements PvsRepository {
     required String qrId,
   }) {
     return pvsService.reverseQr(accessToken: accessToken, qrId: qrId);
+  }
+
+  @override
+  Future<void> simulateHomoPayment({required String qrRaw}) {
+    return pvsService.simulateHomoPayment(qrRaw: qrRaw);
   }
 }

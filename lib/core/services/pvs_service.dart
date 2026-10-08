@@ -139,4 +139,23 @@ class PvsService {
       );
     }
   }
+
+  /// TEMP MOCK — simula el pago del QR en homologación.
+  Future<void> simulateHomoPayment({required String qrRaw}) async {
+    try {
+      await _dio.post(
+        '/qrhomo/v1/homo/payment',
+        data: {'qrraw': qrRaw},
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
+    } on DioException catch (e) {
+      throw Exception(
+        'Error simulando pago PVS: ${e.response?.data ?? e.message}',
+      );
+    }
+  }
 }
