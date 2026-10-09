@@ -165,15 +165,15 @@ class SearchProcessor {
     final saleInfo = resolveBarcodeSaleInfoFromBarcode(matchedBarcode);
     if (saleInfo != null && weightKg == null) {
       finalQuantity = saleInfo.quantityFor(qty);
-      if (saleInfo.label.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Tipo de venta: ${saleInfo.label}'),
-            backgroundColor: AppColors.info,
-            duration: const Duration(seconds: 1),
-          ),
-        );
-      }
+      // if (saleInfo.label.isNotEmpty) {
+      //   ScaffoldMessenger.of(context).showSnackBar(
+      //     SnackBar(
+      //       content: Text('Tipo de venta: ${saleInfo.label}'),
+      //       backgroundColor: AppColors.info,
+      //       duration: const Duration(seconds: 1),
+      //     ),
+      //   );
+      // }
     }
 
     if (weightKg != null) {
@@ -194,13 +194,13 @@ class SearchProcessor {
         cartBloc
             .add(RemoveQuantityFromCart(found.id.toString(), finalQuantity));
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${found.name} eliminado del carrito'),
-          backgroundColor: AppColors.error,
-          duration: const Duration(seconds: 1),
-        ),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: Text('${found.name} eliminado del carrito'),
+      //     backgroundColor: AppColors.error,
+      //     duration: const Duration(seconds: 1),
+      //   ),
+      // );
     } else {
       if (weightKg != null && calculatedUnitPrice != null) {
         cartBloc.add(AddToCart(
@@ -210,24 +210,24 @@ class SearchProcessor {
           weightKg: weightKg,
           pricePerKg: calculatedUnitPrice,
         ));
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '${weightKg.toStringAsFixed(3)} kg × ${found.name} agregado',
-            ),
-            backgroundColor: AppColors.success,
-            duration: const Duration(seconds: 1),
-          ),
-        );
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(
+        //     content: Text(
+        //       '${weightKg.toStringAsFixed(3)} kg × ${found.name} agregado',
+        //     ),
+        //     backgroundColor: AppColors.success,
+        //     duration: const Duration(seconds: 1),
+        //   ),
+        // );
       } else {
         cartBloc.add(AddToCart(found, quantity: finalQuantity));
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('$finalQuantity x ${found.name} agregado'),
-            backgroundColor: AppColors.success,
-            duration: const Duration(seconds: 1),
-          ),
-        );
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(
+        //     content: Text('$finalQuantity x ${found.name} agregado'),
+        //     backgroundColor: AppColors.success,
+        //     duration: const Duration(seconds: 1),
+        //   ),
+        // );
       }
     }
 
