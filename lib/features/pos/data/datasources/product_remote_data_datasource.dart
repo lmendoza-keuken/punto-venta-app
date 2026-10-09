@@ -62,7 +62,8 @@ abstract class ProductService {
 // =============================================================================
 
 abstract class ProductRemoteDataSource {
-  Stream<List<ProductModel>> getProducts();
+  /// Si [forceRefresh] es false y el catálogo ya está cargado, solo emite cache.
+  Stream<List<ProductModel>> getProducts({bool forceRefresh = false});
   Future<List<ProductModel>> getProductsByCategory(String category);
   Future<List<ProductModel>> searchProducts(String query);
   Future<ProductModel?> searchByBarcode(String barcode);
@@ -76,6 +77,7 @@ abstract class ProductRemoteDataSource {
   void setListaPrecio(int lista);
   int getListaPrecio();
   void clearCache();
+  bool get hasFullCatalogCached;
 }
 
 // =============================================================================
@@ -122,11 +124,27 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
   // ---------------------------------------------------------------------------
 
   @override
-  Stream<List<ProductModel>> getProducts() async* {
-    debugPrint('DEBUG: ProductLocalDataSourceImpl.getProducts() started');
-    if (_cachedMappedProducts != null && _cachedMappedProducts!.isNotEmpty) {
-      debugPrint('DEBUG: getProducts() yielding cached products. Count: ${_cachedMappedProducts!.length}');
-      yield _cachedMappedProducts!;
+  bool get hasFullCatalogCached =>
+      _isAllProductsLoaded &&
+      _cachedMappedProducts != null &&
+      _cachedMappedProducts!.isNotEmpty;
+
+  @override
+  Stream<List<ProductModel>> getProducts({bool forceRefresh = false}) async* {
+    debugPrint(
+      'DEBUG: ProductLocalDataSourceImpl.getProducts() started '
+      'forceRefresh=$forceRefresh hasCache=$hasFullCatalogCached',
+    );
+
+    if (forceRefresh) {
+      clearCache();
+    } else if (hasFullCatalogCached) {
+      debugPrint(
+        'DEBUG: getProducts() yielding cached products only. '
+        'Count: ${_cachedMappedProducts!.length}',
+      );
+      yield List<ProductModel>.from(_cachedMappedProducts!);
+      return;
     }
 
     debugPrint('DEBUG: getProducts() fetching barcodes...');
@@ -514,6 +532,7 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
   // Cache Management
   // ---------------------------------------------------------------------------
 
+  @override
   void clearCache() {
     _cachedProducts = null;
     _cachedPrecios = null;

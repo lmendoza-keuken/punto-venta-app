@@ -8,12 +8,15 @@ class ProductRepositoryImpl implements ProductRepository {
   ProductRepositoryImpl({required this.localDataSource});
 
   @override
-  Stream<List<Product>> getProducts() {
-    return localDataSource.getProducts().map(
+  Stream<List<Product>> getProducts({bool forceRefresh = false}) {
+    return localDataSource.getProducts(forceRefresh: forceRefresh).map(
           (productModels) =>
               productModels.map((model) => model.toEntity()).toList(),
         );
   }
+
+  @override
+  bool get hasFullCatalogCached => localDataSource.hasFullCatalogCached;
 
   @override
   Future<Product?> searchByBarcode(String barcode) async {

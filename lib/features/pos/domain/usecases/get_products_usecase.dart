@@ -6,9 +6,11 @@ class GetProductsUsecase {
 
   GetProductsUsecase(this.repository);
 
-  Stream<List<Product>> call() {
-    return repository.getProducts();
+  Stream<List<Product>> call({bool forceRefresh = false}) {
+    return repository.getProducts(forceRefresh: forceRefresh);
   }
+
+  bool get hasFullCatalogCached => repository.hasFullCatalogCached;
 
   Future<List<Product>> getByCategory(String category) async {
     if (category.toLowerCase() == 'todo') {

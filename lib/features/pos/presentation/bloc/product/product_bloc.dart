@@ -92,15 +92,11 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     await _productsSubscription?.cancel();
     _productsSubscription = null;
 
-    if (event.forceRefresh) {
-      getProductsUsecase.clearCache();
-    }
+    final forceRefresh = event.forceRefresh;
 
-    // Branches / motivos de devolución: se refrescan con los artículos
-    // y quedan cacheados para el panel de confirmación.
-    _prefetchCheckoutLookups(forceRefresh: true);
+    // Branches / motivos: remote solo con refresh manual de productos.
+    _prefetchCheckoutLookups(forceRefresh: forceRefresh);
 
-    emit(ProductLoading());
     try {
       int currentList;
       if (event.priceListId != null && event.priceListId! > 0) {
@@ -113,13 +109,19 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
         }
       }
 
-      // se actualiza la lista de precios en el usecase para que los productos se traigan con los precios correctos
+      // Cambia lista → limpia cache interno; misma lista conserva cache.
       await getProductsUsecase.updatePriceList(currentList);
 
-      // se traen las categorías primero
+      final readingFromCache =
+          !forceRefresh && getProductsUsecase.hasFullCatalogCached;
+      if (!readingFromCache) {
+        emit(ProductLoading());
+      }
+
       final categories = await getProductsUsecase.getCategories();
 
-      _productsSubscription = getProductsUsecase().listen(
+      _productsSubscription =
+          getProductsUsecase(forceRefresh: forceRefresh).listen(
         (products) {
           add(ProductsUpdated(
             products: products,
@@ -227,7 +229,9 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
       // se traen las categorías primero
       final categories = await getProductsUsecase.getCategories();
 
-      _productsSubscription = getProductsUsecase().listen(
+      // Cambio de lista invalida cache; forzar remote.
+      _productsSubscription =
+          getProductsUsecase(forceRefresh: true).listen(
         (products) {
           add(ProductsUpdated(
             products: products,
