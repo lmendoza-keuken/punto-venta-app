@@ -55,12 +55,9 @@ class _DailySummaryViewState extends State<DailySummaryView> {
           final filteredTickets = widget.searchController.text.isEmpty
               ? state.tickets
               : state.tickets
-                  .where((ticket) =>
-                      (ticket.description ?? '').toLowerCase().contains(
-                          widget.searchController.text.toLowerCase()) ||
-                      (ticket.clientName ?? '')
-                          .toLowerCase()
-                          .contains(widget.searchController.text.toLowerCase()))
+                  .where((ticket) => ticket.matchesReportSearch(
+                        widget.searchController.text,
+                      ))
                   .toList();
 
           stateSliver = _buildOrdersSliverList(

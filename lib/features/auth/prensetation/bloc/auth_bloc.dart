@@ -4,6 +4,7 @@ import 'package:punto_venta_app/features/auth/domain/usecases/authenticate_user_
 import 'package:punto_venta_app/features/auth/domain/usecases/change_chashier_usecase.dart';
 import 'package:punto_venta_app/features/auth/domain/usecases/login_with_google_usecase.dart';
 import 'package:punto_venta_app/features/auth/domain/usecases/login_with_email_usecase.dart';
+import 'package:punto_venta_app/features/auth/domain/usecases/refresh_companies_usecase.dart';
 import 'package:punto_venta_app/features/auth/domain/usecases/select_company_usecase.dart';
 import 'package:punto_venta_app/features/auth/domain/usecases/logout_usecase.dart';
 import 'auth_event.dart';
@@ -16,6 +17,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final SelectCompanyUseCase selectCompanyUsecase;
   final LogoutUsecase logoutUsecase;
   final ChangeCashierUseCase changeCashierUseCase;
+  final RefreshCompaniesUseCase refreshCompaniesUseCase;
 
   AuthBloc({
     required this.loginWithGoogleUsecase,
@@ -24,6 +26,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.selectCompanyUsecase,
     required this.logoutUsecase,
     required this.changeCashierUseCase,
+    required this.refreshCompaniesUseCase,
   }) : super(AuthInitial()) {
     on<LoginWithGoogleRequested>(_onLoginWithGoogleRequested);
     on<LoginWithEmailRequested>(_onLoginWithEmailRequested);
@@ -33,6 +36,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<CheckAuthStatus>(_onCheckAuthStatus);
     on<AuthenticateUserRequested>(_onUserAuthenticationRequested);
     on<ChangeCashierRequested>(_onChangeCashierRequested);
+    on<RefreshCompaniesRequested>(_onRefreshCompaniesRequested);
   }
 
   String _extractErrorMessage(dynamic error) {
@@ -198,6 +202,50 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       await changeCashierUseCase();
     } catch (e) {
+      final errorMessage = _extractErrorMessage(e);
+      emit(AuthError(message: errorMessage));
+    }
+  }
+
+  Future<void> _onRefreshCompaniesRequested(
+    RefreshCompaniesRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    AppLogger.info('AuthBloc: RefreshCompaniesRequested');
+    try {
+      final result = await refreshCompaniesUseCase();
+      AppLogger.info(
+        'AuthBloc: refresh companies email=${result['email']} '
+        'count=${(result['companies'] as List).length} '
+        'autoSelected=${result['autoSelected']}',
+      );
+
+      if (result['autoSelected'] == true && !event.forceSelection) {
+        final company = result['companies'][0];
+        final selectResult = await selectCompanyUsecase(
+          result['email'],
+          company['id'] is int
+              ? company['id'] as int
+              : int.parse(company['id'].toString()),
+        );
+
+        emit(AuthCompanySelected(
+          email: selectResult['email'],
+          companyId: selectResult['companyId'] is int
+              ? selectResult['companyId'] as int
+              : int.parse(selectResult['companyId'].toString()),
+          companyName: selectResult['companyName'],
+        ));
+      } else {
+        emit(AuthCompanySelectionRequired(
+          email: result['email'],
+          companies: List<Map<String, dynamic>>.from(result['companies']),
+          autoSelected: false,
+        ));
+      }
+    } catch (e, stackTrace) {
+      AppLogger.error('AuthBloc: RefreshCompaniesRequested falló', e, stackTrace);
       final errorMessage = _extractErrorMessage(e);
       emit(AuthError(message: errorMessage));
     }

@@ -26,11 +26,9 @@ Future<void> showLogoutDialog(BuildContext context) async {
         builder: (context, state) {
           String? email;
           int? companyId;
-          String? companyName;
 
           if (cachedEnterprise != null && cachedEmail != null) {
             companyId = cachedEnterprise.id;
-            companyName = cachedEnterprise.name;
             email = cachedEmail;
           }
 
@@ -64,20 +62,15 @@ Future<void> showLogoutDialog(BuildContext context) async {
                       iconColor: Colors.orange,
                       backgroundColor: Colors.orange.withValues(alpha: 0.1),
                       title: 'Cambiar usuario',
-                      subtitle: 'Mantener sesión de empresa activa',
+                      subtitle: 'Cambiar cajero y/o empresa',
                       onTap: () {
                         Navigator.of(dialogContext).pop();
                         context.read<CartBloc>().add(ClearCart());
                         context.read<AuthBloc>().add(ChangeCashierRequested());
-
-                        context.go(
-                          RoutePaths.credentials,
-                          extra: {
-                            'email': email,
-                            'companyId': companyId,
-                            'companyName': companyName ?? 'Empresa',
-                          },
-                        );
+                        context.go(RoutePaths.companySelection);
+                        context
+                            .read<AuthBloc>()
+                            .add(RefreshCompaniesRequested());
                       },
                     ),
                     const SizedBox(height: AppDimensions.paddingM),

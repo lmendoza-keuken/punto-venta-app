@@ -111,7 +111,13 @@ class GetReportsUsecase {
         typeCode: typeCode,
       );
 
-      allOrders.addAll(chunk);
+      // Evita duplicados visuales si el back solapa páginas (skip/limit).
+      final seenIds = allOrders.map((o) => o.id).toSet();
+      for (final order in chunk) {
+        if (seenIds.add(order.id)) {
+          allOrders.add(order);
+        }
+      }
       hasMore = chunk.length >= chunkSize;
 
       yield (

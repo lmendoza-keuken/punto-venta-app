@@ -82,7 +82,12 @@ class _CredentialsPageState extends State<CredentialsPage> {
               onPressed: isLoading
                   ? null
                   : () {
-                      context.read<AuthBloc>().add(LogoutRequested());
+                      context.go(RoutePaths.companySelection);
+                      context.read<AuthBloc>().add(
+                            const RefreshCompaniesRequested(
+                              forceSelection: true,
+                            ),
+                          );
                     },
             ),
           ),

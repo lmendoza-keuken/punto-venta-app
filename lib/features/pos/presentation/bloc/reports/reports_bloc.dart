@@ -35,7 +35,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     LoadAllReports event,
     Emitter<ReportsState> emit,
   ) async {
-    _loadGeneration++;
+    final generation = ++_loadGeneration;
     emit(ReportsLoading());
     _currentPage = 1;
     _isAllReportsMode = true;
@@ -49,7 +49,11 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
         final skip = (_currentPage - 1) * _pageSize;
         final orders = await getReportsUsecase.getAllCompletedOrdersFromRemote(
             skip: skip, limit: _pageSize, typeCode: event.typeCode);
-        emit(ReportsLoaded(orders, hasMoreData: orders.length >= _pageSize));
+        if (generation != _loadGeneration) return;
+        emit(ReportsLoaded(
+          _dedupeById(orders),
+          hasMoreData: orders.length >= _pageSize,
+        ));
       } catch (remoteError) {
         // TODO: CAMBIAR PARA USAR EL MISMO MODELO TicketResponseModel
 
@@ -58,6 +62,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
         // emit(ReportsLoaded(orders, hasMoreData: false));
       }
     } catch (e) {
+      if (generation != _loadGeneration) return;
       emit(ReportsError(e.toString()));
     }
   }
@@ -99,8 +104,10 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
         return;
       }
 
-      final updatedOrders = List<CompletedOrder>.from(currentState.tickets)
-        ..addAll(newOrders);
+      final updatedOrders = _dedupeById([
+        ...currentState.tickets,
+        ...newOrders,
+      ]);
 
       final updatedSummary = currentState.summary != null
           ? getReportsUsecase.buildSummaryFromOrders(updatedOrders)
@@ -188,14 +195,57 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     )) {
       if (generation != _loadGeneration) return;
 
-      final orders = chunk.summary['orders'] as List<CompletedOrder>;
+      final orders = _dedupeById(
+        List<CompletedOrder>.from(chunk.summary['orders'] as List),
+      );
+      final summary = getReportsUsecase.buildSummaryFromOrders(orders);
       emit(ReportsLoaded(
         orders,
-        summary: chunk.summary,
+        summary: summary,
         hasMoreData: chunk.hasMore,
         isLoadingMore: chunk.hasMore,
       ));
     }
+  }
+
+  Future<void> _reloadCurrentView(Emitter<ReportsState> emit) async {
+    if (_isAllReportsMode) {
+      await _onLoadAllReports(
+        LoadAllReports(typeCode: _currentTypeCode),
+        emit,
+      );
+      return;
+    }
+
+    if (_currentStartDate == null) return;
+
+    if (_currentEndDate != null) {
+      await _onLoadReportsByDateRange(
+        LoadReportsByDateRange(
+          _currentStartDate!,
+          _currentEndDate!,
+          typeCode: _currentTypeCode,
+        ),
+        emit,
+      );
+      return;
+    }
+
+    await _onLoadDailySummary(
+      LoadDailySummary(_currentStartDate!, typeCode: _currentTypeCode),
+      emit,
+    );
+  }
+
+  List<CompletedOrder> _dedupeById(List<CompletedOrder> orders) {
+    final seen = <String>{};
+    final result = <CompletedOrder>[];
+    for (final order in orders) {
+      if (seen.add(order.id)) {
+        result.add(order);
+      }
+    }
+    return result;
   }
 
   // Metodo para pasar un ticket (VE, venta) a (NC, nota de crédito)
@@ -212,21 +262,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
             'Se creó una nota de crédito vinculada al ticket ${event.ticketId}.',
       ));
 
-      if (currentState is ReportsLoaded) {
-        final updatedTickets = currentState.tickets.map((t) {
-          if (t.id == event.ticketId) {
-            return t.copyWith(isAnnulled: true);
-          }
-          return t;
-        }).toList();
-
-        emit(ReportsLoaded(
-          updatedTickets,
-          summary: currentState.summary,
-          hasMoreData: currentState.hasMoreData,
-          isLoadingMore: currentState.isLoadingMore,
-        ));
-      }
+      await _reloadCurrentView(emit);
     } catch (e) {
       String message = e.toString();
       while (message.startsWith('Exception: ')) {

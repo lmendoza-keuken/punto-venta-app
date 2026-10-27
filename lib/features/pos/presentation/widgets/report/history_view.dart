@@ -138,13 +138,9 @@ class _HistoryViewState extends State<HistoryView> {
                 final filteredTickets = widget.searchController.text.isEmpty
                     ? state.tickets
                     : state.tickets
-                        .where((ticket) =>
-                            (ticket.description ?? '')
-                                .toLowerCase()
-                                .contains(widget.searchController.text.toLowerCase()) ||
-                            (ticket.clientName ?? '')
-                                .toLowerCase()
-                                .contains(widget.searchController.text.toLowerCase()))
+                        .where((ticket) => ticket.matchesReportSearch(
+                              widget.searchController.text,
+                            ))
                         .toList();
 
                 return _buildOrdersList(

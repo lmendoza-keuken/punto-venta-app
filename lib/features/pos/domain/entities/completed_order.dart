@@ -80,6 +80,30 @@ class CompletedOrder extends Equatable {
     this.caeQrCode,
   });
 
+  bool matchesReportSearch(String query) {
+    final q = query.trim().toLowerCase();
+    if (q.isEmpty) return true;
+
+    final desc = (description ?? '').toLowerCase();
+    final client = (clientName ?? '').toLowerCase();
+    final order = orderNumber.toLowerCase();
+
+    if (desc.contains(q) || client.contains(q) || order.contains(q)) {
+      return true;
+    }
+
+    final digitsQuery = q.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digitsQuery.isEmpty) return false;
+
+    final descDigits = desc.replaceAll(RegExp(r'[^0-9]'), '');
+    final orderDigits = order.replaceAll(RegExp(r'[^0-9]'), '');
+    final externalDigits = externalId?.toString() ?? '';
+
+    return descDigits.endsWith(digitsQuery) ||
+        orderDigits.endsWith(digitsQuery) ||
+        externalDigits.endsWith(digitsQuery);
+  }
+
   CompletedOrder copyWith({
     String? id,
     String? orderNumber,

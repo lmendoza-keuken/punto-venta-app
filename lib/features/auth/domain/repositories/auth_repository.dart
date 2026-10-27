@@ -4,6 +4,7 @@ abstract class AuthRepository {
   Future<Map<String, dynamic>> loginWithGoogle();
   Future<Map<String, dynamic>> loginWithEmail(String email);
   Future<Map<String, dynamic>> selectCompany(String email, int companyId);
+  Future<Map<String, dynamic>> refreshCompaniesForCachedEmail();
   Future<User> authenticateUser(String username, String password);
   Future<void> changeCashier();
   Future<void> logout();

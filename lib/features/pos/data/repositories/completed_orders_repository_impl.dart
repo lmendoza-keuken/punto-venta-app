@@ -8,6 +8,7 @@ import 'package:punto_venta_app/features/pos/data/datasources/tax_local_datasour
 import 'package:punto_venta_app/features/pos/data/models/completed_order_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/invoice_payload_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/product_model.dart';
+import 'package:punto_venta_app/features/pos/data/models/tax_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/vat_category_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_item.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
@@ -29,6 +30,11 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
   final TaxLocalDataSource taxLocalDataSource;
   final PaymentMethodRepository paymentMethodRepository;
   final TaxRepository taxRepository;
+
+  /// Catálogos reutilizados al mapear tickets (evita N calls a /taxes y /payment_methods).
+  List<TaxModel>? _mappingTaxes;
+  List<PaymentMethod>? _mappingPaymentMethods;
+  Future<void>? _mappingCatalogsFuture;
 
   CompletedOrdersRepositoryImpl({
     required this.localDataSource,
@@ -117,6 +123,7 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
       final invoicePayloads = await remoteDataSource!
           .getAllTickets(skip: skip, limit: limit, typeCode: typeCode);
 
+      await _ensureMappingCatalogs();
       final orders = await Future.wait(invoicePayloads
           .map((payload) => _convertInvoicePayloadToCompletedOrder(payload)));
 
@@ -144,6 +151,7 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
           skip: skip,
           limit: limit,
           typeCode: typeCode);
+      await _ensureMappingCatalogs();
       final orders = await Future.wait(invoicePayloads
           .map((payload) => _convertInvoicePayloadToCompletedOrder(payload)));
 
@@ -163,15 +171,55 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
     try {
       final payload = await remoteDataSource!.getTicketById(orderId);
       if (payload == null) return null;
+      await _ensureMappingCatalogs();
       return await _convertInvoicePayloadToCompletedOrder(payload);
     } catch (e) {
       throw Exception('Error al obtener orden por ID desde el servidor: $e');
     }
   }
 
+  /// Carga taxes + payment methods una sola vez (cache en memoria del singleton).
+  Future<void> _ensureMappingCatalogs() async {
+    if (_mappingTaxes != null && _mappingPaymentMethods != null) return;
+
+    _mappingCatalogsFuture ??= () async {
+      var taxes = await taxLocalDataSource.getCachedTaxes() ?? [];
+      if (taxes.isEmpty) {
+        try {
+          taxes = await taxRepository.getTaxes();
+        } catch (e) {
+          print(
+              'Error fetching taxes for completed orders mapping catalogs: $e');
+        }
+      }
+      _mappingTaxes = taxes;
+
+      try {
+        _mappingPaymentMethods =
+            await paymentMethodRepository.fetchPaymentMethods();
+      } catch (e) {
+        print(
+            'Error fetching payment methods for completed orders mapping catalogs: $e');
+        _mappingPaymentMethods = [];
+      }
+    }();
+
+    try {
+      await _mappingCatalogsFuture;
+    } finally {
+      // Si falló a medias, permitir reintento en la próxima carga.
+      if (_mappingTaxes == null || _mappingPaymentMethods == null) {
+        _mappingCatalogsFuture = null;
+      }
+    }
+  }
+
   // Helper method to convert InvoicePayload to CompletedOrder
   Future<CompletedOrder> _convertInvoicePayloadToCompletedOrder(
       InvoicePayload ticket) async {
+    await _ensureMappingCatalogs();
+    final taxesFromBackend = _mappingTaxes ?? [];
+    final allPaymentMethods = _mappingPaymentMethods ?? [];
     bool? branchAfipAvailable;
     bool? clientTaxDetails;
 
@@ -261,16 +309,6 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
         .map((itemJson) => _cartLogEntryFromPayload(itemJson, ticketTimestamp))
         .toList();
     final List<CartItem> items = ManageCartUsecase().rebuildFromLog(logs);
-    await taxRepository.getTaxes();
-    var taxesFromBackend = await taxLocalDataSource.getCachedTaxes() ?? [];
-    if (taxesFromBackend.isEmpty) {
-      try {
-        taxesFromBackend = await taxRepository.getTaxes();
-      } catch (e) {
-        print(
-            'Error fetching taxes from remote in completed orders repository mapping: $e');
-      }
-    }
 
     final ivaTaxIds = <int>{};
     final iibbTaxIds = <int>{};
@@ -363,54 +401,34 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
     // Calculate total items
     final totalItems = items.fold(0, (sum, item) => sum + item.quantity);
 
-    List<PaymentMethod> paymentMethods = [];
-    try {
-      final allMethods = await paymentMethodRepository.fetchPaymentMethods();
-      paymentMethods = ticket.paymentMethods.map((reqPm) {
-        final matched = allMethods.firstWhere(
-          (m) => m.id == reqPm.id,
-          orElse: () => PaymentMethod(
+    final paymentMethods = ticket.paymentMethods.map((reqPm) {
+      PaymentMethod? matched;
+      for (final method in allPaymentMethods) {
+        if (method.id == reqPm.id) {
+          matched = method;
+          break;
+        }
+      }
+      final base = matched ??
+          PaymentMethod(
             id: reqPm.id ?? 0,
             description: 'Método ${reqPm.id}',
             shortDescription: 'MET-${reqPm.id}',
             deleteAt: '',
-          ),
-        );
-        return matched.copyWith(
-          amount: reqPm.amount,
-          details: reqPm.details != null
-              ? PaymentMethodDetails(
-                  accountOwner: reqPm.details!.accountOwner,
-                  bankId: reqPm.details!.bankId,
-                  checkNumber: reqPm.details!.checkNumber,
-                  transferId: reqPm.details!.transferId,
-                  verificationId: reqPm.details!.verificationId,
-                )
-              : null,
-        );
-      }).toList();
-    } catch (e) {
-      print(
-          'Error resolving payment methods in completed orders repository: $e');
-      paymentMethods = ticket.paymentMethods.map((reqPm) {
-        return PaymentMethod(
-          id: reqPm.id ?? 0,
-          description: 'Método ${reqPm.id}',
-          shortDescription: 'MET-${reqPm.id}',
-          deleteAt: '',
-          amount: reqPm.amount,
-          details: reqPm.details != null
-              ? PaymentMethodDetails(
-                  accountOwner: reqPm.details!.accountOwner,
-                  bankId: reqPm.details!.bankId,
-                  checkNumber: reqPm.details!.checkNumber,
-                  transferId: reqPm.details!.transferId,
-                  verificationId: reqPm.details!.verificationId,
-                )
-              : null,
-        );
-      }).toList();
-    }
+          );
+      return base.copyWith(
+        amount: reqPm.amount,
+        details: reqPm.details != null
+            ? PaymentMethodDetails(
+                accountOwner: reqPm.details!.accountOwner,
+                bankId: reqPm.details!.bankId,
+                checkNumber: reqPm.details!.checkNumber,
+                transferId: reqPm.details!.transferId,
+                verificationId: reqPm.details!.verificationId,
+              )
+            : null,
+      );
+    }).toList();
 
     PaymentMethod? paymentMethod =
         paymentMethods.isNotEmpty ? paymentMethods.first : null;
@@ -458,29 +476,8 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
 
   @override
   Future<CompletedOrder> fromInvoicePayload(InvoicePayload payload) async {
+    await _ensureMappingCatalogs();
     return _convertInvoicePayloadToCompletedOrder(payload);
-  }
-
-  Future<PaymentMethod> _resolvePaymentMethod(int paymentMethodId) async {
-    try {
-      final catalog = await paymentMethodRepository.fetchPaymentMethods();
-      return catalog.firstWhere(
-        (pm) => pm.id == paymentMethodId,
-        orElse: () => PaymentMethod(
-          id: paymentMethodId,
-          description: '',
-          shortDescription: '',
-          deleteAt: '',
-        ),
-      );
-    } catch (_) {
-      return PaymentMethod(
-        id: paymentMethodId,
-        description: '',
-        shortDescription: '',
-        deleteAt: '',
-      );
-    }
   }
 
   CartLogEntry _cartLogEntryFromPayload(

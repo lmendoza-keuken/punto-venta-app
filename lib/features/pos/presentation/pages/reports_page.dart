@@ -160,7 +160,6 @@ class _ReportsPageState extends State<ReportsPage>
                     height: 50,
                   ),
                 ],
-                onTap: _onTabChanged,
               ),
               // Content
               Expanded(

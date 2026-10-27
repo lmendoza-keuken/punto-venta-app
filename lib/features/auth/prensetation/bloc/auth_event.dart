@@ -61,7 +61,16 @@ class AuthenticateUserRequested extends AuthEvent {
   List<Object> get props => [username, password];
 }
 
-class ChangeCashierRequested extends AuthEvent {} 
+class ChangeCashierRequested extends AuthEvent {}
+
+class RefreshCompaniesRequested extends AuthEvent {
+  final bool forceSelection;
+
+  const RefreshCompaniesRequested({this.forceSelection = false});
+
+  @override
+  List<Object> get props => [forceSelection];
+}
 
 class LogoutRequested extends AuthEvent {}
 

@@ -37,7 +37,7 @@ class PdvConfigBloc extends Bloc<PdvConfigEvent, PdvConfigState> {
         config = const PdvConfig();
       }
 
-      final branches = await fetchBranchesUsecase();
+      final branches = await fetchBranchesUsecase(forceRefresh: true);
       await getVatCategoriesUsecase();
       emit(PdvConfigLoaded(config, branches: branches));
     } catch (e) {
@@ -49,7 +49,7 @@ class PdvConfigBloc extends Bloc<PdvConfigEvent, PdvConfigState> {
       FetchBranchesEvent event, Emitter<PdvConfigState> emit) async {
     emit(BranchesLoading());
     try {
-      final branches = await fetchBranchesUsecase();
+      final branches = await fetchBranchesUsecase(forceRefresh: true);
       emit(BranchesLoaded(branches));
     } catch (e) {
       emit(PdvConfigError('Error al obtener sucursales: $e'));

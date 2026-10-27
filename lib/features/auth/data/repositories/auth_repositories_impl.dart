@@ -89,6 +89,34 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Map<String, dynamic>> refreshCompaniesForCachedEmail() async {
+    final email = await localDataSource.getCachedEmail();
+
+    if (email == null || email.isEmpty) {
+      throw Exception(
+          'No hay una sesión de empresa activa. Inicia sesión con Google nuevamente.');
+    }
+
+    final companies =
+        await firestoreUserDataSource.getCompaniesByEmail(email);
+
+    if (companies.isEmpty) {
+      throw Exception(
+          'No hay empresas vinculadas a este correo. Por favor contacta al administrador.');
+    }
+
+    AppLogger.info(
+      'refreshCompaniesForCachedEmail email=$email empresas=${companies.length}',
+    );
+
+    return {
+      'email': email,
+      'companies': companies.map((c) => c.toMap()).toList(),
+      'autoSelected': companies.length == 1,
+    };
+  }
+
+  @override
   Future<Map<String, dynamic>> selectCompany(
       String email, int companyId) async {
     final companies = await firestoreUserDataSource.getCompaniesByEmail(email);

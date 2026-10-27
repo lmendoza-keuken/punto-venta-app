@@ -31,6 +31,14 @@ class CompanySelectionPage extends StatelessWidget {
               backgroundColor: Colors.red,
             ),
           );
+          final shouldReturnToLogin = state.message.contains(
+                'empresas vinculadas',
+              ) ||
+              state.message.contains('sesión de empresa');
+          if (shouldReturnToLogin) {
+            context.read<AuthBloc>().add(LogoutRequested());
+            context.go(RoutePaths.login);
+          }
         }
       },
       builder: (context, state) {
@@ -145,10 +153,14 @@ class CompanySelectionPage extends StatelessWidget {
                                       subtitle: Text('ID: ${company['id']}'),
                                       trailing: const Icon(Icons.arrow_forward_ios),
                                       onTap: () {
+                                        final rawId = company['id'];
+                                        final companyId = rawId is int
+                                            ? rawId
+                                            : int.parse(rawId.toString());
                                         context.read<AuthBloc>().add(
                                               CompanySelected(
                                                 email: state.email,
-                                                companyId: company['id'],
+                                                companyId: companyId,
                                               ),
                                             );
                                       },
