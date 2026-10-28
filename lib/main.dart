@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -11,6 +13,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/themes/theme_cubit.dart';
 import 'package:punto_venta_app/core/utils/app_logger.dart';
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
+import 'package:punto_venta_app/features/customer_display/data/windows_customer_display_service.dart';
+import 'package:punto_venta_app/features/customer_display/presentation/customer_display_window_bootstrap.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/checkout/checkout_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/payment_methods_bloc.dart';
@@ -18,8 +22,10 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/pdv_config/pdv_co
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_bloc.dart';
 import 'package:punto_venta_app/firebase_options.dart';
+import 'package:window_manager/window_manager.dart';
 
 import 'app/app.dart';
+import 'features/customer_display/presentation/android_secondary_entry.dart';
 import 'features/pos/presentation/bloc/cart/cart_bloc.dart';
 import 'features/pos/presentation/bloc/product/product_bloc.dart';
 import 'features/pos/presentation/bloc/saved_orders/saved_orders_bloc.dart';
@@ -27,9 +33,22 @@ import 'features/pos/presentation/bloc/ui/ui_bloc.dart';
 import 'features/splash/presentation/bloc/splash_bloc.dart';
 import 'injection_container.dart' as di;
 
-void main() {
+/// Entry-point fijo requerido por presentation_displays (Android Presentation).
+@pragma('vm:entry-point')
+void secondaryDisplayMain() {
+  runAndroidSecondaryDisplay();
+}
+
+void main(List<String> args) {
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
+
+    // Subventana Windows: engine separado sin Firebase/DI del cajero.
+    if (await _launchCustomerDisplayIfNeeded(args)) {
+      return;
+    }
+
+    await _configureWindowsFullscreen();
     await AppLogger.init();
     _installGlobalErrorHandlers();
 
@@ -57,6 +76,49 @@ void main() {
   }, (error, stackTrace) {
     AppLogger.error('Error no capturado (zona)', error, stackTrace);
   });
+}
+
+/// Detecta si este isolate es la ventana de cliente (desktop_multi_window 0.3 / legacy).
+Future<bool> _launchCustomerDisplayIfNeeded(List<String> args) async {
+  if (kIsWeb || !Platform.isWindows) return false;
+
+  // Legacy CLI: ['multi_window', windowId, argumentJson]
+  if (args.isNotEmpty && args.first == 'multi_window') {
+    final argumentJson = args.length > 2 ? args[2] : '';
+    await runCustomerDisplayWindow(argumentJson);
+    return true;
+  }
+
+  try {
+    final controller = await WindowController.fromCurrentEngine();
+    final raw = controller.arguments;
+    if (raw.isEmpty) return false;
+    final map = jsonDecode(raw) as Map<String, dynamic>;
+    if (map['type'] != kCustomerDisplayWindowArg) return false;
+    await runCustomerDisplayWindow(raw);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+/// Abre la app en fullscreen real en Windows (sin barra de título ni taskbar).
+Future<void> _configureWindowsFullscreen() async {
+  if (!Platform.isWindows) return;
+
+  await windowManager.ensureInitialized();
+  await windowManager.waitUntilReadyToShow(
+    const WindowOptions(
+      fullScreen: true,
+      skipTaskbar: false,
+      titleBarStyle: TitleBarStyle.hidden,
+    ),
+    () async {
+      await windowManager.setFullScreen(true);
+      await windowManager.show();
+      await windowManager.focus();
+    },
+  );
 }
 
 /// Windows puede matar el proceso al paginar el ejecutable si éste vive en una

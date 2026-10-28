@@ -34,6 +34,7 @@ import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cash_register/cash_register_cubit.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cash_register/cash_register_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/cash_register/closed_register_view.dart';
+import 'package:punto_venta_app/features/customer_display/presentation/customer_display_binder.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 class PosMainPage extends StatefulWidget {
@@ -104,31 +105,33 @@ class _PosMainPageState extends State<PosMainPage> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      child: BlocListener<ClientsBloc, ClientsState>(
-        listenWhen: (previous, current) {
-          if (previous is ClientsLoaded && current is ClientsLoaded) {
-            return previous.selectedClient?.id != current.selectedClient?.id;
-          }
-          if (previous is! ClientsLoaded && current is ClientsLoaded) {
-            return true;
-          }
-          return false;
-        },
-        listener: (context, state) {
-          if (state is ClientsLoaded) {
-            final priceListId = state.selectedClient?.listId;
-            context
-                .read<ProductBloc>()
-                .add(LoadProducts(priceListId: priceListId));
-          }
-        },
-        child: BlocBuilder<AuthBloc, AuthState>(
-          builder: (context, authState) {
-            final user = authState is AuthAuthenticated ? authState.user : null;
+    return CustomerDisplayBinder(
+      child: PopScope(
+        canPop: false,
+        child: BlocListener<ClientsBloc, ClientsState>(
+          listenWhen: (previous, current) {
+            if (previous is ClientsLoaded && current is ClientsLoaded) {
+              return previous.selectedClient?.id != current.selectedClient?.id;
+            }
+            if (previous is! ClientsLoaded && current is ClientsLoaded) {
+              return true;
+            }
+            return false;
+          },
+          listener: (context, state) {
+            if (state is ClientsLoaded) {
+              final priceListId = state.selectedClient?.listId;
+              context
+                  .read<ProductBloc>()
+                  .add(LoadProducts(priceListId: priceListId));
+            }
+          },
+          child: BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, authState) {
+              final user =
+                  authState is AuthAuthenticated ? authState.user : null;
 
-            return Scaffold(
+              return Scaffold(
               resizeToAvoidBottomInset: true,
               body: Row(
                 children: [
@@ -245,6 +248,7 @@ class _PosMainPageState extends State<PosMainPage> {
           },
         ),
       ),
+    ),
     );
   }
 

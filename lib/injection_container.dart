@@ -1,7 +1,14 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:punto_venta_app/core/database/database_helper.dart';
 import 'package:punto_venta_app/core/network/dio_client.dart';
+import 'package:punto_venta_app/features/customer_display/data/android_customer_display_service.dart';
+import 'package:punto_venta_app/features/customer_display/data/noop_customer_display_service.dart';
+import 'package:punto_venta_app/features/customer_display/data/windows_customer_display_service.dart';
+import 'package:punto_venta_app/features/customer_display/domain/customer_display_service.dart';
 import 'package:punto_venta_app/features/app_update/data/datasources/firestore_update_datasource.dart';
 import 'package:punto_venta_app/features/app_update/data/datasources/update_downloader.dart';
 import 'package:punto_venta_app/features/app_update/data/repositories/app_update_repository_impl.dart';
@@ -667,6 +674,17 @@ Future<void> init() async {
   sl.registerLazySingleton(() => sharedPreferences);
   sl.registerLazySingleton<Uuid>(() => const Uuid());
   sl.registerLazySingleton<Dio>(() => DioClient.instance);
+
+  //! Customer display (dual screen)
+  sl.registerLazySingleton<CustomerDisplayService>(() {
+    if (!kIsWeb && Platform.isWindows) {
+      return WindowsCustomerDisplayService(sl());
+    }
+    if (!kIsWeb && Platform.isAndroid) {
+      return AndroidCustomerDisplayService(sl());
+    }
+    return NoOpCustomerDisplayService(sl());
+  });
 
   // HTTP client
   sl.registerLazySingleton(() => http.Client());

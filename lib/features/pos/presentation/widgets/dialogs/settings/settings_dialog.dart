@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/dialogs/logout_dialog.dart';
+import 'package:punto_venta_app/features/customer_display/domain/customer_display_service.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product/product_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product/product_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/pdv_settings_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/printer_settings_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/price_list_selector_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/payment_methods_settings_dialog.dart';
+import 'package:punto_venta_app/injection_container.dart' as di;
 
 class SettingsDialog extends StatefulWidget {
   const SettingsDialog({super.key});
@@ -16,6 +18,37 @@ class SettingsDialog extends StatefulWidget {
 }
 
 class _SettingsDialogState extends State<SettingsDialog> {
+  late bool _customerDisplayEnabled;
+  late final CustomerDisplayService _customerDisplay;
+
+  @override
+  void initState() {
+    super.initState();
+    _customerDisplay = di.sl<CustomerDisplayService>();
+    _customerDisplayEnabled = _customerDisplay.isEnabled;
+  }
+
+  Future<void> _toggleCustomerDisplay(bool enabled) async {
+    setState(() => _customerDisplayEnabled = enabled);
+    await _customerDisplay.setEnabled(enabled);
+    if (enabled) {
+      await _customerDisplay.start();
+    } else {
+      await _customerDisplay.stop();
+    }
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          enabled
+              ? 'Pantalla cliente activada'
+              : 'Pantalla cliente desactivada',
+        ),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ProductBloc, ProductState>(
@@ -82,6 +115,24 @@ class _SettingsDialogState extends State<SettingsDialog> {
                       Navigator.of(context).pop();
                       showPaymentMethodsSettingsDialog(navigatorContext);
                     },
+                  ),
+                  const SizedBox(height: 10),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    secondary: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.teal.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.tv, color: Colors.teal),
+                    ),
+                    title: const Text('Pantalla cliente'),
+                    subtitle: const Text(
+                      'Mostrar carrito y total en la segunda pantalla',
+                    ),
+                    value: _customerDisplayEnabled,
+                    onChanged: _toggleCustomerDisplay,
                   ),
                 ],
               ),
