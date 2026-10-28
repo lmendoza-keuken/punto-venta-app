@@ -139,6 +139,7 @@ import 'features/auth/domain/usecases/login_with_email_usecase.dart';
 import 'features/auth/domain/usecases/select_company_usecase.dart';
 import 'features/auth/domain/usecases/logout_usecase.dart';
 import 'features/pos/data/repositories/product_repository_impl.dart';
+import 'features/pos/data/repositories/product_images_repository.dart';
 
 import 'package:punto_venta_app/features/pos/data/datasources/supplier_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/supplier_remote_datasource.dart';
@@ -221,6 +222,7 @@ Future<void> init() async {
       firestoreUserDataSource: sl(),
       userApiDataSource: sl(),
       priceListLocalDataSource: sl(),
+      productImagesRepository: sl(),
     ),
   );
 
@@ -346,7 +348,8 @@ Future<void> init() async {
   // sl.registerFactory(() => PrinterBloc(printTicketUsecase: sl()));
 
   // Use cases
-  sl.registerLazySingleton(() => GetProductsUsecase(sl()));
+  sl.registerLazySingleton(() => ProductImagesRepository());
+  sl.registerLazySingleton(() => GetProductsUsecase(sl(), sl(), sl()));
   sl.registerLazySingleton(() => ManageCartUsecase());
   sl.registerLazySingleton(() => SaveOrderUsecase(sl()));
   sl.registerLazySingleton(() => LoadSavedOrdersUsecase(sl()));
@@ -370,7 +373,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => FetchPdvConfigUsecase(sl()));
   sl.registerLazySingleton(() => GetCashRegisterStatusUseCase(sl()));
   sl.registerLazySingleton(() => OpenCashRegisterUseCase(sl()));
-  sl.registerLazySingleton(() => CloseCashRegisterUseCase(sl()));
+  sl.registerLazySingleton(() => CloseCashRegisterUseCase(sl(), sl()));
   sl.registerLazySingleton(() => FetchPriceListTypesUsecase(sl()));
   sl.registerLazySingleton(() => FetchBranchesUsecase(sl()));
   sl.registerLazySingleton(() => FetchReturnReasonsUsecase(sl()));

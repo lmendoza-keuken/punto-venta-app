@@ -12,6 +12,7 @@ import 'package:punto_venta_app/features/pos/presentation/widgets/cart/cart_pane
 import 'package:punto_venta_app/features/pos/presentation/widgets/cart/cart_summary_widget.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/cart/confirmation_panel.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/cart/scanner_mode_content_widget.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_dimensions.dart';
 import '../../bloc/cart/cart_bloc.dart';
@@ -44,6 +45,11 @@ class _CartPanelState extends State<CartPanel> {
   void dispose() {
     _scrollController.dispose();
     super.dispose();
+  }
+
+  CartLogEntry? _lastLogEntry(List<CartLogEntry> log) {
+    if (log.isEmpty) return null;
+    return log.last;
   }
 
   @override
@@ -204,7 +210,16 @@ class _CartPanelState extends State<CartPanel> {
                                         // Área principal: logs o mensaje según el modo
                                         Expanded(
                                           child: isBarcodeMode
-                                              ? const ScannerModeContent()
+                                              ? ScannerModeContent(
+                                                  key: ValueKey(
+                                                    _lastLogEntry(state.log)
+                                                            ?.id ??
+                                                        'empty',
+                                                  ),
+                                                  lastEntry: _lastLogEntry(
+                                                    state.log,
+                                                  ),
+                                                )
                                               : Padding(
                                                   padding: const EdgeInsets.all(
                                                       AppDimensions.paddingS),

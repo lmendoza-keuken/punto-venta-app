@@ -1,12 +1,12 @@
 import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
-import 'package:punto_venta_app/features/stock/domain/repositories/stock_repository.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/get_products_usecase.dart';
 
 class GetAllProductsUsecase {
-  final StockRepository repository;
+  final GetProductsUsecase getProductsUsecase;
 
-  GetAllProductsUsecase(this.repository);
+  GetAllProductsUsecase(this.getProductsUsecase);
 
   Future<List<Product>> call() async {
-    return await repository.getAllProducts();
+    return await getProductsUsecase().last;
   }
 }

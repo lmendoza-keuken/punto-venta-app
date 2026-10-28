@@ -5,6 +5,7 @@ import 'package:punto_venta_app/features/auth/data/datasources/google_auth_datas
 import 'package:punto_venta_app/features/auth/data/datasources/firestore_user_datasource.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/user_api_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/price_list_local_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/repositories/product_images_repository.dart';
 import 'package:punto_venta_app/features/auth/data/models/enterprise_model.dart';
 import 'package:punto_venta_app/features/auth/data/models/user_model.dart';
 import 'package:punto_venta_app/features/auth/domain/entities/user.dart';
@@ -16,6 +17,7 @@ class AuthRepositoryImpl implements AuthRepository {
   final FirestoreUserDataSource firestoreUserDataSource;
   final UserApiDataSource userApiDataSource;
   final PriceListLocalDataSource priceListLocalDataSource;
+  final ProductImagesRepository productImagesRepository;
 
   AuthRepositoryImpl({
     required this.localDataSource,
@@ -23,6 +25,7 @@ class AuthRepositoryImpl implements AuthRepository {
     required this.firestoreUserDataSource,
     required this.userApiDataSource,
     required this.priceListLocalDataSource,
+    required this.productImagesRepository,
   });
 
   @override
@@ -151,6 +154,10 @@ class AuthRepositoryImpl implements AuthRepository {
     // await priceListLocalDataSource
     //     .savePriceList(selectedCompany.listPriceId ?? 0);
 
+    // Precarga ProductLinks.json mientras el cajero ingresa credenciales.
+    productImagesRepository
+        .prefetchProductImages(enterpriseModel.id.toString());
+
     return {
       'email': email,
       'companyId': companyId,
@@ -185,6 +192,12 @@ class AuthRepositoryImpl implements AuthRepository {
     await localDataSource.cacheUser(userModel);
     await localDataSource.cacheToken(token);
 
+    // Refuerzo: si el prefetch al elegir empresa no terminó, sigue en background.
+    final enterprise = await localDataSource.getCachedEnterprise();
+    if (enterprise != null) {
+      productImagesRepository.prefetchProductImages(enterprise.id.toString());
+    }
+
     return user;
   }
 
@@ -195,6 +208,7 @@ class AuthRepositoryImpl implements AuthRepository {
     await localDataSource.clearEnterprise();
     await localDataSource.clearEmail();
     await priceListLocalDataSource.clearPriceList();
+    productImagesRepository.clearCache();
     ApiConfig.resetCompanyId();
   }
 

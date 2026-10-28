@@ -59,12 +59,16 @@ dependencies:
   firebase_core: 3.12.0
   firebase_auth: 5.5.0
   cloud_firestore: 5.6.4
+  firebase_storage: 12.4.3
   google_sign_in: 6.2.2
   package_info_plus: 9.0.1
   window_manager: 0.5.2
   desktop_multi_window: 0.3.1
   screen_retriever: 0.2.2
   presentation_displays: 1.0.0
+
+  # Images
+  cached_network_image: 3.3.1
 
  
 

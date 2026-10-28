@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
@@ -47,10 +48,26 @@ class ProductListItem extends StatelessWidget {
                 : AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(AppDimensions.borderRadiusS),
           ),
-          child: Icon(
-            Icons.inventory_2,
-            color: isLowStock ? AppColors.warning : AppColors.primary,
-          ),
+          clipBehavior: Clip.antiAlias,
+          child: product.imageUrl != null && product.imageUrl!.trim().isNotEmpty
+              ? CachedNetworkImage(
+                  imageUrl: product.imageUrl!,
+                  fit: BoxFit.cover,
+                  width: 50,
+                  height: 50,
+                  placeholder: (context, url) => Icon(
+                    Icons.inventory_2,
+                    color: isLowStock ? AppColors.warning : AppColors.primary,
+                  ),
+                  errorWidget: (context, url, error) => Icon(
+                    Icons.inventory_2,
+                    color: isLowStock ? AppColors.warning : AppColors.primary,
+                  ),
+                )
+              : Icon(
+                  Icons.inventory_2,
+                  color: isLowStock ? AppColors.warning : AppColors.primary,
+                ),
         ),
         title: Text(
           product.description,

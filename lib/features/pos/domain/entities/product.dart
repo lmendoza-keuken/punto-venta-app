@@ -18,12 +18,13 @@ class Product extends Equatable {
   final String suspendedForPurchase;
   final String isActive;
   final String categoryDescription;
-  
+
   final double? price; // precio actual (siempre mostrar este)
   final double? regularPrice; // precio anterior (solo mostrar tachado si hay oferta)
   final bool isOnSale; // true si está en oferta, false si no
   final List<BarcodeModel>? barcodes;
   final double? purchasePrice;
+  final String? imageUrl;
 
   const Product({
     required this.id,
@@ -47,13 +48,64 @@ class Product extends Equatable {
     required this.isOnSale,
     this.barcodes,
     this.purchasePrice,
+    this.imageUrl,
   });
 
   String get idStr => id.toString();
   String get name => description.trim();
   String get code => id.toString();
-  String get category => categoryDescription.isNotEmpty ? categoryDescription : categoryId;
-  String? get imageUrl => null;
+  String get category =>
+      categoryDescription.isNotEmpty ? categoryDescription : categoryId;
+
+  Product copyWith({
+    int? id,
+    String? description,
+    int? fractional,
+    int? stock,
+    int? supplierId,
+    double? vat,
+    double? vatPerception,
+    double? internalTax,
+    double? internalTaxRate,
+    String? isWeighted,
+    double? netWeight,
+    String? categoryId,
+    String? suspendedForSale,
+    String? suspendedForPurchase,
+    String? isActive,
+    String? categoryDescription,
+    double? price,
+    double? regularPrice,
+    bool? isOnSale,
+    List<BarcodeModel>? barcodes,
+    double? purchasePrice,
+    String? imageUrl,
+  }) {
+    return Product(
+      id: id ?? this.id,
+      description: description ?? this.description,
+      fractional: fractional ?? this.fractional,
+      stock: stock ?? this.stock,
+      supplierId: supplierId ?? this.supplierId,
+      vat: vat ?? this.vat,
+      vatPerception: vatPerception ?? this.vatPerception,
+      internalTax: internalTax ?? this.internalTax,
+      internalTaxRate: internalTaxRate ?? this.internalTaxRate,
+      isWeighted: isWeighted ?? this.isWeighted,
+      netWeight: netWeight ?? this.netWeight,
+      categoryId: categoryId ?? this.categoryId,
+      suspendedForSale: suspendedForSale ?? this.suspendedForSale,
+      suspendedForPurchase: suspendedForPurchase ?? this.suspendedForPurchase,
+      isActive: isActive ?? this.isActive,
+      categoryDescription: categoryDescription ?? this.categoryDescription,
+      price: price ?? this.price,
+      regularPrice: regularPrice ?? this.regularPrice,
+      isOnSale: isOnSale ?? this.isOnSale,
+      barcodes: barcodes ?? this.barcodes,
+      purchasePrice: purchasePrice ?? this.purchasePrice,
+      imageUrl: imageUrl ?? this.imageUrl,
+    );
+  }
 
   @override
   List<Object?> get props => [
@@ -78,5 +130,6 @@ class Product extends Equatable {
         isOnSale,
         barcodes,
         purchasePrice,
+        imageUrl,
       ];
 }
