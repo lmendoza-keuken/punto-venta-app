@@ -36,6 +36,7 @@ class TicketTemplateResolver {
         // Si no tiene desglose (tax_details=false), precios con IVA
         return clientTaxDetails == false;
       case TicketTemplateType.standard:
+      case TicketTemplateType.dispose:
         return true;
     }
   }
@@ -57,6 +58,7 @@ class TicketTemplateResolver {
         // Operación en blanco: muestra desglose solo si tax_details=true
         return clientTaxDetails == true;
       case TicketTemplateType.standard:
+      case TicketTemplateType.dispose:
         return false;
     }
   }

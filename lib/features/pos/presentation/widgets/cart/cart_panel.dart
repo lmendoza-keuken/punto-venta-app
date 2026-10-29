@@ -54,38 +54,27 @@ class _CartPanelState extends State<CartPanel> {
           listener: (context, checkoutState) {
             if (checkoutState is CheckoutSuccess) {
               final uiState = context.read<UiBloc>().state;
-              final isReturnMode =
-                  uiState is UiLoaded ? uiState.isReturnMode : false;
+              final cartMode =
+                  uiState is UiLoaded ? uiState.cartMode : CartMode.sale;
               final pendingUpdate = checkoutState.pendingUpdate;
 
-              // Imprimir ticket de venta
-              if (!isReturnMode) {
+              // Print venta y descarte; devolución no imprime (comportamiento actual)
+              if (cartMode != CartMode.returnMode) {
                 context.read<PrinterBloc>().add(PrintTicket(
                       printJob: checkoutState.printJob,
                     ));
               }
 
-              // Limpiar el carrito y cerrar el panel de confirmación
               context.read<CartBloc>().add(ClearCart());
               context.read<CheckoutBloc>().add(const ResetCheckout());
-              // Resetear el cliente por defecto
               context.read<ClientsBloc>().add(ResetToDefaultClientEvent());
 
-              if (isReturnMode) {
-                context.read<UiBloc>().add(ToggleReturnMode());
+              if (cartMode != CartMode.sale) {
+                context.read<UiBloc>().add(const SetCartMode(CartMode.sale));
               }
               context.read<UiBloc>().add(CloseConfirmationPanel());
 
-              // ScaffoldMessenger.of(context).showSnackBar(
-              //   SnackBar(
-              //     content: Text(isReturnMode
-              //         ? 'Devolución procesada exitosamente'
-              //         : 'Venta procesada exitosamente'),
-              //     backgroundColor: AppColors.success,
-              //   ),
-              // );
-
-              if (!isReturnMode &&
+              if (cartMode == CartMode.sale &&
                   pendingUpdate != null &&
                   pendingUpdate.updateAvailable &&
                   pendingUpdate.release != null) {
@@ -138,8 +127,8 @@ class _CartPanelState extends State<CartPanel> {
         builder: (context, uiState) {
           final isBarcodeMode =
               uiState is UiLoaded ? uiState.isBarcodeSearchEnabled : true;
-          final isReturnMode =
-              uiState is UiLoaded ? uiState.isReturnMode : false;
+          final cartMode =
+              uiState is UiLoaded ? uiState.cartMode : CartMode.sale;
           final showConfirmation =
               uiState is UiLoaded ? uiState.showConfirmationPanel : false;
 
@@ -239,7 +228,7 @@ class _CartPanelState extends State<CartPanel> {
                                               subtotal: subtotal,
                                               totalIva: totalIva,
                                               totalConIva: totalConIva,
-                                              isReturnMode: isReturnMode,
+                                              cartMode: cartMode,
                                               isConfirmEnabled:
                                                   isConfirmEnabled,
                                               onConfirm: () {

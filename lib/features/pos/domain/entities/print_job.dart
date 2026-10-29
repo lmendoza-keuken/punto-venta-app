@@ -36,6 +36,7 @@ class PrintJob {
   final String branchNumber;
   final int? branchId;
   final String? description;
+  final String? disposeReason;
   final TicketTemplateType templateType;
   final bool isCopy;
   final bool isCreditNote;
@@ -72,6 +73,7 @@ class PrintJob {
     required this.branchNumber,
     this.branchId,
     this.description,
+    this.disposeReason,
     this.templateType = TicketTemplateType.standard,
     this.isCopy = false,
     this.isCreditNote = false,

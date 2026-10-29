@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_state.dart';
 
 abstract class UiEvent extends Equatable {
   const UiEvent();
@@ -24,7 +25,14 @@ class ResetQuantity extends UiEvent {}
 
 class ResetUiState extends UiEvent {}
 
-class ToggleReturnMode extends UiEvent {}
+class SetCartMode extends UiEvent {
+  final CartMode mode;
+
+  const SetCartMode(this.mode);
+
+  @override
+  List<Object> get props => [mode];
+}
 
 class OpenConfirmationPanel extends UiEvent {}
 

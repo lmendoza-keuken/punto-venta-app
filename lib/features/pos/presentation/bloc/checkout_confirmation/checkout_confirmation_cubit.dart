@@ -4,12 +4,14 @@ import 'package:punto_venta_app/features/pos/domain/entities/cart_item.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/payment_method.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_return_reasons_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/fetch_dispose_reasons_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/calculate_order_taxes_usecase.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/checkout/checkout_event.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/cart/confirmation/confirmation_helpers.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/pdv_config.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/payment_method_config.dart';
@@ -22,6 +24,7 @@ import 'checkout_confirmation_state.dart';
 
 class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
   final FetchReturnReasonsUsecase fetchReturnReasonsUsecase;
+  final FetchDisposeReasonsUsecase fetchDisposeReasonsUsecase;
   final CalculateOrderTaxesUseCase calculateOrderTaxesUseCase;
   final CartBloc cartBloc;
   final ClientsBloc clientsBloc;
@@ -32,10 +35,11 @@ class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
   List<Branch> _allBranches = [];
   PaymentMethodsConfig? _paymentMethodsConfig;
   PdvConfig? _pdvConfig;
-  bool _isReturnMode = false;
+  CartMode _cartMode = CartMode.sale;
 
   CheckoutConfirmationCubit({
     required this.fetchReturnReasonsUsecase,
+    required this.fetchDisposeReasonsUsecase,
     required this.calculateOrderTaxesUseCase,
     required this.cartBloc,
     required this.clientsBloc,
@@ -49,15 +53,29 @@ class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
     });
   }
 
-  Future<void> load(PaymentMethod? defaultPaymentMethod, {bool isReturnMode = false}) async {
-    _isReturnMode = isReturnMode;
+  Future<void> load(
+    PaymentMethod? defaultPaymentMethod, {
+    CartMode cartMode = CartMode.sale,
+  }) async {
+    _cartMode = cartMode;
     emit(state.copyWith(isLoading: true, errorMessage: null));
     try {
-      // 1. Fetch return reasons
-      final reasons = await fetchReturnReasonsUsecase();
-      final defaultReasonId = reasons.isNotEmpty ? reasons.first.id : null;
+      if (cartMode == CartMode.returnMode) {
+        final reasons = await fetchReturnReasonsUsecase();
+        emit(state.copyWith(
+          returnReasons: reasons,
+          selectedReturnReasonId:
+              reasons.isNotEmpty ? reasons.first.id : null,
+        ));
+      } else if (cartMode == CartMode.disposeMode) {
+        final reasons = await fetchDisposeReasonsUsecase();
+        emit(state.copyWith(
+          disposeReasons: reasons,
+          selectedDisposeReasonId:
+              reasons.isNotEmpty ? reasons.first.id : null,
+        ));
+      }
 
-      // Cargar datos de sucursales y configuraciones de métodos de pago
       _allBranches = await di.sl<FetchBranchesUsecase>()();
       _paymentMethodsConfig = await di.sl<FetchPaymentMethodsConfigUsecase>()();
       try {
@@ -66,12 +84,6 @@ class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
         _pdvConfig = await di.sl<PdvLocalDataSource>().getPdvConfig();
       }
 
-      emit(state.copyWith(
-        returnReasons: reasons,
-        selectedReturnReasonId: defaultReasonId,
-      ));
-
-      // 2. Calculate taxes using injected UseCase
       await _calculateTaxes(cartBloc.state, clientsBloc.state,
           defaultPaymentMethod: defaultPaymentMethod);
       _updateActiveBranch();
@@ -85,6 +97,10 @@ class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
 
   void selectReturnReason(int reasonId) {
     emit(state.copyWith(selectedReturnReasonId: reasonId));
+  }
+
+  void selectDisposeReason(int reasonId) {
+    emit(state.copyWith(selectedDisposeReasonId: reasonId));
   }
 
   void initializePayments(
@@ -429,7 +445,7 @@ class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
     List<Branch> allowedBranches = [];
 
     // Si es devolución o no hay métodos de pago seleccionados, permitimos seleccionar todas las sucursales, seleccionando por defecto la del PDV
-    if (_isReturnMode || payments.isEmpty) {
+    if (_cartMode != CartMode.sale || payments.isEmpty) {
       allowedBranches = List<Branch>.from(_allBranches);
       if (state.activeBranchId != null &&
           allowedBranches.any((b) => b.id == state.activeBranchId)) {
@@ -581,6 +597,26 @@ class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
       items: items,
       logItems: logItems,
       branchId: state.activeBranchId,
+    );
+  }
+
+  ConfirmStockDispose buildConfirmStockDisposeEvent() {
+    final cartState = cartBloc.state;
+    final items =
+        cartState is CartLoaded ? cartState.items : const <CartItem>[];
+    final logItems =
+        cartState is CartLoaded ? cartState.log : const <CartLogEntry>[];
+    final reasonId = state.selectedDisposeReasonId ?? -1;
+    final matched =
+        state.disposeReasons.where((r) => r.id == reasonId).toList();
+    final reasonDescription =
+        matched.isEmpty ? '' : matched.first.description;
+
+    return ConfirmStockDispose(
+      reasonId: reasonId,
+      reasonDescription: reasonDescription,
+      items: items,
+      logItems: logItems,
     );
   }
 

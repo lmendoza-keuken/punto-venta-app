@@ -15,17 +15,28 @@ import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/refund
 class CartPanelHeader extends StatelessWidget {
   const CartPanelHeader({super.key});
 
-  void _changeMode(BuildContext context, bool toReturnMode) {
-    context.read<UiBloc>().add(ToggleReturnMode());
+  void _changeMode(BuildContext context, CartMode mode) {
+    context.read<UiBloc>().add(SetCartMode(mode));
     context.read<CartBloc>().add(ClearCart());
   }
 
-  void _showChangeModeConfirmation(BuildContext context, bool toReturnMode) {
+  String _modeLabel(CartMode mode) {
+    switch (mode) {
+      case CartMode.sale:
+        return 'Venta';
+      case CartMode.returnMode:
+        return 'Devolución';
+      case CartMode.disposeMode:
+        return 'Descarte';
+    }
+  }
+
+  void _showChangeModeConfirmation(BuildContext context, CartMode toMode) {
     final cartState = context.read<CartBloc>().state;
     final hasItems = cartState is CartLoaded && cartState.items.isNotEmpty;
 
     if (!hasItems) {
-      _changeMode(context, toReturnMode);
+      _changeMode(context, toMode);
       return;
     }
 
@@ -35,7 +46,7 @@ class CartPanelHeader extends StatelessWidget {
       builder: (dialogContext) => AlertDialog(
         title: const Text('Limpiar Pedido'),
         content: Text(
-          'Al cambiar a modo ${toReturnMode ? "Devolución" : "Venta"}, '
+          'Al cambiar a modo ${_modeLabel(toMode)}, '
           'se limpiará el pedido actual. ¿Desea continuar?',
         ),
         actions: [
@@ -46,7 +57,7 @@ class CartPanelHeader extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(dialogContext);
-              _changeMode(context, toReturnMode);
+              _changeMode(context, toMode);
             },
             child: const Text('Aceptar'),
           ),
@@ -79,6 +90,28 @@ class CartPanelHeader extends StatelessWidget {
     );
   }
 
+  Color _modeColor(CartMode mode) {
+    switch (mode) {
+      case CartMode.sale:
+        return AppColors.primary;
+      case CartMode.returnMode:
+        return AppColors.warning;
+      case CartMode.disposeMode:
+        return Colors.brown.shade600;
+    }
+  }
+
+  IconData _modeIcon(CartMode mode) {
+    switch (mode) {
+      case CartMode.sale:
+        return Icons.shopping_cart_outlined;
+      case CartMode.returnMode:
+        return Icons.assignment_return_outlined;
+      case CartMode.disposeMode:
+        return Icons.delete_forever_outlined;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -102,15 +135,15 @@ class CartPanelHeader extends StatelessWidget {
 
           return BlocBuilder<UiBloc, UiState>(
             builder: (context, uiState) {
-              final isReturnMode =
-                  uiState is UiLoaded ? uiState.isReturnMode : false;
+              final cartMode =
+                  uiState is UiLoaded ? uiState.cartMode : CartMode.sale;
+              final modeColor = _modeColor(cartMode);
 
               return Column(
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Lado izquierdo: Título y etiqueta de Modo
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
@@ -126,47 +159,43 @@ class CartPanelHeader extends StatelessWidget {
                           Row(
                             children: [
                               Icon(
-                                isReturnMode
-                                    ? Icons.assignment_return_outlined
-                                    : Icons.shopping_cart_outlined,
+                                _modeIcon(cartMode),
                                 size: 14,
-                                color: isReturnMode
-                                    ? AppColors.warning
-                                    : AppColors.primary,
+                                color: modeColor,
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                isReturnMode ? 'Devolución' : 'Venta',
+                                _modeLabel(cartMode),
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
-                                  color: isReturnMode
-                                      ? AppColors.warning
-                                      : AppColors.primary,
+                                  color: modeColor,
                                 ),
                               ),
                             ],
                           ),
                         ],
                       ),
-
-                      // Lado derecho: Total y Hamburguesa (Menú)
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // Total
-
                           const SizedBox(width: 12),
-                          // Menú Hamburguesa
                           PopupMenuButton<String>(
                             icon: const Icon(Icons.menu, color: Colors.black87),
                             tooltip: 'Cambiar modo / vaciar / reintegro',
                             onSelected: (value) {
-                              if (value == 'venta' && isReturnMode) {
-                                _showChangeModeConfirmation(context, false);
+                              if (value == 'venta' &&
+                                  cartMode != CartMode.sale) {
+                                _showChangeModeConfirmation(
+                                    context, CartMode.sale);
                               } else if (value == 'devolucion' &&
-                                  !isReturnMode) {
-                                _showChangeModeConfirmation(context, true);
+                                  cartMode != CartMode.returnMode) {
+                                _showChangeModeConfirmation(
+                                    context, CartMode.returnMode);
+                              } else if (value == 'descarte' &&
+                                  cartMode != CartMode.disposeMode) {
+                                _showChangeModeConfirmation(
+                                    context, CartMode.disposeMode);
                               } else if (value == 'vaciar') {
                                 _showClearCartConfirmation(context);
                               } else if (value == 'reintegro') {
@@ -175,67 +204,26 @@ class CartPanelHeader extends StatelessWidget {
                             },
                             itemBuilder: (BuildContext context) =>
                                 <PopupMenuEntry<String>>[
-                              PopupMenuItem<String>(
+                              _modeMenuItem(
                                 value: 'venta',
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.shopping_cart_outlined,
-                                      color: !isReturnMode
-                                          ? AppColors.primary
-                                          : Colors.grey,
-                                      size: 20,
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Text(
-                                      'Venta',
-                                      style: TextStyle(
-                                        fontWeight: !isReturnMode
-                                            ? FontWeight.bold
-                                            : FontWeight.normal,
-                                        color: !isReturnMode
-                                            ? AppColors.primary
-                                            : Colors.black87,
-                                      ),
-                                    ),
-                                    if (!isReturnMode) ...[
-                                      const Spacer(),
-                                      const Icon(Icons.check,
-                                          color: AppColors.primary, size: 18),
-                                    ],
-                                  ],
-                                ),
+                                label: 'Venta',
+                                icon: Icons.shopping_cart_outlined,
+                                selected: cartMode == CartMode.sale,
+                                selectedColor: AppColors.primary,
                               ),
-                              PopupMenuItem<String>(
+                              _modeMenuItem(
                                 value: 'devolucion',
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.assignment_return_outlined,
-                                      color: isReturnMode
-                                          ? AppColors.warning
-                                          : Colors.grey,
-                                      size: 20,
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Text(
-                                      'Devolución',
-                                      style: TextStyle(
-                                        fontWeight: isReturnMode
-                                            ? FontWeight.bold
-                                            : FontWeight.normal,
-                                        color: isReturnMode
-                                            ? AppColors.warning
-                                            : Colors.black87,
-                                      ),
-                                    ),
-                                    if (isReturnMode) ...[
-                                      const Spacer(),
-                                      const Icon(Icons.check,
-                                          color: AppColors.warning, size: 18),
-                                    ],
-                                  ],
-                                ),
+                                label: 'Devolución',
+                                icon: Icons.assignment_return_outlined,
+                                selected: cartMode == CartMode.returnMode,
+                                selectedColor: AppColors.warning,
+                              ),
+                              _modeMenuItem(
+                                value: 'descarte',
+                                label: 'Descarte (mal estado)',
+                                icon: Icons.delete_forever_outlined,
+                                selected: cartMode == CartMode.disposeMode,
+                                selectedColor: Colors.brown.shade600,
                               ),
                               const PopupMenuItem<String>(
                                 value: 'reintegro',
@@ -291,10 +279,10 @@ class CartPanelHeader extends StatelessWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.all(AppDimensions.paddingS),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
+                      color: modeColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.3),
+                        color: modeColor.withValues(alpha: 0.3),
                       ),
                     ),
                     child: FittedBox(
@@ -305,7 +293,7 @@ class CartPanelHeader extends StatelessWidget {
                         style:
                             Theme.of(context).textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: AppColors.primary,
+                                  color: modeColor,
                                   fontSize: 36,
                                 ),
                       ),
@@ -316,6 +304,39 @@ class CartPanelHeader extends StatelessWidget {
             },
           );
         },
+      ),
+    );
+  }
+
+  PopupMenuItem<String> _modeMenuItem({
+    required String value,
+    required String label,
+    required IconData icon,
+    required bool selected,
+    required Color selectedColor,
+  }) {
+    return PopupMenuItem<String>(
+      value: value,
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            color: selected ? selectedColor : Colors.grey,
+            size: 20,
+          ),
+          const SizedBox(width: 10),
+          Text(
+            label,
+            style: TextStyle(
+              fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+              color: selected ? selectedColor : Colors.black87,
+            ),
+          ),
+          if (selected) ...[
+            const Spacer(),
+            Icon(Icons.check, color: selectedColor, size: 18),
+          ],
+        ],
       ),
     );
   }

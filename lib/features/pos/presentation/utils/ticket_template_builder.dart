@@ -1,6 +1,7 @@
 import 'package:punto_venta_app/core/constants/ticket_template_types.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/templates/base_ticket_template.dart';
+import 'package:punto_venta_app/features/pos/presentation/utils/templates/dispose_ticket_template.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/templates/standard_ticket_template.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/templates/black_market_ticket_template.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/templates/white_market_ticket_template.dart';
@@ -29,6 +30,8 @@ class TicketTemplateBuilder {
         return BlackMarketTicketTemplate(printJob: printJob);
       case TicketTemplateType.whiteMarket:
         return WhiteMarketTicketTemplate(printJob: printJob);
+      case TicketTemplateType.dispose:
+        return DisposeTicketTemplate(printJob: printJob);
     }
   }
 }
