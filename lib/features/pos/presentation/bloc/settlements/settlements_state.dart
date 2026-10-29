@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:punto_venta_app/features/pos/data/models/pending_canceled_items_response_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/pending_collectors_detail_response_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/pending_collectors_response_model.dart';
+import 'package:punto_venta_app/features/pos/data/models/pending_disposed_items_response_model.dart';
 
 abstract class SettlementsState extends Equatable {
   const SettlementsState();
@@ -39,6 +40,15 @@ class PendingCanceledItemsLoaded extends SettlementsState {
 
   @override
   List<Object> get props => [canceledTickets];
+}
+
+class PendingDisposedItemsLoaded extends SettlementsState {
+  final List<PendingDisposedGroupModel> disposedGroups;
+
+  const PendingDisposedItemsLoaded(this.disposedGroups);
+
+  @override
+  List<Object> get props => [disposedGroups];
 }
 
 class SettlementsError extends SettlementsState {

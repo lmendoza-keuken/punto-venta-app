@@ -12,6 +12,7 @@ class PendingCollectorsDetailResponseModel
     @JsonKey(name: 'invoice_count') int? invoiceCount,
     @JsonKey(name: 'nc_count') int? creditNoteCount,
     @JsonKey(name: 'canceled_items_count') int? canceledItemsCount,
+    @JsonKey(name: 'disposed_items_count') int? disposedItemsCount,
     @JsonKey(name: 'payments_breakdown')
     List<PaymentBreakdown>? paymentsBreakdown,
     @JsonKey(name: 'invoice_total') double? invoiceTotal,

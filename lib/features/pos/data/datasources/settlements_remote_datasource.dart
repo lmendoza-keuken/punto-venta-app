@@ -4,6 +4,7 @@ import 'package:punto_venta_app/core/network/error_handler.dart';
 import 'package:punto_venta_app/features/pos/data/models/pending_canceled_items_response_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/pending_collectors_response_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/pending_collectors_detail_response_model.dart';
+import 'package:punto_venta_app/features/pos/data/models/pending_disposed_items_response_model.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 part 'settlements_remote_datasource.g.dart';
@@ -27,6 +28,12 @@ abstract class SettlementsService {
     @Path('collector_id') required String collectorId,
     @Query('date') required String date,
   });
+
+  @GET('/settlements/pending/{collector_id}/disposed_items')
+  Future<List<PendingDisposedGroupModel>> getPendingDisposedItems({
+    @Path('collector_id') required String collectorId,
+    @Query('date') required String date,
+  });
 }
 
 abstract class SettlementsRemoteDataSource {
@@ -35,6 +42,8 @@ abstract class SettlementsRemoteDataSource {
   Future<PendingCollectorsDetailResponseModel> getPendingCollectorDetail(
       {required String collectorId, required String date});
   Future<List<PendingCanceledTicketModel>> getPendingCanceledItems(
+      {required String collectorId, required String date});
+  Future<List<PendingDisposedGroupModel>> getPendingDisposedItems(
       {required String collectorId, required String date});
 }
 
@@ -78,6 +87,20 @@ class SettlementsRemoteDataSourceImpl implements SettlementsRemoteDataSource {
     } catch (e) {
       throw Exception(ErrorHandler.handleError(e,
           defaultMessage: 'Error al obtener artículos cancelados'));
+    }
+  }
+
+  @override
+  Future<List<PendingDisposedGroupModel>> getPendingDisposedItems(
+      {required String collectorId, required String date}) async {
+    try {
+      return await _apiService.getPendingDisposedItems(
+        collectorId: collectorId,
+        date: date,
+      );
+    } catch (e) {
+      throw Exception(ErrorHandler.handleError(e,
+          defaultMessage: 'Error al obtener artículos descartados'));
     }
   }
 }
