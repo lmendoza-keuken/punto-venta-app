@@ -45,20 +45,20 @@ class DailySummaryView extends StatefulWidget {
 }
 
 class _DailySummaryViewState extends State<DailySummaryView> {
-  bool _allowNonAdminSalesSummary = false;
+  bool _showTotalSaleToCashier = false;
 
   @override
   void initState() {
     super.initState();
-    _loadAllowNonAdminSalesSummary();
+    _loadShowTotalSaleToCashier();
   }
 
-  Future<void> _loadAllowNonAdminSalesSummary() async {
+  Future<void> _loadShowTotalSaleToCashier() async {
     final config = await di.sl<PdvLocalDataSource>().getPdvConfig();
     if (!mounted) return;
     setState(() {
-      _allowNonAdminSalesSummary =
-          config?.allowNonAdminSalesSummary ?? false;
+      _showTotalSaleToCashier =
+          config?.showTotalSaleToCashier ?? false;
     });
   }
 
@@ -66,7 +66,7 @@ class _DailySummaryViewState extends State<DailySummaryView> {
     final authState = context.read<AuthBloc>().state;
     final isAdmin = authState is AuthAuthenticated &&
         authState.user.role == UserRole.admin;
-    return isAdmin || _allowNonAdminSalesSummary;
+    return isAdmin || _showTotalSaleToCashier;
   }
 
   @override

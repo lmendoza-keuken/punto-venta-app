@@ -38,8 +38,8 @@ class PdvConfigResponseModel with _$PdvConfigResponseModel {
     @JsonKey(name: 'branch_id') int? branchId,
     @JsonKey(name: 'credit_note_days_limit') int? creditNoteDaysLimit,
     @JsonKey(name: 'check_update_period') int? checkUpdatePeriod,
-    @JsonKey(name: 'allow_non_admin_sales_summary')
-    bool? allowNonAdminSalesSummary,
+    @JsonKey(name: 'show_total_sale_to_cashier')
+    bool? showTotalSaleToCashier,
     @JsonKey(name: 'id') int? id,
     @JsonKey(name: 'non_default_client_branch_id') int? nonDefaultClientBranchId,
   }) = _PdvConfigResponseModel;

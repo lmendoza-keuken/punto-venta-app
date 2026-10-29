@@ -66,7 +66,7 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
   PdvConfig? _pdvConfig;
   int? _creditNoteDaysLimit;
   int? _checkUpdatePeriod;
-  bool _allowNonAdminSalesSummary = false;
+  bool _showTotalSaleToCashier = false;
 
   @override
   void initState() {
@@ -144,8 +144,8 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
     _checkUpdatePeriod = config.checkUpdatePeriod;
     _checkUpdatePeriodController.text =
         config.checkUpdatePeriod?.toString() ?? '';
-    _allowNonAdminSalesSummary =
-        config.allowNonAdminSalesSummary ?? false;
+    _showTotalSaleToCashier =
+        config.showTotalSaleToCashier ?? false;
 
     _syncSelectedClientFromConfig();
   }
@@ -465,15 +465,15 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                               SwitchListTile(
                                 contentPadding: EdgeInsets.zero,
                                 title: const Text(
-                                  'Permitir resumen de ventas a no-admin',
+                                  'Mostrar total de venta al cajero',
                                 ),
                                 subtitle: const Text(
                                   'Sin esto, VEN/CAJ ven tickets pero no los totales del resumen',
                                 ),
-                                value: _allowNonAdminSalesSummary,
+                                value: _showTotalSaleToCashier,
                                 onChanged: (value) {
                                   setState(() {
-                                    _allowNonAdminSalesSummary = value;
+                                    _showTotalSaleToCashier = value;
                                   });
                                 },
                               ),
@@ -525,8 +525,8 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                           creditNoteDaysLimit: _creditNoteDaysLimit,
                           checkUpdatePeriod: _checkUpdatePeriod ??
                               _pdvConfig?.checkUpdatePeriod,
-                          allowNonAdminSalesSummary:
-                              _allowNonAdminSalesSummary,
+                          showTotalSaleToCashier:
+                              _showTotalSaleToCashier,
                         );
 
                         context

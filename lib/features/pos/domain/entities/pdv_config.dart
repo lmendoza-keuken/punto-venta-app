@@ -6,7 +6,7 @@ class PdvConfig {
   final bool? offlineMode;
   final int? creditNoteDaysLimit;
   final int? checkUpdatePeriod;
-  final bool? allowNonAdminSalesSummary;
+  final bool? showTotalSaleToCashier;
 
   const PdvConfig({
     this.pdvId,
@@ -16,7 +16,7 @@ class PdvConfig {
     this.offlineMode,
     this.creditNoteDaysLimit,
     this.checkUpdatePeriod,
-    this.allowNonAdminSalesSummary,
+    this.showTotalSaleToCashier,
   });
 
   PdvConfig copyWith({
@@ -27,7 +27,7 @@ class PdvConfig {
     bool? offlineMode,
     int? creditNoteDaysLimit,
     int? checkUpdatePeriod,
-    bool? allowNonAdminSalesSummary,
+    bool? showTotalSaleToCashier,
   }) {
     return PdvConfig(
       pdvId: pdvId ?? this.pdvId,
@@ -38,8 +38,8 @@ class PdvConfig {
       offlineMode: offlineMode ?? this.offlineMode,
       creditNoteDaysLimit: creditNoteDaysLimit ?? this.creditNoteDaysLimit,
       checkUpdatePeriod: checkUpdatePeriod ?? this.checkUpdatePeriod,
-      allowNonAdminSalesSummary:
-          allowNonAdminSalesSummary ?? this.allowNonAdminSalesSummary,
+      showTotalSaleToCashier:
+          showTotalSaleToCashier ?? this.showTotalSaleToCashier,
     );
   }
 
@@ -51,7 +51,7 @@ class PdvConfig {
         'offline_mode': offlineMode,
         'credit_note_days_limit': creditNoteDaysLimit,
         'check_update_period': checkUpdatePeriod,
-        'allow_non_admin_sales_summary': allowNonAdminSalesSummary,
+        'show_total_sale_to_cashier': showTotalSaleToCashier,
       };
 
   Map<String, dynamic> toUpdateJson() {
@@ -67,8 +67,8 @@ class PdvConfig {
     if (checkUpdatePeriod != null) {
       data['check_update_period'] = checkUpdatePeriod;
     }
-    if (allowNonAdminSalesSummary != null) {
-      data['allow_non_admin_sales_summary'] = allowNonAdminSalesSummary;
+    if (showTotalSaleToCashier != null) {
+      data['show_total_sale_to_cashier'] = showTotalSaleToCashier;
     }
     return data;
   }
@@ -88,8 +88,8 @@ class PdvConfig {
         offlineMode: json['offline_mode'] as bool?,
         creditNoteDaysLimit: json['credit_note_days_limit'] as int?,
         checkUpdatePeriod: json['check_update_period'] as int?,
-        allowNonAdminSalesSummary:
-            json['allow_non_admin_sales_summary'] as bool?,
+        showTotalSaleToCashier:
+            json['show_total_sale_to_cashier'] as bool?,
       );
 }
 
