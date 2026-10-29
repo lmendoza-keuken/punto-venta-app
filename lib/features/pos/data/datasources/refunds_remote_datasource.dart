@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:retrofit/retrofit.dart';
+import 'package:punto_venta_app/core/network/base_url_failover.dart';
 import 'package:punto_venta_app/core/network/error_handler.dart';
 import 'package:punto_venta_app/features/pos/data/models/refund_reason_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/cash_refund_request_model.dart';
@@ -45,9 +46,11 @@ class RefundsRemoteDataSourceImpl implements RefundsRemoteDataSource {
   Future<CashRefundResponseModel> processCashRefund(
       CashRefundRequestModel request) async {
     try {
-      final dynamic data =
-          await _apiService.processCashRefund(request.toJson());
-      return CashRefundResponseModel.fromJson(data as Map<String, dynamic>);
+      return await BaseUrlFailover.runWithFailover(() async {
+        final dynamic data =
+            await _apiService.processCashRefund(request.toJson());
+        return CashRefundResponseModel.fromJson(data as Map<String, dynamic>);
+      });
     } catch (e, stack) {
       debugPrint('[RefundsRemoteDataSource] Exception: $e');
       debugPrint('[RefundsRemoteDataSource] StackTrace: $stack');

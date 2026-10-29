@@ -129,19 +129,29 @@ class AuthRepositoryImpl implements AuthRepository {
     AppLogger.info(
       'selectCompany email=$email companyId=$companyId name=${selectedCompany.name}',
     );
-    // Obtener PdvBaseUrl desde enterprisesLicense
-    final pdvBaseUrl = await firestoreUserDataSource.getEnterpriseLicenseBaseUrl(selectedCompany.id);
-    AppLogger.info('selectCompany pdvBaseUrl=$pdvBaseUrl cachedBaseUrl=${selectedCompany.baseUrl}');
+    // Obtener PdvBaseUrls desde enterprisesLicense
+    final pdvUrls = await firestoreUserDataSource
+        .getEnterpriseLicenseBaseUrls(selectedCompany.id);
+    final urls = pdvUrls.isNotEmpty
+        ? pdvUrls
+        : [
+            if (selectedCompany.baseUrl != null &&
+                selectedCompany.baseUrl!.trim().isNotEmpty)
+              selectedCompany.baseUrl!.trim(),
+          ];
+    AppLogger.info(
+        'selectCompany pdvUrls=$pdvUrls companyBaseUrl=${selectedCompany.baseUrl}');
 
     ApiConfig.updateCompanyConfig(
       selectedCompany.id.toString(),
-      pdvBaseUrl ?? selectedCompany.baseUrl,
+      urls,
     );
 
     final enterpriseModel = EnterpriseModel(
       id: selectedCompany.id,
       name: selectedCompany.name,
-      baseUrl: pdvBaseUrl ?? selectedCompany.baseUrl,
+      baseUrl: ApiConfig.activeBaseUrl,
+      baseUrls: List<String>.from(ApiConfig.baseUrls),
       listPriceId: selectedCompany.listPriceId,
     );
 

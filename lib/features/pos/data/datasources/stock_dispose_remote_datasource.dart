@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
+import 'package:punto_venta_app/core/network/base_url_failover.dart';
 import 'package:punto_venta_app/core/network/error_handler.dart';
 import 'package:punto_venta_app/features/pos/data/models/dispose_reason_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/stock_dispose_request_model.dart';
@@ -45,7 +46,9 @@ class StockDisposeRemoteDataSourceImpl implements StockDisposeRemoteDataSource {
   Future<StockDisposeResponseModel> disposeStock(
       StockDisposeRequestModel request) async {
     try {
-      return await _apiService.disposeStock(request.toJson());
+      return await BaseUrlFailover.runWithFailover(
+        () => _apiService.disposeStock(request.toJson()),
+      );
     } catch (e) {
       throw Exception(ErrorHandler.handleError(e,
           defaultMessage: 'Error al procesar el descarte de stock'));

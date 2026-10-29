@@ -47,7 +47,7 @@ class Company {
 
 abstract class FirestoreUserDataSource {
   Future<List<Company>> getCompaniesByEmail(String email);
-  Future<String?> getEnterpriseLicenseBaseUrl(int enterpriseId);
+  Future<List<String>> getEnterpriseLicenseBaseUrls(int enterpriseId);
 }
 
 class FirestoreUserDataSourceImpl implements FirestoreUserDataSource {
@@ -120,10 +120,11 @@ class FirestoreUserDataSourceImpl implements FirestoreUserDataSource {
   }
 
   @override
-  Future<String?> getEnterpriseLicenseBaseUrl(int enterpriseId) async {
-    AppLogger.info('Firestore getEnterpriseLicenseBaseUrl id=$enterpriseId isWindows=$_isWindows');
+  Future<List<String>> getEnterpriseLicenseBaseUrls(int enterpriseId) async {
+    AppLogger.info(
+        'Firestore getEnterpriseLicenseBaseUrls id=$enterpriseId isWindows=$_isWindows');
     if (_isWindows) {
-      return _getEnterpriseLicenseBaseUrlRest(enterpriseId);
+      return _getEnterpriseLicenseBaseUrlsRest(enterpriseId);
     }
 
     try {
@@ -134,15 +135,42 @@ class FirestoreUserDataSourceImpl implements FirestoreUserDataSource {
           .timeout(_queryTimeout);
 
       if (!licenseDoc.exists) {
-        return null;
+        return [];
       }
 
-      final data = licenseDoc.data();
-      return data?['pointOfSaleUrl']?.toString();
+      return _extractBaseUrls(licenseDoc.data());
     } catch (e, stackTrace) {
-      AppLogger.error('Error al obtener PdvBaseUrl desde Firestore Nativo, intentando REST...', e, stackTrace);
-      return _getEnterpriseLicenseBaseUrlRest(enterpriseId);
+      AppLogger.error(
+          'Error al obtener PdvBaseUrls desde Firestore Nativo, intentando REST...',
+          e,
+          stackTrace);
+      return _getEnterpriseLicenseBaseUrlsRest(enterpriseId);
     }
+  }
+
+  /// Prefer `pointOfSaleUrls` array; fall back to legacy `pointOfSaleUrl` string.
+  static List<String> _extractBaseUrls(Map<String, dynamic>? data) {
+    if (data == null) return [];
+
+    final urls = <String>[];
+    final rawList = data['pointOfSaleUrls'];
+    if (rawList is List) {
+      for (final item in rawList) {
+        final url = item?.toString().trim() ?? '';
+        if (url.isNotEmpty && !urls.contains(url)) {
+          urls.add(url);
+        }
+      }
+    }
+
+    if (urls.isEmpty) {
+      final legacy = data['pointOfSaleUrl']?.toString().trim() ?? '';
+      if (legacy.isNotEmpty) {
+        urls.add(legacy);
+      }
+    }
+
+    return urls;
   }
 
   /// Obtiene un token anónimo REST de Firebase Auth para llamadas REST a Firestore.
@@ -183,8 +211,20 @@ class FirestoreUserDataSourceImpl implements FirestoreUserDataSource {
           result[key] = valMap['booleanValue'];
         } else if (valMap.containsKey('nullValue')) {
           result[key] = null;
+        } else if (valMap.containsKey('arrayValue')) {
+          final values =
+              (valMap['arrayValue'] as Map<String, dynamic>)['values']
+                      as List<dynamic>? ??
+                  [];
+          result[key] = values.map((item) {
+            if (item is Map<String, dynamic>) {
+              return _parseFirestoreRestFields({'v': item})['v'];
+            }
+            return item;
+          }).toList();
         } else if (valMap.containsKey('mapValue')) {
-          final subMap = (valMap['mapValue'] as Map<String, dynamic>)['fields'] as Map<String, dynamic>?;
+          final subMap = (valMap['mapValue'] as Map<String, dynamic>)['fields']
+              as Map<String, dynamic>?;
           result[key] = _parseFirestoreRestFields(subMap);
         }
       }
@@ -258,9 +298,11 @@ class FirestoreUserDataSourceImpl implements FirestoreUserDataSource {
     }
   }
 
-  Future<String?> _getEnterpriseLicenseBaseUrlRest(int enterpriseId) async {
+  Future<List<String>> _getEnterpriseLicenseBaseUrlsRest(
+      int enterpriseId) async {
     try {
-      AppLogger.info('Firestore REST getEnterpriseLicenseBaseUrl id=$enterpriseId');
+      AppLogger.info(
+          'Firestore REST getEnterpriseLicenseBaseUrls id=$enterpriseId');
       final token = await _getAuthToken();
       final headers = <String, String>{};
       if (token != null) {
@@ -272,19 +314,23 @@ class FirestoreUserDataSourceImpl implements FirestoreUserDataSource {
         'https://firestore.googleapis.com/v1/projects/$projectId/databases/(default)/documents/enterprisesLicense/$enterpriseId',
       );
 
-      final response = await http.get(uri, headers: headers).timeout(_queryTimeout);
-      AppLogger.info('Firestore REST enterprisesLicense statusCode=${response.statusCode}');
+      final response =
+          await http.get(uri, headers: headers).timeout(_queryTimeout);
+      AppLogger.info(
+          'Firestore REST enterprisesLicense statusCode=${response.statusCode}');
 
       if (response.statusCode != 200) {
-        return null;
+        return [];
       }
 
       final data = json.decode(response.body) as Map<String, dynamic>;
-      final fields = _parseFirestoreRestFields(data['fields'] as Map<String, dynamic>?);
-      return fields['pointOfSaleUrl']?.toString();
+      final fields =
+          _parseFirestoreRestFields(data['fields'] as Map<String, dynamic>?);
+      return _extractBaseUrls(fields);
     } catch (e, stackTrace) {
-      AppLogger.error('Error al obtener PdvBaseUrl via Firestore REST', e, stackTrace);
-      throw Exception('Error al obtener PdvBaseUrl desde Firestore: $e');
+      AppLogger.error(
+          'Error al obtener PdvBaseUrls via Firestore REST', e, stackTrace);
+      throw Exception('Error al obtener PdvBaseUrls desde Firestore: $e');
     }
   }
 }
