@@ -5,6 +5,10 @@ import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/core/constants/ticket_types.dart';
 import 'package:punto_venta_app/core/utils/extensions.dart';
+import 'package:punto_venta_app/features/auth/domain/entities/user.dart';
+import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
+import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_state.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/pdv_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_bloc.dart';
@@ -12,6 +16,7 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_s
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/report/date_range_picker.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/report/summary_row.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/report/ticket_preview_dialog.dart';
+import 'package:punto_venta_app/injection_container.dart' as di;
 
 class DailySummaryView extends StatefulWidget {
   final DateTime selectedDate;
@@ -40,6 +45,30 @@ class DailySummaryView extends StatefulWidget {
 }
 
 class _DailySummaryViewState extends State<DailySummaryView> {
+  bool _allowNonAdminSalesSummary = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAllowNonAdminSalesSummary();
+  }
+
+  Future<void> _loadAllowNonAdminSalesSummary() async {
+    final config = await di.sl<PdvLocalDataSource>().getPdvConfig();
+    if (!mounted) return;
+    setState(() {
+      _allowNonAdminSalesSummary =
+          config?.allowNonAdminSalesSummary ?? false;
+    });
+  }
+
+  bool get _canShowSummary {
+    final authState = context.read<AuthBloc>().state;
+    final isAdmin = authState is AuthAuthenticated &&
+        authState.user.role == UserRole.admin;
+    return isAdmin || _allowNonAdminSalesSummary;
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ReportsBloc, ReportsState>(
@@ -92,8 +121,10 @@ class _DailySummaryViewState extends State<DailySummaryView> {
               ),
             ),
 
-            // Summary row (scrolls away)
-            if (state is ReportsLoaded && state.summary != null)
+            // Summary row (scrolls away) — admin always; non-admin if flag
+            if (state is ReportsLoaded &&
+                state.summary != null &&
+                _canShowSummary)
               SliverToBoxAdapter(
                 child: SummaryRow(summary: state.summary!),
               ),

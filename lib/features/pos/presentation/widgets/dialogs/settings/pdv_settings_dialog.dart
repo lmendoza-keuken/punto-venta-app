@@ -66,6 +66,7 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
   PdvConfig? _pdvConfig;
   int? _creditNoteDaysLimit;
   int? _checkUpdatePeriod;
+  bool _allowNonAdminSalesSummary = false;
 
   @override
   void initState() {
@@ -143,6 +144,8 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
     _checkUpdatePeriod = config.checkUpdatePeriod;
     _checkUpdatePeriodController.text =
         config.checkUpdatePeriod?.toString() ?? '';
+    _allowNonAdminSalesSummary =
+        config.allowNonAdminSalesSummary ?? false;
 
     _syncSelectedClientFromConfig();
   }
@@ -450,6 +453,30 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                                   _checkUpdatePeriod = int.tryParse(v);
                                 },
                               ),
+                              const SizedBox(height: AppDimensions.paddingM),
+                              const Text(
+                                'Reportes',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: AppDimensions.paddingS),
+                              SwitchListTile(
+                                contentPadding: EdgeInsets.zero,
+                                title: const Text(
+                                  'Permitir resumen de ventas a no-admin',
+                                ),
+                                subtitle: const Text(
+                                  'Sin esto, VEN/CAJ ven tickets pero no los totales del resumen',
+                                ),
+                                value: _allowNonAdminSalesSummary,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _allowNonAdminSalesSummary = value;
+                                  });
+                                },
+                              ),
                               const SizedBox(height: 8),
                             ],
                           ],
@@ -498,6 +525,8 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                           creditNoteDaysLimit: _creditNoteDaysLimit,
                           checkUpdatePeriod: _checkUpdatePeriod ??
                               _pdvConfig?.checkUpdatePeriod,
+                          allowNonAdminSalesSummary:
+                              _allowNonAdminSalesSummary,
                         );
 
                         context

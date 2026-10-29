@@ -6,6 +6,7 @@ class PdvConfig {
   final bool? offlineMode;
   final int? creditNoteDaysLimit;
   final int? checkUpdatePeriod;
+  final bool? allowNonAdminSalesSummary;
 
   const PdvConfig({
     this.pdvId,
@@ -15,6 +16,7 @@ class PdvConfig {
     this.offlineMode,
     this.creditNoteDaysLimit,
     this.checkUpdatePeriod,
+    this.allowNonAdminSalesSummary,
   });
 
   PdvConfig copyWith({
@@ -25,6 +27,7 @@ class PdvConfig {
     bool? offlineMode,
     int? creditNoteDaysLimit,
     int? checkUpdatePeriod,
+    bool? allowNonAdminSalesSummary,
   }) {
     return PdvConfig(
       pdvId: pdvId ?? this.pdvId,
@@ -35,6 +38,8 @@ class PdvConfig {
       offlineMode: offlineMode ?? this.offlineMode,
       creditNoteDaysLimit: creditNoteDaysLimit ?? this.creditNoteDaysLimit,
       checkUpdatePeriod: checkUpdatePeriod ?? this.checkUpdatePeriod,
+      allowNonAdminSalesSummary:
+          allowNonAdminSalesSummary ?? this.allowNonAdminSalesSummary,
     );
   }
 
@@ -46,6 +51,7 @@ class PdvConfig {
         'offline_mode': offlineMode,
         'credit_note_days_limit': creditNoteDaysLimit,
         'check_update_period': checkUpdatePeriod,
+        'allow_non_admin_sales_summary': allowNonAdminSalesSummary,
       };
 
   Map<String, dynamic> toUpdateJson() {
@@ -60,6 +66,9 @@ class PdvConfig {
     }
     if (checkUpdatePeriod != null) {
       data['check_update_period'] = checkUpdatePeriod;
+    }
+    if (allowNonAdminSalesSummary != null) {
+      data['allow_non_admin_sales_summary'] = allowNonAdminSalesSummary;
     }
     return data;
   }
@@ -79,6 +88,8 @@ class PdvConfig {
         offlineMode: json['offline_mode'] as bool?,
         creditNoteDaysLimit: json['credit_note_days_limit'] as int?,
         checkUpdatePeriod: json['check_update_period'] as int?,
+        allowNonAdminSalesSummary:
+            json['allow_non_admin_sales_summary'] as bool?,
       );
 }
 
