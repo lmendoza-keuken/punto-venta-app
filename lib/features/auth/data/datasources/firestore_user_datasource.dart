@@ -153,7 +153,7 @@ class FirestoreUserDataSourceImpl implements FirestoreUserDataSource {
     if (data == null) return [];
 
     final urls = <String>[];
-    final rawList = data['pointOfSaleUrls'];
+    final rawList = data['pointOfSaleUrlList'];
     if (rawList is List) {
       for (final item in rawList) {
         final url = item?.toString().trim() ?? '';
