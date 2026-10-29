@@ -1,6 +1,7 @@
 name: punto_venta_app
 description: A Flutter POS application with BLoC architecture
 version: 1.0.20+20
+publish_to: none
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -65,7 +66,10 @@ dependencies:
   window_manager: 0.5.2
   desktop_multi_window: 0.3.1
   screen_retriever: 0.2.2
-  presentation_displays: 1.0.0
+  # Vendored: pub 1.0.0 rompe AGP 8+ (namespace) y Flutter nuevo (Registrar v1).
+  # El hack solo en android/build.gradle no alcanza (falta el fix de Kotlin).
+  presentation_displays:
+    path: packages/presentation_displays
 
   # Images
   cached_network_image: 3.3.1
@@ -85,3 +89,4 @@ flutter:
   uses-material-design: true
   assets:
     - assets/icons/
+    - assets/mock/product_3_secco_naranja.jpg
