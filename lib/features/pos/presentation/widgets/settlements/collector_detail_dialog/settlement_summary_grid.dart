@@ -20,12 +20,14 @@ class SettlementSummaryGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final canceledCount = detail.canceledItemsCount ?? 0;
-    final disposedCount = detail.disposedItemsCount ?? 0;
+    final disposedCount = detail.disposedItemsCount;
+    final showDisposedCard = disposedCount != null;
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        final cardCount = showDisposedCard ? 4 : 3;
         final crossAxisCount = constraints.maxWidth > 720
-            ? 4
+            ? cardCount
             : constraints.maxWidth > 500
                 ? 2
                 : 1;
@@ -37,7 +39,7 @@ class SettlementSummaryGrid extends StatelessWidget {
             crossAxisCount: crossAxisCount,
             crossAxisSpacing: AppDimensions.paddingS,
             mainAxisSpacing: AppDimensions.paddingS,
-            childAspectRatio: crossAxisCount >= 4
+            childAspectRatio: crossAxisCount >= 3
                 ? 1.25
                 : crossAxisCount == 2
                     ? 2.2
@@ -64,14 +66,15 @@ class SettlementSummaryGrid extends StatelessWidget {
               showTotalOnly: true,
               onTap: canceledCount > 0 ? onCanceledItemsTap : null,
             ),
-            _buildMetricCard(
-              title: 'Artículos Descartados',
-              count: disposedCount,
-              total: '$disposedCount unid.',
-              isDark: isDark,
-              showTotalOnly: true,
-              onTap: disposedCount > 0 ? onDisposedItemsTap : null,
-            ),
+            if (showDisposedCard)
+              _buildMetricCard(
+                title: 'Artículos Descartados',
+                count: disposedCount,
+                total: '$disposedCount unid.',
+                isDark: isDark,
+                showTotalOnly: true,
+                onTap: disposedCount > 0 ? onDisposedItemsTap : null,
+              ),
           ],
         );
       },
