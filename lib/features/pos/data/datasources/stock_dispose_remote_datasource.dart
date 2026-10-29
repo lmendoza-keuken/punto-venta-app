@@ -2,8 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 import 'package:punto_venta_app/core/network/error_handler.dart';
 import 'package:punto_venta_app/features/pos/data/models/dispose_reason_model.dart';
-import 'package:punto_venta_app/features/pos/data/models/product_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/stock_dispose_request_model.dart';
+import 'package:punto_venta_app/features/pos/data/models/stock_dispose_response_model.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 part 'stock_dispose_remote_datasource.g.dart';
@@ -12,17 +12,18 @@ part 'stock_dispose_remote_datasource.g.dart';
 abstract class StockDisposeService {
   factory StockDisposeService(Dio dio, {String baseUrl}) = _StockDisposeService;
 
-  @GET('/stock/dispose/reasons')
+  @GET('/stock/dispose-reasons')
   Future<List<DisposeReasonModel>> getDisposeReasons();
 
-  /// Response placeholder: same shape as GET /articles/
   @POST('/stock/dispose')
-  Future<List<ProductModel>> disposeStock(@Body() Map<String, dynamic> body);
+  Future<StockDisposeResponseModel> disposeStock(
+      @Body() Map<String, dynamic> body);
 }
 
 abstract class StockDisposeRemoteDataSource {
   Future<List<DisposeReasonModel>> getDisposeReasons();
-  Future<List<ProductModel>> disposeStock(StockDisposeRequestModel request);
+  Future<StockDisposeResponseModel> disposeStock(
+      StockDisposeRequestModel request);
 }
 
 class StockDisposeRemoteDataSourceImpl implements StockDisposeRemoteDataSource {
@@ -41,7 +42,7 @@ class StockDisposeRemoteDataSourceImpl implements StockDisposeRemoteDataSource {
   }
 
   @override
-  Future<List<ProductModel>> disposeStock(
+  Future<StockDisposeResponseModel> disposeStock(
       StockDisposeRequestModel request) async {
     try {
       return await _apiService.disposeStock(request.toJson());

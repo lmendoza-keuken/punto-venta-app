@@ -22,7 +22,7 @@ List<Map<String, dynamic>>? _itemsToJson(List<StockDisposeItemModel>? items) =>
 @freezed
 class StockDisposeItemModel with _$StockDisposeItemModel {
   const factory StockDisposeItemModel({
-    @JsonKey(name: 'article_id') required int articleId,
+    @JsonKey(name: 'code') required String code,
     @JsonKey(name: 'quantity') required double quantity,
     @JsonKey(name: 'is_weighted') String? isWeighted,
     @JsonKey(name: 'net_weight') double? netWeight,

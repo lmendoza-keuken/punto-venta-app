@@ -369,7 +369,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
       final disposeItems = event.items.map((item) {
         final isWeighted = item.isWeighted == true;
         return StockDisposeItemModel(
-          articleId: item.product.id,
+          code: item.product.id.toString(),
           quantity: isWeighted ? 1.0 : item.quantity.toDouble(),
           isWeighted: isWeighted ? 'S' : 'N',
           netWeight: isWeighted ? item.product.netWeight : null,
@@ -382,20 +382,21 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         items: disposeItems,
       );
 
-      await processStockDisposeUseCase(request);
+      final response = await processStockDisposeUseCase(request);
 
       final user = await authLocalDataSource.getCachedUser();
       final enterprise = await authLocalDataSource.getCachedEnterprise();
       final config = await pdvLocalDataSource.getPdvConfig();
 
       final printJob = PrintJob(
+        ticketId: response.id?.toString(),
         items: event.items,
         logItems: event.logItems,
         total: 0,
         totalTax: 0,
         cashierName: user?.name ?? 'Desconocido',
         cashierId: int.tryParse(user?.id ?? ''),
-        timestamp: DateTime.now(),
+        timestamp: DateTime.tryParse(response.createdAt ?? '') ?? DateTime.now(),
         enterprise: enterprise,
         branchNumber: config?.branchNumber ?? '',
         branchId: config?.branchId,
