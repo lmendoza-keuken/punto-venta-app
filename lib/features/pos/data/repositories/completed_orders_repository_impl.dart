@@ -415,7 +415,7 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
             description: 'Método ${reqPm.id}',
             shortDescription: 'MET-${reqPm.id}',
             deleteAt: '',
-          );
+);
       return base.copyWith(
         amount: reqPm.amount,
         details: reqPm.details != null
@@ -425,6 +425,7 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
                 checkNumber: reqPm.details!.checkNumber,
                 transferId: reqPm.details!.transferId,
                 verificationId: reqPm.details!.verificationId,
+                orderId: reqPm.details!.orderId,
               )
             : null,
       );

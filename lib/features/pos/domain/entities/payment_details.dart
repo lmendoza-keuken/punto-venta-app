@@ -4,6 +4,7 @@ class PaymentDetails {
   final String? checkNumber;
   final String? accountOwner;
   final String? verificationId;
+  final String? orderId;
 
   const PaymentDetails({
     this.transferId,
@@ -11,6 +12,7 @@ class PaymentDetails {
     this.checkNumber,
     this.accountOwner,
     this.verificationId,
+    this.orderId,
   });
 
   factory PaymentDetails.empty() => const PaymentDetails();
@@ -25,6 +27,7 @@ class PaymentDetails {
       checkNumber: json['check_number']?.toString(),
       accountOwner: json['account_owner']?.toString(),
       verificationId: json['verification_id']?.toString(),
+      orderId: json['order_id']?.toString(),
     );
   }
 
@@ -35,6 +38,7 @@ class PaymentDetails {
     if (checkNumber != null) map['check_number'] = checkNumber;
     if (accountOwner != null) map['account_owner'] = accountOwner;
     if (verificationId != null) map['verification_id'] = verificationId;
+    if (orderId != null) map['order_id'] = orderId;
     return map;
   }
 }

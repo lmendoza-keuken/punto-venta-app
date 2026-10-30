@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:punto_venta_app/features/pos/data/models/category_model.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product_labels/product_labels_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product_labels/product_labels_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product_labels/product_labels_state.dart';
@@ -26,7 +27,8 @@ class _ProductLabelsSearchBarState extends State<ProductLabelsSearchBar> {
     return BlocBuilder<ProductLabelsBloc, ProductLabelsState>(
       builder: (context, state) {
         final isLoaded = state is ProductLabelsLoaded;
-        final categories = isLoaded ? state.categories : const <String>[];
+        final categories =
+            isLoaded ? state.categories : const <CategoryModel>[];
 
         return Row(
           children: [
@@ -75,7 +77,7 @@ class _ProductLabelsSearchBarState extends State<ProductLabelsSearchBar> {
     );
   }
 
-  Widget _buildCategoryDropdown(bool enabled, List<String> categories) {
+  Widget _buildCategoryDropdown(bool enabled, List<CategoryModel> categories) {
     return DropdownButtonFormField<String>(
       value: _selectedCategoryId,
       isExpanded: true,
@@ -98,15 +100,17 @@ class _ProductLabelsSearchBarState extends State<ProductLabelsSearchBar> {
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        ...categories.where((cat) => cat.isNotEmpty).map((category) {
+        ...categories
+            .where((cat) => (cat.id ?? '').isNotEmpty)
+            .map((category) {
           return DropdownMenuItem(
-            value: category,
+            value: category.id,
             child: Text(
-              category,
+              category.description ?? '',
               overflow: TextOverflow.ellipsis,
             ),
           );
-        }).toList(),
+        }),
       ],
       onChanged: enabled
           ? (value) {

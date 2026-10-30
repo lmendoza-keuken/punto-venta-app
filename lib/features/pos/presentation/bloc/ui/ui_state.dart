@@ -15,6 +15,7 @@ class UiLoaded extends UiState {
   final bool isBarcodeSearchEnabled;
   final CartMode cartMode;
   final bool showConfirmationPanel;
+  final bool isMpQrActive;
 
   const UiLoaded({
     this.selectedQuantity = 1,
@@ -22,6 +23,7 @@ class UiLoaded extends UiState {
     this.isBarcodeSearchEnabled = true,
     this.cartMode = CartMode.sale,
     this.showConfirmationPanel = false,
+    this.isMpQrActive = false,
   });
 
   bool get isReturnMode => cartMode == CartMode.returnMode;
@@ -34,15 +36,17 @@ class UiLoaded extends UiState {
     bool? isBarcodeSearchEnabled,
     CartMode? cartMode,
     bool? showConfirmationPanel,
+    bool? isMpQrActive,
   }) {
     return UiLoaded(
       selectedQuantity: selectedQuantity ?? this.selectedQuantity,
       isDeleteMode: isDeleteMode ?? this.isDeleteMode,
       isBarcodeSearchEnabled:
           isBarcodeSearchEnabled ?? this.isBarcodeSearchEnabled,
-      cartMode: cartMode ?? this.cartMode,
+cartMode: cartMode ?? this.cartMode,
       showConfirmationPanel:
           showConfirmationPanel ?? this.showConfirmationPanel,
+      isMpQrActive: isMpQrActive ?? this.isMpQrActive,
     );
   }
 
@@ -53,5 +57,6 @@ class UiLoaded extends UiState {
         isBarcodeSearchEnabled,
         cartMode,
         showConfirmationPanel,
+        isMpQrActive,
       ];
 }

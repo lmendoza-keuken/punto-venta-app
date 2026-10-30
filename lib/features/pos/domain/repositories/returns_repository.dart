@@ -1,3 +1,4 @@
+import 'package:punto_venta_app/features/pos/data/models/mercado_pago/associate_qr_refund_request_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/invoice_payload_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/partial_return_request_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/return_reason.dart';
@@ -8,4 +9,5 @@ abstract class ReturnsRepository {
   Future<List<SaleReturn>> fetchReturns({String? date});
   Future<InvoicePayload> processTotalReturn(int saleId, int reasonId);
   Future<InvoicePayload> processPartialReturn(PartialReturnRequestModel request);
+  Future<void> associateQrRefund(AssociateQrRefundRequest request);
 }

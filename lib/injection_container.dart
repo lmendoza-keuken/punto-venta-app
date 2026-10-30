@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:punto_venta_app/core/database/database_helper.dart';
@@ -17,6 +18,8 @@ import 'package:punto_venta_app/features/app_update/domain/usecases/check_for_up
 import 'package:punto_venta_app/features/app_update/domain/usecases/download_and_install_update_usecase.dart';
 import 'package:punto_venta_app/features/app_update/domain/usecases/track_comprobante_and_maybe_check_update_usecase.dart';
 import 'package:punto_venta_app/features/app_update/presentation/cubit/app_update_cubit.dart';
+import 'package:punto_venta_app/core/services/mercado_pago_service.dart';
+import 'package:punto_venta_app/core/services/pvs_service.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/google_auth_datasource.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/firestore_user_datasource.dart';
@@ -28,6 +31,17 @@ import 'package:punto_venta_app/features/auth/domain/usecases/refresh_companies_
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/client_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/client_remote_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/mercado_pago_local_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/mercado_pago_remote_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/repositories/mercado_pago_repository_impl.dart';
+import 'package:punto_venta_app/features/pos/data/repositories/pvs_repository_impl.dart';
+import 'package:punto_venta_app/features/pos/domain/repositories/mercado_pago_repository.dart';
+import 'package:punto_venta_app/features/pos/domain/repositories/pvs_repository.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/annul_ticket_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/bootstrap_mercado_pago_credentials_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/bootstrap_pvs_credentials_usecase.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/mercado_pago_qr/mercado_pago_qr_bloc.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/pvs_qr/pvs_qr_bloc.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/price_list_types_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/price_list_types_remote_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/tax_local_datasource.dart';
@@ -227,7 +241,9 @@ Future<void> init() async {
       firestoreUserDataSource: sl(),
       userApiDataSource: sl(),
       priceListLocalDataSource: sl(),
-      productImagesRepository: sl(),
+productImagesRepository: sl(),
+      mercadoPagoLocalDataSource: sl(),
+      pvsRepository: sl(),
     ),
   );
 
@@ -240,6 +256,29 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<AuthLocalDataSource>(
     () => AuthLocalDataSourceImpl(sharedPreferences: sl()),
+  );
+  sl.registerLazySingleton<MercadoPagoLocalDataSource>(
+    () => MercadoPagoLocalDataSourceImpl(sharedPreferences: sl()),
+  );
+  sl.registerLazySingleton(() => MercadoPagoService());
+  sl.registerLazySingleton<MercadoPagoRemoteDataSource>(
+    () => MercadoPagoRemoteDataSourceImpl(
+      firestore: FirebaseFirestore.instance,
+      mercadoPagoService: sl(),
+    ),
+  );
+  sl.registerLazySingleton<MercadoPagoRepository>(
+    () => MercadoPagoRepositoryImpl(
+      remoteDataSource: sl(),
+      localDataSource: sl(),
+    ),
+  );
+  sl.registerLazySingleton(() => PvsService());
+  sl.registerLazySingleton<PvsRepository>(
+    () => PvsRepositoryImpl(
+      mercadoPagoRemoteDataSource: sl(),
+      pvsService: sl(),
+    ),
   );
   sl.registerLazySingleton<UserApiService>(
     () => UserApiService(sl()),
@@ -300,7 +339,7 @@ Future<void> init() async {
         branchLocalDataSource: sl(),
       ));
   sl.registerFactory(() =>
-      ReportsBloc(getReportsUsecase: sl(), generateCreditNoteUsecase: sl()));
+      ReportsBloc(getReportsUsecase: sl(), annulTicketUsecase: sl()));
   sl.registerFactory(() => SettlementsBloc(getSettlementsUsecase: sl()));
   sl.registerFactory(() => ClientsBloc(
         getClients: sl(),
@@ -389,10 +428,30 @@ Future<void> init() async {
         returnsRepository: sl(),
         completedOrdersRepository: sl(),
       ));
-  sl.registerLazySingleton(() => ProcessStockDisposeUseCase(sl()));
+sl.registerLazySingleton(() => ProcessStockDisposeUseCase(sl()));
+  sl.registerLazySingleton(() => AnnulTicketUsecase(
+        generateCreditNoteUsecase: sl(),
+        mercadoPagoService: sl(),
+        mercadoPagoRepository: sl(),
+        pvsRepository: sl(),
+        returnsRepository: sl(),
+      ));
   sl.registerLazySingleton(() => ProcessPartialReturnUseCase(
         returnsRepository: sl(),
         completedOrdersRepository: sl(),
+      ));
+  sl.registerLazySingleton(() => BootstrapMercadoPagoCredentialsUsecase(sl()));
+  sl.registerLazySingleton(() => BootstrapPvsCredentialsUsecase(sl()));
+  sl.registerFactory(() => MercadoPagoQrBloc(
+        mercadoPagoService: sl(),
+        mercadoPagoRepository: sl(),
+        authLocalDataSource: sl(),
+        pdvConfigRepository: sl(),
+      ));
+  sl.registerFactory(() => PvsQrBloc(
+        pvsRepository: sl(),
+        authLocalDataSource: sl(),
+        pdvConfigRepository: sl(),
       ));
 
   // sl.registerLazySingleton(() => PrintTicketUsecase(sl()));

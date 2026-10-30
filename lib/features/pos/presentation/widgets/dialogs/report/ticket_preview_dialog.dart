@@ -13,6 +13,7 @@ import 'package:punto_venta_app/features/pos/domain/repositories/payment_method_
 import 'package:punto_venta_app/features/pos/domain/entities/cart_item.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/completed_order.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/payment_method.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_event.dart';
@@ -22,6 +23,9 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_e
 import 'package:punto_venta_app/features/pos/presentation/bloc/reports/reports_state.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_return_reasons_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_returns_usecase.dart';
+import 'package:punto_venta_app/features/pos/presentation/utils/mercado_pago_qr_utils.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/report/mp_refund_failure_dialog.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/report/mp_refund_mode_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/report/print_type_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/report/return_reason_dialog.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
@@ -261,6 +265,12 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                   behavior: SnackBarBehavior.floating,
                 ),
               );
+            } else if (state is MpRefundFailed &&
+                state.ticketId == widget.ticket.id) {
+              if (mounted) {
+                setState(() => _isGeneratingCreditNote = false);
+              }
+              _handleMpRefundFailed(context, state);
             } else if (state is CreditNoteGenerationError &&
                 state.ticketId == widget.ticket.id) {
               if (mounted) {
@@ -537,6 +547,45 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
         ));
   }
 
+  Future<void> _handleMpRefundFailed(
+    BuildContext context,
+    MpRefundFailed state,
+  ) async {
+    final action = await showMpRefundFailureDialog(
+      context,
+      message: state.message,
+      canRetry: state.canRetry,
+    );
+    if (!context.mounted || action == null) return;
+
+    setState(() => _isGeneratingCreditNote = true);
+
+    if (action == MpRefundFailureAction.retry) {
+      context.read<ReportsBloc>().add(
+            GenerateCreditNote(
+              state.ticketId,
+              state.reasonId,
+              refundToMercadoPagoAccount: !state.refundToPvsAccount,
+              refundToPvsAccount: state.refundToPvsAccount,
+              mpOrderId: state.mpOrderId,
+              pvsPaymentMethodId: state.pvsPaymentMethodId,
+              enterpriseId: state.enterpriseId,
+              mpRefundAttempt: state.attempt + 1,
+            ),
+          );
+      return;
+    }
+
+    context.read<ReportsBloc>().add(
+          GenerateCreditNote(
+            state.ticketId,
+            state.reasonId,
+            refundInCash: true,
+            mpOrderId: state.mpOrderId,
+          ),
+        );
+  }
+
   Future<void> _handleConvertToCreditNote(BuildContext context) async {
     try {
       showDialog<void>(
@@ -568,9 +617,76 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
 
       if (selectedReasonId == null || !context.mounted) return;
 
+      bool refundToAccount = false;
+      bool refundToPvsAccount = false;
+      bool refundInCash = false;
+      String? mpOrderId;
+      int? pvsPaymentMethodId;
+      int? enterpriseId;
+      final payments = widget.ticket.paymentMethods ??
+          (widget.ticket.paymentMethod != null
+              ? [widget.ticket.paymentMethod!]
+              : <PaymentMethod>[]);
+      if (ticketHasMercadoPagoQr(payments)) {
+        mpOrderId = extractMpOrderIdFromTicketPayments(payments) ??
+            extractMpOrderId(widget.ticket.paymentMethod);
+        final mode = await showMpRefundModeDialog(context);
+        if (mode == null || !context.mounted) return;
+        refundToAccount = mode == MpRefundMode.account;
+        refundInCash = mode == MpRefundMode.cash;
+        if (refundToAccount && (mpOrderId == null || mpOrderId.isEmpty)) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'No se encontró order_id de Mercado Pago en el ticket',
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+      } else if (ticketHasPvsQr(payments)) {
+        final pvsPm = findPvsPaymentMethod(payments) ??
+            widget.ticket.paymentMethod;
+        mpOrderId = extractPvsOrderIdFromTicketPayments(payments) ??
+            extractQrOrderId(pvsPm);
+        pvsPaymentMethodId = pvsPm?.id;
+        final enterprise =
+            await di.sl<AuthLocalDataSource>().getCachedEnterprise();
+        enterpriseId = enterprise?.id;
+        if (!context.mounted) return;
+        final mode = await showMpRefundModeDialog(
+          context,
+          providerLabel: 'PVS',
+        );
+        if (mode == null || !context.mounted) return;
+        refundToPvsAccount = mode == MpRefundMode.account;
+        refundInCash = mode == MpRefundMode.cash;
+        if (refundToPvsAccount && (mpOrderId == null || mpOrderId.isEmpty)) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'No se encontró order_id de PVS en el ticket',
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+      }
+
       setState(() => _isGeneratingCreditNote = true);
       context.read<ReportsBloc>().add(
-            GenerateCreditNote(widget.ticket.id, selectedReasonId),
+            GenerateCreditNote(
+              widget.ticket.id,
+              selectedReasonId,
+              refundToMercadoPagoAccount: refundToAccount,
+              refundToPvsAccount: refundToPvsAccount,
+              refundInCash: refundInCash,
+              mpOrderId: mpOrderId,
+              pvsPaymentMethodId: pvsPaymentMethodId,
+              enterpriseId: enterpriseId,
+            ),
           );
     } catch (e) {
       if (!context.mounted) return;

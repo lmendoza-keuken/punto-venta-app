@@ -87,3 +87,41 @@ class CreditNoteGenerationError extends ReportsState {
   @override
   List<Object> get props => [ticketId, message];
 }
+
+/// Falló el reembolso a cuenta MP (aún no se creó la NC).
+class MpRefundFailed extends ReportsState {
+  final String ticketId;
+  final String message;
+  final int reasonId;
+  final String? mpOrderId;
+  final bool refundToPvsAccount;
+  final int? pvsPaymentMethodId;
+  final int? enterpriseId;
+  final int attempt;
+  final bool canRetry;
+
+  const MpRefundFailed({
+    required this.ticketId,
+    required this.message,
+    required this.reasonId,
+    required this.mpOrderId,
+    required this.attempt,
+    required this.canRetry,
+    this.refundToPvsAccount = false,
+    this.pvsPaymentMethodId,
+    this.enterpriseId,
+  });
+
+  @override
+  List<Object> get props => [
+        ticketId,
+        message,
+        reasonId,
+        mpOrderId ?? '',
+        refundToPvsAccount,
+        pvsPaymentMethodId ?? 0,
+        enterpriseId ?? 0,
+        attempt,
+        canRetry,
+      ];
+}

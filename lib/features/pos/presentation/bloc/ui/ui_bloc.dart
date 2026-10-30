@@ -12,6 +12,7 @@ class UiBloc extends Bloc<UiEvent, UiState> {
     on<SetCartMode>(_onSetCartMode);
     on<OpenConfirmationPanel>(_onOpenConfirmationPanel);
     on<CloseConfirmationPanel>(_onCloseConfirmationPanel);
+    on<SetMpQrActive>(_onSetMpQrActive);
   }
 
   void _onSetQuantity(SetQuantity event, Emitter<UiState> emit) {
@@ -67,7 +68,18 @@ class UiBloc extends Bloc<UiEvent, UiState> {
       CloseConfirmationPanel event, Emitter<UiState> emit) {
     if (state is UiLoaded) {
       final currentState = state as UiLoaded;
-      emit(currentState.copyWith(showConfirmationPanel: false));
+      emit(currentState.copyWith(
+        showConfirmationPanel: false,
+        isMpQrActive: false,
+      ));
+    }
+  }
+
+  void _onSetMpQrActive(SetMpQrActive event, Emitter<UiState> emit) {
+    if (state is UiLoaded) {
+      final currentState = state as UiLoaded;
+      if (currentState.isMpQrActive == event.isActive) return;
+      emit(currentState.copyWith(isMpQrActive: event.isActive));
     }
   }
 }

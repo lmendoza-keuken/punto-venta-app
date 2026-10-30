@@ -1,9 +1,12 @@
+import 'package:punto_venta_app/core/utils/enums.dart';
+
 class PaymentMethodDetails {
   final String? accountOwner;
   final String? bankId;
   final String? checkNumber;
   final String? transferId;
   final String? verificationId;
+  final String? orderId;
 
   const PaymentMethodDetails({
     this.accountOwner,
@@ -11,6 +14,7 @@ class PaymentMethodDetails {
     this.checkNumber,
     this.transferId,
     this.verificationId,
+    this.orderId,
   });
 
   PaymentMethodDetails copyWith({
@@ -19,6 +23,7 @@ class PaymentMethodDetails {
     String? checkNumber,
     String? transferId,
     String? verificationId,
+    String? orderId,
   }) {
     return PaymentMethodDetails(
       accountOwner: accountOwner ?? this.accountOwner,
@@ -26,6 +31,7 @@ class PaymentMethodDetails {
       checkNumber: checkNumber ?? this.checkNumber,
       transferId: transferId ?? this.transferId,
       verificationId: verificationId ?? this.verificationId,
+      orderId: orderId ?? this.orderId,
     );
   }
 
@@ -36,6 +42,7 @@ class PaymentMethodDetails {
       checkNumber: json['check_number'] as String?,
       transferId: json['transfer_id'] as String?,
       verificationId: json['verification_id'] as String?,
+      orderId: json['order_id'] as String?,
     );
   }
 
@@ -45,6 +52,7 @@ class PaymentMethodDetails {
         if (checkNumber != null) 'check_number': checkNumber,
         if (transferId != null) 'transfer_id': transferId,
         if (verificationId != null) 'verification_id': verificationId,
+        if (orderId != null) 'order_id': orderId,
       };
 }
 
@@ -56,6 +64,7 @@ class PaymentMethod {
   final double? amount;
   final double? receivedAmount;
   final PaymentMethodDetails? details;
+  final QrType? qrType;
 
   const PaymentMethod({
     required this.id,
@@ -65,6 +74,7 @@ class PaymentMethod {
     this.amount,
     this.receivedAmount,
     this.details,
+    this.qrType,
   });
 
   PaymentMethod copyWith({
@@ -76,6 +86,7 @@ class PaymentMethod {
     double? receivedAmount,
     bool clearReceivedAmount = false,
     PaymentMethodDetails? details,
+    QrType? qrType,
   }) {
     return PaymentMethod(
       id: id ?? this.id,
@@ -83,10 +94,10 @@ class PaymentMethod {
       shortDescription: shortDescription ?? this.shortDescription,
       deleteAt: deleteAt ?? this.deleteAt,
       amount: amount ?? this.amount,
-      receivedAmount: clearReceivedAmount ? null : (receivedAmount ?? this.receivedAmount),
+      receivedAmount:
+          clearReceivedAmount ? null : (receivedAmount ?? this.receivedAmount),
       details: details ?? this.details,
+      qrType: qrType ?? this.qrType,
     );
   }
 }
-
-

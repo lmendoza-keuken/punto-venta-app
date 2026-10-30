@@ -1,3 +1,4 @@
+import 'package:punto_venta_app/features/pos/data/models/category_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
 
 abstract class ProductRepository {
@@ -6,7 +7,7 @@ abstract class ProductRepository {
   Future<List<Product>> searchProducts(String query);
   Future<Product?> searchByBarcode(String barcode);
   Future<Product?> searchByArticleId(int articleId);
-  Future<List<String>> getCategories();
+  Future<List<CategoryModel>> getCategories();
   Future<Product> createProduct(Product product);
   Future<Product> updateProduct(Product product);
   Future<void> deleteProduct(int codigo);

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:punto_venta_app/features/pos/data/models/category_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
 
 abstract class ProductState extends Equatable {
@@ -14,27 +15,25 @@ class ProductLoading extends ProductState {}
 
 class ProductLoaded extends ProductState {
   final List<Product> allProducts;
-  final List<String> categories;
-  final String selectedCategory;
+  final List<CategoryModel> categories;
+  final CategoryModel? selectedCategory;
   final String searchQuery;
   final int currentPriceList;
 
   const ProductLoaded({
     required this.allProducts,
     required this.categories,
-    this.selectedCategory = 'Todo',
+    this.selectedCategory,
     this.searchQuery = '',
     required this.currentPriceList,
   });
 
   List<Product> get products {
     List<Product> filtered = allProducts;
-    if (selectedCategory.toLowerCase() != 'todo' &&
-        selectedCategory.toLowerCase() != 'all') {
+    final selectedId = selectedCategory?.id;
+    if (selectedId != null && selectedId.isNotEmpty) {
       filtered = filtered
-          .where((p) =>
-              p.categoryDescription.toLowerCase() ==
-              selectedCategory.toLowerCase())
+          .where((p) => p.categoryId == selectedId)
           .toList();
     }
     if (searchQuery.isNotEmpty) {
@@ -54,15 +53,18 @@ class ProductLoaded extends ProductState {
 
   ProductLoaded copyWith({
     List<Product>? allProducts,
-    List<String>? categories,
-    String? selectedCategory,
+    List<CategoryModel>? categories,
+    CategoryModel? selectedCategory,
+    bool resetSelectedCategory = false,
     String? searchQuery,
     int? currentPriceList,
   }) {
     return ProductLoaded(
       allProducts: allProducts ?? this.allProducts,
       categories: categories ?? this.categories,
-      selectedCategory: selectedCategory ?? this.selectedCategory,
+      selectedCategory: resetSelectedCategory
+          ? selectedCategory
+          : selectedCategory ?? this.selectedCategory,
       searchQuery: searchQuery ?? this.searchQuery,
       currentPriceList: currentPriceList ?? this.currentPriceList,
     );
@@ -72,7 +74,7 @@ class ProductLoaded extends ProductState {
   List<Object> get props => [
         allProducts,
         categories,
-        selectedCategory,
+        selectedCategory?.id ?? '',
         searchQuery,
         currentPriceList,
       ];

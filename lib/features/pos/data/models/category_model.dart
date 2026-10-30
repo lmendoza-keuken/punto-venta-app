@@ -3,12 +3,14 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'category_model.freezed.dart';
 part 'category_model.g.dart';
 
+String? _categoryIdFromJson(dynamic value) => value?.toString();
+
 @freezed
 class CategoryModel with _$CategoryModel {
   const CategoryModel._();
 
   const factory CategoryModel({
-    @JsonKey(name: 'id') String? id,
+    @JsonKey(name: 'id', fromJson: _categoryIdFromJson) String? id,
     @JsonKey(name: 'description') String? description,
   }) = _CategoryModel;
 

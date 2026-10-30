@@ -37,3 +37,13 @@ class SetCartMode extends UiEvent {
 class OpenConfirmationPanel extends UiEvent {}
 
 class CloseConfirmationPanel extends UiEvent {}
+
+/// Bloquea el catálogo / lado izquierdo mientras el cobro QR está en pantalla.
+class SetMpQrActive extends UiEvent {
+  final bool isActive;
+
+  const SetMpQrActive(this.isActive);
+
+  @override
+  List<Object> get props => [isActive];
+}

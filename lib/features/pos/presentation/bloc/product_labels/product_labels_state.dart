@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:punto_venta_app/features/pos/data/models/category_model.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
 
 abstract class ProductLabelsState extends Equatable {
@@ -15,7 +16,7 @@ class ProductLabelsLoading extends ProductLabelsState {}
 class ProductLabelsLoaded extends ProductLabelsState {
   final List<Product> allProducts;
   final List<Product> selectedProducts;
-  final List<String> categories;
+  final List<CategoryModel> categories;
   final String? selectedCategoryId;
   final String searchQuery;
 
@@ -33,9 +34,7 @@ class ProductLabelsLoaded extends ProductLabelsState {
         selectedCategoryId!.toLowerCase() != 'todo' &&
         selectedCategoryId!.toLowerCase() != 'all') {
       filtered = filtered
-          .where((p) =>
-              p.categoryDescription.toLowerCase() ==
-              selectedCategoryId!.toLowerCase())
+          .where((p) => p.categoryId == selectedCategoryId)
           .toList();
     }
     if (searchQuery.isNotEmpty) {
@@ -65,7 +64,7 @@ class ProductLabelsLoaded extends ProductLabelsState {
   ProductLabelsLoaded copyWith({
     List<Product>? allProducts,
     List<Product>? selectedProducts,
-    List<String>? categories,
+    List<CategoryModel>? categories,
     String? selectedCategoryId,
     String? searchQuery,
   }) {

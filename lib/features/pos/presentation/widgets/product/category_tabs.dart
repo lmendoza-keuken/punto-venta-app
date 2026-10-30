@@ -1,12 +1,13 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:punto_venta_app/features/pos/data/models/category_model.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_dimensions.dart';
 
 class CategoryTabs extends StatefulWidget {
-  final List<String> categories;
-  final String selectedCategory;
-  final Function(String) onCategorySelected;
+  final List<CategoryModel> categories;
+  final CategoryModel? selectedCategory;
+  final Function(CategoryModel?) onCategorySelected;
 
   const CategoryTabs({
     super.key,
@@ -22,6 +23,8 @@ class CategoryTabs extends StatefulWidget {
 class _CategoryTabsState extends State<CategoryTabs> {
   late final ScrollController _scrollController;
 
+  static const _todoLabel = 'Todo';
+
   @override
   void initState() {
     super.initState();
@@ -36,11 +39,16 @@ class _CategoryTabsState extends State<CategoryTabs> {
 
   static const _webScrollBehavior = WebScrollBehavior();
 
+  bool _isSelected(CategoryModel? category) {
+    if (category == null) {
+      return widget.selectedCategory == null;
+    }
+    return widget.selectedCategory?.id == category.id;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final displayedCategories = widget.categories.contains('Todo')
-        ? widget.categories
-        : ['Todo', ...widget.categories];
+    final displayedCategories = <CategoryModel?>[null, ...widget.categories];
 
     return SizedBox(
       height: AppDimensions.categoryTabHeight + 10,
@@ -62,11 +70,12 @@ class _CategoryTabsState extends State<CategoryTabs> {
                   const SizedBox(width: AppDimensions.paddingXS),
               itemBuilder: (context, index) {
                 final category = displayedCategories[index];
-                final isSelected = category == widget.selectedCategory;
+                final isSelected = _isSelected(category);
+                final label = category?.description ?? _todoLabel;
 
                 return GestureDetector(
                   onTap: () {
-                    final newCategory = isSelected ? 'Todo' : category;
+                    final newCategory = isSelected ? null : category;
                     widget.onCategorySelected(newCategory);
                   },
                   child: Container(
@@ -89,7 +98,7 @@ class _CategoryTabsState extends State<CategoryTabs> {
                     ),
                     child: Center(
                       child: Text(
-                        category,
+                        label,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: isSelected
                                   ? Colors.white

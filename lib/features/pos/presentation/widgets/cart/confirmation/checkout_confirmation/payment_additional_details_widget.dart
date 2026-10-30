@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/payment_method.dart';
+import 'package:punto_venta_app/features/pos/presentation/utils/mercado_pago_qr_utils.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/cart/confirmation/checkout_confirmation/payment_methods_detail_form.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/cart/confirmation/checkout_confirmation/payment_method_details_controllers.dart';
 
@@ -44,10 +45,10 @@ class PaymentAdditionalDetailsWidget extends StatelessWidget {
         shortDesc.contains('credito') ||
         desc.contains('posnet') ||
         shortDesc.contains('posnet');
-    final isQR = desc.contains('qr') ||
-        shortDesc.contains('qr') ||
-        desc.contains('mercado') ||
-        shortDesc.contains('mercado');
+    final isQR = isDynamicQrMethod(paymentMethod);
+    final isMercadoPagoDynamic = isMercadoPagoQrMethod(paymentMethod);
+    final isPvsDynamic = isPvsQrMethod(paymentMethod);
+    final isDynamicQr = isMercadoPagoDynamic || isPvsDynamic;
     final isCheck = desc.contains('cheque') || shortDesc.contains('cheque');
 
     return Container(
@@ -111,14 +112,14 @@ class PaymentAdditionalDetailsWidget extends StatelessWidget {
                         icon: Icons.pin_outlined,
                         onChanged: onCheckNumberChanged,
                       ),
-                    if (isTransfer || isQR)
+                    if (isTransfer || (isQR && !isDynamicQr))
                       PaymentMethodsDetailForm(
                         controller: controllers.transferId,
                         label: 'ID de Transferencia/Operación',
                         icon: Icons.receipt_long_outlined,
                         onChanged: onTransferIdChanged,
                       ),
-                    if (isCard || isQR)
+                    if (isCard || (isQR && !isDynamicQr))
                       PaymentMethodsDetailForm(
                         controller: controllers.verificationId,
                         label: isCard
@@ -126,6 +127,17 @@ class PaymentAdditionalDetailsWidget extends StatelessWidget {
                             : 'ID de Verificación',
                         icon: Icons.verified_outlined,
                         onChanged: onVerificationIdChanged,
+                      ),
+                    if (isDynamicQr)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          isPvsDynamic
+                              ? 'Los datos de PVS se completan al confirmar el cobro con QR.'
+                              : 'Los datos de Mercado Pago se completan al confirmar el cobro con QR.',
+                          style: const TextStyle(
+                              fontSize: 12, color: Colors.black54),
+                        ),
                       ),
                   ];
 

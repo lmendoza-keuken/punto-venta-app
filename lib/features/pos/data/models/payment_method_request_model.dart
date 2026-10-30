@@ -27,6 +27,7 @@ class PaymentMethodDetailRequest with _$PaymentMethodDetailRequest {
     @JsonKey(name: 'check_number') String? checkNumber,
     @JsonKey(name: 'transfer_id') String? transferId,
     @JsonKey(name: 'verification_id') String? verificationId,
+    @JsonKey(name: 'order_id') String? orderId,
   }) = _PaymentMethodDetailRequest;
 
   factory PaymentMethodDetailRequest.fromJson(Map<String, dynamic> json) =>
