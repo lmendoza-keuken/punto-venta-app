@@ -6,6 +6,7 @@ class PdvConfig {
   final bool? offlineMode;
   final int? creditNoteDaysLimit;
   final int? checkUpdatePeriod;
+  final bool? showTotalSaleToCashier;
 
   const PdvConfig({
     this.pdvId,
@@ -15,6 +16,7 @@ class PdvConfig {
     this.offlineMode,
     this.creditNoteDaysLimit,
     this.checkUpdatePeriod,
+    this.showTotalSaleToCashier,
   });
 
   PdvConfig copyWith({
@@ -25,6 +27,7 @@ class PdvConfig {
     bool? offlineMode,
     int? creditNoteDaysLimit,
     int? checkUpdatePeriod,
+    bool? showTotalSaleToCashier,
   }) {
     return PdvConfig(
       pdvId: pdvId ?? this.pdvId,
@@ -35,6 +38,8 @@ class PdvConfig {
       offlineMode: offlineMode ?? this.offlineMode,
       creditNoteDaysLimit: creditNoteDaysLimit ?? this.creditNoteDaysLimit,
       checkUpdatePeriod: checkUpdatePeriod ?? this.checkUpdatePeriod,
+      showTotalSaleToCashier:
+          showTotalSaleToCashier ?? this.showTotalSaleToCashier,
     );
   }
 
@@ -46,6 +51,7 @@ class PdvConfig {
         'offline_mode': offlineMode,
         'credit_note_days_limit': creditNoteDaysLimit,
         'check_update_period': checkUpdatePeriod,
+        'show_total_sale_to_cashier': showTotalSaleToCashier,
       };
 
   Map<String, dynamic> toUpdateJson() {
@@ -60,6 +66,9 @@ class PdvConfig {
     }
     if (checkUpdatePeriod != null) {
       data['check_update_period'] = checkUpdatePeriod;
+    }
+    if (showTotalSaleToCashier != null) {
+      data['show_total_sale_to_cashier'] = showTotalSaleToCashier;
     }
     return data;
   }
@@ -79,6 +88,8 @@ class PdvConfig {
         offlineMode: json['offline_mode'] as bool?,
         creditNoteDaysLimit: json['credit_note_days_limit'] as int?,
         checkUpdatePeriod: json['check_update_period'] as int?,
+        showTotalSaleToCashier:
+            json['show_total_sale_to_cashier'] as bool?,
       );
 }
 

@@ -1,7 +1,9 @@
 import 'package:equatable/equatable.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/dispose_reason.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/payment_method.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/return_reason.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/pdv_config.dart';
+import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_state.dart';
 
 class CheckoutConfirmationState extends Equatable {
   final bool isLoading;
@@ -11,6 +13,8 @@ class CheckoutConfirmationState extends Equatable {
   final double totalAmount;
   final List<ReturnReason> returnReasons;
   final int? selectedReturnReasonId;
+  final List<DisposeReason> disposeReasons;
+  final int? selectedDisposeReasonId;
   final String? errorMessage;
   final List<PaymentMethod> selectedPayments;
   final double receivedAmount;
@@ -27,6 +31,8 @@ class CheckoutConfirmationState extends Equatable {
     this.totalAmount = 0.0,
     this.returnReasons = const [],
     this.selectedReturnReasonId,
+    this.disposeReasons = const [],
+    this.selectedDisposeReasonId,
     this.errorMessage,
     this.selectedPayments = const [],
     this.receivedAmount = 0.0,
@@ -39,9 +45,12 @@ class CheckoutConfirmationState extends Equatable {
   double get totalAllocated =>
       selectedPayments.fold(0.0, (sum, pm) => sum + (pm.amount ?? 0.0));
 
-  bool isValid(bool isReturnMode) {
-    if (isReturnMode) {
+  bool isValid(CartMode cartMode) {
+    if (cartMode == CartMode.returnMode) {
       return selectedReturnReasonId != null;
+    }
+    if (cartMode == CartMode.disposeMode) {
+      return selectedDisposeReasonId != null;
     }
     if (selectedPayments.isEmpty) {
       return false;
@@ -61,6 +70,8 @@ class CheckoutConfirmationState extends Equatable {
     double? totalAmount,
     List<ReturnReason>? returnReasons,
     int? selectedReturnReasonId,
+    List<DisposeReason>? disposeReasons,
+    int? selectedDisposeReasonId,
     String? errorMessage,
     List<PaymentMethod>? selectedPayments,
     double? receivedAmount,
@@ -77,13 +88,20 @@ class CheckoutConfirmationState extends Equatable {
       internalTaxAmount: internalTaxAmount ?? this.internalTaxAmount,
       totalAmount: totalAmount ?? this.totalAmount,
       returnReasons: returnReasons ?? this.returnReasons,
-      selectedReturnReasonId: selectedReturnReasonId ?? this.selectedReturnReasonId,
+      selectedReturnReasonId:
+          selectedReturnReasonId ?? this.selectedReturnReasonId,
+      disposeReasons: disposeReasons ?? this.disposeReasons,
+      selectedDisposeReasonId:
+          selectedDisposeReasonId ?? this.selectedDisposeReasonId,
       errorMessage: errorMessage ?? this.errorMessage,
       selectedPayments: selectedPayments ?? this.selectedPayments,
       receivedAmount: receivedAmount ?? this.receivedAmount,
       change: change ?? this.change,
-      activeBranchId: resetActiveBranch ? null : (activeBranchId ?? this.activeBranchId),
-      activeBranchName: resetActiveBranch ? null : (activeBranchName ?? this.activeBranchName),
+      activeBranchId:
+          resetActiveBranch ? null : (activeBranchId ?? this.activeBranchId),
+      activeBranchName: resetActiveBranch
+          ? null
+          : (activeBranchName ?? this.activeBranchName),
       allowedBranches: allowedBranches ?? this.allowedBranches,
     );
   }
@@ -97,6 +115,8 @@ class CheckoutConfirmationState extends Equatable {
         totalAmount,
         returnReasons,
         selectedReturnReasonId,
+        disposeReasons,
+        selectedDisposeReasonId,
         errorMessage,
         selectedPayments,
         receivedAmount,

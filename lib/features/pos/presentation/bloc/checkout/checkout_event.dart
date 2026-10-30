@@ -74,3 +74,20 @@ class ConfirmReturn extends CheckoutEvent {
   @override
   List<Object?> get props => [reasonId, items, logItems, branchId];
 }
+
+class ConfirmStockDispose extends CheckoutEvent {
+  final int reasonId;
+  final String reasonDescription;
+  final List<CartItem> items;
+  final List<CartLogEntry> logItems;
+
+  const ConfirmStockDispose({
+    required this.reasonId,
+    required this.reasonDescription,
+    required this.items,
+    required this.logItems,
+  });
+
+  @override
+  List<Object?> get props => [reasonId, reasonDescription, items, logItems];
+}

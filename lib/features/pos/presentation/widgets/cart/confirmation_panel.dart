@@ -11,6 +11,7 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/checkout_confirma
 import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/payment_methods_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/payment_methods/payment_methods_state.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/cart/confirmation/dispose_confirmation/dispose_confirmation_view.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/cart/confirmation/return_confirmation/return_confirmation_view.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_state.dart';
@@ -30,6 +31,39 @@ class ConfirmationPanel extends StatefulWidget {
 }
 
 class _ConfirmationPanelState extends State<ConfirmationPanel> {
+  String _titleForMode(CartMode mode) {
+    switch (mode) {
+      case CartMode.returnMode:
+        return 'Confirmar Devolución';
+      case CartMode.disposeMode:
+        return 'Confirmar Descarte';
+      case CartMode.sale:
+        return 'Confirmar Pago';
+    }
+  }
+
+  String _processingLabel(CartMode mode) {
+    switch (mode) {
+      case CartMode.returnMode:
+        return 'Procesando devolución...';
+      case CartMode.disposeMode:
+        return 'Procesando descarte...';
+      case CartMode.sale:
+        return 'Procesando venta...';
+    }
+  }
+
+  Color _confirmColor(CartMode mode) {
+    switch (mode) {
+      case CartMode.returnMode:
+        return AppColors.warning;
+      case CartMode.disposeMode:
+        return Colors.brown.shade600;
+      case CartMode.sale:
+        return AppColors.success;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final pmState = context.read<PaymentMethodsBloc>().state;
@@ -37,16 +71,16 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
         pmState is PaymentMethodsLoaded ? pmState.selectedPaymentMethod : null;
 
     final uiState = context.read<UiBloc>().state;
-    final isReturnMode =
-        uiState is UiLoaded ? uiState.isReturnMode : false;
+    final cartMode = uiState is UiLoaded ? uiState.cartMode : CartMode.sale;
 
     return BlocProvider(
       create: (context) => CheckoutConfirmationCubit(
         fetchReturnReasonsUsecase: di.sl(),
+        fetchDisposeReasonsUsecase: di.sl(),
         calculateOrderTaxesUseCase: di.sl(),
         cartBloc: context.read<CartBloc>(),
         clientsBloc: context.read<ClientsBloc>(),
-      )..load(defaultPaymentMethod, isReturnMode: isReturnMode),
+      )..load(defaultPaymentMethod, cartMode: cartMode),
       child: BlocBuilder<CartBloc, CartState>(
         builder: (context, cartState) {
           if (cartState is! CartLoaded) {
@@ -54,8 +88,8 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
           }
 
           final uiState = context.watch<UiBloc>().state;
-          final isReturnMode =
-              uiState is UiLoaded ? uiState.isReturnMode : false;
+          final cartMode =
+              uiState is UiLoaded ? uiState.cartMode : CartMode.sale;
 
           return BlocBuilder<CheckoutConfirmationCubit,
               CheckoutConfirmationState>(
@@ -90,9 +124,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
-                                    isReturnMode
-                                        ? 'Confirmar Devolución'
-                                        : 'Confirmar Pago',
+                                    _titleForMode(cartMode),
                                     style: Theme.of(context)
                                         .textTheme
                                         .titleLarge
@@ -100,7 +132,8 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                                           fontWeight: FontWeight.bold,
                                         ),
                                   ),
-                                  if (confirmationState.activeBranchName !=
+                                  if (cartMode == CartMode.sale &&
+                                      confirmationState.activeBranchName !=
                                           null) ...[
                                     const SizedBox(height: 2),
                                     if (confirmationState
@@ -181,8 +214,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              if (isReturnMode)
-                                // Vista de devolución
+                              if (cartMode == CartMode.returnMode)
                                 ReturnConfirmationView(
                                   totalAmount: totalAmount,
                                   isLoadingReasons: confirmationState.isLoading,
@@ -198,8 +230,23 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                                     }
                                   },
                                 )
+                              else if (cartMode == CartMode.disposeMode)
+                                DisposeConfirmationView(
+                                  totalAmount: totalAmount,
+                                  isLoadingReasons: confirmationState.isLoading,
+                                  disposeReasons:
+                                      confirmationState.disposeReasons,
+                                  selectedDisposeReasonId: confirmationState
+                                      .selectedDisposeReasonId,
+                                  onDisposeReasonChanged: (id) {
+                                    if (id != null) {
+                                      context
+                                          .read<CheckoutConfirmationCubit>()
+                                          .selectDisposeReason(id);
+                                    }
+                                  },
+                                )
                               else
-                                // Vista de cobro
                                 CheckoutConfirmationView(
                                   totalAmount: totalAmount,
                                   iibbAmount: confirmationState.iibbAmount,
@@ -220,19 +267,19 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                                         AppColors.info.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  child: const Row(
+                                  child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      SizedBox(
+                                      const SizedBox(
                                         width: 20,
                                         height: 20,
                                         child: CircularProgressIndicator(
                                             strokeWidth: 2),
                                       ),
-                                      SizedBox(width: 12),
+                                      const SizedBox(width: 12),
                                       Text(
-                                        'Procesando venta...',
-                                        style: TextStyle(
+                                        _processingLabel(cartMode),
+                                        style: const TextStyle(
                                           fontSize: 15,
                                           fontWeight: FontWeight.w500,
                                         ),
@@ -245,7 +292,6 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                           ),
                         ),
                       ),
-                      // Botones de acción
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: AppDimensions.paddingL,
@@ -263,20 +309,20 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                                 height: AppDimensions.buttonHeightS,
                                 child: ElevatedButton(
                                   onPressed: isProcessing ||
-                                          !confirmationState
-                                              .isValid(isReturnMode)
+                                          !confirmationState.isValid(cartMode)
                                       ? null
                                       : () {
-                                          if (isReturnMode) {
-                                            _confirmReturn(context);
-                                          } else {
-                                            _confirmSale(context);
+                                          switch (cartMode) {
+                                            case CartMode.returnMode:
+                                              _confirmReturn(context);
+                                            case CartMode.disposeMode:
+                                              _confirmDispose(context);
+                                            case CartMode.sale:
+                                              _confirmSale(context);
                                           }
                                         },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: isReturnMode
-                                        ? AppColors.warning
-                                        : AppColors.success,
+                                    backgroundColor: _confirmColor(cartMode),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
@@ -339,10 +385,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
     );
   }
 
-  // Función para confirmar la venta
-  void _confirmSale(
-    BuildContext context,
-  ) {
+  void _confirmSale(BuildContext context) {
     final paymentMethodsState = context.read<PaymentMethodsBloc>().state;
     final selectedPaymentMethod = paymentMethodsState is PaymentMethodsLoaded
         ? paymentMethodsState.selectedPaymentMethod
@@ -355,16 +398,19 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
     context.read<CheckoutBloc>().add(event);
   }
 
-  // funcion para confirmar la devolucion
-  void _confirmReturn(
-    BuildContext context,
-  ) {
+  void _confirmReturn(BuildContext context) {
     final event =
         context.read<CheckoutConfirmationCubit>().buildConfirmReturnEvent();
     context.read<CheckoutBloc>().add(event);
   }
 
-  // Función para manejar el cierre del panel
+  void _confirmDispose(BuildContext context) {
+    final event = context
+        .read<CheckoutConfirmationCubit>()
+        .buildConfirmStockDisposeEvent();
+    context.read<CheckoutBloc>().add(event);
+  }
+
   void _handleClose() {
     widget.onClose();
   }

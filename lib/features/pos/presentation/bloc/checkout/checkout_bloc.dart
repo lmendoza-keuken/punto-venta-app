@@ -19,6 +19,8 @@ import 'checkout_event.dart';
 import 'checkout_state.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/process_partial_return_usecase.dart';
 import 'package:punto_venta_app/features/pos/data/models/partial_return_request_model.dart';
+import 'package:punto_venta_app/features/pos/data/models/stock_dispose_request_model.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/process_stock_dispose_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/calculate_order_taxes_usecase.dart';
 import 'package:punto_venta_app/features/app_update/domain/entities/update_check_result.dart';
 import 'package:punto_venta_app/features/app_update/domain/usecases/track_comprobante_and_maybe_check_update_usecase.dart';
@@ -34,6 +36,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
   final GetTicketConfigUsecase getTicketConfigUsecase;
   final SendInvoiceUseCase sendInvoiceUseCase;
   final ProcessPartialReturnUseCase processPartialReturnUseCase;
+  final ProcessStockDisposeUseCase processStockDisposeUseCase;
   final CalculateOrderTaxesUseCase calculateOrderTaxesUseCase;
   final TrackComprobanteAndMaybeCheckUpdateUseCase
       trackComprobanteAndMaybeCheckUpdate;
@@ -50,6 +53,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
     required this.getTicketConfigUsecase,
     required this.sendInvoiceUseCase,
     required this.processPartialReturnUseCase,
+    required this.processStockDisposeUseCase,
     required this.calculateOrderTaxesUseCase,
     required this.trackComprobanteAndMaybeCheckUpdate,
     required this.sharedPreferences,
@@ -57,6 +61,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
     on<ProcessSale>(_onProcessSale);
     on<ResetCheckout>(_onResetCheckout);
     on<ConfirmReturn>(_onConfirmReturn);
+    on<ConfirmStockDispose>(_onConfirmStockDispose);
   }
 
   Future<void> _onProcessSale(
@@ -340,6 +345,66 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         description: completedOrder.description,
         templateType: completedOrder.templateType,
         isCreditNote: true,
+      );
+
+      emit(CheckoutSuccess(printJob: printJob));
+    } catch (e) {
+      emit(CheckoutError(message: _extractErrorMessage(e)));
+    }
+  }
+
+  Future<void> _onConfirmStockDispose(
+    ConfirmStockDispose event,
+    Emitter<CheckoutState> emit,
+  ) async {
+    emit(const CheckoutProcessing());
+
+    try {
+      if (event.items.isEmpty) {
+        emit(const CheckoutError(
+            message: 'Agrega productos antes de confirmar el descarte.'));
+        return;
+      }
+
+      final disposeItems = event.items.map((item) {
+        final isWeighted = item.isWeighted == true;
+        return StockDisposeItemModel(
+          code: item.product.id.toString(),
+          quantity: isWeighted ? 1.0 : item.quantity.toDouble(),
+          isWeighted: isWeighted ? 'S' : 'N',
+          netWeight: isWeighted ? item.product.netWeight : null,
+          weight: isWeighted ? (item.weightKg ?? 0.0) : null,
+        );
+      }).toList();
+
+      final request = StockDisposeRequestModel(
+        reasonId: event.reasonId,
+        items: disposeItems,
+      );
+
+      final response = await processStockDisposeUseCase(request);
+
+      final user = await authLocalDataSource.getCachedUser();
+      final enterprise = await authLocalDataSource.getCachedEnterprise();
+      final config = await pdvLocalDataSource.getPdvConfig();
+
+      final printJob = PrintJob(
+        ticketId: response.id?.toString(),
+        items: event.items,
+        logItems: event.logItems,
+        total: 0,
+        totalTax: 0,
+        cashierName: user?.name ?? 'Desconocido',
+        cashierId: int.tryParse(user?.id ?? ''),
+        timestamp: DateTime.tryParse(response.createdAt ?? '') ?? DateTime.now(),
+        enterprise: enterprise,
+        branchNumber: config?.branchNumber ?? '',
+        branchId: config?.branchId,
+        disposeReason: event.reasonDescription,
+        description: 'DESCARTE',
+        templateType: TicketTemplateType.dispose,
+        showSubtotalAndTax: false,
+        showPricesWithTax: false,
       );
 
       emit(CheckoutSuccess(printJob: printJob));

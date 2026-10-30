@@ -42,10 +42,13 @@ import 'package:punto_venta_app/features/pos/data/datasources/completed_orders_r
 import 'package:punto_venta_app/features/pos/data/datasources/return_reason_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/returns_remote_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/refunds_remote_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/stock_dispose_remote_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/repositories/returns_repository_impl.dart';
 import 'package:punto_venta_app/features/pos/data/repositories/refunds_repository_impl.dart';
+import 'package:punto_venta_app/features/pos/data/repositories/stock_dispose_repository_impl.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/returns_repository.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/refunds_repository.dart';
+import 'package:punto_venta_app/features/pos/domain/repositories/stock_dispose_repository.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/refunds/refunds_cubit.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/invoice_remote_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/ticket_config_local_datasource.dart';
@@ -95,6 +98,8 @@ import 'package:punto_venta_app/features/pos/domain/usecases/fetch_return_reason
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_returns_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/generate_credit_note_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/process_partial_return_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/process_stock_dispose_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/fetch_dispose_reasons_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_clients_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_taxes_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_vat_categories_usecase.dart';
@@ -334,6 +339,7 @@ Future<void> init() async {
         getTicketConfigUsecase: sl(),
         sendInvoiceUseCase: sl(),
         processPartialReturnUseCase: sl(),
+        processStockDisposeUseCase: sl(),
         calculateOrderTaxesUseCase: sl(),
         trackComprobanteAndMaybeCheckUpdate: sl(),
         sharedPreferences: sl(),
@@ -377,11 +383,13 @@ Future<void> init() async {
   sl.registerLazySingleton(() => FetchPriceListTypesUsecase(sl()));
   sl.registerLazySingleton(() => FetchBranchesUsecase(sl()));
   sl.registerLazySingleton(() => FetchReturnReasonsUsecase(sl()));
+  sl.registerLazySingleton(() => FetchDisposeReasonsUsecase(sl()));
   sl.registerLazySingleton(() => FetchReturnsUsecase(sl()));
   sl.registerLazySingleton(() => GenerateCreditNoteUsecase(
         returnsRepository: sl(),
         completedOrdersRepository: sl(),
       ));
+  sl.registerLazySingleton(() => ProcessStockDisposeUseCase(sl()));
   sl.registerLazySingleton(() => ProcessPartialReturnUseCase(
         returnsRepository: sl(),
         completedOrdersRepository: sl(),
@@ -539,6 +547,15 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<ReturnsRemoteDataSource>(
     () => ReturnsRemoteDataSourceImpl(),
+  );
+  sl.registerLazySingleton<StockDisposeService>(
+    () => StockDisposeService(sl()),
+  );
+  sl.registerLazySingleton<StockDisposeRemoteDataSource>(
+    () => StockDisposeRemoteDataSourceImpl(),
+  );
+  sl.registerLazySingleton<StockDisposeRepository>(
+    () => StockDisposeRepositoryImpl(remoteDataSource: sl()),
   );
   sl.registerLazySingleton<RefundsService>(
     () => RefundsService(sl()),

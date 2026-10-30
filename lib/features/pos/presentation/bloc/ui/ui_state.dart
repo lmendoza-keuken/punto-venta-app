@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+enum CartMode { sale, returnMode, disposeMode }
+
 abstract class UiState extends Equatable {
   const UiState();
 
@@ -11,30 +13,36 @@ class UiLoaded extends UiState {
   final int selectedQuantity;
   final bool isDeleteMode;
   final bool isBarcodeSearchEnabled;
-  final bool isReturnMode;
+  final CartMode cartMode;
   final bool showConfirmationPanel;
 
   const UiLoaded({
     this.selectedQuantity = 1,
     this.isDeleteMode = false,
     this.isBarcodeSearchEnabled = true,
-    this.isReturnMode = false,
+    this.cartMode = CartMode.sale,
     this.showConfirmationPanel = false,
   });
+
+  bool get isReturnMode => cartMode == CartMode.returnMode;
+  bool get isDisposeMode => cartMode == CartMode.disposeMode;
+  bool get isSaleMode => cartMode == CartMode.sale;
 
   UiLoaded copyWith({
     int? selectedQuantity,
     bool? isDeleteMode,
     bool? isBarcodeSearchEnabled,
-    bool? isReturnMode,
+    CartMode? cartMode,
     bool? showConfirmationPanel,
   }) {
     return UiLoaded(
       selectedQuantity: selectedQuantity ?? this.selectedQuantity,
       isDeleteMode: isDeleteMode ?? this.isDeleteMode,
-      isBarcodeSearchEnabled: isBarcodeSearchEnabled ?? this.isBarcodeSearchEnabled,
-      isReturnMode: isReturnMode ?? this.isReturnMode,
-      showConfirmationPanel: showConfirmationPanel ?? this.showConfirmationPanel,
+      isBarcodeSearchEnabled:
+          isBarcodeSearchEnabled ?? this.isBarcodeSearchEnabled,
+      cartMode: cartMode ?? this.cartMode,
+      showConfirmationPanel:
+          showConfirmationPanel ?? this.showConfirmationPanel,
     );
   }
 
@@ -43,7 +51,7 @@ class UiLoaded extends UiState {
         selectedQuantity,
         isDeleteMode,
         isBarcodeSearchEnabled,
-        isReturnMode,
+        cartMode,
         showConfirmationPanel,
       ];
 }

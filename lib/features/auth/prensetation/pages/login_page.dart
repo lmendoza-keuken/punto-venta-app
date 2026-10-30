@@ -28,7 +28,18 @@ class LoginPage extends StatelessWidget {
 
       if (enterprise != null && email != null) {
 
-        ApiConfig.updateCompanyConfig(enterprise.id.toString(), enterprise.baseUrl);
+        final urls = enterprise.baseUrls.isNotEmpty
+            ? enterprise.baseUrls
+            : [
+                if (enterprise.baseUrl != null &&
+                    enterprise.baseUrl!.trim().isNotEmpty)
+                  enterprise.baseUrl!.trim(),
+              ];
+        ApiConfig.updateCompanyConfig(
+          enterprise.id.toString(),
+          urls,
+          activeUrl: enterprise.baseUrl,
+        );
         context.go(
           RoutePaths.credentials,
           extra: {

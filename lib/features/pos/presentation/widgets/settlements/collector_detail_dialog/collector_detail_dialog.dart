@@ -6,6 +6,7 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/settlements/settl
 import 'package:punto_venta_app/features/pos/presentation/bloc/settlements/settlements_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/settlements/settlements_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/settlements/collector_detail_dialog/canceled_items_dialog.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/settlements/collector_detail_dialog/disposed_items_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/settlements/collector_detail_dialog/settlement_payments_breakdown.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/settlements/collector_detail_dialog/settlement_summary_grid.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
@@ -186,6 +187,17 @@ class _CollectorDetailDialogContent extends StatelessWidget {
                             barrierDismissible: false,
                             context: context,
                             builder: (_) => CanceledItemsDialog(
+                              collectorId: collectorId,
+                              collectorName: collectorName,
+                              date: date,
+                            ),
+                          );
+                        },
+                        onDisposedItemsTap: () {
+                          showDialog(
+                            barrierDismissible: false,
+                            context: context,
+                            builder: (_) => DisposedItemsDialog(
                               collectorId: collectorId,
                               collectorName: collectorName,
                               date: date,

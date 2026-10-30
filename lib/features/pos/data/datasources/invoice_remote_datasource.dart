@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
+import 'package:punto_venta_app/core/network/base_url_failover.dart';
 import 'package:punto_venta_app/core/network/error_handler.dart';
 import 'package:punto_venta_app/features/pos/data/models/invoice_payload_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/tax_model.dart';
@@ -42,9 +43,12 @@ class InvoiceRemoteDataSourceImpl implements InvoiceRemoteDataSource {
     final payload = InvoicePayload.fromPrintJob(job, taxes).toJson();
 
     try {
-      final Map<String, dynamic> data = await _apiService.sendInvoice(payload);
-
-      return InvoiceResponseModel.fromJson(data, defaultTicketId: job.ticketId);
+      return await BaseUrlFailover.runWithFailover(() async {
+        final Map<String, dynamic> data =
+            await _apiService.sendInvoice(payload);
+        return InvoiceResponseModel.fromJson(data,
+            defaultTicketId: job.ticketId);
+      });
     } catch (e) {
       throw Exception(ErrorHandler.handleError(e,
           defaultMessage: 'Error al enviar factura'));

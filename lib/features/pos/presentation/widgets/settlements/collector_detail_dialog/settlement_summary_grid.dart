@@ -7,21 +7,30 @@ import 'package:punto_venta_app/features/pos/data/models/pending_collectors_deta
 class SettlementSummaryGrid extends StatelessWidget {
   final PendingCollectorsDetailResponseModel detail;
   final VoidCallback? onCanceledItemsTap;
+  final VoidCallback? onDisposedItemsTap;
 
   const SettlementSummaryGrid({
     super.key,
     required this.detail,
     this.onCanceledItemsTap,
+    this.onDisposedItemsTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final canceledCount = detail.canceledItemsCount ?? 0;
+    final disposedCount = detail.disposedItemsCount;
+    final showDisposedCard = disposedCount != null;
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth > 500 ? 3 : 1;
+        final cardCount = showDisposedCard ? 4 : 3;
+        final crossAxisCount = constraints.maxWidth > 720
+            ? cardCount
+            : constraints.maxWidth > 500
+                ? 2
+                : 1;
 
         return GridView(
           shrinkWrap: true,
@@ -30,32 +39,42 @@ class SettlementSummaryGrid extends StatelessWidget {
             crossAxisCount: crossAxisCount,
             crossAxisSpacing: AppDimensions.paddingS,
             mainAxisSpacing: AppDimensions.paddingS,
-            childAspectRatio: crossAxisCount == 3 ? 1.4 : 3.5,
+            childAspectRatio: crossAxisCount >= 3
+                ? 1.25
+                : crossAxisCount == 2
+                    ? 2.2
+                    : 3.5,
           ),
           children: [
             _buildMetricCard(
               title: 'Facturación',
               count: detail.invoiceCount ?? 0,
               total: (detail.invoiceTotal ?? 0.0).formatToCurrency(),
-              iconColor: AppColors.primary,
               isDark: isDark,
             ),
             _buildMetricCard(
               title: 'Notas de Crédito',
               count: detail.creditNoteCount ?? 0,
               total: (detail.creditNoteTotal ?? 0.0).formatToCurrency(),
-              iconColor: AppColors.error,
               isDark: isDark,
             ),
             _buildMetricCard(
               title: 'Artículos Cancelados',
               count: canceledCount,
               total: '$canceledCount unid.',
-              iconColor: AppColors.accent,
               isDark: isDark,
               showTotalOnly: true,
               onTap: canceledCount > 0 ? onCanceledItemsTap : null,
             ),
+            if (showDisposedCard)
+              _buildMetricCard(
+                title: 'Artículos Descartados',
+                count: disposedCount,
+                total: '$disposedCount unid.',
+                isDark: isDark,
+                showTotalOnly: true,
+                onTap: disposedCount > 0 ? onDisposedItemsTap : null,
+              ),
           ],
         );
       },
@@ -66,7 +85,6 @@ class SettlementSummaryGrid extends StatelessWidget {
     required String title,
     required int count,
     required String total,
-    required Color iconColor,
     required bool isDark,
     bool showTotalOnly = false,
     VoidCallback? onTap,

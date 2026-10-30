@@ -1,6 +1,7 @@
 class ApiConfig {
   static String _companyId = '';
   static String _baseUrl = '';
+  static List<String> _baseUrls = [];
 
   static String get validatedBaseUrl {
     if (_baseUrl.isEmpty) {
@@ -8,6 +9,10 @@ class ApiConfig {
     }
     return _baseUrl;
   }
+
+  static List<String> get baseUrls => List.unmodifiable(_baseUrls);
+
+  static String get activeBaseUrl => _baseUrl;
 
   static String get productosUrl => '$validatedBaseUrl/articles/';
   static String get pricesListUrl => '$validatedBaseUrl/prices_list/';
@@ -31,19 +36,60 @@ class ApiConfig {
   static String get pendingCollectorDetail =>
       '$validatedBaseUrl/settlements/pending/{collector_id}';
 
-  static void updateCompanyConfig(String companyId, String? baseUrl) {
+  static void updateCompanyConfig(
+    String companyId,
+    List<String> urls, {
+    String? activeUrl,
+  }) {
     _companyId = companyId;
 
-    if (baseUrl != null && baseUrl.isNotEmpty) {
-      _baseUrl = baseUrl;
-    } else {
+    final cleaned = <String>[];
+    for (final url in urls) {
+      final trimmed = url.trim();
+      if (trimmed.isNotEmpty && !cleaned.contains(trimmed)) {
+        cleaned.add(trimmed);
+      }
+    }
+
+    if (cleaned.isEmpty) {
       throw Exception('No hay url configurada para esta empresa');
     }
+
+    _baseUrls = cleaned;
+
+    final preferred = activeUrl?.trim();
+    if (preferred != null &&
+        preferred.isNotEmpty &&
+        cleaned.contains(preferred)) {
+      _baseUrl = preferred;
+    } else {
+      _baseUrl = cleaned.first;
+    }
+  }
+
+  /// Rotates to the next URL in the list. Returns false if there is no alternative.
+  static bool switchToNextBaseUrl() {
+    if (_baseUrls.length <= 1) {
+      return false;
+    }
+
+    final currentIndex = _baseUrls.indexOf(_baseUrl);
+    final nextIndex =
+        currentIndex < 0 ? 0 : (currentIndex + 1) % _baseUrls.length;
+    final nextUrl = _baseUrls[nextIndex];
+
+    if (nextUrl == _baseUrl) {
+      return false;
+    }
+
+    _baseUrl = nextUrl;
+    return true;
   }
 
   static void resetCompanyId() {
     _companyId = '';
     _baseUrl = '';
+    _baseUrls = [];
   }
 
   static String get companyId => _companyId;

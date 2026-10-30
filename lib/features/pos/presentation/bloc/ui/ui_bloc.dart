@@ -9,7 +9,7 @@ class UiBloc extends Bloc<UiEvent, UiState> {
     on<ToggleBarcodeSearch>(_onToggleBarcodeSearch);
     on<ResetQuantity>(_onResetQuantity);
     on<ResetUiState>(_onResetUiState);
-    on<ToggleReturnMode>(_onToggleReturnMode);
+    on<SetCartMode>(_onSetCartMode);
     on<OpenConfirmationPanel>(_onOpenConfirmationPanel);
     on<CloseConfirmationPanel>(_onCloseConfirmationPanel);
   }
@@ -28,10 +28,12 @@ class UiBloc extends Bloc<UiEvent, UiState> {
     }
   }
 
-  void _onToggleBarcodeSearch(ToggleBarcodeSearch event, Emitter<UiState> emit) {
+  void _onToggleBarcodeSearch(
+      ToggleBarcodeSearch event, Emitter<UiState> emit) {
     if (state is UiLoaded) {
       final currentState = state as UiLoaded;
-      emit(currentState.copyWith(isBarcodeSearchEnabled: !currentState.isBarcodeSearchEnabled));
+      emit(currentState.copyWith(
+          isBarcodeSearchEnabled: !currentState.isBarcodeSearchEnabled));
     }
   }
 
@@ -46,21 +48,23 @@ class UiBloc extends Bloc<UiEvent, UiState> {
     emit(const UiLoaded());
   }
 
-  void _onToggleReturnMode(ToggleReturnMode event, Emitter<UiState> emit) {
+  void _onSetCartMode(SetCartMode event, Emitter<UiState> emit) {
     if (state is UiLoaded) {
       final currentState = state as UiLoaded;
-      emit(currentState.copyWith(isReturnMode: !currentState.isReturnMode));
+      emit(currentState.copyWith(cartMode: event.mode));
     }
   }
 
-  void _onOpenConfirmationPanel(OpenConfirmationPanel event, Emitter<UiState> emit) {
+  void _onOpenConfirmationPanel(
+      OpenConfirmationPanel event, Emitter<UiState> emit) {
     if (state is UiLoaded) {
       final currentState = state as UiLoaded;
       emit(currentState.copyWith(showConfirmationPanel: true));
     }
   }
 
-  void _onCloseConfirmationPanel(CloseConfirmationPanel event, Emitter<UiState> emit) {
+  void _onCloseConfirmationPanel(
+      CloseConfirmationPanel event, Emitter<UiState> emit) {
     if (state is UiLoaded) {
       final currentState = state as UiLoaded;
       emit(currentState.copyWith(showConfirmationPanel: false));

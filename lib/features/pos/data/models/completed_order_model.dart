@@ -305,6 +305,8 @@ TicketTemplateType _templateTypeFromJson(String? json) {
       return TicketTemplateType.blackMarket;
     case 'whiteMarket':
       return TicketTemplateType.whiteMarket;
+    case 'dispose':
+      return TicketTemplateType.dispose;
     default:
       return TicketTemplateType.standard;
   }
@@ -318,5 +320,7 @@ String _templateTypeToJson(TicketTemplateType templateType) {
       return 'blackMarket';
     case TicketTemplateType.whiteMarket:
       return 'whiteMarket';
+    case TicketTemplateType.dispose:
+      return 'dispose';
   }
 }

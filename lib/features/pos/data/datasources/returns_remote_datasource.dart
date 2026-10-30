@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
+import 'package:punto_venta_app/core/network/base_url_failover.dart';
 import 'package:punto_venta_app/core/network/error_handler.dart';
 import 'package:punto_venta_app/features/pos/data/models/invoice_payload_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/return_reason_model.dart';
@@ -66,9 +67,11 @@ class ReturnsRemoteDataSourceImpl implements ReturnsRemoteDataSource {
         saleId: saleId,
         reasonId: reasonId,
       ).toJson();
-      final Map<String, dynamic> data =
-          await _apiService.processTotalReturn(body);
-      return InvoicePayload.fromJson(data);
+      return await BaseUrlFailover.runWithFailover(() async {
+        final Map<String, dynamic> data =
+            await _apiService.processTotalReturn(body);
+        return InvoicePayload.fromJson(data);
+      });
     } catch (e) {
       throw Exception(ErrorHandler.handleError(e,
           defaultMessage: 'Error al procesar devolución total'));
@@ -79,9 +82,11 @@ class ReturnsRemoteDataSourceImpl implements ReturnsRemoteDataSource {
   Future<InvoicePayload> processPartialReturn(PartialReturnRequestModel request) async {
     try {
       final body = request.toJson();
-      final Map<String, dynamic> data =
-          await _apiService.processPartialReturn(body);
-      return InvoicePayload.fromJson(data);
+      return await BaseUrlFailover.runWithFailover(() async {
+        final Map<String, dynamic> data =
+            await _apiService.processPartialReturn(body);
+        return InvoicePayload.fromJson(data);
+      });
     } catch (e) {
       throw Exception(ErrorHandler.handleError(e,
           defaultMessage: 'Error al procesar devolución parcial'));
