@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
+import 'package:punto_venta_app/core/constants/app_dimensions.dart';
+import 'package:punto_venta_app/core/utils/extensions.dart';
+import 'package:punto_venta_app/core/widgets/scroll_bottom_extension.dart';
 import 'package:punto_venta_app/features/customer_display/domain/customer_display_snapshot.dart';
+import 'package:punto_venta_app/features/customer_display/presentation/widgets/customer_display_last_product.dart';
+import 'package:punto_venta_app/features/customer_display/presentation/widgets/customer_display_qr_panel.dart';
+import 'package:punto_venta_app/features/customer_display/presentation/widgets/customer_display_qr_status.dart';
 
 class CustomerDisplayPage extends StatelessWidget {
   const CustomerDisplayPage({
@@ -11,35 +16,29 @@ class CustomerDisplayPage extends StatelessWidget {
 
   final CustomerDisplaySnapshot snapshot;
 
-  static final _currency = NumberFormat.currency(
-    locale: 'es_AR',
-    symbol: '\$',
-    decimalDigits: 2,
-  );
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.sidebarBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 250),
           child: switch (snapshot.mode) {
             CustomerDisplayMode.idle => const _IdleView(key: ValueKey('idle')),
+            CustomerDisplayMode.advertising =>
+              const _AdvertisingView(key: ValueKey('ads')),
+            // Key estable: no remount en cada scan (evita traba al escanear rápido).
             CustomerDisplayMode.cart => _CartView(
                 key: const ValueKey('cart'),
                 snapshot: snapshot,
-                currency: _currency,
               ),
             CustomerDisplayMode.payment => _PaymentView(
                 key: const ValueKey('payment'),
-                total: snapshot.totalConIva,
-                currency: _currency,
+                snapshot: snapshot,
               ),
             CustomerDisplayMode.done => _DoneView(
                 key: const ValueKey('done'),
                 total: snapshot.totalConIva,
-                currency: _currency,
               ),
           },
         ),
@@ -53,24 +52,25 @@ class _IdleView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    final theme = Theme.of(context);
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.storefront, size: 96, color: AppColors.sidebarAccent),
-          SizedBox(height: 24),
+          const Icon(Icons.storefront, size: 88, color: AppColors.primary),
+          const SizedBox(height: AppDimensions.paddingL),
           Text(
             'Bienvenido',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 42,
-              fontWeight: FontWeight.w600,
+            style: theme.textTheme.headlineLarge?.copyWith(
+              color: AppColors.primary,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             'Su compra aparecerá aquí',
-            style: TextStyle(color: AppColors.sidebarIconInactive, fontSize: 20),
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: AppColors.textSecondary,
+            ),
           ),
         ],
       ),
@@ -78,119 +78,250 @@ class _IdleView extends StatelessWidget {
   }
 }
 
-class _CartView extends StatelessWidget {
-  const _CartView({
-    super.key,
-    required this.snapshot,
-    required this.currency,
-  });
-
-  final CustomerDisplaySnapshot snapshot;
-  final NumberFormat currency;
+class _AdvertisingView extends StatelessWidget {
+  const _AdvertisingView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppDimensions.paddingXL),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.greenDark,
+            AppColors.green,
+            AppColors.greenLight,
+          ],
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.campaign_outlined, size: 96, color: Colors.white),
+            const SizedBox(height: 24),
+            Text(
+              'Publicidad',
+              style: theme.textTheme.headlineLarge?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Espacio reservado para promociones\ny avisos del local',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: Colors.white.withValues(alpha: 0.9),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CartView extends StatefulWidget {
+  const _CartView({
+    super.key,
+    required this.snapshot,
+  });
+
+  final CustomerDisplaySnapshot snapshot;
+
+  @override
+  State<_CartView> createState() => _CartViewState();
+}
+
+class _CartViewState extends State<_CartView> {
+  final ScrollController _scrollController = ScrollController();
+  int _lastCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _lastCount = widget.snapshot.items.length;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollController.scrollToBottom();
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant _CartView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final next = widget.snapshot.items.length;
+    final lastChanged = oldWidget.snapshot.lastProduct?.entryId !=
+        widget.snapshot.lastProduct?.entryId;
+    if (next != _lastCount || lastChanged) {
+      _lastCount = next;
+      _scrollController.scrollToBottom();
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final snapshot = widget.snapshot;
+    final hasHero = snapshot.lastProduct != null;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-      child: Column(
+      padding: const EdgeInsets.all(AppDimensions.paddingL),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            'Su compra',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.w600,
+          if (hasHero) ...[
+            Expanded(
+              flex: 6,
+              child: CustomerDisplayLastProductPreview(
+                product: snapshot.lastProduct!,
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
+            const SizedBox(width: AppDimensions.paddingL),
+          ],
           Expanded(
-            child: snapshot.items.isEmpty
-                ? const Center(
-                    child: Text(
-                      'Sin artículos',
-                      style: TextStyle(
-                        color: AppColors.sidebarIconInactive,
-                        fontSize: 22,
-                      ),
-                    ),
-                  )
-                : ListView.separated(
-                    itemCount: snapshot.items.length,
-                    separatorBuilder: (_, __) => const Divider(
-                      color: AppColors.sidebarDivider,
-                      height: 1,
-                    ),
-                    itemBuilder: (context, index) {
-                      final item = snapshot.items[index];
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    item.name,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    item.quantityLabel,
-                                    style: const TextStyle(
-                                      color: AppColors.sidebarIconInactive,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Text(
-                              currency.format(item.lineTotal),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 22,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppColors.sidebarSurface,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            flex: hasHero ? 4 : 1,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text(
-                  'Total',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.w600,
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppDimensions.paddingM,
+                    vertical: AppDimensions.paddingM,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius:
+                        BorderRadius.circular(AppDimensions.borderRadiusL),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Total',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          snapshot.totalConIva.formatToCurrency(),
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.displaySmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.primary,
+                            height: 1.05,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                Text(
-                  currency.format(snapshot.totalConIva),
-                  style: const TextStyle(
-                    color: AppColors.sidebarAccent,
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
-                  ),
+                const SizedBox(height: AppDimensions.paddingM),
+                Expanded(
+                  child: snapshot.items.isEmpty
+                      ? Center(
+                          child: Text(
+                            'Sin artículos',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        )
+                      : Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(
+                              AppDimensions.borderRadiusL,
+                            ),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: ListView.separated(
+                            controller: _scrollController,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 4,
+                              horizontal: 12,
+                            ),
+                            itemCount: snapshot.items.length,
+                            separatorBuilder: (_, __) => Divider(
+                              height: 1,
+                              color: Colors.grey.shade200,
+                            ),
+                            itemBuilder: (context, index) {
+                              return _TicketLine(
+                                item: snapshot.items[index],
+                              );
+                            },
+                          ),
+                        ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Fila densa tipo ticket (legible a distancia, sin cards).
+class _TicketLine extends StatelessWidget {
+  const _TicketLine({required this.item});
+
+  final CustomerDisplayLineItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 44,
+            child: Text(
+              item.quantityLabel,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: AppColors.primary,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              item.name,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                height: 1.2,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            item.lineTotal.formatToCurrency(),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
             ),
           ),
         ],
@@ -202,35 +333,211 @@ class _CartView extends StatelessWidget {
 class _PaymentView extends StatelessWidget {
   const _PaymentView({
     super.key,
-    required this.total,
-    required this.currency,
+    required this.snapshot,
   });
 
-  final double total;
-  final NumberFormat currency;
+  final CustomerDisplaySnapshot snapshot;
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    final theme = Theme.of(context);
+    final qrLabel = snapshot.qrLabel;
+    final hasPayload =
+        snapshot.qrPayload != null && snapshot.qrPayload!.trim().isNotEmpty;
+    final totalText = snapshot.totalConIva.formatToCurrency();
+    final phase = snapshot.qrPhase;
+
+    // Solo cuando CheckoutBloc está en CheckoutProcessing.
+    if (snapshot.isProcessing) {
+      return _PaymentShell(
+        totalText: totalText,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(
+              width: 56,
+              height: 56,
+              child: CircularProgressIndicator(
+                color: AppColors.primary,
+                strokeWidth: 3,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Procesando pago…',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Mismo switch que el confirmation panel (approved / rejected / expired / pending).
+    if (qrLabel != null &&
+        qrLabel.isNotEmpty &&
+        (phase == CustomerDisplayQrPhase.approved ||
+            phase == CustomerDisplayQrPhase.rejected ||
+            phase == CustomerDisplayQrPhase.expired ||
+            (phase == CustomerDisplayQrPhase.pending && !hasPayload))) {
+      return Padding(
+        padding: const EdgeInsets.all(AppDimensions.paddingL),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              flex: 2,
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Total a pagar',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        totalText,
+                        style: theme.textTheme.displayMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: AppDimensions.paddingL),
+            Expanded(
+              flex: 3,
+              child: CustomerDisplayQrStatus(
+                phase: phase,
+                label: qrLabel,
+                detail: snapshot.qrDetail,
+                totalLabel: totalText,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // ready / pending con payload: mostrar QR (como el panel del cajero).
+    if (qrLabel != null && qrLabel.isNotEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(AppDimensions.paddingL),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              flex: 2,
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Total a pagar',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        totalText,
+                        style: theme.textTheme.displayMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                    if (phase == CustomerDisplayQrPhase.pending) ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        'Confirmando pago…',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: Colors.orange.shade700,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: AppDimensions.paddingL),
+            Expanded(
+              flex: 3,
+              child: CustomerDisplayQrPanel(
+                label: qrLabel,
+                payload: snapshot.qrPayload,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Otros medios (efectivo, tarjeta, etc.): total + espera en caja.
+    return _PaymentShell(
+      totalText: totalText,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Icon(Icons.payments_outlined,
-              size: 80, color: AppColors.sidebarAccent),
-          const SizedBox(height: 24),
-          const Text(
-            'Total a pagar',
-            style: TextStyle(color: AppColors.sidebarIconInactive, fontSize: 24),
-          ),
-          const SizedBox(height: 12),
+              size: 80, color: AppColors.primary),
+          const SizedBox(height: 16),
           Text(
-            currency.format(total),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 56,
-              fontWeight: FontWeight.bold,
+            'Aguarde mientras confirman el pago',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: AppColors.textSecondary,
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PaymentShell extends StatelessWidget {
+  const _PaymentShell({
+    required this.totalText,
+    required this.child,
+  });
+
+  final String totalText;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.all(AppDimensions.paddingL),
+      child: Column(
+        children: [
+          Text(
+            'Total a pagar',
+            style: theme.textTheme.titleLarge?.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            totalText,
+            style: theme.textTheme.displaySmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppColors.primary,
+            ),
+          ),
+          Expanded(child: Center(child: child)),
         ],
       ),
     );
@@ -241,14 +548,13 @@ class _DoneView extends StatelessWidget {
   const _DoneView({
     super.key,
     required this.total,
-    required this.currency,
   });
 
   final double total;
-  final NumberFormat currency;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -256,20 +562,18 @@ class _DoneView extends StatelessWidget {
           const Icon(Icons.check_circle_outline,
               size: 96, color: AppColors.success),
           const SizedBox(height: 24),
-          const Text(
+          Text(
             '¡Gracias por su compra!',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 36,
-              fontWeight: FontWeight.w600,
+            style: theme.textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.w700,
             ),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
           Text(
-            currency.format(total),
-            style: const TextStyle(
-              color: AppColors.sidebarAccent,
-              fontSize: 32,
+            total.formatToCurrency(),
+            style: theme.textTheme.headlineSmall?.copyWith(
+              color: AppColors.primary,
               fontWeight: FontWeight.w600,
             ),
           ),

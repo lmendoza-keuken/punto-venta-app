@@ -8,11 +8,16 @@ class ProductImagesRepository {
   final Map<String, String> _imageCache = {};
   Future<Map<String, String>>? _inFlightFetch;
 
+  /// TEMP: mock local de imagen para producto código 3.
+  static const String _tempMockProduct3Asset =
+      'asset:assets/mock/product_3_secco_naranja.jpg';
+
   ProductImagesRepository({FirebaseStorage? storage})
       : _storage = storage ?? FirebaseStorage.instance;
 
   Future<Map<String, String>> fetchProductImages(String enterpriseId) async {
     if (_imageCache.isNotEmpty) {
+      _applyTempMocks();
       return _imageCache;
     }
     if (_inFlightFetch != null) {
@@ -21,10 +26,17 @@ class ProductImagesRepository {
 
     _inFlightFetch = _downloadAndCache(enterpriseId);
     try {
-      return await _inFlightFetch!;
+      await _inFlightFetch!;
+      _applyTempMocks();
+      return _imageCache;
     } finally {
       _inFlightFetch = null;
     }
+  }
+
+  void _applyTempMocks() {
+    // TODO(temp): quitar cuando ProductLinks.json tenga la foto real.
+    _imageCache['3'] = _tempMockProduct3Asset;
   }
 
   /// Precarga en background; no bloquea el flujo de login.

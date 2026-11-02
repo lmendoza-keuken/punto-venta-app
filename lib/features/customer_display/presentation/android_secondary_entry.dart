@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:presentation_displays/secondary_display.dart';
+import 'package:punto_venta_app/core/themes/app_theme.dart';
 import 'package:punto_venta_app/features/customer_display/presentation/customer_display_host.dart';
 
 final GlobalKey<CustomerDisplayHostState> _androidHostKey =
@@ -11,6 +12,10 @@ void runAndroidSecondaryDisplay() {
   runApp(
     MaterialApp(
       debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.light,
+      locale: const Locale('es', 'AR'),
       initialRoute: 'presentation',
       onGenerateRoute: (settings) {
         if (settings.name == 'presentation') {

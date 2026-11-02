@@ -1,9 +1,9 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/core/utils/extensions.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/product/product_image.dart';
 
 class LastScannedProductPreview extends StatelessWidget {
   final CartLogEntry entry;
@@ -66,7 +66,7 @@ class LastScannedProductPreview extends StatelessWidget {
                 fit: StackFit.expand,
                 children: [
                   if (hasImage)
-                    CachedNetworkImage(
+                    ProductImage(
                       key: ValueKey(
                         'scanner-img-${entry.id}-${product.id}-${product.imageUrl}',
                       ),
@@ -74,12 +74,10 @@ class LastScannedProductPreview extends StatelessWidget {
                       fit: BoxFit.contain,
                       width: double.infinity,
                       height: double.infinity,
-                      alignment: Alignment.center,
-                      fadeInDuration: const Duration(milliseconds: 150),
-                      placeholder: (context, url) => const Center(
+                      placeholder: const Center(
                         child: CircularProgressIndicator(strokeWidth: 2),
                       ),
-                      errorWidget: (context, url, error) => Icon(
+                      error: Icon(
                         Icons.inventory_2,
                         size: 72,
                         color: Colors.grey.shade400,

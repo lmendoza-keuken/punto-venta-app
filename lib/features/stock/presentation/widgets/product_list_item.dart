@@ -1,9 +1,9 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/core/utils/extensions.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/product/product_image.dart';
 
 class ProductListItem extends StatelessWidget {
   final Product product;
@@ -50,16 +50,16 @@ class ProductListItem extends StatelessWidget {
           ),
           clipBehavior: Clip.antiAlias,
           child: product.imageUrl != null && product.imageUrl!.trim().isNotEmpty
-              ? CachedNetworkImage(
+              ? ProductImage(
                   imageUrl: product.imageUrl!,
                   fit: BoxFit.cover,
                   width: 50,
                   height: 50,
-                  placeholder: (context, url) => Icon(
+                  placeholder: Icon(
                     Icons.inventory_2,
                     color: isLowStock ? AppColors.warning : AppColors.primary,
                   ),
-                  errorWidget: (context, url, error) => Icon(
+                  error: Icon(
                     Icons.inventory_2,
                     color: isLowStock ? AppColors.warning : AppColors.primary,
                   ),

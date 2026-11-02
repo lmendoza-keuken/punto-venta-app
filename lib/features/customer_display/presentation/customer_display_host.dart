@@ -25,8 +25,9 @@ class CustomerDisplayHostState extends State<CustomerDisplayHost> {
       } else {
         return;
       }
-      if (!mounted) return;
-      setState(() => _snapshot = CustomerDisplaySnapshot.fromJson(json));
+      final next = CustomerDisplaySnapshot.fromJson(json);
+      if (!mounted || next == _snapshot) return;
+      setState(() => _snapshot = next);
     } catch (e) {
       debugPrint('CustomerDisplayHost: payload inválido: $e');
     }

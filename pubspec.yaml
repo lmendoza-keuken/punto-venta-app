@@ -90,5 +90,5 @@ flutter:
   uses-material-design: true
   assets:
     - assets/icons/
-- assets/mock/product_3_secco_naranja.jpg
+    - assets/mock/product_3_secco_naranja.jpg
     - assets/images/

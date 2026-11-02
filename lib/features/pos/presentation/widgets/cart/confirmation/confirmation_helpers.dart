@@ -27,7 +27,9 @@ IconData getPaymentMethodIcon(String description, String shortDescription) {
   if (desc.contains('qr') ||
       shortDesc.contains('qr') ||
       desc.contains('mercado') ||
-      shortDesc.contains('mercado')) {
+      shortDesc.contains('mercado') ||
+      desc.contains('pvs') ||
+      shortDesc.contains('pvs')) {
     return Icons.qr_code;
   }
   return Icons.payment;

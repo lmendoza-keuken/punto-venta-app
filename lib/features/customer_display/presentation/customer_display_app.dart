@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:punto_venta_app/core/themes/app_theme.dart';
 import 'package:punto_venta_app/features/customer_display/presentation/customer_display_host.dart';
 
 /// MaterialApp mínima para la subventana Windows del cliente.
@@ -15,6 +16,10 @@ class CustomerDisplayApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Pantalla cliente',
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.light,
+      locale: const Locale('es', 'AR'),
       home: CustomerDisplayHost(key: hostKey),
     );
   }

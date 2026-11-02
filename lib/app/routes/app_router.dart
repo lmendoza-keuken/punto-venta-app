@@ -25,6 +25,7 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/supplier_payments
 import 'package:punto_venta_app/features/pos/presentation/bloc/supplier_payments/supplier_payments_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/pages/supplier_payments_page.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cash_register/cash_register_cubit.dart';
+import 'package:punto_venta_app/features/customer_display/presentation/customer_display_shell_controller.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -186,14 +187,17 @@ class MainLayoutShell extends StatelessWidget {
               );
             }
           },
-          child: MainLayout(
+          child: CustomerDisplayShellController(
             currentRoute: currentRoute,
-            isAdmin: isAdmin,
-            onLogout: () {
-              context.read<AuthBloc>().add(LogoutEvent());
-              context.go(RoutePaths.login);
-            },
-            child: child,
+            child: MainLayout(
+              currentRoute: currentRoute,
+              isAdmin: isAdmin,
+              onLogout: () {
+                context.read<AuthBloc>().add(LogoutEvent());
+                context.go(RoutePaths.login);
+              },
+              child: child,
+            ),
           ),
         );
       },

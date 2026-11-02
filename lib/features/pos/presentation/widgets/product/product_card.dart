@@ -1,10 +1,10 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/core/utils/extensions.dart';
 import 'package:punto_venta_app/core/utils/utils.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/product/product_image.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -59,23 +59,21 @@ class ProductCard extends StatelessWidget {
                       fit: StackFit.expand,
                       children: [
                         if (hasImage)
-                          CachedNetworkImage(
+                          ProductImage(
                             key: ValueKey(
                                 'product-img-${product.id}-${product.imageUrl}'),
                             imageUrl: product.imageUrl!,
                             fit: BoxFit.contain,
                             width: double.infinity,
                             height: double.infinity,
-                            alignment: Alignment.center,
-                            fadeInDuration: const Duration(milliseconds: 150),
-                            placeholder: (context, url) => Center(
+                            placeholder: Center(
                               child: Icon(
                                 Icons.inventory_2,
                                 color: AppColors.textHint,
                                 size: isCompact ? 28 : 40,
                               ),
                             ),
-                            errorWidget: (context, url, error) => Center(
+                            error: Center(
                               child: Icon(
                                 Icons.inventory_2,
                                 color: AppColors.textHint,

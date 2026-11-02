@@ -26,6 +26,7 @@ import 'package:punto_venta_app/features/pos/presentation/widgets/cart/confirmat
 import 'package:punto_venta_app/features/pos/presentation/widgets/mercado_pago/mercado_pago_qr_panel_view.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/pvs/pvs_qr_panel_view.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
+import 'package:punto_venta_app/features/customer_display/presentation/customer_display_sync.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 class ConfirmationPanel extends StatefulWidget {
@@ -124,16 +125,31 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
           final showingPvsQr = _pvsQrStep != null;
           final showingQr = showingMpQr || showingPvsQr;
 
-          return BlocBuilder<CheckoutConfirmationCubit,
+          return BlocListener<CheckoutConfirmationCubit,
               CheckoutConfirmationState>(
-            builder: (context, confirmationState) {
-              final totalAmount = confirmationState.totalAmount;
+            listenWhen: (prev, next) =>
+                prev.selectedPayments != next.selectedPayments ||
+                prev.totalAmount != next.totalAmount,
+            listener: (context, confirmationState) {
+              final cart = context.read<CartBloc>().state;
+              if (cart is! CartLoaded) return;
+              syncCustomerDisplayPayment(
+                cart: cart,
+                selectedPayments: confirmationState.selectedPayments,
+                isProcessing:
+                    context.read<CheckoutBloc>().state is CheckoutProcessing,
+              );
+            },
+            child: BlocBuilder<CheckoutConfirmationCubit,
+                CheckoutConfirmationState>(
+              builder: (context, confirmationState) {
+                final totalAmount = confirmationState.totalAmount;
 
-              return BlocBuilder<CheckoutBloc, CheckoutState>(
-                builder: (context, checkoutState) {
-                  final isProcessing = checkoutState is CheckoutProcessing;
+                return BlocBuilder<CheckoutBloc, CheckoutState>(
+                  builder: (context, checkoutState) {
+                    final isProcessing = checkoutState is CheckoutProcessing;
 
-                  return Column(
+                    return Column(
                     children: [
                       _buildHeader(
                         context,
@@ -277,7 +293,8 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
                 },
               );
             },
-          );
+          ),
+        );
         },
       ),
     );
@@ -610,6 +627,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
       );
     }
     _setMpQrStep(null);
+    _clearCustomerDisplayQr();
     _processSale(context);
   }
 
@@ -626,15 +644,24 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
       );
     }
     _setPvsQrStep(null);
+    _clearCustomerDisplayQr();
     _processSale(context);
   }
 
   void _exitMpQrStep() {
     _setMpQrStep(null);
+    _clearCustomerDisplayQr();
   }
 
   void _exitPvsQrStep() {
     _setPvsQrStep(null);
+    _clearCustomerDisplayQr();
+  }
+
+  void _clearCustomerDisplayQr() {
+    final cart = context.read<CartBloc>().state;
+    if (cart is! CartLoaded) return;
+    clearCustomerDisplayQr(cart: cart);
   }
 
   void _processSale(BuildContext context) {
