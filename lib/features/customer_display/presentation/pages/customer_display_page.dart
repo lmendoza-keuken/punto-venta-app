@@ -4,6 +4,7 @@ import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/core/utils/extensions.dart';
 import 'package:punto_venta_app/core/widgets/scroll_bottom_extension.dart';
 import 'package:punto_venta_app/features/customer_display/domain/customer_display_snapshot.dart';
+import 'package:punto_venta_app/features/customer_display/presentation/widgets/customer_display_ad_carousel.dart';
 import 'package:punto_venta_app/features/customer_display/presentation/widgets/customer_display_last_product.dart';
 import 'package:punto_venta_app/features/customer_display/presentation/widgets/customer_display_qr_panel.dart';
 import 'package:punto_venta_app/features/customer_display/presentation/widgets/customer_display_qr_status.dart';
@@ -25,8 +26,12 @@ class CustomerDisplayPage extends StatelessWidget {
           duration: const Duration(milliseconds: 250),
           child: switch (snapshot.mode) {
             CustomerDisplayMode.idle => const _IdleView(key: ValueKey('idle')),
-            CustomerDisplayMode.advertising =>
-              const _AdvertisingView(key: ValueKey('ads')),
+            CustomerDisplayMode.advertising => _AdvertisingView(
+                key: const ValueKey('ads'),
+                title: snapshot.adTitle,
+                message: snapshot.adMessage,
+                products: snapshot.adProducts,
+              ),
             // Key estable: no remount en cada scan (evita traba al escanear rápido).
             CustomerDisplayMode.cart => _CartView(
                 key: const ValueKey('cart'),
@@ -79,14 +84,34 @@ class _IdleView extends StatelessWidget {
 }
 
 class _AdvertisingView extends StatelessWidget {
-  const _AdvertisingView({super.key});
+  const _AdvertisingView({
+    super.key,
+    this.title,
+    this.message,
+    this.products = const [],
+  });
+
+  final String? title;
+  final String? message;
+  final List<CustomerDisplayAdProduct> products;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final resolvedTitle = (title != null && title!.trim().isNotEmpty)
+        ? title!.trim()
+        : 'Promociones';
+    final resolvedMessage =
+        (message != null && message!.trim().isNotEmpty) ? message!.trim() : null;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppDimensions.paddingXL),
+      padding: const EdgeInsets.fromLTRB(
+        AppDimensions.paddingL,
+        AppDimensions.paddingL,
+        AppDimensions.paddingL,
+        AppDimensions.paddingM,
+      ),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -98,29 +123,31 @@ class _AdvertisingView extends StatelessWidget {
           ],
         ),
       ),
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.campaign_outlined, size: 96, color: Colors.white),
-            const SizedBox(height: 24),
-            Text(
-              'Publicidad',
-              style: theme.textTheme.headlineLarge?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
+      child: Column(
+        children: [
+          Text(
+            resolvedTitle,
+            style: theme.textTheme.headlineLarge?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
             ),
-            const SizedBox(height: 12),
+            textAlign: TextAlign.center,
+          ),
+          if (resolvedMessage != null) ...[
+            const SizedBox(height: 8),
             Text(
-              'Espacio reservado para promociones\ny avisos del local',
+              resolvedMessage,
               textAlign: TextAlign.center,
               style: theme.textTheme.titleMedium?.copyWith(
                 color: Colors.white.withValues(alpha: 0.9),
               ),
             ),
           ],
-        ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: CustomerDisplayAdCarousel(products: products),
+          ),
+        ],
       ),
     );
   }

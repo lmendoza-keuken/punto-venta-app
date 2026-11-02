@@ -84,10 +84,27 @@ void main() {
 
   test('idle and advertising factories', () {
     expect(const CustomerDisplaySnapshot.idle().mode, CustomerDisplayMode.idle);
-    expect(
-      const CustomerDisplaySnapshot.advertising().mode,
-      CustomerDisplayMode.advertising,
+    final ads = CustomerDisplaySnapshot.advertising(
+      adTitle: 'Promociones',
+      adMessage: 'Ofertas del día',
+      adProducts: const [
+        CustomerDisplayAdProduct(
+          productId: 3,
+          name: 'Gaseosa',
+          unitPrice: 752,
+          isOnSale: true,
+          regularPrice: 900,
+        ),
+      ],
     );
+    expect(ads.mode, CustomerDisplayMode.advertising);
+    expect(ads.adTitle, 'Promociones');
+    expect(ads.adProducts, hasLength(1));
+    expect(ads.adProducts.first.isOnSale, isTrue);
+
+    final restored = CustomerDisplaySnapshot.fromJson(ads.toJson());
+    expect(restored.adProducts.first.name, 'Gaseosa');
+    expect(restored.adProducts.first.unitPrice, 752);
   });
 
   test('lastProduct round-trip JSON', () {
@@ -99,17 +116,23 @@ void main() {
       isAdd: true,
       isWeighted: false,
       quantityLabel: '+1',
-      unitPrice: 1817,
-      lineTotal: 1817,
+      unitPrice: 1050,
+      lineTotal: 1050,
+      isOnSale: true,
+      regularUnitPrice: 1355,
+      regularLineTotal: 1355,
     );
     const snap = CustomerDisplaySnapshot(
       mode: CustomerDisplayMode.cart,
       lastProduct: last,
-      totalConIva: 1817,
+      totalConIva: 1050,
     );
     final restored = CustomerDisplaySnapshot.fromJson(snap.toJson());
     expect(restored.lastProduct?.name, 'Gaseosa');
     expect(restored.lastProduct?.imageUrl, 'https://example.com/img.png');
     expect(restored.lastProduct?.isAdd, isTrue);
+    expect(restored.lastProduct?.isOnSale, isTrue);
+    expect(restored.lastProduct?.regularUnitPrice, 1355);
+    expect(restored.lastProduct?.regularLineTotal, 1355);
   });
 }

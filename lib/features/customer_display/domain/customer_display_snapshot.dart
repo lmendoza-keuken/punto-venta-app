@@ -18,16 +18,89 @@ enum CustomerDisplayQrPhase {
 
 /// Precio unitario al público (base + IVA + impuesto interno), igual que el log del POS.
 double customerDisplayUnitPriceWithTax(Product product) {
-  final basePrice = product.price ?? 0.0;
-  final vatRate = product.vat / 100.0;
-  final internalTax = product.internalTax;
-  final fractional = product.fractional ?? 1;
+  return customerDisplayBasePriceWithTax(
+    basePrice: product.price ?? 0.0,
+    vat: product.vat,
+    internalTax: product.internalTax,
+    fractional: product.fractional ?? 1,
+  );
+}
 
-  double unit = basePrice * (1 + vatRate);
+double customerDisplayBasePriceWithTax({
+  required double basePrice,
+  required double vat,
+  required double internalTax,
+  int fractional = 1,
+}) {
+  double unit = basePrice * (1 + vat / 100.0);
   if (internalTax > 0) {
     unit += internalTax * fractional;
   }
   return unit;
+}
+
+/// Producto en el carrusel de publicidad (fuera del POS).
+class CustomerDisplayAdProduct extends Equatable {
+  final int productId;
+  final String name;
+  final String? imageUrl;
+  final double unitPrice;
+  final bool isOnSale;
+  final double? regularPrice;
+
+  const CustomerDisplayAdProduct({
+    required this.productId,
+    required this.name,
+    this.imageUrl,
+    required this.unitPrice,
+    this.isOnSale = false,
+    this.regularPrice,
+  });
+
+  factory CustomerDisplayAdProduct.fromProduct(Product product) {
+    final unit = customerDisplayUnitPriceWithTax(product);
+    double? regular;
+    if (product.isOnSale && product.regularPrice != null) {
+      regular = customerDisplayBasePriceWithTax(
+        basePrice: product.regularPrice!,
+        vat: product.vat,
+        internalTax: product.internalTax,
+        fractional: product.fractional ?? 1,
+      );
+    }
+    return CustomerDisplayAdProduct(
+      productId: product.id,
+      name: product.name,
+      imageUrl: product.imageUrl,
+      unitPrice: unit,
+      isOnSale: product.isOnSale,
+      regularPrice: regular,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'productId': productId,
+        'name': name,
+        if (imageUrl != null) 'imageUrl': imageUrl,
+        'unitPrice': unitPrice,
+        'isOnSale': isOnSale,
+        if (regularPrice != null) 'regularPrice': regularPrice,
+      };
+
+  factory CustomerDisplayAdProduct.fromJson(Map<String, dynamic> json) {
+    return CustomerDisplayAdProduct(
+      productId: (json['productId'] as num?)?.toInt() ?? 0,
+      name: json['name'] as String? ?? '',
+      imageUrl: json['imageUrl'] as String?,
+      unitPrice: (json['unitPrice'] as num?)?.toDouble() ?? 0,
+      isOnSale: json['isOnSale'] as bool? ?? false,
+      regularPrice: (json['regularPrice'] as num?)?.toDouble(),
+    );
+  }
+
+  @override
+  List<Object?> get props =>
+      [productId, name, imageUrl, unitPrice, isOnSale, regularPrice];
 }
 
 class CustomerDisplayLineItem extends Equatable {
@@ -74,6 +147,9 @@ class CustomerDisplayLastProduct extends Equatable {
   final String quantityLabel;
   final double unitPrice;
   final double lineTotal;
+  final bool isOnSale;
+  final double? regularUnitPrice;
+  final double? regularLineTotal;
 
   const CustomerDisplayLastProduct({
     required this.entryId,
@@ -85,6 +161,9 @@ class CustomerDisplayLastProduct extends Equatable {
     required this.quantityLabel,
     required this.unitPrice,
     required this.lineTotal,
+    this.isOnSale = false,
+    this.regularUnitPrice,
+    this.regularLineTotal,
   });
 
   factory CustomerDisplayLastProduct.fromLogEntry(CartLogEntry entry) {
@@ -92,10 +171,23 @@ class CustomerDisplayLastProduct extends Equatable {
     final sign = isAdd ? '+' : '-';
     final product = entry.item.product;
     final isWeighted = entry.item.isWeighted ?? false;
+    final qty = isWeighted
+        ? (entry.item.weightKg ?? 0.0)
+        : entry.item.quantity.toDouble();
     final unitPrice = customerDisplayUnitPriceWithTax(product);
-    final lineTotal = isWeighted
-        ? unitPrice * (entry.item.weightKg ?? 0.0)
-        : unitPrice * entry.item.quantity;
+    final lineTotal = unitPrice * qty;
+
+    double? regularUnit;
+    double? regularLine;
+    if (product.isOnSale && product.regularPrice != null) {
+      regularUnit = customerDisplayBasePriceWithTax(
+        basePrice: product.regularPrice!,
+        vat: product.vat,
+        internalTax: product.internalTax,
+        fractional: product.fractional ?? 1,
+      );
+      regularLine = regularUnit * qty;
+    }
 
     final quantityLabel = isWeighted
         ? '$sign${entry.item.weightKg ?? 0} kg'
@@ -111,6 +203,9 @@ class CustomerDisplayLastProduct extends Equatable {
       quantityLabel: quantityLabel,
       unitPrice: unitPrice,
       lineTotal: lineTotal,
+      isOnSale: product.isOnSale,
+      regularUnitPrice: regularUnit,
+      regularLineTotal: regularLine,
     );
   }
 
@@ -124,6 +219,9 @@ class CustomerDisplayLastProduct extends Equatable {
         'quantityLabel': quantityLabel,
         'unitPrice': unitPrice,
         'lineTotal': lineTotal,
+        'isOnSale': isOnSale,
+        if (regularUnitPrice != null) 'regularUnitPrice': regularUnitPrice,
+        if (regularLineTotal != null) 'regularLineTotal': regularLineTotal,
       };
 
   factory CustomerDisplayLastProduct.fromJson(Map<String, dynamic> json) {
@@ -137,6 +235,9 @@ class CustomerDisplayLastProduct extends Equatable {
       quantityLabel: json['quantityLabel'] as String? ?? '',
       unitPrice: (json['unitPrice'] as num?)?.toDouble() ?? 0,
       lineTotal: (json['lineTotal'] as num?)?.toDouble() ?? 0,
+      isOnSale: json['isOnSale'] as bool? ?? false,
+      regularUnitPrice: (json['regularUnitPrice'] as num?)?.toDouble(),
+      regularLineTotal: (json['regularLineTotal'] as num?)?.toDouble(),
     );
   }
 
@@ -151,6 +252,9 @@ class CustomerDisplayLastProduct extends Equatable {
         quantityLabel,
         unitPrice,
         lineTotal,
+        isOnSale,
+        regularUnitPrice,
+        regularLineTotal,
       ];
 }
 
@@ -173,6 +277,11 @@ class CustomerDisplaySnapshot extends Equatable {
   /// Detalle opcional (ID de pago, motivo de rechazo, etc.).
   final String? qrDetail;
 
+  final String? adTitle;
+
+  final String? adMessage;
+  final List<CustomerDisplayAdProduct> adProducts;
+
   /// True solo mientras [CheckoutBloc] está en [CheckoutProcessing].
   final bool isProcessing;
 
@@ -186,6 +295,9 @@ class CustomerDisplaySnapshot extends Equatable {
     this.qrPayload,
     this.qrPhase = CustomerDisplayQrPhase.none,
     this.qrDetail,
+    this.adTitle,
+    this.adMessage,
+    this.adProducts = const [],
     this.isProcessing = false,
   });
 
@@ -199,19 +311,23 @@ class CustomerDisplaySnapshot extends Equatable {
         qrPayload = null,
         qrPhase = CustomerDisplayQrPhase.none,
         qrDetail = null,
+        adTitle = null,
+        adMessage = null,
+        adProducts = const [],
         isProcessing = false;
 
-  const CustomerDisplaySnapshot.advertising()
-      : mode = CustomerDisplayMode.advertising,
-        items = const [],
-        subtotal = 0,
-        totalConIva = 0,
-        lastProduct = null,
-        qrLabel = null,
-        qrPayload = null,
-        qrPhase = CustomerDisplayQrPhase.none,
-        qrDetail = null,
-        isProcessing = false;
+  factory CustomerDisplaySnapshot.advertising({
+    String? adTitle,
+    String? adMessage,
+    List<CustomerDisplayAdProduct> adProducts = const [],
+  }) {
+    return CustomerDisplaySnapshot(
+      mode: CustomerDisplayMode.advertising,
+      adTitle: adTitle,
+      adMessage: adMessage,
+      adProducts: adProducts,
+    );
+  }
 
   factory CustomerDisplaySnapshot.fromCartLoaded(
     CartLoaded cart, {
@@ -268,6 +384,10 @@ class CustomerDisplaySnapshot extends Equatable {
         if (qrPayload != null) 'qrPayload': qrPayload,
         'qrPhase': qrPhase.name,
         if (qrDetail != null) 'qrDetail': qrDetail,
+        if (adTitle != null) 'adTitle': adTitle,
+        if (adMessage != null) 'adMessage': adMessage,
+        if (adProducts.isNotEmpty)
+          'adProducts': adProducts.map((e) => e.toJson()).toList(),
         'isProcessing': isProcessing,
       };
 
@@ -279,6 +399,7 @@ class CustomerDisplaySnapshot extends Equatable {
     );
     final rawItems = json['items'] as List<dynamic>? ?? const [];
     final rawLast = json['lastProduct'];
+    final rawAds = json['adProducts'] as List<dynamic>? ?? const [];
     return CustomerDisplaySnapshot(
       mode: mode,
       items: rawItems
@@ -301,6 +422,14 @@ class CustomerDisplaySnapshot extends Equatable {
         orElse: () => CustomerDisplayQrPhase.none,
       ),
       qrDetail: json['qrDetail'] as String?,
+      adTitle: json['adTitle'] as String?,
+      adMessage: json['adMessage'] as String?,
+      adProducts: rawAds
+          .whereType<Map>()
+          .map((e) => CustomerDisplayAdProduct.fromJson(
+                Map<String, dynamic>.from(e),
+              ))
+          .toList(),
       isProcessing: json['isProcessing'] as bool? ?? false,
     );
   }
@@ -315,6 +444,9 @@ class CustomerDisplaySnapshot extends Equatable {
     String? qrPayload,
     CustomerDisplayQrPhase? qrPhase,
     String? qrDetail,
+    String? adTitle,
+    String? adMessage,
+    List<CustomerDisplayAdProduct>? adProducts,
     bool? isProcessing,
     bool clearQr = false,
     bool clearLastProduct = false,
@@ -332,6 +464,9 @@ class CustomerDisplaySnapshot extends Equatable {
           ? CustomerDisplayQrPhase.none
           : (qrPhase ?? this.qrPhase),
       qrDetail: clearQr ? null : (qrDetail ?? this.qrDetail),
+      adTitle: adTitle ?? this.adTitle,
+      adMessage: adMessage ?? this.adMessage,
+      adProducts: adProducts ?? this.adProducts,
       isProcessing: isProcessing ?? this.isProcessing,
     );
   }
@@ -347,6 +482,9 @@ class CustomerDisplaySnapshot extends Equatable {
         qrPayload,
         qrPhase,
         qrDetail,
+        adTitle,
+        adMessage,
+        adProducts,
         isProcessing,
       ];
 }

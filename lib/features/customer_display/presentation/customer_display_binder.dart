@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/utils/app_logger.dart';
+import 'package:punto_venta_app/features/customer_display/domain/customer_display_prefs.dart';
 import 'package:punto_venta_app/features/customer_display/domain/customer_display_service.dart';
 import 'package:punto_venta_app/features/customer_display/domain/customer_display_snapshot.dart';
+import 'package:punto_venta_app/features/customer_display/presentation/customer_display_advertising.dart';
 import 'package:punto_venta_app/features/customer_display/presentation/customer_display_sync.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_state.dart';
@@ -13,6 +15,7 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/checkout/checkout
 import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_state.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Sync cajero → pantalla cliente.
 class CustomerDisplayBinder extends StatefulWidget {
@@ -33,9 +36,12 @@ class _CustomerDisplayBinderState extends State<CustomerDisplayBinder> {
   static const _cartIdleDebounce = Duration(milliseconds: 90);
 
   late final CustomerDisplayService _service;
+  late final SharedPreferences _prefs;
   Timer? _doneTimer;
   Timer? _cartIdleTimer;
+  Timer? _lockScreenTimer;
   bool _holdingDone = false;
+  bool _showingLockAd = false;
   bool _syncInFlight = false;
   bool _dirty = false;
   String? _pendingQrLabel;
@@ -47,6 +53,7 @@ class _CustomerDisplayBinderState extends State<CustomerDisplayBinder> {
   void initState() {
     super.initState();
     _service = di.sl<CustomerDisplayService>();
+    _prefs = di.sl<SharedPreferences>();
     WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrap());
   }
 
@@ -65,7 +72,51 @@ class _CustomerDisplayBinderState extends State<CustomerDisplayBinder> {
   void dispose() {
     _doneTimer?.cancel();
     _cartIdleTimer?.cancel();
+    _lockScreenTimer?.cancel();
     super.dispose();
+  }
+
+  bool get _isFacturando {
+    final cart = context.read<CartBloc>().state;
+    if (cart is CartLoaded && cart.items.isNotEmpty) return true;
+    final ui = context.read<UiBloc>().state;
+    if (ui is UiLoaded && ui.showConfirmationPanel) return true;
+    final checkout = context.read<CheckoutBloc>().state;
+    if (checkout is CheckoutProcessing) return true;
+    return false;
+  }
+
+  void _scheduleLockScreen() {
+    _lockScreenTimer?.cancel();
+    if (!_service.isEnabled || _holdingDone || !mounted) return;
+
+    final seconds = CustomerDisplayPrefs.adIdleSeconds(_prefs);
+    if (seconds <= 0) return;
+    if (_isFacturando) {
+      _showingLockAd = false;
+      return;
+    }
+
+    _lockScreenTimer = Timer(Duration(seconds: seconds), () {
+      if (!mounted || _holdingDone || _isFacturando) return;
+      unawaited(_showLockAdvertising());
+    });
+  }
+
+  Future<void> _showLockAdvertising() async {
+    if (!_service.isEnabled || !mounted) return;
+    final snapshot = buildCustomerDisplayAdvertisingSnapshot(context);
+    _showingLockAd = true;
+    _lastSent = snapshot;
+    try {
+      await _service.sync(snapshot);
+      AppLogger.info(
+        'CustomerDisplayBinder: lock screen publicidad '
+        '(${snapshot.adProducts.length} ofertas)',
+      );
+    } catch (e, st) {
+      AppLogger.error('CustomerDisplayBinder: lock ad falló', e, st);
+    }
   }
 
   void _requestSync({
@@ -76,6 +127,12 @@ class _CustomerDisplayBinderState extends State<CustomerDisplayBinder> {
   }) {
     if (_holdingDone) return;
     if (!_service.isEnabled) return;
+
+    // Cualquier actividad de caja saca la publicidad tipo bloqueo.
+    if (_showingLockAd) {
+      _showingLockAd = false;
+    }
+    _lockScreenTimer?.cancel();
 
     if (clearQr) {
       _pendingClearQr = true;
@@ -101,7 +158,7 @@ class _CustomerDisplayBinderState extends State<CustomerDisplayBinder> {
 
   void _kickFlush() {
     if (!_dirty || _holdingDone) return;
-    if (_syncInFlight) return; // al terminar el sync en vuelo, reintenta
+    if (_syncInFlight) return;
     unawaited(_flushOnce());
   }
 
@@ -118,7 +175,6 @@ class _CustomerDisplayBinderState extends State<CustomerDisplayBinder> {
       CustomerDisplayQrBridge.clear();
     }
 
-    // Bridge = QR real (MP/PVS) + fase de polling; no pisarlo con sync de carrito.
     final qrLabel = clearQr
         ? null
         : (CustomerDisplayQrBridge.label ?? _pendingQrLabel);
@@ -139,24 +195,24 @@ class _CustomerDisplayBinderState extends State<CustomerDisplayBinder> {
       clearQr: clearQr,
     );
     if (snapshot == null || snapshot == _lastSent) {
-      // Si llegó otro scan mientras construíamos, ya está _dirty otra vez.
       if (_dirty) _kickFlush();
+      _scheduleLockScreen();
       return;
     }
 
     _syncInFlight = true;
     _lastSent = snapshot;
     try {
-      // Fire: el await no bloquea el UI del cajero (listener ya volvió).
       await _service.sync(snapshot);
     } catch (e, st) {
       AppLogger.error('CustomerDisplayBinder: sync falló', e, st);
     } finally {
       _syncInFlight = false;
       if (_dirty) {
-        // Hubo más scans durante el IPC → un solo sync con el estado actual.
         _cartIdleTimer?.cancel();
         _cartIdleTimer = Timer(_cartIdleDebounce, _kickFlush);
+      } else {
+        _scheduleLockScreen();
       }
     }
   }
@@ -214,7 +270,9 @@ class _CustomerDisplayBinderState extends State<CustomerDisplayBinder> {
   Future<void> _onCheckoutSuccess() async {
     _doneTimer?.cancel();
     _cartIdleTimer?.cancel();
+    _lockScreenTimer?.cancel();
     _holdingDone = true;
+    _showingLockAd = false;
     _dirty = false;
     CustomerDisplayQrBridge.clear();
     _pendingQrLabel = null;
@@ -226,7 +284,6 @@ class _CustomerDisplayBinderState extends State<CustomerDisplayBinder> {
       isProcessing: false,
     );
     _lastSent = done;
-    // Done es raro: sí esperamos, fuera del path de escaneo.
     try {
       await _service.sync(done);
     } catch (e, st) {
@@ -244,7 +301,6 @@ class _CustomerDisplayBinderState extends State<CustomerDisplayBinder> {
     return MultiBlocListener(
       listeners: [
         BlocListener<CartBloc, CartState>(
-          // Solo marca dirty — cero JSON/IPC en el beep.
           listener: (context, state) => _requestSync(),
         ),
         BlocListener<UiBloc, UiState>(

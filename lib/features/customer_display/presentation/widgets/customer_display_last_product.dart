@@ -23,6 +23,9 @@ class CustomerDisplayLastProductPreview extends StatelessWidget {
         product.isAdd ? Icons.add_circle_outline : Icons.remove_circle_outline;
     final hasImage =
         product.imageUrl != null && product.imageUrl!.trim().isNotEmpty;
+    final showOffer = product.isOnSale &&
+        product.regularLineTotal != null &&
+        product.regularLineTotal! > product.lineTotal;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -31,74 +34,103 @@ class CustomerDisplayLastProductPreview extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(AppDimensions.borderRadiusL),
+              borderRadius:
+                  BorderRadius.circular(AppDimensions.borderRadiusL),
               border: Border.all(
                 color: actionColor.withValues(alpha: 0.4),
                 width: 2,
               ),
             ),
-            clipBehavior: Clip.antiAlias,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                ColoredBox(color: Colors.grey.shade50),
-                if (hasImage)
-                  Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: ProductImage(
-                      key: ValueKey(
-                        'cd-img-${product.entryId}-${product.productId}-${product.imageUrl}',
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(
+                AppDimensions.borderRadiusL - 2,
+              ),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  ColoredBox(color: Colors.grey.shade50),
+                  if (hasImage)
+                    Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: ProductImage(
+                        key: ValueKey(
+                          'cd-img-${product.entryId}-${product.productId}-${product.imageUrl}',
+                        ),
+                        imageUrl: product.imageUrl!,
+                        fit: BoxFit.contain,
+                        width: double.infinity,
+                        height: double.infinity,
+                        placeholder: const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        error: Icon(
+                          Icons.inventory_2,
+                          size: 72,
+                          color: Colors.grey.shade400,
+                        ),
                       ),
-                      imageUrl: product.imageUrl!,
-                      fit: BoxFit.contain,
-                      width: double.infinity,
-                      height: double.infinity,
-                      placeholder: const Center(
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  else
+                    Icon(
+                      Icons.inventory_2,
+                      size: 72,
+                      color: Colors.grey.shade400,
+                    ),
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 7,
                       ),
-                      error: Icon(
-                        Icons.inventory_2,
-                        size: 72,
-                        color: Colors.grey.shade400,
+                      decoration: BoxDecoration(
+                        color: actionColor,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(actionIcon, size: 18, color: Colors.white),
+                          const SizedBox(width: 6),
+                          Text(
+                            actionLabel,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  )
-                else
-                  Icon(
-                    Icons.inventory_2,
-                    size: 72,
-                    color: Colors.grey.shade400,
                   ),
-                Positioned(
-                  top: 12,
-                  left: 12,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 7,
-                    ),
-                    decoration: BoxDecoration(
-                      color: actionColor,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(actionIcon, size: 18, color: Colors.white),
-                        const SizedBox(width: 6),
-                        Text(
-                          actionLabel,
-                          style: const TextStyle(
+                  if (product.isOnSale)
+                    Positioned(
+                      top: 12,
+                      right: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 7,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.shade600,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Text(
+                          'OFERTA',
+                          style: TextStyle(
                             color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w800,
                             fontSize: 14,
+                            letterSpacing: 0.6,
                           ),
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -114,6 +146,7 @@ class CustomerDisplayLastProductPreview extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
               product.quantityLabel,
@@ -124,13 +157,29 @@ class CustomerDisplayLastProductPreview extends StatelessWidget {
             ),
             const SizedBox(width: 16),
             Expanded(
-              child: Text(
-                product.lineTotal.formatToCurrency(),
-                textAlign: TextAlign.right,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.primary,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (showOffer)
+                    Text(
+                      product.regularLineTotal!.formatToCurrency(),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: Colors.grey.shade600,
+                        decoration: TextDecoration.lineThrough,
+                        decorationColor: Colors.grey.shade600,
+                      ),
+                    ),
+                  Text(
+                    product.lineTotal.formatToCurrency(),
+                    textAlign: TextAlign.right,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: showOffer
+                          ? Colors.orange.shade700
+                          : AppColors.primary,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

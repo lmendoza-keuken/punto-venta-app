@@ -4,11 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:punto_venta_app/app/routes/route_paths.dart';
 import 'package:punto_venta_app/core/utils/app_logger.dart';
 import 'package:punto_venta_app/features/customer_display/domain/customer_display_service.dart';
-import 'package:punto_venta_app/features/customer_display/domain/customer_display_snapshot.dart';
+import 'package:punto_venta_app/features/customer_display/presentation/customer_display_advertising.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
 /// Mantiene viva la pantalla cliente mientras hay sesión (shell autenticado).
-/// Fuera de `/pos` empuja modo publicidad para que la vista no se cierre.
 class CustomerDisplayShellController extends StatefulWidget {
   const CustomerDisplayShellController({
     super.key,
@@ -33,7 +32,8 @@ class _CustomerDisplayShellControllerState
   void initState() {
     super.initState();
     _service = di.sl<CustomerDisplayService>();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _onRoute(widget.currentRoute));
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _onRoute(widget.currentRoute));
   }
 
   @override
@@ -62,11 +62,15 @@ class _CustomerDisplayShellControllerState
 
       await _service.start();
 
-      final onPos = route == RoutePaths.pos || route.startsWith('${RoutePaths.pos}/');
+      final onPos =
+          route == RoutePaths.pos || route.startsWith('${RoutePaths.pos}/');
       if (!onPos) {
-        await _service.sync(const CustomerDisplaySnapshot.advertising());
+        if (!mounted) return;
+        final snapshot = buildCustomerDisplayAdvertisingSnapshot(context);
+        await _service.sync(snapshot);
         AppLogger.info(
-          'CustomerDisplayShell: fuera de POS → publicidad ($route)',
+          'CustomerDisplayShell: fuera de POS → publicidad '
+          '(${snapshot.adProducts.length} ofertas) ($route)',
         );
       }
     } catch (e, st) {

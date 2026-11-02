@@ -4,6 +4,7 @@ import 'package:punto_venta_app/core/dialogs/logout_dialog.dart';
 import 'package:punto_venta_app/features/customer_display/domain/customer_display_service.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product/product_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product/product_state.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/customer_display_advertising_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/pdv_settings_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/printer_settings_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/price_list_selector_dialog.dart';
@@ -133,6 +134,26 @@ class _SettingsDialogState extends State<SettingsDialog> {
                     ),
                     value: _customerDisplayEnabled,
                     onChanged: _toggleCustomerDisplay,
+                  ),
+                  const SizedBox(height: 10),
+                  ActionCard(
+                    icon: Icons.campaign_outlined,
+                    iconColor: Colors.teal,
+                    backgroundColor: Colors.teal.withValues(alpha: 0.1),
+                    title: 'Publicidad pantalla cliente',
+                    subtitle:
+                        'Carrusel de productos en oferta fuera del POS',
+                    onTap: () {
+                      final productBloc = context.read<ProductBloc>();
+                      final navigator = Navigator.of(context);
+                      navigator.pop();
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        showCustomerDisplayAdvertisingDialog(
+                          navigator.context,
+                          productBloc: productBloc,
+                        );
+                      });
+                    },
                   ),
                 ],
               ),
