@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:punto_venta_app/features/pos/data/models/product_image_model.dart';
 
 class ProductImagesRepository {
@@ -8,7 +9,7 @@ class ProductImagesRepository {
   final Map<String, String> _imageCache = {};
   Future<Map<String, String>>? _inFlightFetch;
 
-  /// TEMP: mock local de imagen para producto código 3.
+  /// TEMP: mock local de imagen para producto código 3 (solo debug).
   static const String _tempMockProduct3Asset =
       'asset:assets/mock/product_3_secco_naranja.jpg';
 
@@ -35,6 +36,7 @@ class ProductImagesRepository {
   }
 
   void _applyTempMocks() {
+    if (!kDebugMode) return;
     // TODO(temp): quitar cuando ProductLinks.json tenga la foto real.
     _imageCache['3'] = _tempMockProduct3Asset;
   }
