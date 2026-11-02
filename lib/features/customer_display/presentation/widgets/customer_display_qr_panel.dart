@@ -2,6 +2,7 @@ import 'package:barcode/barcode.dart';
 import 'package:flutter/material.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
+import 'package:punto_venta_app/features/customer_display/presentation/widgets/customer_display_qr_brand.dart';
 
 /// Panel QR para Mercado Pago / PVS en la pantalla cliente.
 class CustomerDisplayQrPanel extends StatelessWidget {
@@ -27,7 +28,7 @@ class CustomerDisplayQrPanel extends StatelessWidget {
         padding: const EdgeInsets.all(AppDimensions.paddingM),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            const headerReserve = 72.0;
+            const headerReserve = 100.0;
             final available = constraints.maxHeight.isFinite
                 ? constraints.maxHeight - headerReserve
                 : 200.0;
@@ -36,26 +37,8 @@ class CustomerDisplayQrPanel extends StatelessWidget {
             return Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.qr_code_2,
-                        size: 28, color: AppColors.primary),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        label,
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
+                CustomerDisplayQrBrand(label: label, height: 52),
+                const SizedBox(height: 8),
                 Text(
                   'Escaneá el código para pagar',
                   style: theme.textTheme.bodyMedium?.copyWith(

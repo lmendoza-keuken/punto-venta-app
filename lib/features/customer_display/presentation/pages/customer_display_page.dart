@@ -525,16 +525,21 @@ class _PaymentShell extends StatelessWidget {
         children: [
           Text(
             'Total a pagar',
-            style: theme.textTheme.titleLarge?.copyWith(
+            style: theme.textTheme.headlineSmall?.copyWith(
               color: AppColors.textSecondary,
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            totalText,
-            style: theme.textTheme.displaySmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppColors.primary,
+          const SizedBox(height: 16),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              totalText,
+              style: theme.textTheme.displayLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppColors.primary,
+                fontSize: 72,
+                height: 1.1,
+              ),
             ),
           ),
           Expanded(child: Center(child: child)),

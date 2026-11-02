@@ -143,20 +143,53 @@ class WindowsCustomerDisplayService implements CustomerDisplayService {
     try {
       final primary = await screenRetriever.getPrimaryDisplay();
       final displays = await screenRetriever.getAllDisplays();
-      if (displays.length >= 2) {
-        final secondary = displays.firstWhere(
-          (d) => d.id != primary.id,
-          orElse: () => displays.last,
+      final primaryPos = primary.visiblePosition ?? Offset.zero;
+
+      AppLogger.info(
+        'CustomerDisplay Windows: displays=${displays.length} '
+        'primary id=${primary.id} pos=$primaryPos '
+        'size=${primary.visibleSize ?? primary.size}',
+      );
+      for (final d in displays) {
+        AppLogger.info(
+          '  display id=${d.id} pos=${d.visiblePosition} '
+          'size=${d.visibleSize ?? d.size}',
         );
+      }
+
+      final secondary = _pickSecondary(displays, primary);
+      if (secondary != null) {
         final pos = secondary.visiblePosition ?? Offset.zero;
         final size = secondary.visibleSize ?? secondary.size;
+        // Si el SO reporta el 2º en (0,0) igual que el primario, no forzar
+        // fullscreen: dejar ventana movible para que el cajero la arrastre.
+        final sameOrigin = (pos - primaryPos).distance < 8;
+        if (sameOrigin) {
+          AppLogger.info(
+            'CustomerDisplay Windows: 2º monitor con mismo origen — '
+            'abriendo en modo ventana',
+          );
+          final width = (size.width * 0.45).clamp(640.0, 1100.0);
+          final height = (size.height * 0.7).clamp(480.0, 900.0);
+          return _WindowPlacement(
+            frame: Rect.fromLTWH(
+              pos.dx + size.width - width - 24,
+              pos.dy + (size.height - height) / 2,
+              width,
+              height,
+            ),
+            fullscreen: false,
+          );
+        }
+
         return _WindowPlacement(
           frame: Rect.fromLTWH(pos.dx, pos.dy, size.width, size.height),
           fullscreen: true,
         );
       }
 
-      final pos = primary.visiblePosition ?? Offset.zero;
+      // Un solo monitor: ventana flotante a la derecha.
+      final pos = primaryPos;
       final size = primary.visibleSize ?? primary.size;
       final width = (size.width * 0.45).clamp(640.0, 1100.0);
       final height = (size.height * 0.7).clamp(480.0, 900.0);
@@ -180,6 +213,34 @@ class WindowsCustomerDisplayService implements CustomerDisplayService {
         fullscreen: false,
       );
     }
+  }
+
+  /// Elige el monitor que no es el primario (por id o por posición).
+  Display? _pickSecondary(List<Display> displays, Display primary) {
+    if (displays.length < 2) return null;
+
+    final primaryPos = primary.visiblePosition ?? Offset.zero;
+
+    final byId = displays.where((d) => d.id != primary.id).toList();
+    if (byId.isNotEmpty) {
+      byId.sort((a, b) {
+        final ap = a.visiblePosition ?? Offset.zero;
+        final bp = b.visiblePosition ?? Offset.zero;
+        final da = (ap - primaryPos).distance;
+        final db = (bp - primaryPos).distance;
+        return db.compareTo(da); // más lejos del primario primero
+      });
+      return byId.first;
+    }
+
+    // Mismo id raro: tomar el de distinta posición.
+    final byPos = displays.where((d) {
+      final p = d.visiblePosition ?? Offset.zero;
+      return (p - primaryPos).distance > 8;
+    }).toList();
+    if (byPos.isNotEmpty) return byPos.first;
+
+    return displays.last;
   }
 }
 

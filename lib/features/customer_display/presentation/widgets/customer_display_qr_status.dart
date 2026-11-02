@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/features/customer_display/domain/customer_display_snapshot.dart';
+import 'package:punto_venta_app/features/customer_display/presentation/widgets/customer_display_qr_brand.dart';
 
 /// Vista de estado del cobro QR en cliente.
 class CustomerDisplayQrStatus extends StatelessWidget {
@@ -31,6 +32,8 @@ class CustomerDisplayQrStatus extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              CustomerDisplayQrBrand(label: label, height: 60),
+              const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
