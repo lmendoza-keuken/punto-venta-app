@@ -88,6 +88,7 @@ class _CustomerDisplayBinderState extends State<CustomerDisplayBinder> {
 
   void _scheduleLockScreen() {
     _lockScreenTimer?.cancel();
+    if (!CustomerDisplayPrefs.advertisingEnabled) return;
     if (!_service.isEnabled || _holdingDone || !mounted) return;
 
     final seconds = CustomerDisplayPrefs.adIdleSeconds(_prefs);
@@ -104,6 +105,7 @@ class _CustomerDisplayBinderState extends State<CustomerDisplayBinder> {
   }
 
   Future<void> _showLockAdvertising() async {
+    if (!CustomerDisplayPrefs.advertisingEnabled) return;
     if (!_service.isEnabled || !mounted) return;
     final snapshot = buildCustomerDisplayAdvertisingSnapshot(context);
     _showingLockAd = true;

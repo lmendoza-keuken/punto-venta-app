@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:punto_venta_app/app/routes/route_paths.dart';
 import 'package:punto_venta_app/core/utils/app_logger.dart';
+import 'package:punto_venta_app/features/customer_display/domain/customer_display_prefs.dart';
 import 'package:punto_venta_app/features/customer_display/domain/customer_display_service.dart';
+import 'package:punto_venta_app/features/customer_display/domain/customer_display_snapshot.dart';
 import 'package:punto_venta_app/features/customer_display/presentation/customer_display_advertising.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
@@ -66,6 +68,14 @@ class _CustomerDisplayShellControllerState
           route == RoutePaths.pos || route.startsWith('${RoutePaths.pos}/');
       if (!onPos) {
         if (!mounted) return;
+        if (!CustomerDisplayPrefs.advertisingEnabled) {
+          await _service.sync(const CustomerDisplaySnapshot.idle());
+          AppLogger.info(
+            'CustomerDisplayShell: fuera de POS → idle '
+            '(publicidad desactivada) ($route)',
+          );
+          return;
+        }
         final snapshot = buildCustomerDisplayAdvertisingSnapshot(context);
         await _service.sync(snapshot);
         AppLogger.info(

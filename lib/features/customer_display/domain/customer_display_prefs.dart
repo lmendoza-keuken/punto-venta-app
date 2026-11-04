@@ -11,6 +11,8 @@ class CustomerDisplayPrefs {
   static const adProductsKey = 'customer_display_ad_products';
   static const adIdleSecondsKey = 'customer_display_ad_idle_seconds';
 
+  static const bool advertisingEnabled = false;
+
   static const defaultAdTitle = 'Promociones';
   static const defaultAdMessage = '';
 
