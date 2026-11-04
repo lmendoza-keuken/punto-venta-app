@@ -45,10 +45,13 @@ class CustomerDisplayPrefs {
     return minutes == 1 ? '1 minuto' : '$minutes minutos';
   }
 
-  /// Cache del último set de productos en oferta (is_on_sale = 1).
-  static List<CustomerDisplayAdProduct> adProducts(SharedPreferences prefs) {
+  /// Productos elegidos para el carrusel. `null` = nunca configurado.
+  static List<CustomerDisplayAdProduct>? adProductsOrNull(
+    SharedPreferences prefs,
+  ) {
     final raw = prefs.getString(adProductsKey);
-    if (raw == null || raw.isEmpty) return const [];
+    if (raw == null) return null;
+    if (raw.isEmpty) return const [];
     try {
       final list = jsonDecode(raw) as List<dynamic>;
       return list
@@ -62,6 +65,10 @@ class CustomerDisplayPrefs {
     }
   }
 
+  static List<CustomerDisplayAdProduct> adProducts(SharedPreferences prefs) {
+    return adProductsOrNull(prefs) ?? const [];
+  }
+
   static List<CustomerDisplayAdProduct> onSaleProductsFromCatalog(
     Iterable<Product> products,
   ) {
@@ -69,6 +76,24 @@ class CustomerDisplayPrefs {
         .where((p) => p.isOnSale)
         .map(CustomerDisplayAdProduct.fromProduct)
         .toList();
+  }
+
+  static List<CustomerDisplayAdProduct> resolveAdProducts({
+    required SharedPreferences prefs,
+    required List<CustomerDisplayAdProduct> catalogOnSale,
+  }) {
+    final saved = adProductsOrNull(prefs);
+    if (saved == null || saved.isEmpty) return catalogOnSale;
+    if (catalogOnSale.isEmpty) return saved;
+
+    final byId = <int, CustomerDisplayAdProduct>{
+      for (final product in catalogOnSale) product.productId: product,
+    };
+    final resolved = [
+      for (final product in saved)
+        if (byId.containsKey(product.productId)) byId[product.productId]!,
+    ];
+    return resolved.isEmpty ? catalogOnSale : resolved;
   }
 
   static Future<void> saveAdvertising(

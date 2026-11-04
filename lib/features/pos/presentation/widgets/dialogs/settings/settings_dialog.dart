@@ -89,7 +89,9 @@ class _SettingsDialogState extends State<SettingsDialog> {
                       final navigatorContext = Navigator.of(context).context;
                       Navigator.of(context).pop();
                       showPriceListSelectorDialog(
-                          navigatorContext, currentList);
+                        navigatorContext,
+                        currentList,
+                      );
                     },
                   ),
                   const SizedBox(height: 10),
@@ -119,31 +121,13 @@ class _SettingsDialogState extends State<SettingsDialog> {
                     },
                   ),
                   const SizedBox(height: 10),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    secondary: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.teal.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(Icons.tv, color: Colors.teal),
-                    ),
-                    title: const Text('Pantalla cliente'),
-                    subtitle: const Text(
-                      'Mostrar carrito y total en la segunda pantalla',
-                    ),
-                    value: _customerDisplayEnabled,
-                    onChanged: _toggleCustomerDisplay,
-                  ),
-                  const SizedBox(height: 10),
+
                   ActionCard(
                     icon: Icons.campaign_outlined,
                     iconColor: Colors.teal,
                     backgroundColor: Colors.teal.withValues(alpha: 0.1),
                     title: 'Publicidad pantalla cliente',
-                    subtitle:
-                        'Carrusel de productos en oferta fuera del POS',
+                    subtitle: 'Carrusel de productos en oferta fuera del POS',
                     onTap: () {
                       final productBloc = context.read<ProductBloc>();
                       final navigator = Navigator.of(context);
@@ -156,6 +140,24 @@ class _SettingsDialogState extends State<SettingsDialog> {
                       });
                     },
                   ),
+                  // const SizedBox(height: 10),
+                  // SwitchListTile(
+                  //   contentPadding: EdgeInsets.zero,
+                  //   secondary: Container(
+                  //     padding: const EdgeInsets.all(10),
+                  //     decoration: BoxDecoration(
+                  //       color: Colors.teal.withValues(alpha: 0.1),
+                  //       borderRadius: BorderRadius.circular(10),
+                  //     ),
+                  //     child: const Icon(Icons.tv, color: Colors.teal),
+                  //   ),
+                  //   title: const Text('Pantalla cliente'),
+                  //   subtitle: const Text(
+                  //     'Mostrar carrito y total en la segunda pantalla',
+                  //   ),
+                  //   value: _customerDisplayEnabled,
+                  //   onChanged: _toggleCustomerDisplay,
+                  // ),
                 ],
               ),
             ),

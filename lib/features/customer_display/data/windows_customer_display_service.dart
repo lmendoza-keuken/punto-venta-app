@@ -45,10 +45,18 @@ class WindowsCustomerDisplayService implements CustomerDisplayService {
     if (_controller != null || _starting) return;
     _starting = true;
     try {
-      final placement = await _resolvePlacement();
+      final placement = await _resolveSecondaryFullscreenPlacement();
+      if (placement == null) {
+        AppLogger.info(
+          'CustomerDisplay Windows: sin 2º monitor usable — '
+          'no se abre la ventana cliente',
+        );
+        return;
+      }
+
       final argument = jsonEncode({
         'type': kCustomerDisplayWindowArg,
-        'fullscreen': placement.fullscreen,
+        'fullscreen': true,
         'frame': {
           'left': placement.frame.left,
           'top': placement.frame.top,
@@ -67,8 +75,8 @@ class WindowsCustomerDisplayService implements CustomerDisplayService {
       await controller.show();
       _listenWindowsChanged();
       AppLogger.info(
-        'CustomerDisplay Windows: ventana abierta '
-        'fullscreen=${placement.fullscreen} frame=${placement.frame}',
+        'CustomerDisplay Windows: ventana abierta fullscreen '
+        'en 2º monitor frame=${placement.frame}',
       );
       // Dar tiempo al engine secundario a registrar el handler.
       await Future<void>.delayed(const Duration(milliseconds: 400));
@@ -127,10 +135,13 @@ class WindowsCustomerDisplayService implements CustomerDisplayService {
   @override
   Future<void> sync(CustomerDisplaySnapshot snapshot) async {
     _last = snapshot;
-    final controller = _controller;
-    if (controller == null) return;
+    // Si aún no hay ventana (p.ej. se conectó el 2º monitor después), reintentar.
+    if (_controller == null) {
+      await start();
+      return;
+    }
     try {
-      await controller.invokeMethod(
+      await _controller!.invokeMethod(
         kCustomerDisplaySyncMethod,
         jsonEncode(snapshot.toJson()),
       );
@@ -139,7 +150,7 @@ class WindowsCustomerDisplayService implements CustomerDisplayService {
     }
   }
 
-  Future<_WindowPlacement> _resolvePlacement() async {
+  Future<_WindowPlacement?> _resolveSecondaryFullscreenPlacement() async {
     try {
       final primary = await screenRetriever.getPrimaryDisplay();
       final displays = await screenRetriever.getAllDisplays();
@@ -157,50 +168,25 @@ class WindowsCustomerDisplayService implements CustomerDisplayService {
         );
       }
 
-      final secondary = _pickSecondary(displays, primary);
-      if (secondary != null) {
-        final pos = secondary.visiblePosition ?? Offset.zero;
-        final size = secondary.visibleSize ?? secondary.size;
-        // Si el SO reporta el 2º en (0,0) igual que el primario, no forzar
-        // fullscreen: dejar ventana movible para que el cajero la arrastre.
-        final sameOrigin = (pos - primaryPos).distance < 8;
-        if (sameOrigin) {
-          AppLogger.info(
-            'CustomerDisplay Windows: 2º monitor con mismo origen — '
-            'abriendo en modo ventana',
-          );
-          final width = (size.width * 0.45).clamp(640.0, 1100.0);
-          final height = (size.height * 0.7).clamp(480.0, 900.0);
-          return _WindowPlacement(
-            frame: Rect.fromLTWH(
-              pos.dx + size.width - width - 24,
-              pos.dy + (size.height - height) / 2,
-              width,
-              height,
-            ),
-            fullscreen: false,
-          );
-        }
+      if (displays.length < 2) return null;
 
-        return _WindowPlacement(
-          frame: Rect.fromLTWH(pos.dx, pos.dy, size.width, size.height),
-          fullscreen: true,
+      final secondary = _pickSecondary(displays, primary);
+      if (secondary == null) return null;
+
+      final pos = secondary.visiblePosition ?? Offset.zero;
+      final size = secondary.visibleSize ?? secondary.size;
+      final sameOrigin = (pos - primaryPos).distance < 8;
+      if (sameOrigin) {
+        AppLogger.info(
+          'CustomerDisplay Windows: 2º monitor reporta el mismo origen '
+          'que el primario — no se abre (posición inválida)',
         );
+        return null;
       }
 
-      // Un solo monitor: ventana flotante a la derecha.
-      final pos = primaryPos;
-      final size = primary.visibleSize ?? primary.size;
-      final width = (size.width * 0.45).clamp(640.0, 1100.0);
-      final height = (size.height * 0.7).clamp(480.0, 900.0);
       return _WindowPlacement(
-        frame: Rect.fromLTWH(
-          pos.dx + size.width - width - 24,
-          pos.dy + (size.height - height) / 2,
-          width,
-          height,
-        ),
-        fullscreen: false,
+        frame: Rect.fromLTWH(pos.dx, pos.dy, size.width, size.height),
+        fullscreen: true,
       );
     } catch (e, st) {
       AppLogger.error(
@@ -208,10 +194,7 @@ class WindowsCustomerDisplayService implements CustomerDisplayService {
         e,
         st,
       );
-      return const _WindowPlacement(
-        frame: Rect.fromLTWH(100, 100, 900, 700),
-        fullscreen: false,
-      );
+      return null;
     }
   }
 
@@ -253,3 +236,4 @@ class _WindowPlacement {
   final Rect frame;
   final bool fullscreen;
 }
+

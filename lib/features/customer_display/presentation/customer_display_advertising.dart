@@ -11,18 +11,26 @@ CustomerDisplaySnapshot buildCustomerDisplayAdvertisingSnapshot(
   BuildContext? context,
 ) {
   final prefs = di.sl<SharedPreferences>();
-  var products = CustomerDisplayPrefs.adProducts(prefs);
+  var catalogOnSale = const <CustomerDisplayAdProduct>[];
 
   if (context != null && context.mounted) {
     try {
       final state = context.read<ProductBloc>().state;
       if (state is ProductLoaded) {
-        products = CustomerDisplayPrefs.onSaleProductsFromCatalog(
+        catalogOnSale = CustomerDisplayPrefs.onSaleProductsFromCatalog(
           state.allProducts,
         );
-        CustomerDisplayPrefs.cacheAdProducts(prefs, products);
       }
     } catch (_) {}
+  }
+
+  final products = CustomerDisplayPrefs.resolveAdProducts(
+    prefs: prefs,
+    catalogOnSale: catalogOnSale,
+  );
+
+  if (catalogOnSale.isNotEmpty) {
+    CustomerDisplayPrefs.cacheAdProducts(prefs, products);
   }
 
   return CustomerDisplaySnapshot.advertising(
