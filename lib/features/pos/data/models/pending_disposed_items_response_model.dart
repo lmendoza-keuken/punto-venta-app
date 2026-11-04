@@ -4,7 +4,7 @@ part 'pending_disposed_items_response_model.freezed.dart';
 part 'pending_disposed_items_response_model.g.dart';
 
 @freezed
-class PendingDisposedGroupModel with _$PendingDisposedGroupModel {
+abstract class PendingDisposedGroupModel with _$PendingDisposedGroupModel {
   const PendingDisposedGroupModel._();
 
   const factory PendingDisposedGroupModel({
@@ -26,7 +26,7 @@ class PendingDisposedGroupModel with _$PendingDisposedGroupModel {
 }
 
 @freezed
-class DisposedItemModel with _$DisposedItemModel {
+abstract class DisposedItemModel with _$DisposedItemModel {
   const factory DisposedItemModel({
     @JsonKey(name: 'productId') int? productId,
     @JsonKey(name: 'productName') String? productName,

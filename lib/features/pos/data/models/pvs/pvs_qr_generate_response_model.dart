@@ -4,7 +4,7 @@ part 'pvs_qr_generate_response_model.freezed.dart';
 part 'pvs_qr_generate_response_model.g.dart';
 
 @freezed
-class PvsQrGenerateResponse with _$PvsQrGenerateResponse {
+abstract class PvsQrGenerateResponse with _$PvsQrGenerateResponse {
   const factory PvsQrGenerateResponse({
     @JsonKey(name: 'code') String? code,
     @JsonKey(name: 'message') String? message,
@@ -17,7 +17,7 @@ class PvsQrGenerateResponse with _$PvsQrGenerateResponse {
 }
 
 @freezed
-class PvsQrGenerateData with _$PvsQrGenerateData {
+abstract class PvsQrGenerateData with _$PvsQrGenerateData {
   const factory PvsQrGenerateData({
     @JsonKey(name: 'qrId') String? qrId,
     @JsonKey(name: 'qrImage') String? qrImage,

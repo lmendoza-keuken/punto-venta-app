@@ -5,7 +5,7 @@ part 'supplier_response_model.freezed.dart';
 part 'supplier_response_model.g.dart';
 
 @freezed
-class SupplierResponseModel with _$SupplierResponseModel {
+abstract class SupplierResponseModel with _$SupplierResponseModel {
   const SupplierResponseModel._();
 
   const factory SupplierResponseModel({

@@ -4,7 +4,7 @@ part 'pdv_config_response_model.freezed.dart';
 part 'pdv_config_response_model.g.dart';
 
 @freezed
-class PdvConfigResponseModel with _$PdvConfigResponseModel {
+abstract class PdvConfigResponseModel with _$PdvConfigResponseModel {
   const PdvConfigResponseModel._();
 
   const factory PdvConfigResponseModel({

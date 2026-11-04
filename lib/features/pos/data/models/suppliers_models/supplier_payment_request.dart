@@ -4,7 +4,7 @@ part 'supplier_payment_request.freezed.dart';
 part 'supplier_payment_request.g.dart';
 
 @freezed
-class SupplierPaymentRequest with _$SupplierPaymentRequest {
+abstract class SupplierPaymentRequest with _$SupplierPaymentRequest {
   const SupplierPaymentRequest._();
 
   const factory SupplierPaymentRequest({
@@ -29,7 +29,7 @@ List<Map<String, dynamic>>? _itemsToJson(List<ItemSupplierRequest>? items) =>
     items?.map((e) => e.toJson()).toList();
 
 @freezed
-class ItemSupplierRequest with _$ItemSupplierRequest {
+abstract class ItemSupplierRequest with _$ItemSupplierRequest {
   const ItemSupplierRequest._();
 
   const factory ItemSupplierRequest({

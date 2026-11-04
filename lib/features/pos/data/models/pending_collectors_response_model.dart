@@ -4,7 +4,7 @@ part 'pending_collectors_response_model.freezed.dart';
 part 'pending_collectors_response_model.g.dart';
 
 @freezed
-class PendingCollectorsResponseModel with _$PendingCollectorsResponseModel {
+abstract class PendingCollectorsResponseModel with _$PendingCollectorsResponseModel {
   const PendingCollectorsResponseModel._();
 
   const factory PendingCollectorsResponseModel({

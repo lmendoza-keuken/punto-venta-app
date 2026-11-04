@@ -4,7 +4,7 @@ part 'config_qr_request_model.freezed.dart';
 part 'config_qr_request_model.g.dart';
 
 @freezed
-class ConfigQrRequest with _$ConfigQrRequest {
+abstract class ConfigQrRequest with _$ConfigQrRequest {
   const factory ConfigQrRequest({
     @JsonKey(name: 'qr') QrConfig? qr,
   }) = _ConfigQrRequest;
@@ -14,7 +14,7 @@ class ConfigQrRequest with _$ConfigQrRequest {
 }
 
 @freezed
-class QrConfig with _$QrConfig {
+abstract class QrConfig with _$QrConfig {
   const factory QrConfig({
     @JsonKey(name: 'external_pos_id') String? externalPosId,
     @JsonKey(name: 'mode') String? mode,

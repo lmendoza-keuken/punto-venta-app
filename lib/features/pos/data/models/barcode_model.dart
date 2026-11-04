@@ -5,7 +5,7 @@ part 'barcode_model.freezed.dart';
 part 'barcode_model.g.dart';
 
 @freezed
-class BarcodeModel with _$BarcodeModel {
+abstract class BarcodeModel with _$BarcodeModel {
   const BarcodeModel._();
 
   const factory BarcodeModel({

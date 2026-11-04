@@ -4,7 +4,7 @@ part 'stock_dispose_response_model.freezed.dart';
 part 'stock_dispose_response_model.g.dart';
 
 @freezed
-class StockDisposeResponseModel with _$StockDisposeResponseModel {
+abstract class StockDisposeResponseModel with _$StockDisposeResponseModel {
   const factory StockDisposeResponseModel({
     @JsonKey(name: 'id') int? id,
     @JsonKey(name: 'user_id') int? userId,

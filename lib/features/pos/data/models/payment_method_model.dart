@@ -6,7 +6,7 @@ part 'payment_method_model.freezed.dart';
 part 'payment_method_model.g.dart';
 
 @freezed
-class PaymentMethodModel with _$PaymentMethodModel {
+abstract class PaymentMethodModel with _$PaymentMethodModel {
   const PaymentMethodModel._();
 
   const factory PaymentMethodModel({

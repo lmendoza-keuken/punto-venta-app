@@ -4,7 +4,7 @@ part 'pos_response_model.freezed.dart';
 part 'pos_response_model.g.dart';
 
 @freezed
-class PosResponseModel with _$PosResponseModel {
+abstract class PosResponseModel with _$PosResponseModel {
   factory PosResponseModel({
     @JsonKey(name: 'id') int? id,
     @JsonKey(name: 'qr') QrModel? qr,
@@ -28,7 +28,7 @@ class PosResponseModel with _$PosResponseModel {
 }
 
 @freezed
-class QrModel with _$QrModel {
+abstract class QrModel with _$QrModel {
   factory QrModel({
     @JsonKey(name: 'image') String? image,
     @JsonKey(name: 'template_document') String? templateDocument,

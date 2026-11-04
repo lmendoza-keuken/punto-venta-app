@@ -6,7 +6,7 @@ part 'category_model.g.dart';
 String? _categoryIdFromJson(dynamic value) => value?.toString();
 
 @freezed
-class CategoryModel with _$CategoryModel {
+abstract class CategoryModel with _$CategoryModel {
   const CategoryModel._();
 
   const factory CategoryModel({

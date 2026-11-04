@@ -35,7 +35,7 @@ class LoginForm extends StatelessWidget {
                           valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       )
-                    : const Icon(FontAwesomeIcons.google,
+                    : const FaIcon(FontAwesomeIcons.google,
                         color: Colors.white, size: 22),
                 label: Text(
                     isLoading ? 'Iniciando sesión...' : 'Continuar con Google'),

@@ -14,7 +14,7 @@ String? pvsWalletNameFromJson(dynamic value) {
 }
 
 @freezed
-class PvsTransactionStatusResponse with _$PvsTransactionStatusResponse {
+abstract class PvsTransactionStatusResponse with _$PvsTransactionStatusResponse {
   const factory PvsTransactionStatusResponse({
     @JsonKey(name: 'code') String? code,
     @JsonKey(name: 'ok') bool? ok,
@@ -26,7 +26,7 @@ class PvsTransactionStatusResponse with _$PvsTransactionStatusResponse {
 }
 
 @freezed
-class PvsTransactionData with _$PvsTransactionData {
+abstract class PvsTransactionData with _$PvsTransactionData {
   const factory PvsTransactionData({
     @JsonKey(name: 'id') String? id,
     @JsonKey(name: 'qrId') String? qrId,

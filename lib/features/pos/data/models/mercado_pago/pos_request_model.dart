@@ -4,7 +4,7 @@ part 'pos_request_model.freezed.dart';
 part 'pos_request_model.g.dart';
 
 @freezed
-class PosRequestModel with _$PosRequestModel {
+abstract class PosRequestModel with _$PosRequestModel {
   factory PosRequestModel({
     @JsonKey(name: 'name') required String name,
     @Default(true) @JsonKey(name: 'fixed_amount') bool fixedAmount,

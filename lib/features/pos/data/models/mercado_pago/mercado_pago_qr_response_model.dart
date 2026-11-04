@@ -6,7 +6,7 @@ part 'mercado_pago_qr_response_model.freezed.dart';
 part 'mercado_pago_qr_response_model.g.dart';
 
 @freezed
-class MercadoPagoQrResponse with _$MercadoPagoQrResponse {
+abstract class MercadoPagoQrResponse with _$MercadoPagoQrResponse {
   const factory MercadoPagoQrResponse({
     @JsonKey(name: 'id') String? id,
     @JsonKey(name: 'type') String? type,
@@ -34,7 +34,7 @@ class MercadoPagoQrResponse with _$MercadoPagoQrResponse {
 }
 
 @freezed
-class QrDataResponse with _$QrDataResponse {
+abstract class QrDataResponse with _$QrDataResponse {
   const factory QrDataResponse({
     @JsonKey(name: 'qr_data') String? qrData,
   }) = _QrDataResponse;

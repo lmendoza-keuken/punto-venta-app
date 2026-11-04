@@ -4,7 +4,7 @@ part 'product_image_model.freezed.dart';
 part 'product_image_model.g.dart';
 
 @freezed
-class ProductImageModel with _$ProductImageModel {
+abstract class ProductImageModel with _$ProductImageModel {
   const factory ProductImageModel({
     @JsonKey(name: 'codigo', fromJson: _codigoFromJson) String? codigo,
     @JsonKey(name: 'link') String? link,

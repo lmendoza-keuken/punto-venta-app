@@ -5,7 +5,7 @@ part 'item_ticket_model.freezed.dart';
 part 'item_ticket_model.g.dart';
 
 @freezed
-class ItemTicketModel with _$ItemTicketModel {
+abstract class ItemTicketModel with _$ItemTicketModel {
   const ItemTicketModel._();
 
   const factory ItemTicketModel({

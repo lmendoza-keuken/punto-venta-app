@@ -4,7 +4,7 @@ part 'vat_category_model.freezed.dart';
 part 'vat_category_model.g.dart';
 
 @freezed
-class VatCategoryModel with _$VatCategoryModel {
+abstract class VatCategoryModel with _$VatCategoryModel {
   const VatCategoryModel._();
 
   const factory VatCategoryModel({

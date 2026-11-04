@@ -7,7 +7,7 @@ part 'enterprise_data_model.freezed.dart';
 part 'enterprise_data_model.g.dart';
 
 @freezed
-class EnterpriseDataModel with _$EnterpriseDataModel {
+abstract class EnterpriseDataModel with _$EnterpriseDataModel {
   factory EnterpriseDataModel({
     @JsonKey(name: 'id', fromJson: convertToInt) int? id,
     @JsonKey(name: 'name') String? name,

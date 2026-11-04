@@ -4,7 +4,7 @@ part 'tax_model.freezed.dart';
 part 'tax_model.g.dart';
 
 @freezed
-class TaxModel with _$TaxModel {
+abstract class TaxModel with _$TaxModel {
   const TaxModel._();
 
   const factory TaxModel({

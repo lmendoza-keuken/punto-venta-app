@@ -4,7 +4,7 @@ part 'branch_response_model.freezed.dart';
 part 'branch_response_model.g.dart';
 
 @freezed
-class BranchResponseModel with _$BranchResponseModel {
+abstract class BranchResponseModel with _$BranchResponseModel {
   const BranchResponseModel._();
 
   const factory BranchResponseModel({

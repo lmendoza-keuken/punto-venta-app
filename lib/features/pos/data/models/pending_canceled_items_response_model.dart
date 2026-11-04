@@ -4,7 +4,7 @@ part 'pending_canceled_items_response_model.freezed.dart';
 part 'pending_canceled_items_response_model.g.dart';
 
 @freezed
-class PendingCanceledTicketModel with _$PendingCanceledTicketModel {
+abstract class PendingCanceledTicketModel with _$PendingCanceledTicketModel {
   const PendingCanceledTicketModel._();
 
   const factory PendingCanceledTicketModel({
@@ -26,7 +26,7 @@ class PendingCanceledTicketModel with _$PendingCanceledTicketModel {
 }
 
 @freezed
-class CanceledItemModel with _$CanceledItemModel {
+abstract class CanceledItemModel with _$CanceledItemModel {
   const factory CanceledItemModel({
     @JsonKey(name: 'productId') int? productId,
     @JsonKey(name: 'productName') String? productName,

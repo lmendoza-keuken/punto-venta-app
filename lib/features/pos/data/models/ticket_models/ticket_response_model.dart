@@ -6,7 +6,7 @@ part 'ticket_response_model.freezed.dart';
 part 'ticket_response_model.g.dart';
 
 @freezed
-class TicketResponseModel with _$TicketResponseModel {
+abstract class TicketResponseModel with _$TicketResponseModel {
   const TicketResponseModel._();
 
   const factory TicketResponseModel({

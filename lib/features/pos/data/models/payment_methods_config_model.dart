@@ -5,7 +5,7 @@ part 'payment_methods_config_model.freezed.dart';
 part 'payment_methods_config_model.g.dart';
 
 @freezed
-class PaymentMethodsConfigModel with _$PaymentMethodsConfigModel {
+abstract class PaymentMethodsConfigModel with _$PaymentMethodsConfigModel {
   const PaymentMethodsConfigModel._();
 
   const factory PaymentMethodsConfigModel({
@@ -42,7 +42,7 @@ List<Map<String, dynamic>>? _paymentMethodsConfigToJson(
     paymentMethodsConfig?.map((e) => e.toJson()).toList();
 
 @freezed
-class PaymentMethodConfigModel with _$PaymentMethodConfigModel {
+abstract class PaymentMethodConfigModel with _$PaymentMethodConfigModel {
   const PaymentMethodConfigModel._();
 
   const factory PaymentMethodConfigModel({

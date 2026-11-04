@@ -4,7 +4,7 @@ part 'mp_credentials_model.freezed.dart';
 part 'mp_credentials_model.g.dart';
 
 @freezed
-class MpCredentials with _$MpCredentials {
+abstract class MpCredentials with _$MpCredentials {
   factory MpCredentials({
     @JsonKey(name: 'mpAccessToken') String? mpAccessToken,
     @JsonKey(name: 'mpExternalPosIds')
@@ -17,7 +17,7 @@ class MpCredentials with _$MpCredentials {
 }
 
 @freezed
-class ExternalPosIdModel with _$ExternalPosIdModel {
+abstract class ExternalPosIdModel with _$ExternalPosIdModel {
   factory ExternalPosIdModel({
     @JsonKey(name: 'mpExternalPosId') String? mpExternalPosId,
     @JsonKey(name: 'userId') int? userId,
@@ -28,7 +28,7 @@ class ExternalPosIdModel with _$ExternalPosIdModel {
 }
 
 @freezed
-class StoreModel with _$StoreModel {
+abstract class StoreModel with _$StoreModel {
   factory StoreModel({
     @JsonKey(name: 'storeId') String? storeId,
     @JsonKey(name: 'mpExternalStoreId') String? mpExternalStoreId,

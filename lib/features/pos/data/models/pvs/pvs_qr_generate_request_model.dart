@@ -10,7 +10,7 @@ String formatPvsAmount(double value) {
 }
 
 @freezed
-class PvsQrGenerateRequest with _$PvsQrGenerateRequest {
+abstract class PvsQrGenerateRequest with _$PvsQrGenerateRequest {
   const factory PvsQrGenerateRequest({
     @JsonKey(name: 'amount') required String amount,
     @JsonKey(name: 'externalId') required String externalId,

@@ -4,7 +4,7 @@ part 'payment_method_request_model.freezed.dart';
 part 'payment_method_request_model.g.dart';
 
 @freezed
-class PaymentMethodRequestModel with _$PaymentMethodRequestModel {
+abstract class PaymentMethodRequestModel with _$PaymentMethodRequestModel {
   const PaymentMethodRequestModel._();
 
   const factory PaymentMethodRequestModel({
@@ -18,7 +18,7 @@ class PaymentMethodRequestModel with _$PaymentMethodRequestModel {
 }
 
 @freezed
-class PaymentMethodDetailRequest with _$PaymentMethodDetailRequest {
+abstract class PaymentMethodDetailRequest with _$PaymentMethodDetailRequest {
   const PaymentMethodDetailRequest._();
 
   const factory PaymentMethodDetailRequest({

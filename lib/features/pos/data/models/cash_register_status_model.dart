@@ -5,7 +5,7 @@ part 'cash_register_status_model.freezed.dart';
 part 'cash_register_status_model.g.dart';
 
 @freezed
-class CashRegisterStatusModel with _$CashRegisterStatusModel {
+abstract class CashRegisterStatusModel with _$CashRegisterStatusModel {
   const CashRegisterStatusModel._();
 
   const factory CashRegisterStatusModel({

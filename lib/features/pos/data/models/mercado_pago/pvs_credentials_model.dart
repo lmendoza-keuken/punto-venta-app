@@ -4,7 +4,7 @@ part 'pvs_credentials_model.freezed.dart';
 part 'pvs_credentials_model.g.dart';
 
 @freezed
-class PvsCredentials with _$PvsCredentials {
+abstract class PvsCredentials with _$PvsCredentials {
   factory PvsCredentials({
     @JsonKey(name: 'paymentMethodId') int? paymentMethodId,
     @JsonKey(name: 'clientId') String? clientId,

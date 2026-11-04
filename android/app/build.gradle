@@ -9,22 +9,22 @@ plugins {
 
 android {
     namespace "ar.com.keuken.punto_venta_app"
-    compileSdk 36
-    ndkVersion flutter.ndkVersion
+    compileSdk 37
+    ndkVersion "27.0.12077973"
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
+        jvmTarget = JavaVersion.VERSION_17
     }
 
     defaultConfig {
         applicationId "ar.com.keuken.punto_venta_app"
         minSdk 24
-        targetSdk flutter.targetSdkVersion
+        targetSdk 37
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }

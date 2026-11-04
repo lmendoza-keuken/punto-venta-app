@@ -5,7 +5,7 @@ part 'fiscal_issuer_data_model.freezed.dart';
 part 'fiscal_issuer_data_model.g.dart';
 
 @freezed
-class FiscalIssuerDataModel with _$FiscalIssuerDataModel {
+abstract class FiscalIssuerDataModel with _$FiscalIssuerDataModel {
   const FiscalIssuerDataModel._();
 
   const factory FiscalIssuerDataModel({

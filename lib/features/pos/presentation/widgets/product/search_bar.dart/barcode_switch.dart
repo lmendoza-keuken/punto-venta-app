@@ -47,12 +47,14 @@ class BarcodeSwitch extends StatelessWidget {
               onTap: () {
                 context.read<UiBloc>().add(ToggleBarcodeSearch());
               },
-              child: Icon(
-                FontAwesomeIcons.barcode,
-                color: uiState.isBarcodeSearchEnabled
-                    ? Colors.white
-                    : AppColors.textSecondary,
-                size: 24,
+              child: Center(
+                child: FaIcon(
+                  FontAwesomeIcons.barcode,
+                  color: uiState.isBarcodeSearchEnabled
+                      ? Colors.white
+                      : AppColors.textSecondary,
+                  size: 24,
+                ),
               ),
             ),
           ),

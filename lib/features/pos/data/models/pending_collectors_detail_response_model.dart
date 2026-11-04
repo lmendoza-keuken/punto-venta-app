@@ -4,7 +4,7 @@ part 'pending_collectors_detail_response_model.freezed.dart';
 part 'pending_collectors_detail_response_model.g.dart';
 
 @freezed
-class PendingCollectorsDetailResponseModel
+abstract class PendingCollectorsDetailResponseModel
     with _$PendingCollectorsDetailResponseModel {
   const PendingCollectorsDetailResponseModel._();
 
@@ -26,7 +26,7 @@ class PendingCollectorsDetailResponseModel
 }
 
 @freezed
-class PaymentBreakdown with _$PaymentBreakdown {
+abstract class PaymentBreakdown with _$PaymentBreakdown {
   const factory PaymentBreakdown({
     @JsonKey(name: 'payment_method_id') int? paymentMethodId,
     @JsonKey(name: 'description') String? description,

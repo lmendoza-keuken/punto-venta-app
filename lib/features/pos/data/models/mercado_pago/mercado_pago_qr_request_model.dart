@@ -6,7 +6,7 @@ part 'mercado_pago_qr_request_model.freezed.dart';
 part 'mercado_pago_qr_request_model.g.dart';
 
 @freezed
-class MercadoPagoQrRequest with _$MercadoPagoQrRequest {
+abstract class MercadoPagoQrRequest with _$MercadoPagoQrRequest {
   const factory MercadoPagoQrRequest({
     @JsonKey(name: 'type') String? type,
     @JsonKey(name: 'total_amount') String? totalAmount,

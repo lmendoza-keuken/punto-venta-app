@@ -5,7 +5,7 @@ part 'order_refund_response_model.freezed.dart';
 part 'order_refund_response_model.g.dart';
 
 @freezed
-class OrderRefundResponse with _$OrderRefundResponse {
+abstract class OrderRefundResponse with _$OrderRefundResponse {
   const factory OrderRefundResponse({
     @JsonKey(name: 'id') String? id,
     @JsonKey(name: 'status') String? status,
@@ -18,7 +18,7 @@ class OrderRefundResponse with _$OrderRefundResponse {
 }
 
 @freezed
-class OrderRefundTransactions with _$OrderRefundTransactions {
+abstract class OrderRefundTransactions with _$OrderRefundTransactions {
   const factory OrderRefundTransactions({
     @JsonKey(name: 'refunds') List<RefundsQrResponse>? refunds,
   }) = _OrderRefundTransactions;

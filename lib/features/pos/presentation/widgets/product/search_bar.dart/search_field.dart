@@ -92,10 +92,22 @@ class _SearchFieldState extends State<SearchField> {
               hintText: isBarcodeMode
                   ? AppStrings.searchBarCodeHint
                   : AppStrings.searchHint,
-              prefixIcon: Icon(
-                isBarcodeMode ? FontAwesomeIcons.barcode : Icons.search,
-                color: AppColors.primary,
-              ),
+              prefixIcon: isBarcodeMode
+                  ? const SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: Center(
+                        child: FaIcon(
+                          FontAwesomeIcons.barcode,
+                          color: AppColors.primary,
+                          size: 22,
+                        ),
+                      ),
+                    )
+                  : const Icon(
+                      Icons.search,
+                      color: AppColors.primary,
+                    ),
               suffixIcon: widget.controller.text.isNotEmpty
                   ? IconButton(
                       icon: const Icon(Icons.clear,

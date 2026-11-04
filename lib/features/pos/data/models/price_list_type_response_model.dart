@@ -4,7 +4,7 @@ part 'price_list_type_response_model.freezed.dart';
 part 'price_list_type_response_model.g.dart';
 
 @freezed
-class PriceListTypeResponseModel with _$PriceListTypeResponseModel {
+abstract class PriceListTypeResponseModel with _$PriceListTypeResponseModel {
   const PriceListTypeResponseModel._();
 
   const factory PriceListTypeResponseModel({

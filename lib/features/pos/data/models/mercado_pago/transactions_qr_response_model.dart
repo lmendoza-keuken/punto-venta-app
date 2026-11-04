@@ -4,7 +4,7 @@ part 'transactions_qr_response_model.freezed.dart';
 part 'transactions_qr_response_model.g.dart';
 
 @freezed
-class TransactionsQrResponse with _$TransactionsQrResponse {
+abstract class TransactionsQrResponse with _$TransactionsQrResponse {
   const factory TransactionsQrResponse({
     @JsonKey(name: 'payments') List<PaymentsQrResponse>? payments,
     @JsonKey(name: 'refunds') List<RefundsQrResponse>? refunds,
@@ -15,7 +15,7 @@ class TransactionsQrResponse with _$TransactionsQrResponse {
 }
 
 @freezed
-class PaymentsQrResponse with _$PaymentsQrResponse {
+abstract class PaymentsQrResponse with _$PaymentsQrResponse {
   const factory PaymentsQrResponse({
     @JsonKey(name: 'id') String? id,
     @JsonKey(name: 'amount') String? amount,
@@ -33,7 +33,7 @@ class PaymentsQrResponse with _$PaymentsQrResponse {
 }
 
 @freezed
-class PaymentMethodMp with _$PaymentMethodMp {
+abstract class PaymentMethodMp with _$PaymentMethodMp {
   const factory PaymentMethodMp({
     @JsonKey(name: 'id') String? id,
     @JsonKey(name: 'type') String? type,
@@ -45,7 +45,7 @@ class PaymentMethodMp with _$PaymentMethodMp {
 }
 
 @freezed
-class DiscountsPaymentMp with _$DiscountsPaymentMp {
+abstract class DiscountsPaymentMp with _$DiscountsPaymentMp {
   const factory DiscountsPaymentMp({
     @JsonKey(name: 'type') String? type,
   }) = _DiscountsPaymentMp;
@@ -55,7 +55,7 @@ class DiscountsPaymentMp with _$DiscountsPaymentMp {
 }
 
 @freezed
-class RefundsQrResponse with _$RefundsQrResponse {
+abstract class RefundsQrResponse with _$RefundsQrResponse {
   const factory RefundsQrResponse({
     @JsonKey(name: 'id') String? id,
     @JsonKey(name: 'transaction_id') String? transactionId,

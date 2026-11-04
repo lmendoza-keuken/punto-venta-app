@@ -4,7 +4,7 @@ part 'partial_return_request_model.freezed.dart';
 part 'partial_return_request_model.g.dart';
 
 @freezed
-class PartialReturnRequestModel with _$PartialReturnRequestModel {
+abstract class PartialReturnRequestModel with _$PartialReturnRequestModel {
   @JsonSerializable(explicitToJson: true)
   const factory PartialReturnRequestModel({
     @JsonKey(name: 'reason_id') required int reasonId,
@@ -22,7 +22,7 @@ List<Map<String, dynamic>>? _itemsToJson(List<PartialReturnItemModel>? items) =>
     items?.map((e) => e.toJson()).toList();
 
 @freezed
-class PartialReturnItemModel with _$PartialReturnItemModel {
+abstract class PartialReturnItemModel with _$PartialReturnItemModel {
   const factory PartialReturnItemModel({
     @JsonKey(name: 'article_id') required int articleId,
     @JsonKey(name: 'priceListId') required int priceListId,
