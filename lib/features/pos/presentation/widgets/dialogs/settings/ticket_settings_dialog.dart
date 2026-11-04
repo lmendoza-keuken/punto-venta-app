@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
+import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/ticket_config.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_ticket_config_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/update_ticket_config_usecase.dart';
@@ -122,7 +123,7 @@ class _TicketSettingsDialogState extends State<TicketSettingsDialog> {
               child: Center(child: CircularProgressIndicator()),
             )
           : SizedBox(
-              width: 450,
+              width: AppDimensions.dialogWidth(context, 450),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,

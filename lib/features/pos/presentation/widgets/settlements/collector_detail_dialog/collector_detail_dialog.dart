@@ -29,12 +29,19 @@ class CollectorDetailDialog extends StatelessWidget {
       create: (context) => di.sl<SettlementsBloc>()
         ..add(FetchPendingCollectorDetail(collectorId: collectorId, date: date)),
       child: Dialog(
+        insetPadding: const EdgeInsets.symmetric(
+          horizontal: AppDimensions.paddingM,
+          vertical: AppDimensions.paddingL,
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
         ),
         clipBehavior: Clip.antiAlias,
-        child: SizedBox(
-          width: MediaQuery.of(context).size.width * 0.85,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: AppDimensions.dialogWidth(context, 720),
+            maxHeight: MediaQuery.sizeOf(context).height * 0.9,
+          ),
           child: _CollectorDetailDialogContent(
             collectorId: collectorId,
             collectorName: collectorName,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/dialogs/logout_dialog.dart';
+import 'package:punto_venta_app/core/widgets/responsive_dialog_width.dart';
 import 'package:punto_venta_app/features/customer_display/domain/customer_display_service.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product/product_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product/product_state.dart';
@@ -59,8 +60,8 @@ class _SettingsDialogState extends State<SettingsDialog> {
         return AlertDialog(
           title: const Text('Configuración de administrador'),
           content: SingleChildScrollView(
-            child: SizedBox(
-              width: 420,
+            child: ResponsiveDialogWidth(
+              preferredWidth: 420,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [

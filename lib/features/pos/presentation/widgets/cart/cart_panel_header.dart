@@ -142,45 +142,48 @@ class CartPanelHeader extends StatelessWidget {
               return Column(
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            AppStrings.cartSummary,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 2),
-                          Row(
-                            children: [
-                              Icon(
-                                _modeIcon(cartMode),
-                                size: 14,
-                                color: modeColor,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                _modeLabel(cartMode),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              AppStrings.cartSummary,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 2),
+                            Row(
+                              children: [
+                                Icon(
+                                  _modeIcon(cartMode),
+                                  size: 14,
                                   color: modeColor,
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                                const SizedBox(width: 4),
+                                Flexible(
+                                  child: Text(
+                                    _modeLabel(cartMode),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: modeColor,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const SizedBox(width: 12),
-                          PopupMenuButton<String>(
+                      PopupMenuButton<String>(
                             icon: const Icon(Icons.menu, color: Colors.black87),
                             tooltip: 'Cambiar modo / vaciar / reintegro',
                             onSelected: (value) {
@@ -271,8 +274,6 @@ class CartPanelHeader extends StatelessWidget {
                               ),
                             ],
                           ),
-                        ],
-                      ),
                     ],
                   ),
                   Container(

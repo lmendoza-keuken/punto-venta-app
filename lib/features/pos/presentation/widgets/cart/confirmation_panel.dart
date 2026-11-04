@@ -438,7 +438,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
           Expanded(
             flex: 1,
             child: SizedBox(
-              height: AppDimensions.buttonHeightS,
+              height: AppDimensions.buttonHeightM,
               child: ElevatedButton(
                 onPressed: isProcessing ||
                         !confirmationState.isValid(cartMode)
@@ -483,7 +483,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
           Expanded(
             flex: 1,
             child: SizedBox(
-              height: AppDimensions.buttonHeightS,
+              height: AppDimensions.buttonHeightM,
               child: ElevatedButton(
                 onPressed: isProcessing ? null : _handleClose,
                 style: ElevatedButton.styleFrom(

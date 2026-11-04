@@ -153,25 +153,53 @@ class _SupplierPaymentsPageState extends State<SupplierPaymentsPage> {
               }
             }
           },
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                flex: 4,
-                child: SuppliersListPanel(
-                  onSupplierSelected: _changeSupplier,
-                ),
-              ),
-              VerticalDivider(
-                width: 1,
-                thickness: 1,
-                color: isDark ? AppColors.darkDivider : Colors.grey.shade300,
-              ),
-              Expanded(
-                flex: 8,
-                child: _buildFormPanel(isDark),
-              ),
-            ],
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = LayoutSpec.fromWidth(constraints.maxWidth).isCompact;
+              if (compact) {
+                return Column(
+                  children: [
+                    SizedBox(
+                      height: constraints.maxHeight * 0.38,
+                      child: SuppliersListPanel(
+                        onSupplierSelected: _changeSupplier,
+                      ),
+                    ),
+                    Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: isDark
+                          ? AppColors.darkDivider
+                          : Colors.grey.shade300,
+                    ),
+                    Expanded(child: _buildFormPanel(isDark)),
+                  ],
+                );
+              }
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    flex: 4,
+                    child: SuppliersListPanel(
+                      onSupplierSelected: _changeSupplier,
+                    ),
+                  ),
+                  VerticalDivider(
+                    width: 1,
+                    thickness: 1,
+                    color: isDark
+                        ? AppColors.darkDivider
+                        : Colors.grey.shade300,
+                  ),
+                  Expanded(
+                    flex: 8,
+                    child: _buildFormPanel(isDark),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),

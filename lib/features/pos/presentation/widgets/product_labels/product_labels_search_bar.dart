@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/features/pos/data/models/category_model.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product_labels/product_labels_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product_labels/product_labels_event.dart';
@@ -29,14 +30,29 @@ class _ProductLabelsSearchBarState extends State<ProductLabelsSearchBar> {
         final isLoaded = state is ProductLabelsLoaded;
         final categories =
             isLoaded ? state.categories : const <CategoryModel>[];
+        final compact = LayoutSpec.of(context).isCompact;
+
+        final search = _buildSearchField(isLoaded);
+        final category = _buildCategoryDropdown(isLoaded, categories);
+
+        if (compact) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              search,
+              const SizedBox(height: AppDimensions.paddingS),
+              category,
+            ],
+          );
+        }
 
         return Row(
           children: [
-            Expanded(child: _buildSearchField(isLoaded)),
+            Expanded(child: search),
             const SizedBox(width: 16),
             SizedBox(
               width: 250,
-              child: _buildCategoryDropdown(isLoaded, categories),
+              child: category,
             ),
           ],
         );

@@ -4,27 +4,51 @@ import 'package:punto_venta_app/features/pos/presentation/widgets/cart/last_scan
 
 class ScannerModeContent extends StatelessWidget {
   final CartLogEntry? lastEntry;
+  final bool dense;
 
   const ScannerModeContent({
     super.key,
     this.lastEntry,
+    this.dense = false,
   });
 
   @override
   Widget build(BuildContext context) {
     if (lastEntry == null) {
-      return const _EmptyScannerState();
+      return _EmptyScannerState(dense: dense);
     }
 
-    return LastScannedProductPreview(entry: lastEntry!);
+    return LastScannedProductPreview(entry: lastEntry!, dense: dense);
   }
 }
 
 class _EmptyScannerState extends StatelessWidget {
-  const _EmptyScannerState();
+  final bool dense;
+
+  const _EmptyScannerState({this.dense = false});
 
   @override
   Widget build(BuildContext context) {
+    if (dense) {
+      return Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            Icon(Icons.barcode_reader, size: 36, color: Colors.grey.shade400),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Escaneá un producto para verlo aquí',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

@@ -203,11 +203,11 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
   @override
   Widget build(BuildContext context) {
     if (_printJob == null) {
-      return const Dialog(
+      return Dialog(
         child: SizedBox(
-          width: 450,
+          width: AppDimensions.dialogWidth(context, 450),
           height: 200,
-          child: Center(
+          child: const Center(
             child: CircularProgressIndicator(),
           ),
         ),
@@ -310,7 +310,7 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                   : BorderSide.none,
         ),
         child: Container(
-          width: 450,
+          width: AppDimensions.dialogWidth(context, 450),
           constraints: const BoxConstraints(maxHeight: 600),
           child: Column(
             children: [
@@ -419,64 +419,95 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
                     final isBusy = isPrinting || _isGeneratingCreditNote;
                     final isCreditNote = _isCreditNote;
                     final canAnnul = !isCreditNote && !widget.ticket.isAnnulled;
+                    final compact = LayoutSpec.of(context).isCompact ||
+                        MediaQuery.sizeOf(context).width <
+                            LayoutSpec.compactBreakpoint;
+
+                    final closeButton = TextButton(
+                      onPressed:
+                          isBusy ? null : () => Navigator.of(context).pop(),
+                      child: const Text('Cerrar'),
+                    );
+
+                    final annulButton = ElevatedButton.icon(
+                      onPressed: isBusy
+                          ? null
+                          : () => _handleConvertToCreditNote(context),
+                      icon: isBusy && _isGeneratingCreditNote
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : const Icon(
+                              Icons.receipt,
+                              color: Colors.white,
+                            ),
+                      label: Text(
+                        _isGeneratingCreditNote
+                            ? 'Anulando...'
+                            : (compact ? 'Anular' : 'Anular Ticket'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+
+                    final printButton = ElevatedButton.icon(
+                      onPressed: isBusy ? null : () => _handlePrint(context),
+                      icon: isPrinting
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : const Icon(
+                              Icons.print,
+                              color: Colors.white,
+                            ),
+                      label: Text(
+                        isPrinting ? 'Imprimiendo...' : 'Imprimir',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    );
+
+                    if (compact) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (canAnnul) annulButton,
+                          if (canAnnul)
+                            const SizedBox(height: AppDimensions.paddingS),
+                          printButton,
+                          const SizedBox(height: AppDimensions.paddingS),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: closeButton,
+                          ),
+                        ],
+                      );
+                    }
 
                     return Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        TextButton(
-                          onPressed:
-                              isBusy ? null : () => Navigator.of(context).pop(),
-                          child: const Text('Cerrar'),
-                        ),
+                        closeButton,
                         const Spacer(),
-                        if (canAnnul)
-                          ElevatedButton.icon(
-                            onPressed: isBusy
-                                ? null
-                                : () => _handleConvertToCreditNote(context),
-                            icon: isBusy && _isGeneratingCreditNote
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                          Colors.white),
-                                    ),
-                                  )
-                                : const Icon(
-                                    Icons.receipt,
-                                    color: Colors.white,
-                                  ),
-                            label: Text(_isGeneratingCreditNote
-                                ? 'Anulando...'
-                                : 'Anular Ticket'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red,
-                            ),
-                          ),
-                        if (canAnnul)
+                        if (canAnnul) ...[
+                          Flexible(child: annulButton),
                           const SizedBox(width: AppDimensions.paddingS),
-                        ElevatedButton.icon(
-                          onPressed:
-                              isBusy ? null : () => _handlePrint(context),
-                          icon: isPrinting
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white),
-                                  ),
-                                )
-                              : const Icon(
-                                  Icons.print,
-                                  color: Colors.white,
-                                ),
-                          label:
-                              Text(isPrinting ? 'Imprimiendo...' : 'Imprimir'),
-                        ),
+                        ],
+                        Flexible(child: printButton),
                       ],
                     );
                   },

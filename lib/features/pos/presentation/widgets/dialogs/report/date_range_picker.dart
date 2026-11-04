@@ -21,81 +21,99 @@ class DateRangePicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppDimensions.paddingM),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < LayoutSpec.compactBreakpoint ||
+            LayoutSpec.of(context).isCompact;
+
+        return Container(
+          padding: const EdgeInsets.all(AppDimensions.paddingM),
+          width: double.infinity,
+          child: compact ? _buildCompact() : _buildWide(),
+        );
+      },
+    );
+  }
+
+  Widget _buildWide() {
+    return Row(
+      children: [
+        const Text('Fecha inicio: '),
+        const SizedBox(width: AppDimensions.paddingS),
+        _DateChip(
+          label: DateFormat('dd/MM/yyyy').format(selectedDate),
+          onTap: _selectStartDate,
+        ),
+        const SizedBox(width: AppDimensions.paddingM),
+        const Text('Fecha fin (opcional): '),
+        const SizedBox(width: AppDimensions.paddingS),
+        _DateChip(
+          label: selectedEndDate != null
+              ? DateFormat('dd/MM/yyyy').format(selectedEndDate!)
+              : 'Sin seleccionar',
+          onTap: _selectEndDate,
+        ),
+        if (selectedEndDate != null) ...[
+          const SizedBox(width: AppDimensions.paddingS),
+          IconButton(
+            icon: const Icon(Icons.clear, size: 20),
+            onPressed: () => onEndDateChanged(null),
+            tooltip: 'Limpiar fecha fin',
+          ),
+        ],
+        const SizedBox(width: AppDimensions.paddingM),
+        ElevatedButton(
+          onPressed: onUpdate,
+          child: const Text('Actualizar'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCompact() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _LabeledDateField(
+          label: 'Fecha inicio',
+          child: _DateChip(
+            label: DateFormat('dd/MM/yyyy').format(selectedDate),
+            onTap: _selectStartDate,
+            expanded: true,
+          ),
+        ),
+        const SizedBox(height: AppDimensions.paddingS),
+        _LabeledDateField(
+          label: 'Fecha fin (opcional)',
+          child: Row(
             children: [
-              const Text('Fecha inicio: '),
-              const SizedBox(width: AppDimensions.paddingS),
-              InkWell(
-                onTap: () => _selectStartDate(context),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppDimensions.paddingM,
-                    vertical: AppDimensions.paddingS,
-                  ),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius:
-                        BorderRadius.circular(AppDimensions.borderRadiusS),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.calendar_today,
-                          size: 16, color: AppColors.primary),
-                      const SizedBox(width: AppDimensions.paddingS),
-                      Text(DateFormat('dd/MM/yyyy').format(selectedDate)),
-                    ],
-                  ),
+              Expanded(
+                child: _DateChip(
+                  label: selectedEndDate != null
+                      ? DateFormat('dd/MM/yyyy').format(selectedEndDate!)
+                      : 'Sin seleccionar',
+                  onTap: _selectEndDate,
+                  expanded: true,
                 ),
               ),
-              const SizedBox(width: AppDimensions.paddingM),
-              const Text('Fecha fin (opcional): '),
-              const SizedBox(width: AppDimensions.paddingS),
-              InkWell(
-                onTap: () => _selectEndDate(context),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppDimensions.paddingM,
-                    vertical: AppDimensions.paddingS,
-                  ),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius:
-                        BorderRadius.circular(AppDimensions.borderRadiusS),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.calendar_today,
-                          size: 16, color: AppColors.primary),
-                      const SizedBox(width: AppDimensions.paddingS),
-                      Text(selectedEndDate != null
-                          ? DateFormat('dd/MM/yyyy').format(selectedEndDate!)
-                          : 'Sin seleccionar'),
-                    ],
-                  ),
-                ),
-              ),
-              if (selectedEndDate != null) ...[
-                const SizedBox(width: AppDimensions.paddingS),
+              if (selectedEndDate != null)
                 IconButton(
                   icon: const Icon(Icons.clear, size: 20),
                   onPressed: () => onEndDateChanged(null),
                   tooltip: 'Limpiar fecha fin',
                 ),
-              ],
-              const SizedBox(width: AppDimensions.paddingM),
-              ElevatedButton(
-                onPressed: onUpdate,
-                child: const Text('Actualizar'),
-              ),
             ],
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: AppDimensions.paddingM),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: onUpdate,
+            child: const Text('Actualizar'),
+          ),
+        ),
+      ],
     );
   }
 
@@ -123,5 +141,76 @@ class DateRangePicker extends StatelessWidget {
     if (picked != null) {
       onEndDateChanged(picked);
     }
+  }
+}
+
+class _LabeledDateField extends StatelessWidget {
+  final String label;
+  final Widget child;
+
+  const _LabeledDateField({required this.label, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+        ),
+        const SizedBox(height: 4),
+        child,
+      ],
+    );
+  }
+}
+
+class _DateChip extends StatelessWidget {
+  final String label;
+  final Future<void> Function(BuildContext context) onTap;
+  final bool expanded;
+
+  const _DateChip({
+    required this.label,
+    required this.onTap,
+    this.expanded = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => onTap(context),
+      child: Container(
+        width: expanded ? double.infinity : null,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDimensions.paddingM,
+          vertical: AppDimensions.paddingS,
+        ),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(AppDimensions.borderRadiusS),
+        ),
+        child: Row(
+          mainAxisSize: expanded ? MainAxisSize.max : MainAxisSize.min,
+          children: [
+            const Icon(Icons.calendar_today, size: 16, color: AppColors.primary),
+            const SizedBox(width: AppDimensions.paddingS),
+            if (expanded)
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              )
+            else
+              Text(label),
+          ],
+        ),
+      ),
+    );
   }
 }

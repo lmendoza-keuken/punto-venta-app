@@ -60,7 +60,7 @@ class _LoadSavedOrdersDialogState extends State<LoadSavedOrdersDialog> {
           ],
         ),
         content: SizedBox(
-          width: 600,
+          width: AppDimensions.dialogWidth(context, 600),
           height: 400,
           child: BlocBuilder<SavedOrdersBloc, SavedOrdersState>(
             builder: (context, state) {

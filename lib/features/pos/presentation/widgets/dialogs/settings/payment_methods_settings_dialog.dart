@@ -127,7 +127,7 @@ class _PaymentMethodsSettingsDialogState
         return AlertDialog(
           title: const Text('Configurar Métodos de Pago'),
           content: SizedBox(
-            width: 500,
+            width: AppDimensions.dialogWidth(context, 500),
             child: showLoading
                 ? const SizedBox(
                     height: 200,

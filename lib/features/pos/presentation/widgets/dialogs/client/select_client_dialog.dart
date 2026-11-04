@@ -84,7 +84,7 @@ class _SelectClientDialogState extends State<SelectClientDialog> {
         ),
       ],
       content: SizedBox(
-        width: 500,
+        width: AppDimensions.dialogWidth(context, 500),
         height: (MediaQuery.of(context).size.height * 0.6).clamp(300.0, 550.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,

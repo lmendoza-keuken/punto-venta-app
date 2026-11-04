@@ -123,7 +123,7 @@ class _CustomerDisplayAdvertisingDialogState
     return AlertDialog(
       title: const Text('Publicidad pantalla cliente'),
       content: SizedBox(
-        width: 480,
+        width: AppDimensions.dialogWidth(context, 480),
         child: ConstrainedBox(
           constraints: BoxConstraints(maxHeight: maxHeight),
           child: SingleChildScrollView(

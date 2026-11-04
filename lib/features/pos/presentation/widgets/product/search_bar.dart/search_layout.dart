@@ -29,9 +29,7 @@ class ResponsiveSearchLayout extends StatelessWidget {
     return LayoutBuilder(builder: (context, constraints) {
       final isCompact = constraints.maxWidth < 600;
 
-      return Container(
-        child: isCompact ? _buildCompactLayout() : _buildFullLayout(),
-      );
+      return isCompact ? _buildCompactLayout() : _buildFullLayout();
     });
   }
 
@@ -75,12 +73,17 @@ class ResponsiveSearchLayout extends StatelessWidget {
                 onSubmitted: onSubmitted,
               ),
             ),
-            const SizedBox(width: AppDimensions.paddingS),
-            const RefreshProductsButton(),
-            const SizedBox(width: AppDimensions.paddingS),
-            const BarcodeSwitch(),
-            const SizedBox(width: AppDimensions.paddingS),
-            const DeleteButton(),
+          ],
+        ),
+        const SizedBox(height: AppDimensions.paddingS),
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            RefreshProductsButton(),
+            SizedBox(width: AppDimensions.paddingS),
+            BarcodeSwitch(),
+            SizedBox(width: AppDimensions.paddingS),
+            DeleteButton(),
           ],
         ),
       ],

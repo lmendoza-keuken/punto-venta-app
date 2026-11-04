@@ -4,10 +4,12 @@ import 'package:intl/intl.dart';
 
 class DynamicDateTime extends StatefulWidget {
   final TextStyle? style;
+  final bool compact;
 
   const DynamicDateTime({
     super.key,
     this.style,
+    this.compact = false,
   });
 
   @override
@@ -38,7 +40,11 @@ class _DynamicDateTimeState extends State<DynamicDateTime> {
   }
 
   String _formatDateTime(DateTime dateTime) {
-    // Días de la semana en español
+    final time = DateFormat('HH:mm:ss').format(dateTime);
+    if (widget.compact) {
+      return '${DateFormat('dd/MM/yyyy').format(dateTime)} · $time';
+    }
+
     const days = [
       'Lunes',
       'Martes',
@@ -49,7 +55,6 @@ class _DynamicDateTimeState extends State<DynamicDateTime> {
       'Domingo'
     ];
 
-    // Meses en español
     const months = [
       'Enero',
       'Febrero',
@@ -69,7 +74,6 @@ class _DynamicDateTimeState extends State<DynamicDateTime> {
     final day = dateTime.day;
     final monthName = months[dateTime.month - 1];
     final year = dateTime.year;
-    final time = DateFormat('HH:mm:ss').format(dateTime);
 
     return '$dayName, $day de $monthName de $year / $time';
   }

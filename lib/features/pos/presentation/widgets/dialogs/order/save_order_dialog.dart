@@ -89,7 +89,7 @@ class _SaveOrderDialogState extends State<SaveOrderDialog> {
           ],
         ),
         content: SizedBox(
-          width: 400,
+          width: AppDimensions.dialogWidth(context, 400),
           height: availableHeight.clamp(250.0, 400.0),
           child: SingleChildScrollView(
             child: Form(

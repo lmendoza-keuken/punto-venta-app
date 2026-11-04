@@ -147,7 +147,7 @@ class _RefundDialogState extends State<RefundDialog> {
                   ),
                 )
               : SizedBox(
-                  width: 420,
+                  width: AppDimensions.dialogWidth(context, 420),
                   child: Form(
                     key: _formKey,
                     child: SingleChildScrollView(

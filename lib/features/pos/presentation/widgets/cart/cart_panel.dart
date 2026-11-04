@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/themes/theme_cubit.dart';
 import 'package:punto_venta_app/core/widgets/scroll_bottom_extension.dart';
-import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_state.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/cart/cart_checkout_side_effects.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/cart/cart_empty_widget.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/cart/cart_log_item_widget.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/cart/cart_panel_header.dart';
@@ -17,21 +17,19 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_dimensions.dart';
 import '../../bloc/cart/cart_bloc.dart';
 import '../../bloc/cart/cart_state.dart';
-import 'package:punto_venta_app/features/pos/presentation/bloc/checkout/checkout_bloc.dart';
-import 'package:punto_venta_app/features/pos/presentation/bloc/checkout/checkout_event.dart';
-import 'package:punto_venta_app/features/pos/presentation/bloc/checkout/checkout_state.dart';
-import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_bloc.dart';
-import 'package:punto_venta_app/features/pos/presentation/bloc/clients/clients_event.dart';
-import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_bloc.dart';
-import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_event.dart';
-import 'package:punto_venta_app/features/pos/presentation/bloc/printer/printer_state.dart';
-import 'package:punto_venta_app/features/pos/presentation/widgets/common/error_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cash_register/cash_register_cubit.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cash_register/cash_register_state.dart';
-import 'package:punto_venta_app/features/app_update/presentation/widgets/update_available_dialog.dart';
 
 class CartPanel extends StatefulWidget {
-  const CartPanel({super.key});
+  /// When false, confirmation is hosted by the parent (compact full-screen).
+  final bool embedConfirmation;
+  final bool attachSideEffects;
+
+  const CartPanel({
+    super.key,
+    this.embedConfirmation = true,
+    this.attachSideEffects = true,
+  });
 
   @override
   State<CartPanel> createState() => _CartPanelState();
@@ -54,224 +52,142 @@ class _CartPanelState extends State<CartPanel> {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocListener(
-      listeners: [
-        BlocListener<CheckoutBloc, CheckoutState>(
-          listener: (context, checkoutState) {
-            if (checkoutState is CheckoutSuccess) {
-              final uiState = context.read<UiBloc>().state;
-              final cartMode =
-                  uiState is UiLoaded ? uiState.cartMode : CartMode.sale;
-              final pendingUpdate = checkoutState.pendingUpdate;
+    Widget panel = BlocBuilder<UiBloc, UiState>(
+      builder: (context, uiState) {
+        final isBarcodeMode =
+            uiState is UiLoaded ? uiState.isBarcodeSearchEnabled : true;
+        final cartMode =
+            uiState is UiLoaded ? uiState.cartMode : CartMode.sale;
+        final showConfirmation =
+            uiState is UiLoaded ? uiState.showConfirmationPanel : false;
 
-              // Print venta y descarte; devolución no imprime (comportamiento actual)
-              if (cartMode != CartMode.returnMode) {
-                context.read<PrinterBloc>().add(PrintTicket(
-                      printJob: checkoutState.printJob,
-                    ));
-              }
+        return BlocBuilder<ThemeCubit, ThemeMode>(
+          builder: (context, mode) {
+            final isDark = mode == ThemeMode.dark;
+            final backgroundColor = isDark
+                ? AppColors.sidebarDarkBackground
+                : AppColors.sidebarLightBackground;
+            final borderColor = isDark
+                ? AppColors.sidebarDarkDivider
+                : AppColors.sidebarLightDivider;
 
-              context.read<CartBloc>().add(ClearCart());
-              context.read<CheckoutBloc>().add(const ResetCheckout());
-              context.read<ClientsBloc>().add(ResetToDefaultClientEvent());
-
-              if (cartMode != CartMode.sale) {
-                context.read<UiBloc>().add(const SetCartMode(CartMode.sale));
-              }
-              context.read<UiBloc>().add(CloseConfirmationPanel());
-
-              if (cartMode == CartMode.sale &&
-                  pendingUpdate != null &&
-                  pendingUpdate.updateAvailable &&
-                  pendingUpdate.release != null) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (!context.mounted) return;
-                  showUpdateAvailableDialog(
-                    context: context,
-                    release: pendingUpdate.release!,
-                    currentVersion: pendingUpdate.currentVersion,
-                  );
-                });
-              }
-            } else if (checkoutState is CheckoutError) {
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (BuildContext dialogContext) {
-                  return ErrorDialog(
-                    message: checkoutState.message,
-                    onAccept: () {
-                      context.read<CheckoutBloc>().add(const ResetCheckout());
-                    },
-                  );
-                },
-              );
-            }
-          },
-        ),
-        BlocListener<PrinterBloc, PrinterState>(
-          listener: (context, printerState) {
-            if (printerState is PrinterSuccess) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(printerState.message),
-                  backgroundColor: AppColors.success,
-                ),
-              );
-            } else if (printerState is PrinterError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(printerState.message),
-                  backgroundColor: AppColors.error,
-                ),
-              );
-            }
-          },
-        ),
-      ],
-      child: BlocBuilder<UiBloc, UiState>(
-        builder: (context, uiState) {
-          final isBarcodeMode =
-              uiState is UiLoaded ? uiState.isBarcodeSearchEnabled : true;
-          final cartMode =
-              uiState is UiLoaded ? uiState.cartMode : CartMode.sale;
-          final showConfirmation =
-              uiState is UiLoaded ? uiState.showConfirmationPanel : false;
-
-          return BlocBuilder<ThemeCubit, ThemeMode>(
-            builder: (context, mode) {
-              final isDark = mode == ThemeMode.dark;
-              final backgroundColor = isDark
-                  ? AppColors.sidebarDarkBackground
-                  : AppColors.sidebarLightBackground;
-              final borderColor = isDark
-                  ? AppColors.sidebarDarkDivider
-                  : AppColors.sidebarLightDivider;
-
-              return LayoutBuilder(
-                builder: (context, constraints) {
-                  final panelWidth = constraints.maxWidth;
-                  return Stack(
-                    children: [
-                      // Panel principal del carrito
-                      Container(
-                        decoration: BoxDecoration(
-                          color: backgroundColor,
-                        ),
-                        child: Column(
-                          children: [
-                            const CartPanelHeader(),
-                            // Contenido del panel
-                            Expanded(
-                              child: BlocConsumer<CartBloc, CartState>(
-                                listener: (context, state) {
-                                  if (state is CartLoaded && !isBarcodeMode) {
-                                    if (state.log.length != _lastLogLength) {
-                                      _lastLogLength = state.log.length;
-                                      WidgetsBinding.instance
-                                          .addPostFrameCallback((_) {
-                                        if (_scrollController.hasClients) {
-                                          _scrollController.scrollToBottom();
-                                        }
-                                      });
-                                    }
-                                  } else {
-                                    _lastLogLength = 0;
-                                  }
-                                },
-                                builder: (context, state) {
-                                  if (state is CartLoaded) {
-                                    if (!isBarcodeMode &&
-                                        state.log.isNotEmpty) {
-                                      WidgetsBinding.instance
-                                          .addPostFrameCallback((_) {
-                                        if (_scrollController.hasClients) {
-                                          _scrollController.scrollToBottom();
-                                        }
-                                      });
-                                    }
-                                    final subtotal = state.subtotal;
-                                    final totalIva = state.totalIva;
-                                    final totalConIva = state.totalConIva;
-
-                                    return Column(
-                                      children: [
-                                        // Área principal: logs o mensaje según el modo
-                                        Expanded(
-                                          child: isBarcodeMode
-                                              ? ScannerModeContent(
-                                                  key: ValueKey(
-                                                    _lastLogEntry(state.log)
-                                                            ?.id ??
-                                                        'empty',
-                                                  ),
-                                                  lastEntry: _lastLogEntry(
-                                                    state.log,
-                                                  ),
-                                                )
-                                              : Padding(
-                                                  padding: const EdgeInsets.all(
-                                                      AppDimensions.paddingS),
-                                                  child: state.log.isEmpty
-                                                      ? const CartEmptyWidget()
-                                                      : ListView.builder(
-                                                          controller:
-                                                              _scrollController,
-                                                          itemCount:
-                                                              state.log.length,
-                                                          itemBuilder:
-                                                              (context, index) {
-                                                            final entry = state
-                                                                .log[index];
-                                                            return CartLogItemWidget(
-                                                                entry: entry);
-                                                          },
-                                                        ),
-                                                ),
-                                        ),
-                                        const Divider(height: 1),
-                                        // monto, botones de cartPanel ( confirmar venta o devolucion)
-                                        BlocBuilder<CashRegisterCubit,
-                                            CashRegisterState>(
-                                          builder: (context, registerState) {
-                                            final isConfirmEnabled =
-                                                registerState
-                                                        is CashRegisterLoaded &&
-                                                    registerState.status.isOpen;
-
-                                            return CartSummary(
-                                              subtotal: subtotal,
-                                              totalIva: totalIva,
-                                              totalConIva: totalConIva,
-                                              cartMode: cartMode,
-                                              isConfirmEnabled:
-                                                  isConfirmEnabled,
-                                              onConfirm: () {
-                                                if (state.items.isNotEmpty) {
-                                                  if (!isBarcodeMode) {
-                                                    context.read<UiBloc>().add(
-                                                        ToggleBarcodeSearch());
-                                                  }
-                                                  context.read<UiBloc>().add(
-                                                      OpenConfirmationPanel());
-                                                }
-                                              },
-                                            );
-                                          },
-                                        ),
-                                      ],
-                                    );
-                                  }
-                                  return const CartEmptyWidget();
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final panelWidth = constraints.maxWidth;
+                return Stack(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: backgroundColor,
                       ),
+                      child: Column(
+                        children: [
+                          const CartPanelHeader(),
+                          Expanded(
+                            child: BlocConsumer<CartBloc, CartState>(
+                              listener: (context, state) {
+                                if (state is CartLoaded && !isBarcodeMode) {
+                                  if (state.log.length != _lastLogLength) {
+                                    _lastLogLength = state.log.length;
+                                    WidgetsBinding.instance
+                                        .addPostFrameCallback((_) {
+                                      if (_scrollController.hasClients) {
+                                        _scrollController.scrollToBottom();
+                                      }
+                                    });
+                                  }
+                                } else {
+                                  _lastLogLength = 0;
+                                }
+                              },
+                              builder: (context, state) {
+                                if (state is CartLoaded) {
+                                  if (!isBarcodeMode &&
+                                      state.log.isNotEmpty) {
+                                    WidgetsBinding.instance
+                                        .addPostFrameCallback((_) {
+                                      if (_scrollController.hasClients) {
+                                        _scrollController.scrollToBottom();
+                                      }
+                                    });
+                                  }
+                                  final subtotal = state.subtotal;
+                                  final totalIva = state.totalIva;
+                                  final totalConIva = state.totalConIva;
 
-                      // Panel de confirmación: solo monta el cubit al abrir
-                      // (evita load() al cerrar / con el panel fuera de pantalla).
+                                  return Column(
+                                    children: [
+                                      Expanded(
+                                        child: isBarcodeMode
+                                            ? ScannerModeContent(
+                                                key: ValueKey(
+                                                  _lastLogEntry(state.log)
+                                                          ?.id ??
+                                                      'empty',
+                                                ),
+                                                lastEntry: _lastLogEntry(
+                                                  state.log,
+                                                ),
+                                              )
+                                            : Padding(
+                                                padding: const EdgeInsets.all(
+                                                    AppDimensions.paddingS),
+                                                child: state.log.isEmpty
+                                                    ? const CartEmptyWidget()
+                                                    : ListView.builder(
+                                                        controller:
+                                                            _scrollController,
+                                                        itemCount:
+                                                            state.log.length,
+                                                        itemBuilder:
+                                                            (context, index) {
+                                                          final entry =
+                                                              state.log[index];
+                                                          return CartLogItemWidget(
+                                                              entry: entry);
+                                                        },
+                                                      ),
+                                              ),
+                                      ),
+                                      const Divider(height: 1),
+                                      BlocBuilder<CashRegisterCubit,
+                                          CashRegisterState>(
+                                        builder: (context, registerState) {
+                                          final isConfirmEnabled =
+                                              registerState
+                                                      is CashRegisterLoaded &&
+                                                  registerState.status.isOpen;
+
+                                          return CartSummary(
+                                            subtotal: subtotal,
+                                            totalIva: totalIva,
+                                            totalConIva: totalConIva,
+                                            cartMode: cartMode,
+                                            isConfirmEnabled: isConfirmEnabled,
+                                            onConfirm: () {
+                                              if (state.items.isNotEmpty) {
+                                                if (!isBarcodeMode) {
+                                                  context.read<UiBloc>().add(
+                                                      ToggleBarcodeSearch());
+                                                }
+                                                context.read<UiBloc>().add(
+                                                    OpenConfirmationPanel());
+                                              }
+                                            },
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  );
+                                }
+                                return const CartEmptyWidget();
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (widget.embedConfirmation)
                       AnimatedPositioned(
                         duration: const Duration(milliseconds: 300),
                         curve: Curves.easeInOut,
@@ -304,14 +220,18 @@ class _CartPanelState extends State<CartPanel> {
                               : const SizedBox.shrink(),
                         ),
                       ),
-                    ],
-                  );
-                },
-              );
-            },
-          );
-        },
-      ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
     );
+
+    if (widget.attachSideEffects) {
+      panel = CartCheckoutSideEffects(child: panel);
+    }
+    return panel;
   }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
+import 'package:punto_venta_app/core/constants/app_dimensions.dart';
+import 'package:punto_venta_app/core/utils/extensions.dart';
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_state.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_pdv_config_usecase.dart';
@@ -20,8 +22,14 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/app/pos_app_bar.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/cart/cart_checkout_side_effects.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/cart/cart_empty_widget.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/cart/cart_panel.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/cart/cart_panel_header.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/cart/cart_log_item_widget.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/cart/cart_summary_widget.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/cart/confirmation_panel.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/cart/scanner_mode_content_widget.dart';
 import 'package:punto_venta_app/core/widgets/scroll_bottom_extension.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/catalog/catalog_card.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/client/client_info_bar.dart';
@@ -30,6 +38,7 @@ import 'package:punto_venta_app/features/pos/presentation/widgets/product/catego
 import 'package:punto_venta_app/features/pos/presentation/widgets/product/product_grid_section.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/product/search_bar.dart/search_weight_helper.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/product/search_bar.dart/weight_input_dialog.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cash_register/cash_register_cubit.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cash_register/cash_register_state.dart';
@@ -107,6 +116,74 @@ class _PosMainPageState extends State<PosMainPage> {
     super.dispose();
   }
 
+  CartLogEntry? _lastLogEntry(List<CartLogEntry> log) {
+    if (log.isEmpty) return null;
+    return log.last;
+  }
+
+  void _openConfirmation(BuildContext context, CartState state) {
+    if (state is! CartLoaded || state.items.isEmpty) return;
+    final uiState = context.read<UiBloc>().state;
+    final isBarcodeMode =
+        uiState is UiLoaded ? uiState.isBarcodeSearchEnabled : true;
+    if (!isBarcodeMode) {
+      context.read<UiBloc>().add(ToggleBarcodeSearch());
+    }
+    context.read<UiBloc>().add(OpenConfirmationPanel());
+  }
+
+  Future<void> _showManualCartSheet(BuildContext context) async {
+    final cartBloc = context.read<CartBloc>();
+    final uiBloc = context.read<UiBloc>();
+    final cashCubit = context.read<CashRegisterCubit>();
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (sheetContext) {
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider.value(value: cartBloc),
+            BlocProvider.value(value: uiBloc),
+            BlocProvider.value(value: cashCubit),
+          ],
+          child: DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.75,
+            minChildSize: 0.4,
+            maxChildSize: 0.95,
+            builder: (context, scrollController) {
+              return Column(
+                children: [
+                  const CartPanelHeader(),
+                  Expanded(
+                    child: BlocBuilder<CartBloc, CartState>(
+                      builder: (context, state) {
+                        if (state is! CartLoaded || state.log.isEmpty) {
+                          return const CartEmptyWidget();
+                        }
+                        return ListView.builder(
+                          controller: scrollController,
+                          padding:
+                              const EdgeInsets.all(AppDimensions.paddingS),
+                          itemCount: state.log.length,
+                          itemBuilder: (context, index) {
+                            return CartLogItemWidget(entry: state.log[index]);
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return CustomerDisplayBinder(
@@ -136,168 +213,342 @@ class _PosMainPageState extends State<PosMainPage> {
                   authState is AuthAuthenticated ? authState.user : null;
 
               return Scaffold(
-              resizeToAvoidBottomInset: true,
-              body: BlocBuilder<UiBloc, UiState>(
-                buildWhen: (previous, current) {
-                  final prevActive =
-                      previous is UiLoaded && previous.isMpQrActive;
-                  final currActive =
-                      current is UiLoaded && current.isMpQrActive;
-                  return prevActive != currActive;
-                },
-                builder: (context, uiState) {
-                  final isMpQrActive =
-                      uiState is UiLoaded && uiState.isMpQrActive;
+                resizeToAvoidBottomInset: true,
+                body: CartCheckoutSideEffects(
+                  child: BlocBuilder<UiBloc, UiState>(
+                    builder: (context, uiState) {
+                      final isMpQrActive =
+                          uiState is UiLoaded && uiState.isMpQrActive;
+                      final showConfirmation = uiState is UiLoaded &&
+                          uiState.showConfirmationPanel;
 
-                  return ScaffoldMessenger(
-                    key: _posMessengerKey,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: Scaffold(
-                            resizeToAvoidBottomInset: true,
-                            body: Stack(
+                      return ScaffoldMessenger(
+                        key: _posMessengerKey,
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final spec =
+                                LayoutSpec.fromWidth(constraints.maxWidth);
+                            final shell = spec.useWidePosShell
+                                ? _buildExpandedShell(
+                                    context,
+                                    user: user,
+                                    isMpQrActive: isMpQrActive,
+                                  )
+                                : _buildCompactShell(
+                                    context,
+                                    user: user,
+                                    isMpQrActive: isMpQrActive,
+                                    uiState: uiState,
+                                  );
+
+                            return Stack(
                               children: [
-                                Column(
-                                  children: [
-                                    PosAppBar(user: user),
-                                    const ClientInfoBar(),
-                                    Expanded(
-                                      child: BlocBuilder<CashRegisterCubit,
-                                          CashRegisterState>(
-                                        builder: (context, registerState) {
-                                          if (registerState
-                                              is CashRegisterLoading) {
-                                            final currentStatus = context
-                                                .read<CashRegisterCubit>()
-                                                .currentStatus;
-                                            if (currentStatus == null) {
-                                              return const Center(
-                                                child:
-                                                    CircularProgressIndicator(),
-                                              );
-                                            }
-                                          }
-
-                                          final currentStatus = registerState
-                                                  is CashRegisterLoaded
-                                              ? registerState.status
-                                              : (registerState
-                                                      is CashRegisterError
-                                                  ? registerState.lastStatus
-                                                  : context
-                                                      .read<
-                                                          CashRegisterCubit>()
-                                                      .currentStatus);
-
-                                          final isRegisterOpen =
-                                              currentStatus?.isOpen ?? false;
-
-                                          if (!isRegisterOpen) {
-                                            return const ClosedRegisterView();
-                                          }
-
-                                          return BlocBuilder<UiBloc, UiState>(
-                                            builder:
-                                                (context, catalogUiState) {
-                                              final isBarcodeMode =
-                                                  catalogUiState is UiLoaded
-                                                      ? catalogUiState
-                                                          .isBarcodeSearchEnabled
-                                                      : true;
-
-                                              return CatalogCard(
-                                                searchBar: IntegratedSearchBar(
-                                                  controller:
-                                                      _searchController,
-                                                  autofocus: false,
-                                                  onSearchChanged: (query) {
-                                                    setState(() {});
-                                                    context
-                                                        .read<ProductBloc>()
-                                                        .add(SearchProducts(
-                                                            query));
-                                                  },
-                                                  onClearSearch: () {
-                                                    _searchController.clear();
-                                                    context
-                                                        .read<ProductBloc>()
-                                                        .add(
-                                                            const SearchProducts(
-                                                                ''));
-                                                    setState(() {});
-                                                  },
-                                                ),
-                                                categoryTabs: isBarcodeMode
-                                                    ? const SizedBox.shrink()
-                                                    : CategoryTabsSection(
-                                                        onCategorySelected:
-                                                            (_) {},
-                                                        onClearSearch: () {
-                                                          _searchController
-                                                              .clear();
-                                                          context
-                                                              .read<
-                                                                  ProductBloc>()
-                                                              .add(
-                                                                  const SearchProducts(
-                                                                      ''));
-                                                        },
-                                                      ),
-                                                productGrid: isBarcodeMode
-                                                    ? _buildCartLogsInCatalog()
-                                                    : ProductGridSection(
-                                                        onProductTap: (product,
-                                                            quantity,
-                                                            isDeleteMode) async {
-                                                          await _handleProductTap(
-                                                            product: product,
-                                                            quantity: quantity,
-                                                            isDeleteMode:
-                                                                isDeleteMode,
-                                                          );
-                                                        },
-                                                      ),
-                                              );
-                                            },
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                if (isMpQrActive)
+                                shell,
+                                if (showConfirmation && !spec.useWidePosShell)
                                   Positioned.fill(
-                                    child: AbsorbPointer(
-                                      child: ColoredBox(
-                                        color: Colors.black
-                                            .withValues(alpha: 0.28),
+                                    child: Material(
+                                      color: Theme.of(context)
+                                          .scaffoldBackgroundColor,
+                                      child: SafeArea(
+                                        child: ConfirmationPanel(
+                                          onClose: () {
+                                            context.read<UiBloc>().add(
+                                                CloseConfirmationPanel());
+                                          },
+                                        ),
                                       ),
                                     ),
                                   ),
                               ],
-                            ),
-                          ),
+                            );
+                          },
                         ),
-                        // Panel de carrito (bajo el mismo ScaffoldMessenger)
-                        const Expanded(
-                          flex: 1,
-                          child: SizedBox(
-                            width: 380,
-                            child: CartPanel(),
-                          ),
-                        ),
-                      ],
+                      );
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExpandedShell(
+    BuildContext context, {
+    required dynamic user,
+    required bool isMpQrActive,
+  }) {
+    return Row(
+      children: [
+        Expanded(
+          flex: 2,
+          child: Scaffold(
+            resizeToAvoidBottomInset: true,
+            body: Stack(
+              children: [
+                Column(
+                  children: [
+                    PosAppBar(user: user),
+                    const ClientInfoBar(),
+                    Expanded(child: _buildCatalogBody(context)),
+                  ],
+                ),
+                if (isMpQrActive)
+                  Positioned.fill(
+                    child: AbsorbPointer(
+                      child: ColoredBox(
+                        color: Colors.black.withValues(alpha: 0.28),
+                      ),
                     ),
-                  );
-                },
+                  ),
+              ],
+            ),
+          ),
+        ),
+        const Expanded(
+          flex: 1,
+          child: CartPanel(attachSideEffects: false),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCompactShell(
+    BuildContext context, {
+    required dynamic user,
+    required bool isMpQrActive,
+    required UiState uiState,
+  }) {
+    final isBarcodeMode =
+        uiState is UiLoaded ? uiState.isBarcodeSearchEnabled : true;
+
+    return Scaffold(
+      resizeToAvoidBottomInset: true,
+      body: Stack(
+        children: [
+          Column(
+            children: [
+              PosAppBar(user: user, showMenuButton: true),
+              const ClientInfoBar(),
+              Expanded(child: _buildCatalogBody(context)),
+              if (isBarcodeMode) _buildCompactScanPreviewBand(),
+              _buildCompactStickyBar(context, isBarcodeMode: isBarcodeMode),
+            ],
+          ),
+          if (isMpQrActive)
+            Positioned.fill(
+              child: AbsorbPointer(
+                child: ColoredBox(
+                  color: Colors.black.withValues(alpha: 0.28),
+                ),
               ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactScanPreviewBand() {
+    return Material(
+      elevation: 2,
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: BlocBuilder<CartBloc, CartState>(
+        builder: (context, state) {
+          final lastEntry =
+              state is CartLoaded ? _lastLogEntry(state.log) : null;
+          return ScannerModeContent(
+            key: ValueKey(lastEntry?.id ?? 'empty-dense'),
+            lastEntry: lastEntry,
+            dense: true,
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildCompactStickyBar(
+    BuildContext context, {
+    required bool isBarcodeMode,
+  }) {
+    return Material(
+      elevation: 8,
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: SafeArea(
+        top: false,
+        child: BlocBuilder<CartBloc, CartState>(
+          builder: (context, state) {
+            final total = state is CartLoaded ? state.totalConIva : 0.0;
+            final subtotal = state is CartLoaded ? state.subtotal : 0.0;
+            final totalIva = state is CartLoaded ? state.totalIva : 0.0;
+            final itemCount =
+                state is CartLoaded ? state.items.length : 0;
+
+            return BlocBuilder<UiBloc, UiState>(
+              builder: (context, uiState) {
+                final cartMode =
+                    uiState is UiLoaded ? uiState.cartMode : CartMode.sale;
+
+                return BlocBuilder<CashRegisterCubit, CashRegisterState>(
+                  builder: (context, registerState) {
+                    final isConfirmEnabled =
+                        registerState is CashRegisterLoaded &&
+                            registerState.status.isOpen;
+
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (!isBarcodeMode)
+                            InkWell(
+                              onTap: () => _showManualCartSheet(context),
+                              borderRadius: BorderRadius.circular(8),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 6, horizontal: 4),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.receipt_long, size: 20),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        itemCount == 0
+                                            ? 'Ver pedido'
+                                            : 'Ver pedido ($itemCount)',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                    Text(
+                                      total.formatToCurrency(),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.primary,
+                                      ),
+                                    ),
+                                    const Icon(Icons.keyboard_arrow_up),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          if (isBarcodeMode)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: Row(
+                                children: [
+                                  const Text(
+                                    'Total',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.w600),
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    total.formatToCurrency(),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          CartSummary(
+                            subtotal: subtotal,
+                            totalIva: totalIva,
+                            totalConIva: total,
+                            cartMode: cartMode,
+                            isConfirmEnabled: isConfirmEnabled,
+                            onConfirm: () =>
+                                _openConfirmation(context, state),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              },
             );
           },
         ),
       ),
-    ),
+    );
+  }
+
+  Widget _buildCatalogBody(BuildContext context) {
+    return BlocBuilder<CashRegisterCubit, CashRegisterState>(
+      builder: (context, registerState) {
+        if (registerState is CashRegisterLoading) {
+          final currentStatus =
+              context.read<CashRegisterCubit>().currentStatus;
+          if (currentStatus == null) {
+            return const Center(child: CircularProgressIndicator());
+          }
+        }
+
+        final currentStatus = registerState is CashRegisterLoaded
+            ? registerState.status
+            : (registerState is CashRegisterError
+                ? registerState.lastStatus
+                : context.read<CashRegisterCubit>().currentStatus);
+
+        final isRegisterOpen = currentStatus?.isOpen ?? false;
+
+        if (!isRegisterOpen) {
+          return const ClosedRegisterView();
+        }
+
+        return BlocBuilder<UiBloc, UiState>(
+          builder: (context, catalogUiState) {
+            final isBarcodeMode = catalogUiState is UiLoaded
+                ? catalogUiState.isBarcodeSearchEnabled
+                : true;
+
+            return CatalogCard(
+              searchBar: IntegratedSearchBar(
+                controller: _searchController,
+                autofocus: false,
+                onSearchChanged: (query) {
+                  setState(() {});
+                  context.read<ProductBloc>().add(SearchProducts(query));
+                },
+                onClearSearch: () {
+                  _searchController.clear();
+                  context
+                      .read<ProductBloc>()
+                      .add(const SearchProducts(''));
+                  setState(() {});
+                },
+              ),
+              categoryTabs: isBarcodeMode
+                  ? const SizedBox.shrink()
+                  : CategoryTabsSection(
+                      onCategorySelected: (_) {},
+                      onClearSearch: () {
+                        _searchController.clear();
+                        context
+                            .read<ProductBloc>()
+                            .add(const SearchProducts(''));
+                      },
+                    ),
+              productGrid: isBarcodeMode
+                  ? _buildCartLogsInCatalog()
+                  : ProductGridSection(
+                      onProductTap: (product, quantity, isDeleteMode) async {
+                        await _handleProductTap(
+                          product: product,
+                          quantity: quantity,
+                          isDeleteMode: isDeleteMode,
+                        );
+                      },
+                    ),
+            );
+          },
+        );
+      },
     );
   }
 

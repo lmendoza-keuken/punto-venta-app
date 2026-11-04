@@ -19,6 +19,7 @@ class ProductLabelCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      margin: EdgeInsets.zero,
       elevation: isSelected ? 6 : 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
@@ -42,10 +43,10 @@ class ProductLabelCard extends StatelessWidget {
               _buildHeader(),
               const SizedBox(height: 4),
               _buildCode(),
-              const Spacer(),
+              const Spacer(flex: 1),
               if (product.barcodes != null && product.barcodes!.isNotEmpty)
                 _buildBarcode(),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               _buildPrice(),
             ],
           ),
@@ -63,12 +64,12 @@ class ProductLabelCard extends StatelessWidget {
             style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
+              height: 1.15,
             ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        // Badge de oferta
         if (product.isOnSale)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
@@ -106,6 +107,8 @@ class ProductLabelCard extends StatelessWidget {
   Widget _buildCode() {
     return Text(
       'Código: ${product.id}',
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
       style: TextStyle(
         fontSize: 10,
         color: Colors.grey[600],
@@ -114,29 +117,26 @@ class ProductLabelCard extends StatelessWidget {
   }
 
   Widget _buildBarcode() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 2),
-      child: Row(
-        children: [
-          Icon(Icons.qr_code, size: 14, color: Colors.grey[600]),
-          const SizedBox(width: 3),
-          Expanded(
-            child: Text(
-              product.barcodes!.first.barcode.toString(),
-              style: TextStyle(
-                fontSize: 10,
-                color: Colors.grey[600],
-              ),
-              overflow: TextOverflow.ellipsis,
+    return Row(
+      children: [
+        Icon(Icons.qr_code, size: 14, color: Colors.grey[600]),
+        const SizedBox(width: 3),
+        Expanded(
+          child: Text(
+            product.barcodes!.first.barcode.toString(),
+            style: TextStyle(
+              fontSize: 10,
+              color: Colors.grey[600],
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   Widget _buildPrice() {
-    // Calcular precio con IVA (igual que en POS)
     final priceWithVat =
         ((product.price ?? 0) * (product.vat / 100)) + (product.price ?? 0);
     final regularPriceWithVat = product.regularPrice != null
@@ -146,25 +146,28 @@ class ProductLabelCard extends StatelessWidget {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        // Precio regular tachado si hay oferta
         if (product.isOnSale && regularPriceWithVat != null)
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                regularPriceWithVat.formatToCurrency(),
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  fontStyle: FontStyle.italic,
-                  color: Colors.grey[600],
-                  decoration: TextDecoration.lineThrough,
-                  decorationColor: Colors.grey[600],
+              Flexible(
+                child: Text(
+                  regularPriceWithVat.formatToCurrency(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    fontStyle: FontStyle.italic,
+                    color: Colors.grey[600],
+                    decoration: TextDecoration.lineThrough,
+                    decorationColor: Colors.grey[600],
+                  ),
                 ),
               ),
-              // Porcentaje de descuento
-              if (regularPriceWithVat > 0)
+              if (regularPriceWithVat > 0) ...[
+                const SizedBox(width: 4),
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
@@ -181,27 +184,31 @@ class ProductLabelCard extends StatelessWidget {
                     ),
                   ),
                 ),
+              ],
             ],
           ),
         if (product.isOnSale) const SizedBox(height: 2),
-        // Precio final
-        Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 8,
-            vertical: 4,
-          ),
-          decoration: BoxDecoration(
-            color: product.isOnSale
-                ? AppColors.warning.withValues(alpha: 0.15)
-                : AppColors.primary.withAlpha(25),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Text(
-            priceWithVat.formatToCurrency(),
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-              color: product.isOnSale ? AppColors.warning : AppColors.primary,
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: product.isOnSale
+                  ? AppColors.warning.withValues(alpha: 0.15)
+                  : AppColors.primary.withAlpha(25),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              priceWithVat.formatToCurrency(),
+              maxLines: 1,
+              softWrap: false,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color:
+                    product.isOnSale ? AppColors.warning : AppColors.primary,
+              ),
             ),
           ),
         ),

@@ -219,7 +219,7 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
               child: Form(
                 key: formKey,
                 child: SizedBox(
-                  width: 420,
+                  width: AppDimensions.dialogWidth(context, 420),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [

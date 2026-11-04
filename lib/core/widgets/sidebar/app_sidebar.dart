@@ -4,8 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:punto_venta_app/app/routes/route_paths.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
+import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/core/dialogs/logout_dialog.dart';
 import 'package:punto_venta_app/core/themes/theme_cubit.dart';
+import 'package:punto_venta_app/core/widgets/sidebar/main_scaffold_scope.dart';
 import 'package:punto_venta_app/core/widgets/sidebar/sidebar_item.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/client.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/saved_order.dart';
@@ -23,6 +25,7 @@ import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settin
 class AppSidebar extends StatefulWidget {
   final String currentRoute;
   final bool isAdmin;
+  final bool asDrawer;
   final VoidCallback? onLogout;
   final VoidCallback? onSettingsPressed;
   final VoidCallback? onNotificationsPressed;
@@ -33,6 +36,7 @@ class AppSidebar extends StatefulWidget {
     super.key,
     required this.currentRoute,
     this.isAdmin = false,
+    this.asDrawer = false,
     this.onLogout,
     this.onSettingsPressed,
     this.onNotificationsPressed,
@@ -67,13 +71,18 @@ class _AppSidebarState extends State<AppSidebar> {
             ? AppColors.sidebarDarkDivider
             : AppColors.sidebarLightDivider;
 
+        final showLabel = widget.asDrawer;
+
         return Container(
-          width: 80,
+          width: widget.asDrawer
+              ? double.infinity
+              : AppDimensions.sidebarRailWidth,
           height: double.infinity,
           decoration: BoxDecoration(
             color: sidebarBg,
           ),
-          child: Column(
+          child: SafeArea(
+            child: Column(
             children: [
               const SizedBox(height: 16),
               // Logo
@@ -90,6 +99,7 @@ class _AppSidebarState extends State<AppSidebar> {
                   icon: Icons.point_of_sale,
                   isHighlighted: widget.currentRoute == RoutePaths.pos,
                   tooltip: 'Punto de Venta',
+                  showLabel: showLabel,
                   onTap: () => _navigateTo(context, RoutePaths.pos),
                 ),
               ),
@@ -104,6 +114,7 @@ class _AppSidebarState extends State<AppSidebar> {
                   icon: Icons.request_page_rounded,
                   isHighlighted: widget.currentRoute == RoutePaths.reports,
                   tooltip: 'Reportes',
+                  showLabel: showLabel,
                   onTap: widget.onHistoryPressed ??
                       () => _navigateTo(context, RoutePaths.reports),
                 ),
@@ -120,6 +131,7 @@ class _AppSidebarState extends State<AppSidebar> {
                   isHighlighted:
                       widget.currentRoute == RoutePaths.productLabels,
                   tooltip: 'Etiquetas de Productos',
+                  showLabel: showLabel,
                   onTap: () => _navigateTo(context, RoutePaths.productLabels),
                 ),
               ),
@@ -135,6 +147,7 @@ class _AppSidebarState extends State<AppSidebar> {
                   isHighlighted:
                       widget.currentRoute == RoutePaths.supplierPayments,
                   tooltip: 'Pagos a Proveedores',
+                  showLabel: showLabel,
                   onTap: () =>
                       _navigateTo(context, RoutePaths.supplierPayments),
                 ),
@@ -153,6 +166,7 @@ class _AppSidebarState extends State<AppSidebar> {
                     isHighlighted:
                         widget.currentRoute == RoutePaths.pendingSettlements,
                     tooltip: 'Cobradores Pendientes',
+                    showLabel: showLabel,
                     onTap: widget.onHistoryPressed ??
                         () =>
                             _navigateTo(context, RoutePaths.pendingSettlements),
@@ -185,6 +199,7 @@ class _AppSidebarState extends State<AppSidebar> {
                             icon: Icons.save_outlined,
                             isHighlighted: _isSaveOrderDialogOpen,
                             tooltip: 'Guardar Pedido',
+                            showLabel: showLabel,
                             onTap: () => _handleSaveOrder(context),
                           ),
                         ),
@@ -199,6 +214,7 @@ class _AppSidebarState extends State<AppSidebar> {
                             icon: Icons.folder_open_outlined,
                             isHighlighted: _isLoadSavedOrdersDialogOpen,
                             tooltip: 'Cargar Pedido',
+                            showLabel: showLabel,
                             onTap: () => _handleLoadOrder(context),
                           ),
                         ),
@@ -213,6 +229,7 @@ class _AppSidebarState extends State<AppSidebar> {
                             icon: Icons.person_search_outlined,
                             isHighlighted: _isSelectClientDialogOpen,
                             tooltip: 'Seleccionar Cliente',
+                            showLabel: showLabel,
                             onTap: () => _handleSelectClient(context),
                           ),
                         ),
@@ -228,6 +245,7 @@ class _AppSidebarState extends State<AppSidebar> {
                             icon: Icons.person_add_outlined,
                             isHighlighted: _isAddClientDialogOpen,
                             tooltip: 'Agregar Cliente',
+                            showLabel: showLabel,
                             onTap: () => _handleAddClient(context),
                           ),
                         ),
@@ -259,6 +277,7 @@ class _AppSidebarState extends State<AppSidebar> {
                     icon: Icons.settings_outlined,
                     isHighlighted: _isSettingsDialogOpen,
                     tooltip: 'Configuración',
+                    showLabel: showLabel,
                     onTap: widget.onSettingsPressed ??
                         () async {
                           setState(() => _isSettingsDialogOpen = true);
@@ -284,6 +303,7 @@ class _AppSidebarState extends State<AppSidebar> {
                     icon: Icons.logout_rounded,
                     isHighlighted: _isLogoutDialogOpen,
                     tooltip: 'Cerrar sesión',
+                    showLabel: showLabel,
                     onTap: () async {
                       setState(() => _isLogoutDialogOpen = true);
                       await showLogoutDialog(context);
@@ -301,6 +321,7 @@ class _AppSidebarState extends State<AppSidebar> {
               ),
               const SizedBox(height: 8),
             ],
+          ),
           ),
         );
       },
@@ -345,8 +366,9 @@ class _AppSidebarState extends State<AppSidebar> {
     required bool isDark,
     required Color sidebarSurface,
   }) {
+    final height = widget.asDrawer ? 48.0 : 35.0;
     return SizedBox(
-      height: 35,
+      height: height,
       child: Stack(
         clipBehavior: Clip.none,
         alignment: Alignment.centerLeft,
@@ -354,7 +376,7 @@ class _AppSidebarState extends State<AppSidebar> {
           if (isSelected)
             Positioned(
               left: 8,
-              right: -16,
+              right: widget.asDrawer ? 8 : -16,
               top: 0,
               bottom: 0,
               child: Container(
@@ -382,6 +404,7 @@ class _AppSidebarState extends State<AppSidebar> {
   }
 
   void _navigateTo(BuildContext context, String route) {
+    MainScaffoldScope.maybeOf(context)?.closeDrawer();
     if (widget.currentRoute != route) {
       context.go(route);
     }

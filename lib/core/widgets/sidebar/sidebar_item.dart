@@ -8,6 +8,7 @@ class SidebarItem extends StatelessWidget {
   final String? tooltip;
   final bool isHighlighted;
   final bool? isDisabled;
+  final bool showLabel;
 
   const SidebarItem({
     super.key,
@@ -17,6 +18,7 @@ class SidebarItem extends StatelessWidget {
     this.tooltip,
     this.isHighlighted = false,
     this.isDisabled = false,
+    this.showLabel = false,
   });
 
   @override
@@ -24,8 +26,13 @@ class SidebarItem extends StatelessWidget {
     final color = isSelected || isHighlighted
         ? AppColors.sidebarAccent
         : AppColors.sidebarIconInactive;
+    final iconColor = isDisabled == true
+        ? AppColors.sidebarIconDisabled
+        : isHighlighted
+            ? Colors.white
+            : color;
 
-    Widget iconWidget = Container(
+    final iconBox = Container(
       width: 48,
       height: 48,
       decoration: isHighlighted
@@ -34,30 +41,46 @@ class SidebarItem extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             )
           : null,
-      child: Icon(
-        icon,
-        color: isDisabled == true
-            ? AppColors.sidebarIconDisabled
-            : isHighlighted
-                ? Colors.white
-                : color,
-        size: 24,
-      ),
+      child: Icon(icon, color: iconColor, size: 24),
     );
 
-    if (tooltip != null) {
-      iconWidget = Tooltip(
-        message: tooltip!,
-        child: iconWidget,
+    Widget content;
+    if (showLabel && tooltip != null) {
+      content = Row(
+        children: [
+          iconBox,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              tooltip!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontWeight:
+                    isHighlighted ? FontWeight.w600 : FontWeight.w500,
+                color: isDisabled == true
+                    ? AppColors.sidebarIconDisabled
+                    : Colors.black87,
+              ),
+            ),
+          ),
+        ],
       );
+    } else {
+      content = tooltip != null
+          ? Tooltip(message: tooltip!, child: iconBox)
+          : iconBox;
     }
 
     return InkWell(
       onTap: isDisabled == true ? null : onTap,
       borderRadius: BorderRadius.circular(12),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: iconWidget,
+        padding: EdgeInsets.symmetric(
+          vertical: 4,
+          horizontal: showLabel ? 8 : 0,
+        ),
+        child: content,
       ),
     );
   }

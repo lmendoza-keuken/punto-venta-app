@@ -55,10 +55,16 @@ void main(List<String> args) {
     AppLogger.info('Arranque: platform=$defaultTargetPlatform debug=$kDebugMode');
     _logEnvironment();
 
-    await SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
+    // Layout is width-driven (LayoutSpec). Android may rotate to portrait;
+    // desktop keeps landscape as the preferred default without duplicating UI.
+    if (Platform.isAndroid || Platform.isIOS) {
+      await SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+    } else {
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+    }
     AppLogger.info('DI init...');
     await di.init();
 

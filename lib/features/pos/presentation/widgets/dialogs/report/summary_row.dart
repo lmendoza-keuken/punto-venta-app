@@ -13,68 +13,122 @@ class SummaryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final cards = [
+      _SummaryMetric(
+        title: 'Total Ventas',
+        value: (summary['total_sales'] as double).formatToCurrency(),
+        color: AppColors.success,
+      ),
+      _SummaryMetric(
+        title: 'Tickets',
+        value: '${summary['total_orders']}',
+        color: AppColors.primary,
+      ),
+      _SummaryMetric(
+        title: 'Artículos',
+        value: '${summary['total_items']}',
+        color: AppColors.warning,
+      ),
+      _SummaryMetric(
+        title: 'IVA Total',
+        value: (summary['total_tax'] as double).formatToCurrency(),
+        color: AppColors.info,
+      ),
+    ];
+
+    return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingM),
-      child: Row(
-        children: [
-          Expanded(
-              child: _buildSummaryCard(
-                  context,
-                  'Total Ventas',
-                  (summary['total_sales'] as double).formatToCurrency(),
-                  Icons.attach_money,
-                  AppColors.success)),
-          Expanded(
-              child: _buildSummaryCard(
-                  context,
-                  'Tickets',
-                  '${summary['total_orders']}',
-                  Icons.receipt,
-                  AppColors.primary)),
-          Expanded(
-              child: _buildSummaryCard(
-                  context,
-                  'Artículos',
-                  '${summary['total_items']}',
-                  Icons.inventory,
-                  AppColors.warning)),
-          Expanded(
-              child: _buildSummaryCard(
-                  context,
-                  'IVA Total',
-                  (summary['total_tax'] as double).formatToCurrency(),
-                  Icons.percent,
-                  AppColors.info)),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact =
+              constraints.maxWidth < LayoutSpec.compactBreakpoint;
+
+          if (compact) {
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: cards.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: AppDimensions.paddingS,
+                crossAxisSpacing: AppDimensions.paddingS,
+                mainAxisExtent: 78,
+              ),
+              itemBuilder: (context, index) =>
+                  _buildSummaryCard(context, cards[index], compact: true),
+            );
+          }
+
+          return Row(
+            children: [
+              for (var i = 0; i < cards.length; i++) ...[
+                if (i > 0) const SizedBox(width: AppDimensions.paddingS),
+                Expanded(
+                  child: _buildSummaryCard(context, cards[i]),
+                ),
+              ],
+            ],
+          );
+        },
       ),
     );
   }
 
   Widget _buildSummaryCard(
-      BuildContext context, String title, String value, IconData icon, Color color) {
+    BuildContext context,
+    _SummaryMetric metric, {
+    bool compact = false,
+  }) {
     return Card(
-      child: Container(
-        padding: const EdgeInsets.all(AppDimensions.paddingS),
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: AppDimensions.paddingS,
+          vertical: compact ? AppDimensions.paddingS : AppDimensions.paddingS,
+        ),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SizedBox(height: 4),
             Text(
-              title,
+              metric.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppColors.textSecondary,
                   ),
             ),
             const SizedBox(height: 4),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                metric.value,
+                maxLines: 1,
+                softWrap: false,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: metric.color,
+                      fontSize: compact ? 16 : null,
+                    ),
+              ),
             ),
           ],
         ),
       ),
     );
   }
+}
+
+class _SummaryMetric {
+  final String title;
+  final String value;
+  final Color color;
+
+  const _SummaryMetric({
+    required this.title,
+    required this.value,
+    required this.color,
+  });
 }

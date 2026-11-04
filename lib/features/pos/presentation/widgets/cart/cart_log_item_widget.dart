@@ -54,6 +54,8 @@ class CartLogItemWidget extends StatelessWidget {
                 children: [
                   Text(
                     entry.item.product.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: Theme.of(context)
                         .textTheme
                         .bodyMedium
@@ -85,12 +87,17 @@ class CartLogItemWidget extends StatelessWidget {
                 ],
               ),
             ),
-            Text(
-              '$sign ${displayedRowTotal.formatToCurrency()}',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(fontWeight: FontWeight.bold, color: color),
+            Flexible(
+              flex: 0,
+              child: Text(
+                '$sign ${displayedRowTotal.formatToCurrency()}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(fontWeight: FontWeight.bold, color: color),
+              ),
             ),
           ],
         ),

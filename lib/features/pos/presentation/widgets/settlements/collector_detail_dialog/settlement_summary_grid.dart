@@ -28,9 +28,12 @@ class SettlementSummaryGrid extends StatelessWidget {
         final cardCount = showDisposedCard ? 4 : 3;
         final crossAxisCount = constraints.maxWidth > 720
             ? cardCount
-            : constraints.maxWidth > 500
+            : constraints.maxWidth > 420
                 ? 2
                 : 1;
+        final compact = constraints.maxWidth < LayoutSpec.compactBreakpoint;
+        // Fixed height so title + amount + "N comprobantes" always fit on mobile.
+        final mainAxisExtent = compact ? 96.0 : 108.0;
 
         return GridView(
           shrinkWrap: true,
@@ -39,11 +42,7 @@ class SettlementSummaryGrid extends StatelessWidget {
             crossAxisCount: crossAxisCount,
             crossAxisSpacing: AppDimensions.paddingS,
             mainAxisSpacing: AppDimensions.paddingS,
-            childAspectRatio: crossAxisCount >= 3
-                ? 1.25
-                : crossAxisCount == 2
-                    ? 2.2
-                    : 3.5,
+            mainAxisExtent: mainAxisExtent,
           ),
           children: [
             _buildMetricCard(
@@ -51,18 +50,21 @@ class SettlementSummaryGrid extends StatelessWidget {
               count: detail.invoiceCount ?? 0,
               total: (detail.invoiceTotal ?? 0.0).formatToCurrency(),
               isDark: isDark,
+              compact: compact,
             ),
             _buildMetricCard(
               title: 'Notas de Crédito',
               count: detail.creditNoteCount ?? 0,
               total: (detail.creditNoteTotal ?? 0.0).formatToCurrency(),
               isDark: isDark,
+              compact: compact,
             ),
             _buildMetricCard(
               title: 'Artículos Cancelados',
               count: canceledCount,
               total: '$canceledCount unid.',
               isDark: isDark,
+              compact: compact,
               showTotalOnly: true,
               onTap: canceledCount > 0 ? onCanceledItemsTap : null,
             ),
@@ -72,6 +74,7 @@ class SettlementSummaryGrid extends StatelessWidget {
                 count: disposedCount,
                 total: '$disposedCount unid.',
                 isDark: isDark,
+                compact: compact,
                 showTotalOnly: true,
                 onTap: disposedCount > 0 ? onDisposedItemsTap : null,
               ),
@@ -86,11 +89,14 @@ class SettlementSummaryGrid extends StatelessWidget {
     required int count,
     required String total,
     required bool isDark,
+    required bool compact,
     bool showTotalOnly = false,
     VoidCallback? onTap,
   }) {
+    final padding = compact ? AppDimensions.paddingS : AppDimensions.paddingM;
+
     final card = Container(
-      padding: const EdgeInsets.all(AppDimensions.paddingM),
+      padding: EdgeInsets.all(padding),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCard : AppColors.cardBackground,
         borderRadius: BorderRadius.circular(AppDimensions.borderRadiusS),
@@ -101,15 +107,15 @@ class SettlementSummaryGrid extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
-              const SizedBox(width: 6),
               Expanded(
                 child: Text(
                   title,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: compact ? 11 : 12,
                     fontWeight: FontWeight.w500,
                     color: isDark
                         ? AppColors.darkTextSecondary
@@ -129,11 +135,13 @@ class SettlementSummaryGrid extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: compact ? 4 : 8),
           Text(
             total,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 16,
+              fontSize: compact ? 14 : 16,
               fontWeight: FontWeight.bold,
               color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
             ),
@@ -142,6 +150,8 @@ class SettlementSummaryGrid extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               '$count comprobantes',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 11,
                 color: isDark
