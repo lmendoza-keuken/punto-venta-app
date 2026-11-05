@@ -115,24 +115,40 @@ class WindowsCustomerDisplayService
   Future<void> _handleMainWindowClose() async {
     if (_closingApp) return;
     _closingApp = true;
+    _stopping = true;
     AppLogger.info(
       'CustomerDisplay Windows: cerrando principal → stop pantalla cliente',
     );
-    try {
-      await stop();
-    } catch (e, st) {
-      AppLogger.error(
-        'CustomerDisplay Windows: stop en cierre de app falló',
-        e,
-        st,
-      );
+
+    await _windowsChangedSub?.cancel();
+    _windowsChangedSub = null;
+    final controller = _controller;
+    _controller = null;
+
+    if (controller != null) {
+      try {
+        await controller.hide();
+      } catch (_) {}
+      try {
+        await controller.invokeMethod('window_close').timeout(
+          const Duration(milliseconds: 250),
+          onTimeout: () => null,
+        );
+      } catch (e, st) {
+        AppLogger.error(
+          'CustomerDisplay Windows: window_close en salida falló',
+          e,
+          st,
+        );
+      }
     }
+
     try {
       await windowManager.setPreventClose(false);
-      await windowManager.destroy();
+      await windowManager.close();
     } catch (e, st) {
       AppLogger.error(
-        'CustomerDisplay Windows: destroy ventana principal falló',
+        'CustomerDisplay Windows: cierre ventana principal falló',
         e,
         st,
       );
@@ -187,27 +203,33 @@ class WindowsCustomerDisplayService
 
   Future<void> _closeCustomerController(WindowController controller) async {
     try {
-      await controller.invokeMethod('window_close');
+      await controller.hide();
+    } catch (_) {}
+    try {
+      await controller.invokeMethod('window_close').timeout(
+        const Duration(milliseconds: 250),
+        onTimeout: () => null,
+      );
     } catch (e, st) {
       AppLogger.error(
-        'CustomerDisplay Windows: window_close falló, hide()',
+        'CustomerDisplay Windows: window_close falló',
         e,
         st,
       );
-      try {
-        await controller.hide();
-      } catch (_) {}
     }
   }
 
   Future<void> _closeAllCustomerWindows({String? exceptId}) async {
     try {
       final all = await WindowController.getAll();
-      for (final c in all) {
-        if (exceptId != null && c.windowId == exceptId) continue;
-        if (!_isCustomerDisplayWindow(c)) continue;
-        await _closeCustomerController(c);
-      }
+      final targets = all
+          .where(
+            (c) =>
+                (exceptId == null || c.windowId != exceptId) &&
+                _isCustomerDisplayWindow(c),
+          )
+          .toList();
+      await Future.wait(targets.map(_closeCustomerController));
     } catch (e, st) {
       AppLogger.error(
         'CustomerDisplay Windows: barrido de subventanas falló',
@@ -231,7 +253,6 @@ class WindowsCustomerDisplayService
   @override
   Future<void> sync(CustomerDisplaySnapshot snapshot) async {
     _last = snapshot;
-    // Si aún no hay ventana (p.ej. se conectó el 2º monitor después), reintentar.
     if (_controller == null) {
       await start();
       return;
