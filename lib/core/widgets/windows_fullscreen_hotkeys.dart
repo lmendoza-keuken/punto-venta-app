@@ -65,6 +65,8 @@ class _WindowsFullscreenHotkeysState extends State<WindowsFullscreenHotkeys> {
         final bounds = widget.windowedBounds;
         if (bounds != null) {
           await windowManager.setBounds(bounds);
+        } else {
+          await windowManager.maximize();
         }
         await windowManager.setTitleBarStyle(TitleBarStyle.normal);
         AppLogger.info('WindowsFullscreenHotkeys: salió de fullscreen (F11)');

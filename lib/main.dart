@@ -48,7 +48,7 @@ void main(List<String> args) {
       return;
     }
 
-    await _configureWindowsFullscreen();
+    await _configureWindowsMainWindow();
     await AppLogger.init();
     _installGlobalErrorHandlers();
 
@@ -108,19 +108,19 @@ Future<bool> _launchCustomerDisplayIfNeeded(List<String> args) async {
   }
 }
 
-/// Abre la app en fullscreen real en Windows (sin barra de título ni taskbar).
-Future<void> _configureWindowsFullscreen() async {
+Future<void> _configureWindowsMainWindow() async {
   if (!Platform.isWindows) return;
 
   await windowManager.ensureInitialized();
   await windowManager.waitUntilReadyToShow(
     const WindowOptions(
-      fullScreen: true,
+      fullScreen: false,
       skipTaskbar: false,
-      titleBarStyle: TitleBarStyle.hidden,
+      titleBarStyle: TitleBarStyle.normal,
     ),
     () async {
-      await windowManager.setFullScreen(true);
+      await windowManager.setFullScreen(false);
+      await windowManager.maximize();
       await windowManager.show();
       await windowManager.focus();
     },
