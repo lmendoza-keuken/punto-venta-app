@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -20,6 +21,7 @@ import 'package:punto_venta_app/features/app_update/domain/usecases/track_compro
 import 'package:punto_venta_app/features/app_update/presentation/cubit/app_update_cubit.dart';
 import 'package:punto_venta_app/core/services/mercado_pago_service.dart';
 import 'package:punto_venta_app/core/services/pvs_service.dart';
+import 'package:punto_venta_app/core/services/windows_touch_input_service.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/google_auth_datasource.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/firestore_user_datasource.dart';
@@ -764,6 +766,13 @@ sl.registerLazySingleton(() => ProcessStockDisposeUseCase(sl()));
     }
     return NoOpCustomerDisplayService(sl());
   });
+
+  //! Windows touch / on-screen keyboard (ventana principal)
+  sl.registerLazySingleton<WindowsTouchInputService>(
+    () => WindowsTouchInputService(sl()),
+  );
+  // Warm-up async: detecta si el monitor primario es touch.
+  unawaited(sl<WindowsTouchInputService>().refresh());
 
   // HTTP client
   sl.registerLazySingleton(() => http.Client());

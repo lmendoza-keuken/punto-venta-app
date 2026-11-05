@@ -1,6 +1,10 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_onscreen_keyboard/flutter_onscreen_keyboard.dart';
 import 'package:punto_venta_app/core/themes/app_theme.dart';
 import 'package:punto_venta_app/core/themes/theme_cubit.dart';
 import 'package:punto_venta_app/core/widgets/windows_fullscreen_hotkeys.dart';
@@ -36,6 +40,14 @@ class PosApp extends StatelessWidget {
                     Locale('es', 'AR'),
                     Locale('en', 'US'),
                   ],
+                  // Teclado virtual solo en Windows (POS touch). La pantalla
+                  // cliente no usa este MaterialApp.
+                  builder: !kIsWeb && Platform.isWindows
+                      ? OnscreenKeyboard.builder(
+                          layout: const MobileKeyboardLayout(),
+                          width: (ctx) => MediaQuery.sizeOf(ctx).width,
+                        )
+                      : null,
                 ),
               ),
             );
