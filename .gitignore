@@ -57,6 +57,8 @@ app.*.map.json
 *.freezed.dart
 *.swift
 *.h
+# Headers del runner Windows (channel nativo, ventana, etc.)
+!windows/runner/*.h
 *.cmake
 
 /**/*.g.dart
