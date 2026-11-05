@@ -40,7 +40,7 @@ Future<void> runCustomerDisplayWindow(String argumentsJson) async {
         customerDisplayHostKey.currentState?.applyPayload(call.arguments);
         return true;
       case 'window_close':
-        await windowManager.close();
+        await windowManager.destroy();
         return true;
       default:
         return null;

@@ -10,11 +10,14 @@ import 'package:punto_venta_app/features/customer_display/domain/customer_displa
 import 'package:punto_venta_app/features/customer_display/domain/customer_display_snapshot.dart';
 import 'package:screen_retriever/screen_retriever.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:window_manager/window_manager.dart';
 
 const String kCustomerDisplayWindowArg = 'customer_display';
 const String kCustomerDisplaySyncMethod = 'customer_display_sync';
 
-class WindowsCustomerDisplayService implements CustomerDisplayService {
+class WindowsCustomerDisplayService
+    with WindowListener
+    implements CustomerDisplayService {
   WindowsCustomerDisplayService(this._prefs);
 
   final SharedPreferences _prefs;
@@ -22,6 +25,9 @@ class WindowsCustomerDisplayService implements CustomerDisplayService {
   WindowController? _controller;
   CustomerDisplaySnapshot _last = const CustomerDisplaySnapshot.idle();
   bool _starting = false;
+  bool _stopping = false;
+  bool _closingApp = false;
+  bool _closeHookInstalled = false;
   StreamSubscription<void>? _windowsChangedSub;
 
   @override
@@ -42,7 +48,7 @@ class WindowsCustomerDisplayService implements CustomerDisplayService {
   @override
   Future<void> start() async {
     if (!Platform.isWindows || !isEnabled) return;
-    if (_controller != null || _starting) return;
+    if (_controller != null || _starting || _closingApp) return;
     _starting = true;
     try {
       final placement = await _resolveSecondaryFullscreenPlacement();
@@ -74,6 +80,7 @@ class WindowsCustomerDisplayService implements CustomerDisplayService {
       _controller = controller;
       await controller.show();
       _listenWindowsChanged();
+      await _ensureMainCloseHook();
       AppLogger.info(
         'CustomerDisplay Windows: ventana abierta fullscreen '
         'en 2º monitor frame=${placement.frame}',
@@ -89,10 +96,53 @@ class WindowsCustomerDisplayService implements CustomerDisplayService {
     }
   }
 
+  /// Intercepta el X de la ventana principal: primero cierra la de cliente.
+  Future<void> _ensureMainCloseHook() async {
+    if (_closeHookInstalled || !Platform.isWindows) return;
+    _closeHookInstalled = true;
+    windowManager.addListener(this);
+    await windowManager.setPreventClose(true);
+    AppLogger.info(
+      'CustomerDisplay Windows: hook de cierre de ventana principal activo',
+    );
+  }
+
+  @override
+  void onWindowClose() {
+    unawaited(_handleMainWindowClose());
+  }
+
+  Future<void> _handleMainWindowClose() async {
+    if (_closingApp) return;
+    _closingApp = true;
+    AppLogger.info(
+      'CustomerDisplay Windows: cerrando principal → stop pantalla cliente',
+    );
+    try {
+      await stop();
+    } catch (e, st) {
+      AppLogger.error(
+        'CustomerDisplay Windows: stop en cierre de app falló',
+        e,
+        st,
+      );
+    }
+    try {
+      await windowManager.setPreventClose(false);
+      await windowManager.destroy();
+    } catch (e, st) {
+      AppLogger.error(
+        'CustomerDisplay Windows: destroy ventana principal falló',
+        e,
+        st,
+      );
+    }
+  }
+
   void _listenWindowsChanged() {
     _windowsChangedSub ??= onWindowsChanged.listen((_) async {
       final current = _controller;
-      if (current == null || !isEnabled) return;
+      if (_stopping || _closingApp || current == null || !isEnabled) return;
       try {
         final all = await WindowController.getAll();
         final stillOpen = all.any((c) => c.windowId == current.windowId);
@@ -115,20 +165,66 @@ class WindowsCustomerDisplayService implements CustomerDisplayService {
 
   @override
   Future<void> stop() async {
+    if (_stopping) return;
+    _stopping = true;
     await _windowsChangedSub?.cancel();
     _windowsChangedSub = null;
     final controller = _controller;
     _controller = null;
-    if (controller == null) return;
     try {
-      // El handler en la subventana responde con windowManager.close().
-      await controller.invokeMethod('window_close');
+      if (controller != null) {
+        await _closeCustomerController(controller);
+      }
+      // Por si quedó alguna subventana huérfana (mismo type en arguments).
+      await _closeAllCustomerWindows(exceptId: null);
       AppLogger.info('CustomerDisplay Windows: ventana cerrada');
     } catch (e, st) {
       AppLogger.error('CustomerDisplay Windows: stop falló', e, st);
+    } finally {
+      _stopping = false;
+    }
+  }
+
+  Future<void> _closeCustomerController(WindowController controller) async {
+    try {
+      await controller.invokeMethod('window_close');
+    } catch (e, st) {
+      AppLogger.error(
+        'CustomerDisplay Windows: window_close falló, hide()',
+        e,
+        st,
+      );
       try {
         await controller.hide();
       } catch (_) {}
+    }
+  }
+
+  Future<void> _closeAllCustomerWindows({String? exceptId}) async {
+    try {
+      final all = await WindowController.getAll();
+      for (final c in all) {
+        if (exceptId != null && c.windowId == exceptId) continue;
+        if (!_isCustomerDisplayWindow(c)) continue;
+        await _closeCustomerController(c);
+      }
+    } catch (e, st) {
+      AppLogger.error(
+        'CustomerDisplay Windows: barrido de subventanas falló',
+        e,
+        st,
+      );
+    }
+  }
+
+  bool _isCustomerDisplayWindow(WindowController c) {
+    final raw = c.arguments;
+    if (raw.isEmpty) return false;
+    try {
+      final map = jsonDecode(raw) as Map<String, dynamic>;
+      return map['type'] == kCustomerDisplayWindowArg;
+    } catch (_) {
+      return raw.contains(kCustomerDisplayWindowArg);
     }
   }
 
@@ -236,4 +332,3 @@ class _WindowPlacement {
   final Rect frame;
   final bool fullscreen;
 }
-
