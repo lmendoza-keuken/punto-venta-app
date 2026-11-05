@@ -7,7 +7,7 @@
 
 #include <memory>
 
-// Detecta touch en el monitor primario y abre el Touch Keyboard (TabTip).
+// Detecta touch en el monitor primario (diagnóstico).
 // Solo registrar en el engine de la ventana principal (POS).
 std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>>
 RegisterTouchInputChannel(flutter::FlutterEngine* engine);

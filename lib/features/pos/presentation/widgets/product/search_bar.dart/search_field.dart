@@ -5,11 +5,9 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/core/constants/app_string.dart';
-import 'package:punto_venta_app/core/services/windows_touch_input_service.dart';
 import 'package:punto_venta_app/core/widgets/windows_touch_keyboard_button.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_state.dart';
-import 'package:punto_venta_app/injection_container.dart';
 
 class SearchField extends StatefulWidget {
   final TextEditingController controller;
@@ -33,17 +31,16 @@ class SearchField extends StatefulWidget {
 
 class _SearchFieldState extends State<SearchField> {
   final FocusNode _focusNode = FocusNode();
-  WindowsTouchInputService? _touchInput;
 
   /// Solo true tras el botón de teclado. Así el focus del scanner no abre el OSK.
   bool _oskEnabled = false;
 
+  /// Evita que el unfocus del reopen apague `_oskEnabled` a mitad del ciclo.
+  bool _suppressOskDisable = false;
+
   @override
   void initState() {
     super.initState();
-    if (sl.isRegistered<WindowsTouchInputService>()) {
-      _touchInput = sl<WindowsTouchInputService>();
-    }
     _focusNode.addListener(_onFocusChanged);
   }
 
@@ -55,6 +52,7 @@ class _SearchFieldState extends State<SearchField> {
   }
 
   void _onFocusChanged() {
+    if (_suppressOskDisable) return;
     if (!_focusNode.hasFocus && _oskEnabled) {
       setState(() => _oskEnabled = false);
     }
@@ -81,21 +79,32 @@ class _SearchFieldState extends State<SearchField> {
     }
   }
 
-  /// Habilita el OSK y fuerza focus para que el package haga attach + open.
-  void _openOnscreenKeyboard() {
+  /// Habilita el OSK, adjunta el campo y abre abajo (también tras haber cerrado).
+  Future<void> _openOnscreenKeyboard() async {
+    _suppressOskDisable = true;
     setState(() => _oskEnabled = true);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+
+    await Future<void>.delayed(Duration.zero);
+    if (!mounted) return;
+
+    // Si ya tenía focus (p.ej. tras cerrar el teclado), forzar re-attach.
+    if (_focusNode.hasPrimaryFocus) {
+      _focusNode.unfocus();
+      await Future<void>.delayed(Duration.zero);
       if (!mounted) return;
-      if (_focusNode.hasPrimaryFocus) {
-        // Ya tiene focus: el listener del package no se re-dispara.
-        _focusNode.unfocus();
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) _focusNode.requestFocus();
-        });
-      } else {
-        _focusNode.requestFocus();
-      }
-    });
+    }
+
+    _focusNode.requestFocus();
+    await Future<void>.delayed(const Duration(milliseconds: 32));
+    if (!mounted) return;
+
+    try {
+      OnscreenKeyboard.of(context)
+        ..moveToBottom()
+        ..open();
+    } catch (_) {}
+
+    _suppressOskDisable = false;
   }
 
   @override
@@ -116,6 +125,7 @@ class _SearchFieldState extends State<SearchField> {
       builder: (context, state) {
         final uiState = state as UiLoaded;
         final isBarcodeMode = uiState.isBarcodeSearchEnabled;
+        final showKeyboardButton = WindowsTouchKeyboardButton.isSupported;
 
         return SizedBox(
           width: double.infinity,
@@ -151,7 +161,7 @@ class _SearchFieldState extends State<SearchField> {
                       Icons.search,
                       color: AppColors.primary,
                     ),
-              suffixIcon: _buildSuffixIcon(),
+              suffixIcon: _buildSuffixIcon(showKeyboardButton),
               suffixIconConstraints: const BoxConstraints(
                 minWidth: 48,
                 minHeight: 48,
@@ -182,26 +192,19 @@ class _SearchFieldState extends State<SearchField> {
     );
   }
 
-  Widget? _buildSuffixIcon() {
-    final touchInput = _touchInput;
-    final listenables = <Listenable>[widget.controller];
-    if (touchInput != null) {
-      listenables.add(touchInput);
-    }
-
+  Widget? _buildSuffixIcon(bool showKeyboardButton) {
     return ListenableBuilder(
-      listenable: Listenable.merge(listenables),
+      listenable: widget.controller,
       builder: (context, _) {
-        final showTouchKeyboard = touchInput?.isKeyboardAvailable ?? false;
         final hasText = widget.controller.text.isNotEmpty;
-        if (!showTouchKeyboard && !hasText) {
+        if (!showKeyboardButton && !hasText) {
           return const SizedBox.shrink();
         }
 
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (showTouchKeyboard)
+            if (showKeyboardButton)
               WindowsTouchKeyboardButton(onPressed: _openOnscreenKeyboard),
             if (hasText)
               IconButton(

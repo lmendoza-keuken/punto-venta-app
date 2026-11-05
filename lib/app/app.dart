@@ -40,12 +40,19 @@ class PosApp extends StatelessWidget {
                     Locale('es', 'AR'),
                     Locale('en', 'US'),
                   ],
-                  // Teclado virtual solo en Windows (POS touch). La pantalla
-                  // cliente no usa este MaterialApp.
+                  // Teclado virtual solo en Windows (POS). Compacto abajo.
                   builder: !kIsWeb && Platform.isWindows
                       ? OnscreenKeyboard.builder(
                           layout: const MobileKeyboardLayout(),
-                          width: (ctx) => MediaQuery.sizeOf(ctx).width,
+                          // Más ancho que alto para que no cubra toda la pantalla.
+                          aspectRatio: 2.6,
+                          width: (ctx) {
+                            final screen = MediaQuery.sizeOf(ctx).width;
+                            return screen * 0.5;
+                          },
+                          theme: const OnscreenKeyboardThemeData(
+                            margin: EdgeInsets.only(bottom: 12),
+                          ),
                         )
                       : null,
                 ),

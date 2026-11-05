@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_onscreen_keyboard/flutter_onscreen_keyboard.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
-import 'package:punto_venta_app/core/services/windows_touch_input_service.dart';
 import 'package:punto_venta_app/core/widgets/windows_touch_keyboard_button.dart';
-import 'package:punto_venta_app/injection_container.dart';
 
 class CustomTextField extends StatelessWidget {
   final String label;
@@ -17,7 +15,7 @@ class CustomTextField extends StatelessWidget {
   final VoidCallback? onTap;
   final bool readOnly;
 
-  /// Si true (default), en Windows touch usa el teclado virtual in-app.
+  /// Si true (default), en Windows usa el teclado virtual in-app.
   final bool showTouchKeyboardButton;
 
   const CustomTextField({
@@ -35,56 +33,12 @@ class CustomTextField extends StatelessWidget {
     this.showTouchKeyboardButton = true,
   });
 
-  bool get _useOnscreenKeyboard {
-    if (!showTouchKeyboardButton) return false;
-    if (!sl.isRegistered<WindowsTouchInputService>()) return false;
-    return sl<WindowsTouchInputService>().isKeyboardAvailable;
-  }
+  bool get _useOnscreenKeyboard =>
+      showTouchKeyboardButton && WindowsTouchKeyboardButton.isSupported;
 
   @override
   Widget build(BuildContext context) {
-    final touchInput = sl.isRegistered<WindowsTouchInputService>()
-        ? sl<WindowsTouchInputService>()
-        : null;
-
-    Widget field({required bool enableOsk}) {
-      if (enableOsk) {
-        return OnscreenKeyboardTextFormField(
-          controller: controller,
-          obscureText: obscureText,
-          validator: validator,
-          // En forms de diálogo, abrir al focus está bien (no es el scanner).
-          enableOnscreenKeyboard: true,
-          onTap: onTap,
-          readOnly: readOnly,
-          decoration: InputDecoration(
-            hintText: hint ?? label,
-            prefixIcon: prefixIcon,
-            suffixIcon: _buildSuffixIcon(enableOsk: true),
-            suffixIconConstraints: const BoxConstraints(
-              minWidth: 48,
-              minHeight: 48,
-            ),
-          ),
-        );
-      }
-
-      return TextFormField(
-        controller: controller,
-        obscureText: obscureText,
-        validator: validator,
-        keyboardType: keyboardType,
-        onTap: onTap,
-        readOnly: readOnly,
-        decoration: InputDecoration(
-          hintText: hint ?? label,
-          prefixIcon: prefixIcon,
-          suffixIcon: suffixIcon,
-        ),
-      );
-    }
-
-    final content = Column(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -92,23 +46,43 @@ class CustomTextField extends StatelessWidget {
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: AppDimensions.paddingS),
-        if (touchInput == null)
-          field(enableOsk: false)
+        if (_useOnscreenKeyboard)
+          OnscreenKeyboardTextFormField(
+            controller: controller,
+            obscureText: obscureText,
+            validator: validator,
+            enableOnscreenKeyboard: true,
+            onTap: onTap,
+            readOnly: readOnly,
+            decoration: InputDecoration(
+              hintText: hint ?? label,
+              prefixIcon: prefixIcon,
+              suffixIcon: _buildSuffixIcon(),
+              suffixIconConstraints: const BoxConstraints(
+                minWidth: 48,
+                minHeight: 48,
+              ),
+            ),
+          )
         else
-          ListenableBuilder(
-            listenable: touchInput,
-            builder: (context, _) => field(enableOsk: _useOnscreenKeyboard),
+          TextFormField(
+            controller: controller,
+            obscureText: obscureText,
+            validator: validator,
+            keyboardType: keyboardType,
+            onTap: onTap,
+            readOnly: readOnly,
+            decoration: InputDecoration(
+              hintText: hint ?? label,
+              prefixIcon: prefixIcon,
+              suffixIcon: suffixIcon,
+            ),
           ),
       ],
     );
-
-    return content;
   }
 
-  Widget? _buildSuffixIcon({required bool enableOsk}) {
-    if (!enableOsk && suffixIcon == null) return null;
-    if (!enableOsk) return suffixIcon;
-
+  Widget? _buildSuffixIcon() {
     if (suffixIcon == null) {
       return const WindowsTouchKeyboardButton();
     }

@@ -1,10 +1,6 @@
-import 'dart:io';
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/dialogs/logout_dialog.dart';
-import 'package:punto_venta_app/core/services/windows_touch_input_service.dart';
 import 'package:punto_venta_app/core/widgets/responsive_dialog_width.dart';
 import 'package:punto_venta_app/features/customer_display/domain/customer_display_prefs.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product/product_bloc.dart';
@@ -14,7 +10,6 @@ import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settin
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/printer_settings_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/price_list_selector_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/payment_methods_settings_dialog.dart';
-import 'package:punto_venta_app/injection_container.dart';
 
 class SettingsDialog extends StatefulWidget {
   const SettingsDialog({super.key});
@@ -114,12 +109,6 @@ class _SettingsDialogState extends State<SettingsDialog> {
                       },
                     ),
                   ],
-                  if (!kIsWeb &&
-                      Platform.isWindows &&
-                      sl.isRegistered<WindowsTouchInputService>()) ...[
-                    const SizedBox(height: 10),
-                    const _WindowsOnscreenKeyboardTile(),
-                  ],
                 ],
               ),
             ),
@@ -130,48 +119,6 @@ class _SettingsDialogState extends State<SettingsDialog> {
               child: const Text('Cancelar'),
             ),
           ],
-        );
-      },
-    );
-  }
-}
-
-/// Preferencia para forzar el botón de teclado si no se detecta touch.
-class _WindowsOnscreenKeyboardTile extends StatelessWidget {
-  const _WindowsOnscreenKeyboardTile();
-
-  @override
-  Widget build(BuildContext context) {
-    final service = sl<WindowsTouchInputService>();
-    return ListenableBuilder(
-      listenable: service,
-      builder: (context, _) {
-        final detected = service.isPrimaryDisplayTouch;
-        final forced = service.isKeyboardForced;
-        final subtitle = detected
-            ? 'Pantalla táctil detectada — el botón ya está disponible'
-            : forced
-                ? 'Forzado: se muestra el botón aunque no se detecte touch'
-                : 'Si no se detecta touch, activá esta opción para mostrar el botón';
-
-        return Material(
-          color: Colors.teal.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-          child: SwitchListTile(
-            secondary: const CircleAvatar(
-              backgroundColor: Colors.teal,
-              child: Icon(Icons.keyboard_alt_outlined, color: Colors.white),
-            ),
-            title: const Text(
-              'Teclado en pantalla',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-            subtitle: Text(subtitle),
-            value: detected || forced,
-            onChanged: detected
-                ? null
-                : (value) => service.setKeyboardForced(value),
-          ),
         );
       },
     );

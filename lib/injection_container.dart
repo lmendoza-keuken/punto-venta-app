@@ -767,11 +767,10 @@ sl.registerLazySingleton(() => ProcessStockDisposeUseCase(sl()));
     return NoOpCustomerDisplayService(sl());
   });
 
-  //! Windows touch / on-screen keyboard (ventana principal)
+  //! Windows touch detection (diagnóstico; el botón de teclado no depende de esto)
   sl.registerLazySingleton<WindowsTouchInputService>(
-    () => WindowsTouchInputService(sl()),
+    () => WindowsTouchInputService(),
   );
-  // Warm-up async: detecta si el monitor primario es touch.
   unawaited(sl<WindowsTouchInputService>().refresh());
 
   // HTTP client
