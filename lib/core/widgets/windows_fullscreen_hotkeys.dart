@@ -28,6 +28,8 @@ class WindowsFullscreenHotkeys extends StatefulWidget {
 }
 
 class _WindowsFullscreenHotkeysState extends State<WindowsFullscreenHotkeys> {
+  bool _toggling = false;
+
   @override
   void initState() {
     super.initState();
@@ -47,28 +49,37 @@ class _WindowsFullscreenHotkeysState extends State<WindowsFullscreenHotkeys> {
   bool _onKey(KeyEvent event) {
     if (event is! KeyDownEvent) return false;
     if (event.logicalKey != LogicalKeyboardKey.f11) return false;
+    if (_toggling) return true;
     _toggle();
     return true;
   }
 
   Future<void> _toggle() async {
+    if (_toggling) return;
+    _toggling = true;
     try {
       final isFs = await windowManager.isFullScreen();
       if (isFs) {
         await windowManager.setFullScreen(false);
+        await Future<void>.delayed(const Duration(milliseconds: 50));
         final bounds = widget.windowedBounds;
         if (bounds != null) {
           await windowManager.setBounds(bounds);
+        } else {
+          await windowManager.maximize();
         }
         await windowManager.setTitleBarStyle(TitleBarStyle.normal);
         AppLogger.info('WindowsFullscreenHotkeys: salió de fullscreen (F11)');
       } else {
         await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
+        await Future<void>.delayed(const Duration(milliseconds: 50));
         await windowManager.setFullScreen(true);
         AppLogger.info('WindowsFullscreenHotkeys: entró a fullscreen (F11)');
       }
     } catch (e, st) {
       AppLogger.error('WindowsFullscreenHotkeys: F11 falló', e, st);
+    } finally {
+      _toggling = false;
     }
   }
 
