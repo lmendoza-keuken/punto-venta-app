@@ -4,6 +4,11 @@ import 'package:punto_venta_app/features/pos/domain/entities/dispose_reason.dart
 
 abstract class StockDisposeRepository {
   Future<List<DisposeReason>> fetchDisposeReasons();
+  Future<DisposeReason> createDisposeReason({
+    required String code,
+    required String description,
+  });
+  Future<void> deleteDisposeReason(int reasonId);
   Future<StockDisposeResponseModel> disposeStock(
       StockDisposeRequestModel request);
 }
