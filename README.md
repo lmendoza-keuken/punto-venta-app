@@ -7,8 +7,8 @@ Aplicación de Punto de Venta (POS) desarrollada en Flutter con arquitectura BLo
 ## Configuración de Referencia
 Esta es la versión exacta de los entornos en los que esta app se compila:
 
-*   **SDK de Flutter:** `3.38.3` (Canal `stable`)
-*   **SDK de Dart:** `3.7.0`
+*   **SDK de Flutter:** `3.47.9` (Canal `stable`)
+*   **SDK de Dart:** `3.13.7`
 *   **Visual Studio:** `Visual Studio Community 2026` (con compilador MSVC para VS 2026)
 *   **Windows SDK:** `10.0.26100.0` o superior
 *   **Android Studio:** `2025.2.1` (Para desarrollo Android)
@@ -31,11 +31,13 @@ Flutter requiere el compilador de C++ de Visual Studio para compilar aplicacione
 > [!IMPORTANT]
 > **Solución a errores comunes de compilación en Windows:**
 > * **Error de descompresión del SDK de Firebase (`ZIP decompression failed`):**
->   Para evitar fallos de descompresión automática de Firebase en Windows, descarga manualmente el SDK de Firebase C++ v12.0.0 desde [aquí](https://github.com/firebase/firebase-cpp-sdk/releases/download/v12.0.0/firebase_cpp_sdk_windows_12.0.0.zip), descomprímelo (ej: en `C:\Tools\firebase_cpp_sdk_windows`) y añade una variable de entorno de usuario llamada `FIREBASE_CPP_SDK_DIR` apuntando a esa carpeta:
+>   Para evitar fallos de descompresión automática de Firebase en Windows, descarga manualmente el SDK de Firebase C++ **v14.1.0** (la versión que pide `firebase_core`) desde [aquí](https://dl.google.com/firebase/sdk/cpp/firebase_cpp_sdk_windows_14.1.0.zip), descomprímelo (ej: en `C:\Tools\firebase_cpp_sdk_windows`) y añade una variable de entorno de usuario llamada `FIREBASE_CPP_SDK_DIR` apuntando a esa carpeta:
 >   ```powershell
 >   [Environment]::SetEnvironmentVariable("FIREBASE_CPP_SDK_DIR", "C:\Tools\firebase_cpp_sdk_windows", "User")
 >   ```
 >   *(Reinicia tu terminal tras ejecutar el comando para aplicar los cambios).*
+> * **Error `UseEmulator` is not a member of `firebase::storage::Storage`:**
+>   Suele ocurrir si quedó cacheado un Firebase C++ SDK antiguo en `build\windows\x64\extracted`. Borra esa carpeta (y, si existe, el zip viejo `firebase_cpp_sdk_windows_12.0.0.zip`) y vuelve a compilar para que use el SDK 14.1.0.
 
 ---
 
