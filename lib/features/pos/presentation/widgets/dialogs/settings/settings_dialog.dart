@@ -5,6 +5,7 @@ import 'package:punto_venta_app/core/widgets/responsive_dialog_width.dart';
 import 'package:punto_venta_app/features/customer_display/domain/customer_display_prefs.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product/product_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product/product_state.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/cashier_settings_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/customer_display_advertising_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/dispose_reason_settings_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/pdv_settings_dialog.dart';
@@ -34,6 +35,8 @@ class _SettingsDialogState extends State<SettingsDialog> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  const CustomerDisplaySettingsTile(),
+                  const SizedBox(height: 10),
                   ActionCard(
                     icon: Icons.print,
                     iconColor: Colors.teal,

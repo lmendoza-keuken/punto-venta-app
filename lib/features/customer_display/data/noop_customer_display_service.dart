@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:punto_venta_app/core/utils/app_logger.dart';
 import 'package:punto_venta_app/features/customer_display/domain/customer_display_prefs.dart';
 import 'package:punto_venta_app/features/customer_display/domain/customer_display_service.dart';
@@ -8,14 +10,24 @@ class NoOpCustomerDisplayService implements CustomerDisplayService {
   NoOpCustomerDisplayService(this._prefs);
 
   final SharedPreferences _prefs;
+  final StreamController<bool> _enabledChanges =
+      StreamController<bool>.broadcast();
 
   @override
-  bool get isEnabled =>
-      _prefs.getBool(CustomerDisplayPrefs.enabledKey) ?? true;
+  bool get isPlatformSupported => false;
+
+  @override
+  Stream<bool> get enabledChanges => _enabledChanges.stream;
+
+  @override
+  bool get isEnabled => CustomerDisplayPrefs.isEnabled(_prefs);
 
   @override
   Future<void> setEnabled(bool enabled) async {
     await _prefs.setBool(CustomerDisplayPrefs.enabledKey, enabled);
+    if (!_enabledChanges.isClosed) {
+      _enabledChanges.add(enabled);
+    }
   }
 
   @override

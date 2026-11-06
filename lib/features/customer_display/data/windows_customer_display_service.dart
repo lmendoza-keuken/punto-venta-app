@@ -29,21 +29,41 @@ class WindowsCustomerDisplayService
   bool _closingApp = false;
   bool _closeHookInstalled = false;
   StreamSubscription<void>? _windowsChangedSub;
+  final StreamController<bool> _enabledChanges =
+      StreamController<bool>.broadcast();
 
   @override
-  bool get isEnabled =>
-      _prefs.getBool(CustomerDisplayPrefs.enabledKey) ?? true;
+  bool get isPlatformSupported => Platform.isWindows;
+
+  @override
+  Stream<bool> get enabledChanges => _enabledChanges.stream;
+
+  @override
+  bool get isEnabled => CustomerDisplayPrefs.isEnabled(_prefs);
 
   @override
   Future<void> setEnabled(bool enabled) async {
     await _prefs.setBool(CustomerDisplayPrefs.enabledKey, enabled);
     if (!enabled) {
       await stop();
+    } else {
+      await start();
     }
+    if (!_enabledChanges.isClosed) {
+      _enabledChanges.add(enabled);
+    }
+    AppLogger.info(
+      'CustomerDisplay Windows: preferencia enabled=$enabled '
+      '(cache local de este equipo)',
+    );
   }
 
   @override
-  Future<bool> isAvailable() async => Platform.isWindows;
+  Future<bool> isAvailable() async {
+    if (!Platform.isWindows) return false;
+    final placement = await _resolveSecondaryFullscreenPlacement();
+    return placement != null;
+  }
 
   @override
   Future<void> start() async {
@@ -77,10 +97,7 @@ class WindowsCustomerDisplayService
         'CustomerDisplay Windows: creando subventana frame=${placement.frame}',
       );
       final controller = await WindowController.create(
-        WindowConfiguration(
-          hiddenAtLaunch: true,
-          arguments: argument,
-        ),
+        WindowConfiguration(hiddenAtLaunch: true, arguments: argument),
       );
       _controller = controller;
       AppLogger.info(
@@ -138,10 +155,9 @@ class WindowsCustomerDisplayService
         await controller.hide();
       } catch (_) {}
       try {
-        await controller.invokeMethod('window_close').timeout(
-          const Duration(milliseconds: 250),
-          onTimeout: () => null,
-        );
+        await controller
+            .invokeMethod('window_close')
+            .timeout(const Duration(milliseconds: 250), onTimeout: () => null);
       } catch (e, st) {
         AppLogger.error(
           'CustomerDisplay Windows: window_close en salida falló',
@@ -214,16 +230,11 @@ class WindowsCustomerDisplayService
       await controller.hide();
     } catch (_) {}
     try {
-      await controller.invokeMethod('window_close').timeout(
-        const Duration(milliseconds: 250),
-        onTimeout: () => null,
-      );
+      await controller
+          .invokeMethod('window_close')
+          .timeout(const Duration(milliseconds: 250), onTimeout: () => null);
     } catch (e, st) {
-      AppLogger.error(
-        'CustomerDisplay Windows: window_close falló',
-        e,
-        st,
-      );
+      AppLogger.error('CustomerDisplay Windows: window_close falló', e, st);
     }
   }
 
@@ -353,10 +364,7 @@ class WindowsCustomerDisplayService
 }
 
 class _WindowPlacement {
-  const _WindowPlacement({
-    required this.frame,
-    required this.fullscreen,
-  });
+  const _WindowPlacement({required this.frame, required this.fullscreen});
 
   final Rect frame;
   final bool fullscreen;
