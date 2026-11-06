@@ -48,7 +48,7 @@ class PosApp extends StatelessWidget {
                           aspectRatio: 2.6,
                           width: (ctx) {
                             final screen = MediaQuery.sizeOf(ctx).width;
-                            return screen * 0.5;
+                            return screen * 0.4;
                           },
                           theme: const OnscreenKeyboardThemeData(
                             margin: EdgeInsets.only(bottom: 12),
