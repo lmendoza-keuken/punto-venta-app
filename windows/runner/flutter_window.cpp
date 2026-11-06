@@ -4,6 +4,7 @@
 
 #include "flutter/generated_plugin_registrant.h"
 #include "desktop_multi_window/desktop_multi_window_plugin.h"
+#include "register_plugins_logged.h"
 #include "utils.h"
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
@@ -31,15 +32,15 @@ bool FlutterWindow::OnCreate() {
     return false;
   }
   NativeBootLog("FlutterViewController ok");
-  NativeBootLog("RegisterPlugins start");
-  RegisterPlugins(flutter_controller_->engine());
-  NativeBootLog("RegisterPlugins done");
+  NativeBootLog("RegisterPluginsLogged start (from OnCreate)");
+  RegisterPluginsLogged(flutter_controller_->engine());
+  NativeBootLog("RegisterPluginsLogged returned (from OnCreate)");
   DesktopMultiWindowSetWindowCreatedCallback([](void *controller) {
     NativeBootLog("DesktopMultiWindow window created callback");
     auto *flutter_view_controller =
         reinterpret_cast<flutter::FlutterViewController *>(controller);
     auto *registry = flutter_view_controller->engine();
-    RegisterPlugins(registry);
+    RegisterPluginsLogged(registry);
   });
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
