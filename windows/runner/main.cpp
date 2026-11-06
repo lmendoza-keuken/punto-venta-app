@@ -25,11 +25,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
                                   : "CoInitializeEx failed");
 
   flutter::DartProject project(L"data");
-  // window_manager setFullScreen(false) congela la UI con el modelo de
-  // hilos fusionados (Flutter 3.35+). Ver flutter/flutter#176088.
-  project.set_ui_thread_policy(
-      flutter::UIThreadPolicy::RunOnSeparateThread);
-  NativeBootLog("DartProject ready UIThreadPolicy=RunOnSeparateThread");
+  // No usar RunOnSeparateThread: con desktop_multi_window tumba el proceso
+  // al abrir la 2ª ventana (crash nativo, a veces sin rastro en Dart).
+  // Tampoco llamar window_manager.setFullScreen — congela con el modelo
+  // de hilos fusionado (flutter/flutter#176088). Usar maximize / bounds.
+  NativeBootLog("DartProject ready UIThreadPolicy=default (no separate UI thread)");
 
   std::vector<std::string> command_line_arguments =
       GetCommandLineArguments();

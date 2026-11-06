@@ -80,8 +80,7 @@ class WindowsCustomerDisplayService
         return;
       }
 
-      // fullscreen:false → la secundaria usa bounds del monitor, no
-      // window_manager.setFullScreen (crash observado en 1.0.27).
+      // bounds del 2º monitor — nunca setFullScreen / setAsFrameless.
       final argument = jsonEncode({
         'type': kCustomerDisplayWindowArg,
         'fullscreen': false,
@@ -104,14 +103,16 @@ class WindowsCustomerDisplayService
         'CustomerDisplay Windows: subventana creada id=${controller.windowId}',
       );
       await controller.show();
+      // Esperar a que el 2º engine registre plugins/handler antes de IPC
+      // o de instalar el hook de cierre (evita falsos onWindowClose).
+      await Future<void>.delayed(const Duration(milliseconds: 600));
+      if (_closingApp || _stopping) return;
       _listenWindowsChanged();
       await _ensureMainCloseHook();
       AppLogger.info(
         'CustomerDisplay Windows: ventana abierta (bounds) '
         'en 2º monitor frame=${placement.frame}',
       );
-      // Dar tiempo al engine secundario a registrar el handler.
-      await Future<void>.delayed(const Duration(milliseconds: 400));
       await sync(_last);
     } catch (e, st) {
       AppLogger.error('CustomerDisplay Windows: start falló', e, st);
@@ -182,10 +183,19 @@ class WindowsCustomerDisplayService
   void _listenWindowsChanged() {
     _windowsChangedSub ??= onWindowsChanged.listen((_) async {
       final current = _controller;
-      if (_stopping || _closingApp || current == null || !isEnabled) return;
+      if (_stopping || _closingApp || _starting || current == null || !isEnabled) {
+        return;
+      }
       try {
+        // Pequeño debounce: al crear la subventana onWindowsChanged dispara
+        // antes de que el id quede estable; recrear en ese momento tumba todo.
+        await Future<void>.delayed(const Duration(milliseconds: 350));
+        if (_stopping || _closingApp || _starting || _controller == null) {
+          return;
+        }
+        final tracked = _controller!;
         final all = await WindowController.getAll();
-        final stillOpen = all.any((c) => c.windowId == current.windowId);
+        final stillOpen = all.any((c) => c.windowId == tracked.windowId);
         if (!stillOpen) {
           AppLogger.info(
             'CustomerDisplay Windows: subventana cerrada — recreando',

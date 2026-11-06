@@ -179,8 +179,7 @@ Future<void> _configureWindowsMainWindow() async {
       ),
       () async {
         try {
-          AppLogger.info('window_manager ready callback: setFullScreen(false)');
-          await windowManager.setFullScreen(false);
+          // Sin setFullScreen: congela o tumba con multi_window.
           AppLogger.info('window_manager ready callback: maximize');
           await windowManager.maximize();
           AppLogger.info('window_manager ready callback: show');

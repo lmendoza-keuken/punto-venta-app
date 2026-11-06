@@ -99,3 +99,15 @@ void RegisterPluginsLogged(flutter::PluginRegistry* registry) {
 
   NativeBootLog("RegisterPluginsLogged done");
 }
+
+void RegisterSecondaryWindowPluginsLogged(flutter::PluginRegistry* registry) {
+  NativeBootLog("RegisterSecondaryWindowPluginsLogged start");
+
+  // La pantalla cliente no usa Firebase; re-registrar el SDK nativo en un
+  // segundo engine suele abortar el proceso al crear la subventana.
+  RegisterOne("desktop_multi_window", RegDesktopMultiWindow, registry);
+  RegisterOne("screen_retriever", RegScreenRetriever, registry);
+  RegisterOne("window_manager", RegWindowManager, registry);
+
+  NativeBootLog("RegisterSecondaryWindowPluginsLogged done");
+}

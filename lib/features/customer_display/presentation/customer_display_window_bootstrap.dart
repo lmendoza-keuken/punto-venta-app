@@ -14,10 +14,9 @@ final GlobalKey<CustomerDisplayHostState> customerDisplayHostKey =
 
 /// Arranque de la subventana Windows (engine separado).
 ///
-/// Importante: no usar [WindowManager.setFullScreen] aquí. Con
-/// `UIThreadPolicy::RunOnSeparateThread` + desktop_multi_window, el
-/// fullscreen nativo puede tumbar el proceso (principal + secundaria).
-/// En su lugar ocupamos el frame del 2º monitor con bounds + titleBar hidden.
+/// No usar [WindowManager.setFullScreen] ni [WindowManager.setAsFrameless]:
+/// con `desktop_multi_window` han tumado el proceso (principal + secundaria).
+/// Ocupamos el frame del 2º monitor con bounds + titleBar hidden.
 Future<void> runCustomerDisplayWindow(String argumentsJson) async {
   AppLogger.bootProbe('customer_display window bootstrap start');
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,7 +51,9 @@ Future<void> runCustomerDisplayWindow(String argumentsJson) async {
           return true;
         case 'window_close':
           AppLogger.info('CustomerDisplay window: method window_close');
-          await windowManager.setPreventClose(false);
+          try {
+            await windowManager.setPreventClose(false);
+          } catch (_) {}
           await windowManager.close();
           return true;
         default:
@@ -67,19 +68,19 @@ Future<void> runCustomerDisplayWindow(String argumentsJson) async {
         skipTaskbar: true,
         titleBarStyle: TitleBarStyle.hidden,
         size: Size(width, height),
+        center: false,
       ),
       () async {
         try {
           AppLogger.info('CustomerDisplay window: ready → setBounds');
           await windowManager.setBounds(targetBounds);
           await windowManager.setTitle('Pantalla cliente');
-          // Borderless + bounds del monitor ≈ fullscreen sin setFullScreen().
-          await windowManager.setAsFrameless();
+          await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
           await windowManager.show();
           await windowManager.focus();
           AppLogger.info(
             'CustomerDisplay window: visible en frame=$targetBounds '
-            '(sin setFullScreen)',
+            '(bounds, sin setFullScreen/setAsFrameless)',
           );
         } catch (e, st) {
           AppLogger.error(
@@ -100,7 +101,6 @@ Future<void> runCustomerDisplayWindow(String argumentsJson) async {
   runApp(
     WindowsFullscreenHotkeys(
       windowedBounds: targetBounds,
-      // F11 en cliente: maximizar bounds, no setFullScreen nativo.
       preferBoundsFullscreen: true,
       child: CustomerDisplayApp(hostKey: customerDisplayHostKey),
     ),
