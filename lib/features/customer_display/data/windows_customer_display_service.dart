@@ -60,9 +60,11 @@ class WindowsCustomerDisplayService
         return;
       }
 
+      // fullscreen:false → la secundaria usa bounds del monitor, no
+      // window_manager.setFullScreen (crash observado en 1.0.27).
       final argument = jsonEncode({
         'type': kCustomerDisplayWindowArg,
-        'fullscreen': true,
+        'fullscreen': false,
         'frame': {
           'left': placement.frame.left,
           'top': placement.frame.top,
@@ -71,6 +73,9 @@ class WindowsCustomerDisplayService
         },
       });
 
+      AppLogger.info(
+        'CustomerDisplay Windows: creando subventana frame=${placement.frame}',
+      );
       final controller = await WindowController.create(
         WindowConfiguration(
           hiddenAtLaunch: true,
@@ -78,11 +83,14 @@ class WindowsCustomerDisplayService
         ),
       );
       _controller = controller;
+      AppLogger.info(
+        'CustomerDisplay Windows: subventana creada id=${controller.windowId}',
+      );
       await controller.show();
       _listenWindowsChanged();
       await _ensureMainCloseHook();
       AppLogger.info(
-        'CustomerDisplay Windows: ventana abierta fullscreen '
+        'CustomerDisplay Windows: ventana abierta (bounds) '
         'en 2º monitor frame=${placement.frame}',
       );
       // Dar tiempo al engine secundario a registrar el handler.

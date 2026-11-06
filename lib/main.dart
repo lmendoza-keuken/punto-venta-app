@@ -55,20 +55,21 @@ void main(List<String> args) {
     _installGlobalErrorHandlers();
     AppLogger.info('Boot stage=logger_ready');
 
-    AppLogger.info(
-      'Arranque: platform=$defaultTargetPlatform debug=$kDebugMode '
-      'args=$args',
-    );
-    await _logPackageInfo();
-    _logEnvironment();
-
-    // Subventana Windows: engine separado sin Firebase/DI del cajero.
+    // Subventana Windows PRIMERO: no PackageInfo/Firebase/window main.
+    // Si el engine secundario sigue el path del cajero, puede tumbar todo.
     AppLogger.info('Boot stage=customer_display_check start');
     if (await _launchCustomerDisplayIfNeeded(args)) {
       AppLogger.info('Boot stage=customer_display_check is_secondary=true');
       return;
     }
     AppLogger.info('Boot stage=customer_display_check is_secondary=false');
+
+    AppLogger.info(
+      'Arranque: platform=$defaultTargetPlatform debug=$kDebugMode '
+      'args=$args',
+    );
+    await _logPackageInfo();
+    _logEnvironment();
 
     AppLogger.info('Boot stage=window_manager start');
     await _configureWindowsMainWindow();
@@ -136,9 +137,11 @@ Future<bool> _launchCustomerDisplayIfNeeded(List<String> args) async {
   }
 
   try {
+    AppLogger.bootProbe('CustomerDisplay: fromCurrentEngine...');
     AppLogger.info('CustomerDisplay: WindowController.fromCurrentEngine...');
     final controller = await WindowController.fromCurrentEngine();
     final raw = controller.arguments;
+    AppLogger.bootProbe('CustomerDisplay: argsLen=${raw.length}');
     AppLogger.info(
       'CustomerDisplay: engine argsLen=${raw.length} '
       'preview=${raw.length > 120 ? '${raw.substring(0, 120)}...' : raw}',
@@ -150,9 +153,11 @@ Future<bool> _launchCustomerDisplayIfNeeded(List<String> args) async {
       return false;
     }
     AppLogger.info('CustomerDisplay: launching secondary window');
+    AppLogger.bootProbe('CustomerDisplay: runCustomerDisplayWindow');
     await runCustomerDisplayWindow(raw);
     return true;
   } catch (e, stackTrace) {
+    AppLogger.bootProbe('CustomerDisplay check error: $e');
     AppLogger.warn('CustomerDisplay: fromCurrentEngine no-op ($e)');
     AppLogger.error('CustomerDisplay check detail', e, stackTrace);
     return false;

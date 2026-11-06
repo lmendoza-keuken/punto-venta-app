@@ -15,12 +15,17 @@ class WindowsFullscreenHotkeys extends StatefulWidget {
     super.key,
     required this.child,
     this.windowedBounds,
+    this.preferBoundsFullscreen = false,
   });
 
   final Widget child;
 
   /// Al salir de fullscreen, restaura este frame (útil en 2º monitor).
   final Rect? windowedBounds;
+
+  /// Si true, no llama [WindowManager.setFullScreen] (inestable con
+  /// desktop_multi_window). Usa bounds + frameless en su lugar.
+  final bool preferBoundsFullscreen;
 
   @override
   State<WindowsFullscreenHotkeys> createState() =>
@@ -29,6 +34,7 @@ class WindowsFullscreenHotkeys extends StatefulWidget {
 
 class _WindowsFullscreenHotkeysState extends State<WindowsFullscreenHotkeys> {
   bool _toggling = false;
+  bool _boundsFs = true;
 
   @override
   void initState() {
@@ -58,6 +64,11 @@ class _WindowsFullscreenHotkeysState extends State<WindowsFullscreenHotkeys> {
     if (_toggling) return;
     _toggling = true;
     try {
+      if (widget.preferBoundsFullscreen) {
+        await _toggleBoundsFullscreen();
+        return;
+      }
+
       final isFs = await windowManager.isFullScreen();
       if (isFs) {
         await windowManager.setFullScreen(false);
@@ -80,6 +91,32 @@ class _WindowsFullscreenHotkeysState extends State<WindowsFullscreenHotkeys> {
       AppLogger.error('WindowsFullscreenHotkeys: F11 falló', e, st);
     } finally {
       _toggling = false;
+    }
+  }
+
+  Future<void> _toggleBoundsFullscreen() async {
+    final bounds = widget.windowedBounds;
+    if (_boundsFs) {
+      await windowManager.setTitleBarStyle(TitleBarStyle.normal);
+      if (bounds != null) {
+        // Ventana más chica centrada en el mismo monitor.
+        final nested = Rect.fromCenter(
+          center: bounds.center,
+          width: (bounds.width * 0.85).clamp(640, bounds.width),
+          height: (bounds.height * 0.85).clamp(480, bounds.height),
+        );
+        await windowManager.setBounds(nested);
+      }
+      _boundsFs = false;
+      AppLogger.info('WindowsFullscreenHotkeys: salió de bounds-FS (F11)');
+    } else {
+      await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
+      await windowManager.setAsFrameless();
+      if (bounds != null) {
+        await windowManager.setBounds(bounds);
+      }
+      _boundsFs = true;
+      AppLogger.info('WindowsFullscreenHotkeys: entró a bounds-FS (F11)');
     }
   }
 
