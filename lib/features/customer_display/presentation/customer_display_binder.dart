@@ -19,10 +19,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Sync cajero → pantalla cliente.
 class CustomerDisplayBinder extends StatefulWidget {
-  const CustomerDisplayBinder({
-    super.key,
-    required this.child,
-  });
+  const CustomerDisplayBinder({super.key, required this.child});
 
   final Widget child;
 
@@ -37,6 +34,7 @@ class _CustomerDisplayBinderState extends State<CustomerDisplayBinder> {
 
   late final CustomerDisplayService _service;
   late final SharedPreferences _prefs;
+  StreamSubscription<bool>? _enabledSub;
   Timer? _doneTimer;
   Timer? _cartIdleTimer;
   Timer? _lockScreenTimer;
@@ -54,12 +52,23 @@ class _CustomerDisplayBinderState extends State<CustomerDisplayBinder> {
     super.initState();
     _service = di.sl<CustomerDisplayService>();
     _prefs = di.sl<SharedPreferences>();
+    _enabledSub = _service.enabledChanges.listen(_onEnabledChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrap());
+  }
+
+  void _onEnabledChanged(bool enabled) {
+    if (!enabled || !mounted) return;
+    _requestSync(immediate: true);
   }
 
   Future<void> _bootstrap() async {
     try {
-      if (!_service.isEnabled) return;
+      if (!_service.isEnabled) {
+        AppLogger.info(
+          'CustomerDisplayBinder: pantalla cliente apagada en este equipo',
+        );
+        return;
+      }
       await _service.start();
       if (!mounted) return;
       _requestSync(immediate: true);
@@ -70,6 +79,7 @@ class _CustomerDisplayBinderState extends State<CustomerDisplayBinder> {
 
   @override
   void dispose() {
+    unawaited(_enabledSub?.cancel());
     _doneTimer?.cancel();
     _cartIdleTimer?.cancel();
     _lockScreenTimer?.cancel();
@@ -235,8 +245,7 @@ class _CustomerDisplayBinderState extends State<CustomerDisplayBinder> {
     final ui = context.read<UiBloc>().state;
     final confirming =
         ui is UiLoaded && ui.showConfirmationPanel && state.items.isNotEmpty;
-    final processing =
-        context.read<CheckoutBloc>().state is CheckoutProcessing;
+    final processing = context.read<CheckoutBloc>().state is CheckoutProcessing;
 
     if (state.items.isEmpty) {
       return const CustomerDisplaySnapshot.idle();
@@ -244,9 +253,7 @@ class _CustomerDisplayBinderState extends State<CustomerDisplayBinder> {
 
     var snap = CustomerDisplaySnapshot.fromCartLoaded(
       state,
-      mode: confirming
-          ? CustomerDisplayMode.payment
-          : CustomerDisplayMode.cart,
+      mode: confirming ? CustomerDisplayMode.payment : CustomerDisplayMode.cart,
       qrLabel: clearQr ? null : qrLabel,
       qrPayload: clearQr ? null : qrPayload,
       qrPhase: clearQr ? CustomerDisplayQrPhase.none : qrPhase,
@@ -312,12 +319,8 @@ class _CustomerDisplayBinderState extends State<CustomerDisplayBinder> {
             return p != n;
           },
           listener: (context, state) {
-            final confirming =
-                state is UiLoaded && state.showConfirmationPanel;
-            _requestSync(
-              immediate: true,
-              clearQr: !confirming,
-            );
+            final confirming = state is UiLoaded && state.showConfirmationPanel;
+            _requestSync(immediate: true, clearQr: !confirming);
           },
         ),
         BlocListener<CheckoutBloc, CheckoutState>(

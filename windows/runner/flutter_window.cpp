@@ -5,6 +5,8 @@
 #include "flutter/generated_plugin_registrant.h"
 #include "desktop_multi_window/desktop_multi_window_plugin.h"
 #include "touch_input_channel.h"
+#include "register_plugins_logged.h"
+#include "utils.h"
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
     : project_(project) {}
@@ -12,7 +14,9 @@ FlutterWindow::FlutterWindow(const flutter::DartProject& project)
 FlutterWindow::~FlutterWindow() {}
 
 bool FlutterWindow::OnCreate() {
+  NativeBootLog("FlutterWindow::OnCreate start");
   if (!Win32Window::OnCreate()) {
+    NativeBootLog("Win32Window::OnCreate failed");
     return false;
   }
 
@@ -20,25 +24,32 @@ bool FlutterWindow::OnCreate() {
 
   // The size here must match the window dimensions to avoid unnecessary surface
   // creation / destruction in the startup path.
+  NativeBootLog("FlutterViewController create start");
   flutter_controller_ = std::make_unique<flutter::FlutterViewController>(
       frame.right - frame.left, frame.bottom - frame.top, project_);
   // Ensure that basic setup of the controller was successful.
   if (!flutter_controller_->engine() || !flutter_controller_->view()) {
+    NativeBootLog("FlutterViewController engine/view null");
     return false;
   }
-  RegisterPlugins(flutter_controller_->engine());
+  NativeBootLog("FlutterViewController ok");
+  NativeBootLog("RegisterPluginsLogged start (from OnCreate)");
+  RegisterPluginsLogged(flutter_controller_->engine());
+  NativeBootLog("RegisterPluginsLogged returned (from OnCreate)");
   touch_input_channel_ =
       RegisterTouchInputChannel(flutter_controller_->engine());
   DesktopMultiWindowSetWindowCreatedCallback([](void *controller) {
+    NativeBootLog("DesktopMultiWindow window created callback");
     auto *flutter_view_controller =
         reinterpret_cast<flutter::FlutterViewController *>(controller);
     auto *registry = flutter_view_controller->engine();
-    RegisterPlugins(registry);
+    RegisterSecondaryWindowPluginsLogged(registry);
     // No touch_input channel en subventanas (pantalla cliente).
   });
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
+    NativeBootLog("first frame callback -> Show()");
     this->Show();
   });
 
@@ -46,6 +57,7 @@ bool FlutterWindow::OnCreate() {
   // registered. The following call ensures a frame is pending to ensure the
   // window is shown. It is a no-op if the first frame hasn't completed yet.
   flutter_controller_->ForceRedraw();
+  NativeBootLog("FlutterWindow::OnCreate ok");
 
   return true;
 }

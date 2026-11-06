@@ -5,22 +5,29 @@ import 'package:flutter/services.dart';
 import 'package:punto_venta_app/core/utils/app_logger.dart';
 import 'package:window_manager/window_manager.dart';
 
-/// F11 alterna fullscreen ↔ ventana (Windows).
+/// F11 alterna “pantalla completa” ↔ ventana (Windows).
 ///
-/// El fullscreen de [window_manager] no responde al F11 del sistema; hay que
-/// manejarlo en Dart. Usa [HardwareKeyboard] para que funcione aunque el foco
-/// esté en un TextField / scanner.
+/// No usa [WindowManager.setFullScreen]: con el modelo de hilos por defecto
+/// congela la UI (flutter/flutter#176088), y con `RunOnSeparateThread` +
+/// `desktop_multi_window` tumba el proceso al abrir la 2ª pantalla.
+///
+/// - Principal: maximize / unmaximize + title bar.
+/// - Cliente (`preferBoundsFullscreen`): bounds del monitor / ventana nested.
 class WindowsFullscreenHotkeys extends StatefulWidget {
   const WindowsFullscreenHotkeys({
     super.key,
     required this.child,
     this.windowedBounds,
+    this.preferBoundsFullscreen = false,
   });
 
   final Widget child;
 
   /// Al salir de fullscreen, restaura este frame (útil en 2º monitor).
   final Rect? windowedBounds;
+
+  /// Si true, usa bounds + titleBar (pantalla cliente). Si false, maximize.
+  final bool preferBoundsFullscreen;
 
   @override
   State<WindowsFullscreenHotkeys> createState() =>
@@ -29,6 +36,7 @@ class WindowsFullscreenHotkeys extends StatefulWidget {
 
 class _WindowsFullscreenHotkeysState extends State<WindowsFullscreenHotkeys> {
   bool _toggling = false;
+  bool _isExpanded = true;
 
   @override
   void initState() {
@@ -58,28 +66,53 @@ class _WindowsFullscreenHotkeysState extends State<WindowsFullscreenHotkeys> {
     if (_toggling) return;
     _toggling = true;
     try {
-      final isFs = await windowManager.isFullScreen();
-      if (isFs) {
-        await windowManager.setFullScreen(false);
-        await Future<void>.delayed(const Duration(milliseconds: 50));
-        final bounds = widget.windowedBounds;
-        if (bounds != null) {
-          await windowManager.setBounds(bounds);
-        } else {
-          await windowManager.maximize();
-        }
-        await windowManager.setTitleBarStyle(TitleBarStyle.normal);
-        AppLogger.info('WindowsFullscreenHotkeys: salió de fullscreen (F11)');
+      if (widget.preferBoundsFullscreen) {
+        await _toggleBoundsFullscreen();
       } else {
-        await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
-        await Future<void>.delayed(const Duration(milliseconds: 50));
-        await windowManager.setFullScreen(true);
-        AppLogger.info('WindowsFullscreenHotkeys: entró a fullscreen (F11)');
+        await _toggleMaximizeFullscreen();
       }
     } catch (e, st) {
       AppLogger.error('WindowsFullscreenHotkeys: F11 falló', e, st);
     } finally {
       _toggling = false;
+    }
+  }
+
+  Future<void> _toggleMaximizeFullscreen() async {
+    if (_isExpanded) {
+      await windowManager.setTitleBarStyle(TitleBarStyle.normal);
+      await windowManager.unmaximize();
+      _isExpanded = false;
+      AppLogger.info('WindowsFullscreenHotkeys: salió de maximize (F11)');
+    } else {
+      await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
+      await windowManager.maximize();
+      _isExpanded = true;
+      AppLogger.info('WindowsFullscreenHotkeys: entró a maximize (F11)');
+    }
+  }
+
+  Future<void> _toggleBoundsFullscreen() async {
+    final bounds = widget.windowedBounds;
+    if (_isExpanded) {
+      await windowManager.setTitleBarStyle(TitleBarStyle.normal);
+      if (bounds != null) {
+        final nested = Rect.fromCenter(
+          center: bounds.center,
+          width: (bounds.width * 0.85).clamp(640, bounds.width),
+          height: (bounds.height * 0.85).clamp(480, bounds.height),
+        );
+        await windowManager.setBounds(nested);
+      }
+      _isExpanded = false;
+      AppLogger.info('WindowsFullscreenHotkeys: salió de bounds-FS (F11)');
+    } else {
+      await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
+      if (bounds != null) {
+        await windowManager.setBounds(bounds);
+      }
+      _isExpanded = true;
+      AppLogger.info('WindowsFullscreenHotkeys: entró a bounds-FS (F11)');
     }
   }
 

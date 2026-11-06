@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 import 'package:punto_venta_app/core/network/base_url_failover.dart';
 import 'package:punto_venta_app/core/network/error_handler.dart';
+import 'package:punto_venta_app/features/pos/data/models/create_dispose_reason_request_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/dispose_reason_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/stock_dispose_request_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/stock_dispose_response_model.dart';
@@ -16,6 +17,13 @@ abstract class StockDisposeService {
   @GET('/stock/dispose-reasons')
   Future<List<DisposeReasonModel>> getDisposeReasons();
 
+  @POST('/stock/dispose-reasons')
+  Future<DisposeReasonModel> createDisposeReason(
+      @Body() Map<String, dynamic> body);
+
+  @DELETE('/stock/dispose-reasons/{reason_id}')
+  Future<void> deleteDisposeReason(@Path('reason_id') int reasonId);
+
   @POST('/stock/dispose')
   Future<StockDisposeResponseModel> disposeStock(
       @Body() Map<String, dynamic> body);
@@ -23,6 +31,9 @@ abstract class StockDisposeService {
 
 abstract class StockDisposeRemoteDataSource {
   Future<List<DisposeReasonModel>> getDisposeReasons();
+  Future<DisposeReasonModel> createDisposeReason(
+      CreateDisposeReasonRequestModel request);
+  Future<void> deleteDisposeReason(int reasonId);
   Future<StockDisposeResponseModel> disposeStock(
       StockDisposeRequestModel request);
 }
@@ -39,6 +50,31 @@ class StockDisposeRemoteDataSourceImpl implements StockDisposeRemoteDataSource {
     } catch (e) {
       throw Exception(ErrorHandler.handleError(e,
           defaultMessage: 'Error al obtener motivos de descarte'));
+    }
+  }
+
+  @override
+  Future<DisposeReasonModel> createDisposeReason(
+      CreateDisposeReasonRequestModel request) async {
+    try {
+      return await BaseUrlFailover.runWithFailover(
+        () => _apiService.createDisposeReason(request.toJson()),
+      );
+    } catch (e) {
+      throw Exception(ErrorHandler.handleError(e,
+          defaultMessage: 'Error al crear el motivo de descarte'));
+    }
+  }
+
+  @override
+  Future<void> deleteDisposeReason(int reasonId) async {
+    try {
+      await BaseUrlFailover.runWithFailover(
+        () => _apiService.deleteDisposeReason(reasonId),
+      );
+    } catch (e) {
+      throw Exception(ErrorHandler.handleError(e,
+          defaultMessage: 'Error al eliminar el motivo de descarte'));
     }
   }
 

@@ -5,7 +5,9 @@ import 'package:punto_venta_app/core/widgets/responsive_dialog_width.dart';
 import 'package:punto_venta_app/features/customer_display/domain/customer_display_prefs.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product/product_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product/product_state.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/cashier_settings_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/customer_display_advertising_dialog.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/dispose_reason_settings_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/pdv_settings_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/printer_settings_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/settings/price_list_selector_dialog.dart';
@@ -33,6 +35,8 @@ class _SettingsDialogState extends State<SettingsDialog> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  const CustomerDisplaySettingsTile(),
+                  const SizedBox(height: 10),
                   ActionCard(
                     icon: Icons.print,
                     iconColor: Colors.teal,
@@ -86,6 +90,19 @@ class _SettingsDialogState extends State<SettingsDialog> {
                       final navigatorContext = Navigator.of(context).context;
                       Navigator.of(context).pop();
                       showPaymentMethodsSettingsDialog(navigatorContext);
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  ActionCard(
+                    icon: Icons.delete_forever_outlined,
+                    iconColor: Colors.teal,
+                    backgroundColor: Colors.teal.withValues(alpha: 0.1),
+                    title: 'Motivos de mal estado',
+                    subtitle: 'Listar, crear y eliminar motivos',
+                    onTap: () {
+                      final navigatorContext = Navigator.of(context).context;
+                      Navigator.of(context).pop();
+                      showDisposeReasonSettingsDialog(navigatorContext);
                     },
                   ),
                   if (CustomerDisplayPrefs.advertisingEnabled) ...[

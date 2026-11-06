@@ -28,14 +28,22 @@ class CustomerDisplayShellController extends StatefulWidget {
 class _CustomerDisplayShellControllerState
     extends State<CustomerDisplayShellController> {
   late final CustomerDisplayService _service;
+  StreamSubscription<bool>? _enabledSub;
   String? _lastRoute;
 
   @override
   void initState() {
     super.initState();
     _service = di.sl<CustomerDisplayService>();
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => _onRoute(widget.currentRoute));
+    _enabledSub = _service.enabledChanges.listen(_onEnabledChanged);
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _onRoute(widget.currentRoute),
+    );
+  }
+
+  void _onEnabledChanged(bool enabled) {
+    if (!enabled || !mounted) return;
+    unawaited(_pushForRoute(widget.currentRoute));
   }
 
   @override
@@ -48,6 +56,7 @@ class _CustomerDisplayShellControllerState
 
   @override
   void dispose() {
+    unawaited(_enabledSub?.cancel());
     unawaited(_service.stop());
     super.dispose();
   }
@@ -55,7 +64,10 @@ class _CustomerDisplayShellControllerState
   Future<void> _onRoute(String route) async {
     if (_lastRoute == route) return;
     _lastRoute = route;
+    await _pushForRoute(route);
+  }
 
+  Future<void> _pushForRoute(String route) async {
     try {
       if (!_service.isEnabled) return;
 

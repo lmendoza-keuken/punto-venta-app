@@ -12,6 +12,7 @@ add_executable(${BINARY_NAME} WIN32
   "touch_input_channel.cpp"
   "utils.cpp"
   "win32_window.cpp"
+  "register_plugins_logged.cpp"
   "${FLUTTER_MANAGED_DIR}/generated_plugin_registrant.cc"
   "Runner.rc"
   "runner.exe.manifest"

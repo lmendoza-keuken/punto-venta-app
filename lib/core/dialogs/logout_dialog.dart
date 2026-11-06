@@ -45,15 +45,15 @@ Future<void> showLogoutDialog(BuildContext context) async {
                   Text(
                     'Cerrar Sesión',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: AppDimensions.paddingS),
                   Text(
                     '¿Qué deseas hacer?',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Colors.grey[700],
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyLarge?.copyWith(color: Colors.grey[700]),
                   ),
                   const SizedBox(height: AppDimensions.paddingXL),
                   if (email != null && companyId != null) ...[
@@ -68,9 +68,9 @@ Future<void> showLogoutDialog(BuildContext context) async {
                         context.read<CartBloc>().add(ClearCart());
                         context.read<AuthBloc>().add(ChangeCashierRequested());
                         context.go(RoutePaths.companySelection);
-                        context
-                            .read<AuthBloc>()
-                            .add(RefreshCompaniesRequested());
+                        context.read<AuthBloc>().add(
+                          RefreshCompaniesRequested(),
+                        );
                       },
                     ),
                     const SizedBox(height: AppDimensions.paddingM),
@@ -165,8 +165,9 @@ class ActionCard extends StatelessWidget {
                   color: enabled
                       ? backgroundColor
                       : Colors.grey.withValues(alpha: 0.1),
-                  borderRadius:
-                      BorderRadius.circular(AppDimensions.borderRadiusM),
+                  borderRadius: BorderRadius.circular(
+                    AppDimensions.borderRadiusM,
+                  ),
                 ),
                 child: Icon(
                   icon,
@@ -182,16 +183,16 @@ class ActionCard extends StatelessWidget {
                     Text(
                       title,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: enabled ? iconColor : Colors.grey,
-                          ),
+                        fontWeight: FontWeight.bold,
+                        color: enabled ? iconColor : Colors.grey,
+                      ),
                     ),
                     const SizedBox(height: AppDimensions.paddingXS),
                     Text(
                       subtitle,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey[600],
-                          ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                     ),
                   ],
                 ),

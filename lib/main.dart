@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:punto_venta_app/core/themes/theme_cubit.dart';
 import 'package:punto_venta_app/core/utils/app_logger.dart';
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
@@ -41,22 +42,42 @@ void secondaryDisplayMain() {
 
 void main(List<String> args) {
   runZonedGuarded(() async {
+    // Probe síncrono ANTES de Flutter binding: si el proceso muere antes
+    // del logger, este archivo en Temp confirma que Dart llegó a main().
+    AppLogger.bootProbe('main() entered args=${args.length}');
+
     WidgetsFlutterBinding.ensureInitialized();
+    AppLogger.bootProbe('WidgetsFlutterBinding.ensureInitialized ok');
 
-    // Subventana Windows: engine separado sin Firebase/DI del cajero.
-    if (await _launchCustomerDisplayIfNeeded(args)) {
-      return;
-    }
-
-    await _configureWindowsMainWindow();
+    // Logger lo antes posible: window_manager / multi_window pueden tumbar
+    // el proceso sin dejar rastro si el log inicia después.
     await AppLogger.init();
     _installGlobalErrorHandlers();
+    AppLogger.info('Boot stage=logger_ready');
 
-    AppLogger.info('Arranque: platform=$defaultTargetPlatform debug=$kDebugMode');
+    // Subventana Windows PRIMERO: no PackageInfo/Firebase/window main.
+    // Si el engine secundario sigue el path del cajero, puede tumbar todo.
+    AppLogger.info('Boot stage=customer_display_check start');
+    if (await _launchCustomerDisplayIfNeeded(args)) {
+      AppLogger.info('Boot stage=customer_display_check is_secondary=true');
+      return;
+    }
+    AppLogger.info('Boot stage=customer_display_check is_secondary=false');
+
+    AppLogger.info(
+      'Arranque: platform=$defaultTargetPlatform debug=$kDebugMode '
+      'args=$args',
+    );
+    await _logPackageInfo();
     _logEnvironment();
+
+    AppLogger.info('Boot stage=window_manager start');
+    await _configureWindowsMainWindow();
+    AppLogger.info('Boot stage=window_manager done');
 
     // Layout is width-driven (LayoutSpec). Android may rotate to portrait;
     // desktop keeps landscape as the preferred default without duplicating UI.
+    AppLogger.info('Boot stage=orientations start');
     if (Platform.isAndroid || Platform.isIOS) {
       await SystemChrome.setPreferredOrientations(DeviceOrientation.values);
     } else {
@@ -65,23 +86,42 @@ void main(List<String> args) {
         DeviceOrientation.landscapeRight,
       ]);
     }
-    AppLogger.info('DI init...');
-    await di.init();
+    AppLogger.info('Boot stage=orientations done');
 
-    AppLogger.info('Firebase.initializeApp...');
+    AppLogger.info('Boot stage=di_init start');
+    await di.init();
+    AppLogger.info('Boot stage=di_init done');
+
+    AppLogger.info('Boot stage=firebase_init start');
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    AppLogger.info('Firebase inicializado proyecto=${Firebase.app().options.projectId}');
+    AppLogger.info(
+      'Boot stage=firebase_init done proyecto=${Firebase.app().options.projectId}',
+    );
     _configureFirestore();
     await _signInAnonymously();
 
-    AppLogger.info('runApp');
+    AppLogger.info('Boot stage=runApp');
     AppLogger.startHeartbeat();
     runApp(const MyApp());
+    AppLogger.info('Boot stage=runApp scheduled');
   }, (error, stackTrace) {
+    AppLogger.bootProbe('ZONE ERROR: $error');
     AppLogger.error('Error no capturado (zona)', error, stackTrace);
   });
+}
+
+Future<void> _logPackageInfo() async {
+  try {
+    final info = await PackageInfo.fromPlatform();
+    AppLogger.info(
+      'PackageInfo version=${info.version} build=${info.buildNumber} '
+      'packageName=${info.packageName} appName=${info.appName}',
+    );
+  } catch (e, stackTrace) {
+    AppLogger.error('PackageInfo falló', e, stackTrace);
+  }
 }
 
 /// Detecta si este isolate es la ventana de cliente (desktop_multi_window 0.3 / legacy).
@@ -90,20 +130,36 @@ Future<bool> _launchCustomerDisplayIfNeeded(List<String> args) async {
 
   // Legacy CLI: ['multi_window', windowId, argumentJson]
   if (args.isNotEmpty && args.first == 'multi_window') {
+    AppLogger.info('CustomerDisplay: legacy multi_window args');
     final argumentJson = args.length > 2 ? args[2] : '';
     await runCustomerDisplayWindow(argumentJson);
     return true;
   }
 
   try {
+    AppLogger.bootProbe('CustomerDisplay: fromCurrentEngine...');
+    AppLogger.info('CustomerDisplay: WindowController.fromCurrentEngine...');
     final controller = await WindowController.fromCurrentEngine();
     final raw = controller.arguments;
+    AppLogger.bootProbe('CustomerDisplay: argsLen=${raw.length}');
+    AppLogger.info(
+      'CustomerDisplay: engine argsLen=${raw.length} '
+      'preview=${raw.length > 120 ? '${raw.substring(0, 120)}...' : raw}',
+    );
     if (raw.isEmpty) return false;
     final map = jsonDecode(raw) as Map<String, dynamic>;
-    if (map['type'] != kCustomerDisplayWindowArg) return false;
+    if (map['type'] != kCustomerDisplayWindowArg) {
+      AppLogger.info('CustomerDisplay: type!=customer_display -> main window');
+      return false;
+    }
+    AppLogger.info('CustomerDisplay: launching secondary window');
+    AppLogger.bootProbe('CustomerDisplay: runCustomerDisplayWindow');
     await runCustomerDisplayWindow(raw);
     return true;
-  } catch (_) {
+  } catch (e, stackTrace) {
+    AppLogger.bootProbe('CustomerDisplay check error: $e');
+    AppLogger.warn('CustomerDisplay: fromCurrentEngine no-op ($e)');
+    AppLogger.error('CustomerDisplay check detail', e, stackTrace);
     return false;
   }
 }
@@ -111,20 +167,35 @@ Future<bool> _launchCustomerDisplayIfNeeded(List<String> args) async {
 Future<void> _configureWindowsMainWindow() async {
   if (!Platform.isWindows) return;
 
-  await windowManager.ensureInitialized();
-  await windowManager.waitUntilReadyToShow(
-    const WindowOptions(
-      fullScreen: false,
-      skipTaskbar: false,
-      titleBarStyle: TitleBarStyle.normal,
-    ),
-    () async {
-      await windowManager.setFullScreen(false);
-      await windowManager.maximize();
-      await windowManager.show();
-      await windowManager.focus();
-    },
-  );
+  try {
+    AppLogger.info('window_manager.ensureInitialized...');
+    await windowManager.ensureInitialized();
+    AppLogger.info('window_manager.waitUntilReadyToShow...');
+    await windowManager.waitUntilReadyToShow(
+      const WindowOptions(
+        fullScreen: false,
+        skipTaskbar: false,
+        titleBarStyle: TitleBarStyle.normal,
+      ),
+      () async {
+        try {
+          // Sin setFullScreen: congela o tumba con multi_window.
+          AppLogger.info('window_manager ready callback: maximize');
+          await windowManager.maximize();
+          AppLogger.info('window_manager ready callback: show');
+          await windowManager.show();
+          AppLogger.info('window_manager ready callback: focus');
+          await windowManager.focus();
+          AppLogger.info('window_manager ready callback: done');
+        } catch (e, stackTrace) {
+          AppLogger.error('window_manager ready callback falló', e, stackTrace);
+        }
+      },
+    );
+  } catch (e, stackTrace) {
+    AppLogger.error('window_manager configure falló', e, stackTrace);
+    rethrow;
+  }
 }
 
 /// Windows puede matar el proceso al paginar el ejecutable si éste vive en una
@@ -137,13 +208,33 @@ void _logEnvironment() {
 
     AppLogger.info('SO: ${Platform.operatingSystemVersion}');
     AppLogger.info('Ejecutable: $exePath');
-    AppLogger.info('Unidad: ${exePath.length >= 2 ? exePath.substring(0, 2) : '?'} rutaUNC=$isUnc');
+    AppLogger.info(
+      'Unidad: ${exePath.length >= 2 ? exePath.substring(0, 2) : '?'} '
+      'rutaUNC=$isUnc',
+    );
     AppLogger.info('OneDrive env=${env['OneDrive'] ?? '(no definido)'}');
     AppLogger.info('Temp: ${Directory.systemTemp.path}');
+    AppLogger.info(
+      'LOCALAPPDATA=${env['LOCALAPPDATA'] ?? '(no)'} '
+      'USERNAME=${env['USERNAME'] ?? '(no)'}',
+    );
 
     final exeDir = File(exePath).parent;
-    final entries = exeDir.listSync().length;
-    AppLogger.info('Carpeta del ejecutable legible, $entries entradas');
+    final entries = exeDir.listSync();
+    AppLogger.info('Carpeta del ejecutable legible, ${entries.length} entradas');
+    for (final entity in entries) {
+      final name = entity.uri.pathSegments.isNotEmpty
+          ? entity.uri.pathSegments.last
+          : entity.path;
+      final kind = entity is Directory ? 'dir' : 'file';
+      var size = '';
+      if (entity is File) {
+        try {
+          size = ' bytes=${entity.lengthSync()}';
+        } catch (_) {}
+      }
+      AppLogger.info('  install/$kind $name$size');
+    }
   } catch (e, stackTrace) {
     AppLogger.error('No se pudo inspeccionar el entorno', e, stackTrace);
   }
@@ -197,7 +288,11 @@ void _configureFirestore() {
       );
     }
   } catch (e, stackTrace) {
-    AppLogger.error('No se pudieron aplicar los settings de Firestore', e, stackTrace);
+    AppLogger.error(
+      'No se pudieron aplicar los settings de Firestore',
+      e,
+      stackTrace,
+    );
   }
 }
 
@@ -205,7 +300,9 @@ Future<void> _signInAnonymously() async {
   try {
     AppLogger.info('FirebaseAuth.signInAnonymously...');
     await FirebaseAuth.instance.signInAnonymously();
-    AppLogger.info('FirebaseAuth anónimo OK uid=${FirebaseAuth.instance.currentUser?.uid}');
+    AppLogger.info(
+      'FirebaseAuth anónimo OK uid=${FirebaseAuth.instance.currentUser?.uid}',
+    );
   } catch (e, stackTrace) {
     AppLogger.error('Error de autenticación anónima', e, stackTrace);
   }

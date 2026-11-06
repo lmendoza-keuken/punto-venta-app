@@ -20,10 +20,18 @@ class AndroidCustomerDisplayService implements CustomerDisplayService {
   CustomerDisplaySnapshot _last = const CustomerDisplaySnapshot.idle();
   bool _started = false;
   Timer? _reconnectTimer;
+  final StreamController<bool> _enabledChanges =
+      StreamController<bool>.broadcast();
 
   @override
-  bool get isEnabled =>
-      _prefs.getBool(CustomerDisplayPrefs.enabledKey) ?? true;
+  bool get isPlatformSupported =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+
+  @override
+  Stream<bool> get enabledChanges => _enabledChanges.stream;
+
+  @override
+  bool get isEnabled => CustomerDisplayPrefs.isEnabled(_prefs);
 
   @override
   Future<void> setEnabled(bool enabled) async {
@@ -33,6 +41,9 @@ class AndroidCustomerDisplayService implements CustomerDisplayService {
     } else {
       _startReconnectPolling();
       await start();
+    }
+    if (!_enabledChanges.isClosed) {
+      _enabledChanges.add(enabled);
     }
   }
 
@@ -132,11 +143,7 @@ class AndroidCustomerDisplayService implements CustomerDisplayService {
         return all[1];
       }
     } catch (e, st) {
-      AppLogger.error(
-        'CustomerDisplay Android: resolve display falló',
-        e,
-        st,
-      );
+      AppLogger.error('CustomerDisplay Android: resolve display falló', e, st);
     }
     return null;
   }
@@ -148,7 +155,9 @@ class AndroidCustomerDisplayService implements CustomerDisplayService {
       if (!isEnabled) return;
       final available = await isAvailable();
       if (available && !_started) {
-        AppLogger.info('CustomerDisplay Android: reconnect — display detectado');
+        AppLogger.info(
+          'CustomerDisplay Android: reconnect — display detectado',
+        );
         await start();
       } else if (!available && _started) {
         AppLogger.info('CustomerDisplay Android: display perdido');

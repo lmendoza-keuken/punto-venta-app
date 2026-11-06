@@ -115,6 +115,8 @@ import 'package:punto_venta_app/features/pos/domain/usecases/fetch_returns_useca
 import 'package:punto_venta_app/features/pos/domain/usecases/generate_credit_note_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/process_partial_return_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/process_stock_dispose_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/create_dispose_reason_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/delete_dispose_reason_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_dispose_reasons_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_clients_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_taxes_usecase.dart';
@@ -425,12 +427,14 @@ productImagesRepository: sl(),
   sl.registerLazySingleton(() => FetchBranchesUsecase(sl()));
   sl.registerLazySingleton(() => FetchReturnReasonsUsecase(sl()));
   sl.registerLazySingleton(() => FetchDisposeReasonsUsecase(sl()));
+  sl.registerLazySingleton(() => CreateDisposeReasonUsecase(sl()));
+  sl.registerLazySingleton(() => DeleteDisposeReasonUsecase(sl()));
   sl.registerLazySingleton(() => FetchReturnsUsecase(sl()));
   sl.registerLazySingleton(() => GenerateCreditNoteUsecase(
         returnsRepository: sl(),
         completedOrdersRepository: sl(),
       ));
-sl.registerLazySingleton(() => ProcessStockDisposeUseCase(sl()));
+  sl.registerLazySingleton(() => ProcessStockDisposeUseCase(sl()));
   sl.registerLazySingleton(() => AnnulTicketUsecase(
         generateCreditNoteUsecase: sl(),
         mercadoPagoService: sl(),

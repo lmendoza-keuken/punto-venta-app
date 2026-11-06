@@ -29,21 +29,41 @@ class WindowsCustomerDisplayService
   bool _closingApp = false;
   bool _closeHookInstalled = false;
   StreamSubscription<void>? _windowsChangedSub;
+  final StreamController<bool> _enabledChanges =
+      StreamController<bool>.broadcast();
 
   @override
-  bool get isEnabled =>
-      _prefs.getBool(CustomerDisplayPrefs.enabledKey) ?? true;
+  bool get isPlatformSupported => Platform.isWindows;
+
+  @override
+  Stream<bool> get enabledChanges => _enabledChanges.stream;
+
+  @override
+  bool get isEnabled => CustomerDisplayPrefs.isEnabled(_prefs);
 
   @override
   Future<void> setEnabled(bool enabled) async {
     await _prefs.setBool(CustomerDisplayPrefs.enabledKey, enabled);
     if (!enabled) {
       await stop();
+    } else {
+      await start();
     }
+    if (!_enabledChanges.isClosed) {
+      _enabledChanges.add(enabled);
+    }
+    AppLogger.info(
+      'CustomerDisplay Windows: preferencia enabled=$enabled '
+      '(cache local de este equipo)',
+    );
   }
 
   @override
-  Future<bool> isAvailable() async => Platform.isWindows;
+  Future<bool> isAvailable() async {
+    if (!Platform.isWindows) return false;
+    final placement = await _resolveSecondaryFullscreenPlacement();
+    return placement != null;
+  }
 
   @override
   Future<void> start() async {
@@ -60,9 +80,10 @@ class WindowsCustomerDisplayService
         return;
       }
 
+      // bounds del 2º monitor — nunca setFullScreen / setAsFrameless.
       final argument = jsonEncode({
         'type': kCustomerDisplayWindowArg,
-        'fullscreen': true,
+        'fullscreen': false,
         'frame': {
           'left': placement.frame.left,
           'top': placement.frame.top,
@@ -71,22 +92,27 @@ class WindowsCustomerDisplayService
         },
       });
 
+      AppLogger.info(
+        'CustomerDisplay Windows: creando subventana frame=${placement.frame}',
+      );
       final controller = await WindowController.create(
-        WindowConfiguration(
-          hiddenAtLaunch: true,
-          arguments: argument,
-        ),
+        WindowConfiguration(hiddenAtLaunch: true, arguments: argument),
       );
       _controller = controller;
+      AppLogger.info(
+        'CustomerDisplay Windows: subventana creada id=${controller.windowId}',
+      );
       await controller.show();
+      // Esperar a que el 2º engine registre plugins/handler antes de IPC
+      // o de instalar el hook de cierre (evita falsos onWindowClose).
+      await Future<void>.delayed(const Duration(milliseconds: 600));
+      if (_closingApp || _stopping) return;
       _listenWindowsChanged();
       await _ensureMainCloseHook();
       AppLogger.info(
-        'CustomerDisplay Windows: ventana abierta fullscreen '
+        'CustomerDisplay Windows: ventana abierta (bounds) '
         'en 2º monitor frame=${placement.frame}',
       );
-      // Dar tiempo al engine secundario a registrar el handler.
-      await Future<void>.delayed(const Duration(milliseconds: 400));
       await sync(_last);
     } catch (e, st) {
       AppLogger.error('CustomerDisplay Windows: start falló', e, st);
@@ -130,10 +156,9 @@ class WindowsCustomerDisplayService
         await controller.hide();
       } catch (_) {}
       try {
-        await controller.invokeMethod('window_close').timeout(
-          const Duration(milliseconds: 250),
-          onTimeout: () => null,
-        );
+        await controller
+            .invokeMethod('window_close')
+            .timeout(const Duration(milliseconds: 250), onTimeout: () => null);
       } catch (e, st) {
         AppLogger.error(
           'CustomerDisplay Windows: window_close en salida falló',
@@ -158,10 +183,19 @@ class WindowsCustomerDisplayService
   void _listenWindowsChanged() {
     _windowsChangedSub ??= onWindowsChanged.listen((_) async {
       final current = _controller;
-      if (_stopping || _closingApp || current == null || !isEnabled) return;
+      if (_stopping || _closingApp || _starting || current == null || !isEnabled) {
+        return;
+      }
       try {
+        // Pequeño debounce: al crear la subventana onWindowsChanged dispara
+        // antes de que el id quede estable; recrear en ese momento tumba todo.
+        await Future<void>.delayed(const Duration(milliseconds: 350));
+        if (_stopping || _closingApp || _starting || _controller == null) {
+          return;
+        }
+        final tracked = _controller!;
         final all = await WindowController.getAll();
-        final stillOpen = all.any((c) => c.windowId == current.windowId);
+        final stillOpen = all.any((c) => c.windowId == tracked.windowId);
         if (!stillOpen) {
           AppLogger.info(
             'CustomerDisplay Windows: subventana cerrada — recreando',
@@ -206,16 +240,11 @@ class WindowsCustomerDisplayService
       await controller.hide();
     } catch (_) {}
     try {
-      await controller.invokeMethod('window_close').timeout(
-        const Duration(milliseconds: 250),
-        onTimeout: () => null,
-      );
+      await controller
+          .invokeMethod('window_close')
+          .timeout(const Duration(milliseconds: 250), onTimeout: () => null);
     } catch (e, st) {
-      AppLogger.error(
-        'CustomerDisplay Windows: window_close falló',
-        e,
-        st,
-      );
+      AppLogger.error('CustomerDisplay Windows: window_close falló', e, st);
     }
   }
 
@@ -345,10 +374,7 @@ class WindowsCustomerDisplayService
 }
 
 class _WindowPlacement {
-  const _WindowPlacement({
-    required this.frame,
-    required this.fullscreen,
-  });
+  const _WindowPlacement({required this.frame, required this.fullscreen});
 
   final Rect frame;
   final bool fullscreen;

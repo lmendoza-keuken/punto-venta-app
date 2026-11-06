@@ -6,6 +6,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class CustomerDisplayPrefs {
   static const enabledKey = 'customer_display_enabled';
+
+  /// Opt-in por equipo. Sin valor guardado, la segunda pantalla no se abre.
+  static bool isEnabled(SharedPreferences prefs) =>
+      prefs.getBool(enabledKey) ?? false;
   static const adTitleKey = 'customer_display_ad_title';
   static const adMessageKey = 'customer_display_ad_message';
   static const adProductsKey = 'customer_display_ad_products';
@@ -18,14 +22,7 @@ class CustomerDisplayPrefs {
 
   static const defaultAdIdleSeconds = 60;
 
-  static const idleSecondsOptions = <int>[
-    0,
-    30,
-    60,
-    120,
-    180,
-    300,
-  ];
+  static const idleSecondsOptions = <int>[0, 30, 60, 120, 180, 300];
 
   static String adTitle(SharedPreferences prefs) {
     final value = prefs.getString(adTitleKey)?.trim() ?? '';
@@ -58,9 +55,10 @@ class CustomerDisplayPrefs {
       final list = jsonDecode(raw) as List<dynamic>;
       return list
           .whereType<Map>()
-          .map((e) => CustomerDisplayAdProduct.fromJson(
-                Map<String, dynamic>.from(e),
-              ))
+          .map(
+            (e) =>
+                CustomerDisplayAdProduct.fromJson(Map<String, dynamic>.from(e)),
+          )
           .toList();
     } catch (_) {
       return const [];
