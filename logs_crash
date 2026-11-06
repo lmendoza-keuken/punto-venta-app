@@ -1,0 +1,284 @@
+[2026-11-05T19:57:52.846074] [INFO] AppUpdate: REST doc version=1.0.26 buildNumber=26 minSupported=1 mandatory=false downloadUrlEmpty=false restTotalMs=280
+[2026-11-05T19:57:52.857604] [INFO] AppUpdate: fetch done via=REST ok=true elapsedMs=300
+[2026-11-05T19:57:52.866128] [INFO] AppUpdate: repository release ok version=1.0.26 build=26
+[2026-11-05T19:57:52.873644] [INFO] AppUpdate: stage=fetchRelease done elapsedMs=316 found=true
+[2026-11-05T19:57:52.882153] [INFO] AppUpdate: stage=compare localBuild=12 remoteBuild=26 minSupported=1 mandatoryFlag=false available=true forced=false totalMs=340
+[2026-11-05T19:57:52.889659] [INFO] AppUpdate: outcome=update_available forced=false
+[2026-11-05T19:58:22.337210] [INFO] AppUpdate: comprobante counter=1 / threshold=10
+[2026-11-05T20:12:19.053122] [INFO] AppUpdate: comprobante counter=2 / threshold=10
+[2026-11-05T20:12:53.011975] [INFO] AppUpdate: comprobante counter=3 / threshold=10
+[2026-11-05T20:13:27.629816] [INFO] AppUpdate: comprobante counter=4 / threshold=10
+[2026-11-05T20:14:08.012611] [INFO] AppUpdate: comprobante counter=5 / threshold=10
+[2026-11-05T20:15:27.844261] [INFO] AppUpdate: comprobante counter=6 / threshold=10
+[2026-11-05T20:23:27.278806] [INFO] AppUpdate: comprobante counter=7 / threshold=10
+[2026-11-05T20:24:37.961439] [INFO] AppUpdate: comprobante counter=8 / threshold=10
+[2026-11-05T20:28:38.701980] [INFO] AppUpdate: comprobante counter=9 / threshold=10
+[2026-11-05T20:30:25.896444] [INFO] AppUpdate: comprobante counter=10 / threshold=10
+[2026-11-05T20:30:26.069039] [INFO] AppUpdate: stage=packageInfo start
+[2026-11-05T20:30:26.071554] [INFO] AppUpdate: stage=packageInfo done elapsedMs=0 version=1.0.12 build=12 localBuild=12 packageName=punto_venta_app
+[2026-11-05T20:30:26.079071] [INFO] AppUpdate: stage=fetchRelease start
+[2026-11-05T20:30:26.087578] [INFO] AppUpdate: fetching appVersionsInfo/punto_venta isWindows=true timeoutMs=20000
+[2026-11-05T20:30:26.095086] [INFO] AppUpdate: stage=authToken start
+[2026-11-05T20:30:26.103092] [INFO] AppUpdate: auth currentUserNull=false uid=SaxAbuSMGMgh8K9tTV2w4qX0rUp1
+[2026-11-05T20:30:26.111604] [INFO] AppUpdate: using FirebaseAuth.currentUser token
+[2026-11-05T20:30:26.119129] [INFO] AppUpdate: stage=authToken done elapsedMs=16 hasToken=true tokenLen=858
+[2026-11-05T20:30:26.127643] [INFO] AppUpdate: stage=httpGet start host=firestore.googleapis.com path=/v1/projects/keuken-mobile-fc114/databases/(default)/documents/appVersionsInfo/punto_venta timeoutMs=20000
+[2026-11-05T20:30:26.314772] [INFO] AppUpdate: stage=httpGet done elapsedMs=178 status=200 bodyLen=1335
+[2026-11-05T20:30:26.315956] [INFO] AppUpdate: stage=parse start
+[2026-11-05T20:30:26.325219] [INFO] AppUpdate: stage=parse done elapsedMs=0 keys=[buildNumber, minSupportedBuildVersion, id, sha256, mandatory, fileName, url, version, publishedAt, downloadUrl, releaseNotes]
+[2026-11-05T20:30:26.333727] [INFO] AppUpdate: REST doc version=1.0.26 buildNumber=26 minSupported=1 mandatory=false downloadUrlEmpty=false restTotalMs=239
+[2026-11-05T20:30:26.341738] [INFO] AppUpdate: fetch done via=REST ok=true elapsedMs=254
+[2026-11-05T20:30:26.351262] [INFO] AppUpdate: repository release ok version=1.0.26 build=26
+[2026-11-05T20:30:26.358779] [INFO] AppUpdate: stage=fetchRelease done elapsedMs=271 found=true
+[2026-11-05T20:30:26.366294] [INFO] AppUpdate: stage=compare localBuild=12 remoteBuild=26 minSupported=1 mandatoryFlag=false available=true forced=false totalMs=297
+[2026-11-05T20:30:26.375011] [INFO] AppUpdate: outcome=update_available forced=false
+[2026-11-05T20:32:19.445135] [INFO] AppUpdate: comprobante counter=1 / threshold=10
+[2026-11-05T20:33:21.270623] [INFO] AppUpdate: comprobante counter=2 / threshold=10
+[2026-11-05T20:33:55.234589] [INFO] AppUpdate: comprobante counter=3 / threshold=10
+[2026-11-05T20:35:07.770531] [INFO] AppUpdate: comprobante counter=4 / threshold=10
+[2026-11-05T20:36:01.920112] [INFO] AppUpdate: comprobante counter=5 / threshold=10
+[2026-11-05T20:36:35.246751] [INFO] AppUpdate: comprobante counter=6 / threshold=10
+[2026-11-05T20:38:18.346504] [INFO] AppUpdate: comprobante counter=7 / threshold=10
+[2026-11-05T20:39:06.910182] [INFO] AppUpdate: comprobante counter=8 / threshold=10
+[2026-11-05T20:41:42.178624] [INFO] AppUpdate: comprobante counter=9 / threshold=10
+[2026-11-05T20:47:36.475493] [INFO] AppUpdate: comprobante counter=10 / threshold=10
+[2026-11-05T20:47:36.649319] [INFO] AppUpdate: stage=packageInfo start
+[2026-11-05T20:47:36.652318] [INFO] AppUpdate: stage=packageInfo done elapsedMs=0 version=1.0.12 build=12 localBuild=12 packageName=punto_venta_app
+[2026-11-05T20:47:36.661827] [INFO] AppUpdate: stage=fetchRelease start
+[2026-11-05T20:47:36.669335] [INFO] AppUpdate: fetching appVersionsInfo/punto_venta isWindows=true timeoutMs=20000
+[2026-11-05T20:47:36.678335] [INFO] AppUpdate: stage=authToken start
+[2026-11-05T20:47:36.686386] [INFO] AppUpdate: auth currentUserNull=false uid=SaxAbuSMGMgh8K9tTV2w4qX0rUp1
+[2026-11-05T20:47:36.695899] [INFO] AppUpdate: using FirebaseAuth.currentUser token
+[2026-11-05T20:47:36.703411] [INFO] AppUpdate: stage=authToken done elapsedMs=17 hasToken=true tokenLen=858
+[2026-11-05T20:47:36.711424] [INFO] AppUpdate: stage=httpGet start host=firestore.googleapis.com path=/v1/projects/keuken-mobile-fc114/databases/(default)/documents/appVersionsInfo/punto_venta timeoutMs=20000
+[2026-11-05T20:47:36.905893] [INFO] AppUpdate: stage=httpGet done elapsedMs=185 status=200 bodyLen=1335
+[2026-11-05T20:47:36.908834] [INFO] AppUpdate: stage=parse start
+[2026-11-05T20:47:36.917353] [INFO] AppUpdate: stage=parse done elapsedMs=0 keys=[buildNumber, url, mandatory, minSupportedBuildVersion, sha256, version, id, fileName, releaseNotes, publishedAt, downloadUrl]
+[2026-11-05T20:47:36.925877] [INFO] AppUpdate: REST doc version=1.0.26 buildNumber=26 minSupported=1 mandatory=false downloadUrlEmpty=false restTotalMs=248
+[2026-11-05T20:47:36.935049] [INFO] AppUpdate: fetch done via=REST ok=true elapsedMs=265
+[2026-11-05T20:47:36.942564] [INFO] AppUpdate: repository release ok version=1.0.26 build=26
+[2026-11-05T20:47:36.951080] [INFO] AppUpdate: stage=fetchRelease done elapsedMs=281 found=true
+[2026-11-05T20:47:36.959593] [INFO] AppUpdate: stage=compare localBuild=12 remoteBuild=26 minSupported=1 mandatoryFlag=false available=true forced=false totalMs=309
+[2026-11-05T20:47:36.966590] [INFO] AppUpdate: outcome=update_available forced=false
+[2026-11-05T20:48:40.174533] [INFO] AppUpdate: comprobante counter=1 / threshold=10
+[2026-11-05T20:59:42.625713] [INFO] AppUpdate: comprobante counter=2 / threshold=10
+[2026-11-05T21:00:22.814892] [INFO] AppUpdate: comprobante counter=3 / threshold=10
+[2026-11-05T21:04:39.233902] [INFO] AppUpdate: comprobante counter=4 / threshold=10
+[2026-11-05T21:06:20.499097] [INFO] AppUpdate: comprobante counter=5 / threshold=10
+[2026-11-05T21:07:18.403810] [INFO] AppUpdate: comprobante counter=6 / threshold=10
+[2026-11-05T21:09:06.791745] [INFO] AppUpdate: comprobante counter=7 / threshold=10
+[2026-11-05T21:09:23.821247] [INFO] AppUpdate: comprobante counter=8 / threshold=10
+[2026-11-05T21:11:40.360111] [INFO] AppUpdate: comprobante counter=9 / threshold=10
+[2026-11-05T21:14:40.314445] [INFO] AppUpdate: comprobante counter=10 / threshold=10
+[2026-11-05T21:14:40.488926] [INFO] AppUpdate: stage=packageInfo start
+[2026-11-05T21:14:40.489931] [INFO] AppUpdate: stage=packageInfo done elapsedMs=0 version=1.0.12 build=12 localBuild=12 packageName=punto_venta_app
+[2026-11-05T21:14:40.499943] [INFO] AppUpdate: stage=fetchRelease start
+[2026-11-05T21:14:40.508451] [INFO] AppUpdate: fetching appVersionsInfo/punto_venta isWindows=true timeoutMs=20000
+[2026-11-05T21:14:40.515958] [INFO] AppUpdate: stage=authToken start
+[2026-11-05T21:14:40.523464] [INFO] AppUpdate: auth currentUserNull=false uid=SaxAbuSMGMgh8K9tTV2w4qX0rUp1
+[2026-11-05T21:14:40.532973] [INFO] AppUpdate: using FirebaseAuth.currentUser token
+[2026-11-05T21:14:40.539985] [INFO] AppUpdate: stage=authToken done elapsedMs=16 hasToken=true tokenLen=858
+[2026-11-05T21:14:40.548492] [INFO] AppUpdate: stage=httpGet start host=firestore.googleapis.com path=/v1/projects/keuken-mobile-fc114/databases/(default)/documents/appVersionsInfo/punto_venta timeoutMs=20000
+[2026-11-05T21:14:40.739777] [INFO] AppUpdate: stage=httpGet done elapsedMs=183 status=200 bodyLen=1335
+[2026-11-05T21:14:40.743120] [INFO] AppUpdate: stage=parse start
+[2026-11-05T21:14:40.752132] [INFO] AppUpdate: stage=parse done elapsedMs=0 keys=[minSupportedBuildVersion, mandatory, releaseNotes, version, buildNumber, sha256, url, id, fileName, publishedAt, downloadUrl]
+[2026-11-05T21:14:40.759637] [INFO] AppUpdate: REST doc version=1.0.26 buildNumber=26 minSupported=1 mandatory=false downloadUrlEmpty=false restTotalMs=244
+[2026-11-05T21:14:40.768149] [INFO] AppUpdate: fetch done via=REST ok=true elapsedMs=259
+[2026-11-05T21:14:40.776546] [INFO] AppUpdate: repository release ok version=1.0.26 build=26
+[2026-11-05T21:14:40.785051] [INFO] AppUpdate: stage=fetchRelease done elapsedMs=276 found=true
+[2026-11-05T21:14:40.792053] [INFO] AppUpdate: stage=compare localBuild=12 remoteBuild=26 minSupported=1 mandatoryFlag=false available=true forced=false totalMs=303
+[2026-11-05T21:14:40.801229] [INFO] AppUpdate: outcome=update_available forced=false
+[2026-11-05T21:14:58.777606] [INFO] AppUpdate: stage=download start url=https://firebasestorage.googleapis.com:443/v0/b/keuken-mobile-fc114.firebasestorage.app/o/releases%2Fpunto_venta%2Fwindows%2FPuntoDeVenta-Setup-1.0.26.exe?alt=media&token=79796017-ba2d-4fab-877b-473647002d79
+[2026-11-05T21:14:58.783607] [INFO] AppUpdate: download target=C:\Users\USER\AppData\Local\Temp\PuntoDeVenta-Setup-1.0.26.exe
+[2026-11-05T21:15:04.114454] [INFO] AppUpdate: stage=download done elapsedMs=5337 bytes=24000760
+[2026-11-05T21:15:04.118457] [INFO] AppUpdate: stage=sha256 skip (vacío)
+[2026-11-05T21:15:04.126961] [INFO] AppUpdate: stage=launchInstaller path=C:\Users\USER\AppData\Local\Temp\PuntoDeVenta-Setup-1.0.26.exe exists=true
+[2026-11-05T21:15:04.874858] [INFO] AppUpdate: stage=launchInstaller started
+
+===== sesión 2026-11-05T21:15:38.895117 =====
+[2026-11-05T21:15:39.326383] [INFO] Logger iniciado. Archivo: C:\Users\USER\AppData\Local\Temp\punto_venta_app.log
+[2026-11-05T21:15:39.335894] [INFO] Arranque: platform=TargetPlatform.windows debug=false
+[2026-11-05T21:15:39.345003] [INFO] SO: "Windows 10 Pro" 10.0 (Build 26300)
+[2026-11-05T21:15:39.353510] [INFO] Ejecutable: C:\Program Files\Punto de Venta\punto_venta_app.exe
+[2026-11-05T21:15:39.361439] [INFO] Unidad: C: rutaUNC=false
+[2026-11-05T21:15:39.369954] [INFO] OneDrive env=C:\Users\USER\OneDrive
+[2026-11-05T21:15:39.379083] [INFO] Temp: C:\Users\USER\AppData\Local\Temp
+[2026-11-05T21:15:39.387818] [INFO] Carpeta del ejecutable legible, 10 entradas
+[2026-11-05T21:15:39.486448] [INFO] DI init...
+[2026-11-05T21:15:39.646027] [INFO] Firebase.initializeApp...
+[2026-11-05T21:15:39.654070] [INFO] Firebase inicializado proyecto=keuken-mobile-fc114
+[2026-11-05T21:15:39.659897] [INFO] Firestore settings: persistenceEnabled=false
+[2026-11-05T21:15:39.667901] [INFO] FirebaseAuth.signInAnonymously...
+[2026-11-05T21:15:41.065711] [INFO] FirebaseAuth anónimo OK uid=7QYu41owvvPlUedD38MRde7fNGT2
+[2026-11-05T21:15:41.069249] [INFO] runApp
+[2026-11-05T21:15:41.081263] [INFO] AppUpdate: splash check start timeoutMs=20000
+[2026-11-05T21:15:41.086912] [INFO] AppUpdate: stage=packageInfo start
+[2026-11-05T21:15:41.095924] [INFO] AppUpdate: stage=packageInfo done elapsedMs=0 version=1.0.12 build=12 localBuild=12 packageName=punto_venta_app
+[2026-11-05T21:15:41.103689] [INFO] AppUpdate: stage=fetchRelease start
+[2026-11-05T21:15:41.112710] [INFO] AppUpdate: fetching appVersionsInfo/punto_venta isWindows=true timeoutMs=20000
+[2026-11-05T21:15:41.120919] [INFO] AppUpdate: stage=authToken start
+[2026-11-05T21:15:41.129431] [INFO] AppUpdate: auth currentUserNull=false uid=7QYu41owvvPlUedD38MRde7fNGT2
+[2026-11-05T21:15:41.144943] [INFO] AppUpdate: using FirebaseAuth.currentUser token
+[2026-11-05T21:15:41.146943] [INFO] AppUpdate: stage=authToken done elapsedMs=17 hasToken=true tokenLen=858
+[2026-11-05T21:15:41.156453] [INFO] AppUpdate: stage=httpGet start host=firestore.googleapis.com path=/v1/projects/keuken-mobile-fc114/databases/(default)/documents/appVersionsInfo/punto_venta timeoutMs=20000
+[2026-11-05T21:15:41.336770] [INFO] AppUpdate: stage=httpGet done elapsedMs=172 status=200 bodyLen=1335
+[2026-11-05T21:15:41.340282] [INFO] AppUpdate: stage=parse start
+[2026-11-05T21:15:41.349468] [INFO] AppUpdate: stage=parse done elapsedMs=0 keys=[mandatory, fileName, publishedAt, id, sha256, buildNumber, downloadUrl, minSupportedBuildVersion, version, url, releaseNotes]
+[2026-11-05T21:15:41.357971] [INFO] AppUpdate: REST doc version=1.0.26 buildNumber=26 minSupported=1 mandatory=false downloadUrlEmpty=false restTotalMs=237
+[2026-11-05T21:15:41.366977] [INFO] AppUpdate: fetch done via=REST ok=true elapsedMs=254
+[2026-11-05T21:15:41.375920] [INFO] AppUpdate: repository release ok version=1.0.26 build=26
+[2026-11-05T21:15:41.384197] [INFO] AppUpdate: stage=fetchRelease done elapsedMs=272 found=true
+[2026-11-05T21:15:41.393704] [INFO] AppUpdate: stage=compare localBuild=12 remoteBuild=26 minSupported=1 mandatoryFlag=false available=true forced=false totalMs=306
+[2026-11-05T21:15:41.401515] [INFO] AppUpdate: outcome=update_available forced=false
+[2026-11-05T21:15:43.098029] [INFO] AppUpdate: splash result available=true local=1.0.12+12 remoteBuild=26 mandatory=false elapsedMs=2010
+[2026-11-05T21:15:44.561315] [INFO] Ruta credentials extraType=_Map<String, Object> extra={email: mercaditoposta520@gmail.com, companyId: 10010073, companyName: FERNANDES ESTEBAN ANIBAL}
+[2026-11-05T21:16:28.052161] [INFO] AuthBloc: AuthenticateUserRequested username=125
+[2026-11-05T21:16:28.458422] [INFO] AuthBloc: authenticateUser OK id=125 name=P520 GALVAN ROMINA role=CAJ
+[2026-11-05T21:17:50.786016] [INFO] AppUpdate: comprobante counter=1 / threshold=10
+[2026-11-05T21:18:40.580580] [INFO] AppUpdate: comprobante counter=2 / threshold=10
+[2026-11-05T21:21:04.195998] [INFO] AppUpdate: comprobante counter=3 / threshold=10
+[2026-11-05T21:22:28.051453] [INFO] AppUpdate: comprobante counter=4 / threshold=10
+[2026-11-05T21:22:59.884412] [INFO] AppUpdate: comprobante counter=5 / threshold=10
+[2026-11-05T21:23:49.244122] [INFO] AppUpdate: comprobante counter=6 / threshold=10
+[2026-11-05T21:26:28.647200] [INFO] AppUpdate: comprobante counter=7 / threshold=10
+[2026-11-05T21:28:01.767491] [INFO] AppUpdate: comprobante counter=8 / threshold=10
+[2026-11-05T21:29:42.491369] [INFO] AppUpdate: comprobante counter=9 / threshold=10
+[2026-11-05T21:31:50.764375] [INFO] AppUpdate: comprobante counter=10 / threshold=10
+[2026-11-05T21:31:50.944095] [INFO] AppUpdate: stage=packageInfo start
+[2026-11-05T21:31:50.947626] [INFO] AppUpdate: stage=packageInfo done elapsedMs=0 version=1.0.12 build=12 localBuild=12 packageName=punto_venta_app
+[2026-11-05T21:31:50.956969] [INFO] AppUpdate: stage=fetchRelease start
+[2026-11-05T21:31:50.966482] [INFO] AppUpdate: fetching appVersionsInfo/punto_venta isWindows=true timeoutMs=20000
+[2026-11-05T21:31:50.974496] [INFO] AppUpdate: stage=authToken start
+[2026-11-05T21:31:50.982160] [INFO] AppUpdate: auth currentUserNull=false uid=7QYu41owvvPlUedD38MRde7fNGT2
+[2026-11-05T21:31:50.991673] [INFO] AppUpdate: using FirebaseAuth.currentUser token
+[2026-11-05T21:31:50.999730] [INFO] AppUpdate: stage=authToken done elapsedMs=17 hasToken=true tokenLen=858
+[2026-11-05T21:31:51.008242] [INFO] AppUpdate: stage=httpGet start host=firestore.googleapis.com path=/v1/projects/keuken-mobile-fc114/databases/(default)/documents/appVersionsInfo/punto_venta timeoutMs=20000
+[2026-11-05T21:31:51.355378] [INFO] AppUpdate: stage=httpGet done elapsedMs=339 status=200 bodyLen=1335
+[2026-11-05T21:31:51.358377] [INFO] AppUpdate: stage=parse start
+[2026-11-05T21:31:51.367309] [INFO] AppUpdate: stage=parse done elapsedMs=0 keys=[minSupportedBuildVersion, fileName, id, publishedAt, releaseNotes, version, downloadUrl, buildNumber, sha256, mandatory, url]
+[2026-11-05T21:31:51.379498] [INFO] AppUpdate: REST doc version=1.0.26 buildNumber=26 minSupported=1 mandatory=false downloadUrlEmpty=false restTotalMs=404
+[2026-11-05T21:31:51.389003] [INFO] AppUpdate: fetch done via=REST ok=true elapsedMs=422
+[2026-11-05T21:31:51.397673] [INFO] AppUpdate: repository release ok version=1.0.26 build=26
+[2026-11-05T21:31:51.406188] [INFO] AppUpdate: stage=fetchRelease done elapsedMs=439 found=true
+[2026-11-05T21:31:51.414187] [INFO] AppUpdate: stage=compare localBuild=12 remoteBuild=26 minSupported=1 mandatoryFlag=false available=true forced=false totalMs=469
+[2026-11-05T21:31:51.421942] [INFO] AppUpdate: outcome=update_available forced=false
+[2026-11-05T21:33:50.369119] [INFO] AppUpdate: comprobante counter=1 / threshold=10
+[2026-11-05T21:36:55.413572] [INFO] AppUpdate: comprobante counter=2 / threshold=10
+[2026-11-05T21:37:56.364586] [INFO] AppUpdate: comprobante counter=3 / threshold=10
+[2026-11-05T21:47:01.382751] [INFO] AppUpdate: comprobante counter=4 / threshold=10
+[2026-11-05T21:51:22.646291] [INFO] AppUpdate: comprobante counter=5 / threshold=10
+[2026-11-05T21:51:49.443620] [INFO] AppUpdate: comprobante counter=6 / threshold=10
+[2026-11-05T21:52:33.486445] [INFO] AppUpdate: comprobante counter=7 / threshold=10
+[2026-11-05T21:53:05.231748] [INFO] AppUpdate: comprobante counter=8 / threshold=10
+[2026-11-05T21:53:47.075258] [INFO] AppUpdate: comprobante counter=9 / threshold=10
+[2026-11-05T21:54:39.394485] [INFO] AppUpdate: comprobante counter=10 / threshold=10
+[2026-11-05T21:54:39.571466] [INFO] AppUpdate: stage=packageInfo start
+[2026-11-05T21:54:39.574505] [INFO] AppUpdate: stage=packageInfo done elapsedMs=0 version=1.0.12 build=12 localBuild=12 packageName=punto_venta_app
+[2026-11-05T21:54:39.581865] [INFO] AppUpdate: stage=fetchRelease start
+[2026-11-05T21:54:39.590382] [INFO] AppUpdate: fetching appVersionsInfo/punto_venta isWindows=true timeoutMs=20000
+[2026-11-05T21:54:39.599634] [INFO] AppUpdate: stage=authToken start
+[2026-11-05T21:54:39.612699] [INFO] AppUpdate: auth currentUserNull=false uid=7QYu41owvvPlUedD38MRde7fNGT2
+[2026-11-05T21:54:39.622275] [INFO] AppUpdate: using FirebaseAuth.currentUser token
+[2026-11-05T21:54:39.630244] [INFO] AppUpdate: stage=authToken done elapsedMs=17 hasToken=true tokenLen=858
+[2026-11-05T21:54:39.638757] [INFO] AppUpdate: stage=httpGet start host=firestore.googleapis.com path=/v1/projects/keuken-mobile-fc114/databases/(default)/documents/appVersionsInfo/punto_venta timeoutMs=20000
+[2026-11-05T21:54:39.986848] [INFO] AppUpdate: stage=httpGet done elapsedMs=340 status=200 bodyLen=1335
+[2026-11-05T21:54:39.990429] [INFO] AppUpdate: stage=parse start
+[2026-11-05T21:54:39.998934] [INFO] AppUpdate: stage=parse done elapsedMs=0 keys=[buildNumber, downloadUrl, fileName, url, publishedAt, sha256, mandatory, minSupportedBuildVersion, releaseNotes, id, version]
+[2026-11-05T21:54:40.007362] [INFO] AppUpdate: REST doc version=1.0.26 buildNumber=26 minSupported=1 mandatory=false downloadUrlEmpty=false restTotalMs=407
+[2026-11-05T21:54:40.015881] [INFO] AppUpdate: fetch done via=REST ok=true elapsedMs=425
+[2026-11-05T21:54:40.024462] [INFO] AppUpdate: repository release ok version=1.0.26 build=26
+[2026-11-05T21:54:40.032399] [INFO] AppUpdate: stage=fetchRelease done elapsedMs=441 found=true
+[2026-11-05T21:54:40.041410] [INFO] AppUpdate: stage=compare localBuild=12 remoteBuild=26 minSupported=1 mandatoryFlag=false available=true forced=false totalMs=470
+[2026-11-05T21:54:40.049892] [INFO] AppUpdate: outcome=update_available forced=false
+[2026-11-05T21:55:43.772431] [INFO] AppUpdate: comprobante counter=1 / threshold=10
+[2026-11-05T21:56:10.579776] [INFO] AppUpdate: comprobante counter=2 / threshold=10
+[2026-11-05T21:56:41.506162] [INFO] AppUpdate: comprobante counter=3 / threshold=10
+[2026-11-05T21:58:50.939289] [INFO] AppUpdate: comprobante counter=4 / threshold=10
+[2026-11-05T21:59:56.348474] [INFO] AppUpdate: comprobante counter=5 / threshold=10
+[2026-11-05T22:05:42.819569] [INFO] Ruta credentials extraType=_Map<String, Object?> extra={email: mercaditoposta520@gmail.com, companyId: 10010073, companyName: FERNANDES ESTEBAN ANIBAL}
+
+===== sesión 2026-11-05T22:06:35.000224 =====
+[2026-11-05T22:06:35.002390] [INFO] Logger iniciado. Archivo: C:\Users\USER\AppData\Local\Temp\punto_venta_app.log
+[2026-11-05T22:06:35.011905] [INFO] Arranque: platform=TargetPlatform.windows debug=false
+[2026-11-05T22:06:35.019515] [INFO] SO: "Windows 10 Pro" 10.0 (Build 26300)
+[2026-11-05T22:06:35.028538] [INFO] Ejecutable: C:\Program Files\Punto de Venta\punto_venta_app.exe
+[2026-11-05T22:06:35.037048] [INFO] Unidad: C: rutaUNC=false
+[2026-11-05T22:06:35.044972] [INFO] OneDrive env=C:\Users\USER\OneDrive
+[2026-11-05T22:06:35.052486] [INFO] Temp: C:\Users\USER\AppData\Local\Temp
+[2026-11-05T22:06:35.061283] [INFO] Carpeta del ejecutable legible, 10 entradas
+[2026-11-05T22:06:35.163576] [INFO] DI init...
+[2026-11-05T22:06:35.322359] [INFO] Firebase.initializeApp...
+[2026-11-05T22:06:35.328395] [INFO] Firebase inicializado proyecto=keuken-mobile-fc114
+[2026-11-05T22:06:35.335251] [INFO] Firestore settings: persistenceEnabled=false
+[2026-11-05T22:06:35.342767] [INFO] FirebaseAuth.signInAnonymously...
+[2026-11-05T22:06:36.271400] [INFO] FirebaseAuth anónimo OK uid=62gxmwKk0iXPAClylgumEpe3Okf1
+[2026-11-05T22:06:36.273411] [INFO] runApp
+[2026-11-05T22:06:36.283916] [INFO] AppUpdate: splash check start timeoutMs=20000
+[2026-11-05T22:06:36.291289] [INFO] AppUpdate: stage=packageInfo start
+[2026-11-05T22:06:36.300295] [INFO] AppUpdate: stage=packageInfo done elapsedMs=0 version=1.0.12 build=12 localBuild=12 packageName=punto_venta_app
+[2026-11-05T22:06:36.307183] [INFO] AppUpdate: stage=fetchRelease start
+[2026-11-05T22:06:36.315368] [INFO] AppUpdate: fetching appVersionsInfo/punto_venta isWindows=true timeoutMs=20000
+[2026-11-05T22:06:36.324281] [INFO] AppUpdate: stage=authToken start
+[2026-11-05T22:06:36.332366] [INFO] AppUpdate: auth currentUserNull=false uid=62gxmwKk0iXPAClylgumEpe3Okf1
+[2026-11-05T22:06:36.343248] [INFO] AppUpdate: using FirebaseAuth.currentUser token
+[2026-11-05T22:06:36.350247] [INFO] AppUpdate: stage=authToken done elapsedMs=17 hasToken=true tokenLen=858
+[2026-11-05T22:06:36.359312] [INFO] AppUpdate: stage=httpGet start host=firestore.googleapis.com path=/v1/projects/keuken-mobile-fc114/databases/(default)/documents/appVersionsInfo/punto_venta timeoutMs=20000
+[2026-11-05T22:06:36.716904] [INFO] AppUpdate: stage=httpGet done elapsedMs=349 status=200 bodyLen=1335
+[2026-11-05T22:06:36.719903] [INFO] AppUpdate: stage=parse start
+[2026-11-05T22:06:36.728421] [INFO] AppUpdate: stage=parse done elapsedMs=0 keys=[downloadUrl, publishedAt, fileName, version, id, mandatory, buildNumber, sha256, minSupportedBuildVersion, url, releaseNotes]
+[2026-11-05T22:06:36.737129] [INFO] AppUpdate: REST doc version=1.0.26 buildNumber=26 minSupported=1 mandatory=false downloadUrlEmpty=false restTotalMs=412
+[2026-11-05T22:06:36.745316] [INFO] AppUpdate: fetch done via=REST ok=true elapsedMs=429
+[2026-11-05T22:06:36.753829] [INFO] AppUpdate: repository release ok version=1.0.26 build=26
+[2026-11-05T22:06:36.762515] [INFO] AppUpdate: stage=fetchRelease done elapsedMs=446 found=true
+[2026-11-05T22:06:36.769519] [INFO] AppUpdate: stage=compare localBuild=12 remoteBuild=26 minSupported=1 mandatoryFlag=false available=true forced=false totalMs=479
+[2026-11-05T22:06:36.778310] [INFO] AppUpdate: outcome=update_available forced=false
+[2026-11-05T22:06:38.383978] [INFO] AppUpdate: splash result available=true local=1.0.12+12 remoteBuild=26 mandatory=false elapsedMs=2093
+[2026-11-05T22:06:40.559458] [INFO] AppUpdate: stage=download start url=https://firebasestorage.googleapis.com:443/v0/b/keuken-mobile-fc114.firebasestorage.app/o/releases%2Fpunto_venta%2Fwindows%2FPuntoDeVenta-Setup-1.0.26.exe?alt=media&token=79796017-ba2d-4fab-877b-473647002d79
+[2026-11-05T22:06:40.564935] [INFO] AppUpdate: download target=C:\Users\USER\AppData\Local\Temp\PuntoDeVenta-Setup-1.0.26.exe
+[2026-11-05T22:06:44.502120] [INFO] AppUpdate: stage=download done elapsedMs=3943 bytes=24000760
+[2026-11-05T22:06:44.508121] [INFO] AppUpdate: stage=sha256 skip (vacío)
+[2026-11-05T22:06:44.517629] [INFO] AppUpdate: stage=launchInstaller path=C:\Users\USER\AppData\Local\Temp\PuntoDeVenta-Setup-1.0.26.exe exists=true
+[2026-11-05T22:06:44.675646] [INFO] AppUpdate: stage=launchInstaller started
+
+===== sesión 2026-11-06T08:17:57.554590 =====
+[2026-11-06T08:17:57.569589] [INFO] Logger iniciado. Archivo: C:\Users\USER\AppData\Local\Temp\punto_venta_app.log
+[2026-11-06T08:17:57.577591] [INFO] Arranque: platform=TargetPlatform.windows debug=false
+[2026-11-06T08:17:57.586591] [INFO] SO: "Windows 10 Pro" 10.0 (Build 26300)
+[2026-11-06T08:17:57.595379] [INFO] Ejecutable: C:\Program Files\Punto de Venta\punto_venta_app.exe
+[2026-11-06T08:17:57.604601] [INFO] Unidad: C: rutaUNC=false
+[2026-11-06T08:17:57.612965] [INFO] OneDrive env=C:\Users\USER\OneDrive
+[2026-11-06T08:17:57.621185] [INFO] Temp: C:\Users\USER\AppData\Local\Temp
+[2026-11-06T08:17:57.630190] [INFO] Carpeta del ejecutable legible, 7 entradas
+[2026-11-06T08:17:57.728729] [INFO] DI init...
+[2026-11-06T08:17:57.964267] [INFO] Firebase.initializeApp...
+[2026-11-06T08:17:57.971269] [INFO] Firebase inicializado proyecto=keuken-mobile-fc114
+[2026-11-06T08:17:57.977532] [INFO] Firestore settings: persistenceEnabled=false
+[2026-11-06T08:17:57.985535] [INFO] FirebaseAuth.signInAnonymously...
+[2026-11-06T08:17:58.978014] [INFO] FirebaseAuth anónimo OK uid=pa4J6OsaRnVYyttzMx6ORG6vJJk2
+[2026-11-06T08:17:58.981035] [INFO] runApp
+[2026-11-06T08:17:59.002021] [INFO] AppUpdate: splash check start timeoutMs=20000
+[2026-11-06T08:17:59.003021] [INFO] AppUpdate: stage=packageInfo start
+[2026-11-06T08:17:59.010947] [INFO] AppUpdate: stage=packageInfo done elapsedMs=0 version=1.0.13 build=13 localBuild=13 packageName=punto_venta_app
+[2026-11-06T08:17:59.019952] [INFO] AppUpdate: stage=fetchRelease start
+[2026-11-06T08:17:59.027951] [INFO] AppUpdate: fetching appVersionsInfo/punto_venta isWindows=true timeoutMs=20000
+[2026-11-06T08:17:59.036954] [INFO] AppUpdate: stage=authToken start
+[2026-11-06T08:17:59.045424] [INFO] AppUpdate: auth currentUserNull=false uid=pa4J6OsaRnVYyttzMx6ORG6vJJk2
+[2026-11-06T08:17:59.061432] [INFO] AppUpdate: using FirebaseAuth.currentUser token
+[2026-11-06T08:17:59.062430] [INFO] AppUpdate: stage=authToken done elapsedMs=17 hasToken=true tokenLen=858
+[2026-11-06T08:17:59.072430] [INFO] AppUpdate: stage=httpGet start host=firestore.googleapis.com path=/v1/projects/keuken-mobile-fc114/databases/(default)/documents/appVersionsInfo/punto_venta timeoutMs=20000
+[2026-11-06T08:17:59.404894] [INFO] AppUpdate: stage=httpGet done elapsedMs=324 status=200 bodyLen=1335
+[2026-11-06T08:17:59.406893] [INFO] AppUpdate: stage=parse start
+[2026-11-06T08:17:59.417183] [INFO] AppUpdate: stage=parse done elapsedMs=0 keys=[version, mandatory, downloadUrl, buildNumber, url, fileName, id, minSupportedBuildVersion, sha256, releaseNotes, publishedAt]
+[2026-11-06T08:17:59.424808] [INFO] AppUpdate: REST doc version=1.0.26 buildNumber=26 minSupported=1 mandatory=false downloadUrlEmpty=false restTotalMs=387
+[2026-11-06T08:17:59.433813] [INFO] AppUpdate: fetch done via=REST ok=true elapsedMs=405
+[2026-11-06T08:17:59.441814] [INFO] AppUpdate: repository release ok version=1.0.26 build=26
+[2026-11-06T08:17:59.450813] [INFO] AppUpdate: stage=fetchRelease done elapsedMs=422 found=true
+[2026-11-06T08:17:59.458286] [INFO] AppUpdate: stage=compare localBuild=13 remoteBuild=26 minSupported=1 mandatoryFlag=false available=true forced=false totalMs=455
+[2026-11-06T08:17:59.467291] [INFO] AppUpdate: outcome=update_available forced=false
+[2026-11-06T08:18:01.013434] [INFO] AppUpdate: splash result available=true local=1.0.13+13 remoteBuild=26 mandatory=false elapsedMs=2010
+[2026-11-06T08:18:02.795749] [INFO] AppUpdate: stage=download start url=https://firebasestorage.googleapis.com:443/v0/b/keuken-mobile-fc114.firebasestorage.app/o/releases%2Fpunto_venta%2Fwindows%2FPuntoDeVenta-Setup-1.0.26.exe?alt=media&token=79796017-ba2d-4fab-877b-473647002d79
+[2026-11-06T08:18:02.799750] [INFO] AppUpdate: download target=C:\Users\USER\AppData\Local\Temp\PuntoDeVenta-Setup-1.0.26.exe
+[2026-11-06T08:18:08.179731] [INFO] AppUpdate: stage=download done elapsedMs=5384 bytes=24000760
+[2026-11-06T08:18:08.180733] [INFO] AppUpdate: stage=sha256 skip (vacío)
+[2026-11-06T08:18:08.190734] [INFO] AppUpdate: stage=launchInstaller path=C:\Users\USER\AppData\Local\Temp\PuntoDeVenta-Setup-1.0.26.exe exists=true
+[2026-11-06T08:18:08.879727] [INFO] AppUpdate: stage=launchInstaller started

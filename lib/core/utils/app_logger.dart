@@ -16,15 +16,30 @@ class AppLogger {
   /// Archivo activo + N-1 rotados (ej. .log, .log.1 … .log.4).
   static const int maxFiles = 5;
 
+  /// Escritura síncrona a Temp antes de [init]. Sirve para saber si Dart
+  /// llegó a `main()` cuando el proceso muere en Task Manager sin log normal.
+  static void bootProbe(String message) {
+    try {
+      final path =
+          '${Directory.systemTemp.path}${Platform.pathSeparator}punto_venta_boot.log';
+      final line =
+          '[${DateTime.now().toIso8601String()}] [BOOT] $message\n';
+      File(path).writeAsStringSync(line, mode: FileMode.append, flush: true);
+    } catch (_) {}
+  }
+
   static Future<void> init() async {
+    bootProbe('AppLogger.init start');
     final sep = Platform.pathSeparator;
     final exeDir = File(Platform.resolvedExecutable).parent.path;
-    final tempLogsDir = '${Directory.systemTemp.path}${sep}punto_venta_app${sep}logs';
+    final tempLogsDir =
+        '${Directory.systemTemp.path}${sep}punto_venta_app${sep}logs';
 
     final candidates = <File>[
-      File('$exeDir${sep}logs${sep}punto_venta_app.log'),
+      // Temp primero: Program Files suele ser de solo lectura para el usuario.
       File('$tempLogsDir${sep}punto_venta_app.log'),
       File('${Directory.systemTemp.path}${sep}punto_venta_app.log'),
+      File('$exeDir${sep}logs${sep}punto_venta_app.log'),
       File('$exeDir${sep}punto_venta_app.log'),
     ];
 
@@ -42,8 +57,10 @@ class AppLogger {
         _file = candidate;
         logPath = candidate.path;
         _currentBytes = await candidate.length();
+        bootProbe('AppLogger.init file=$logPath');
         break;
-      } catch (_) {
+      } catch (e) {
+        bootProbe('AppLogger.init candidate fail ${candidate.path}: $e');
         continue;
       }
     }
@@ -60,15 +77,17 @@ class AppLogger {
       'Logger iniciado. Archivo: ${logPath.isEmpty ? '(solo consola)' : logPath} '
       '(max ${maxBytes ~/ 1024}KB x $maxFiles archivos)',
     );
+    bootProbe('AppLogger.init done logPath=$logPath');
   }
 
   /// Latido periódico: si el log se corta sin más latidos, el proceso murió
   /// (crash nativo). Si los latidos siguen, la app quedó colgada.
   static void startHeartbeat({Duration interval = const Duration(seconds: 5)}) {
     _heartbeat?.cancel();
-    /*_heartbeat = Timer.periodic(interval, (timer) {
+    _heartbeat = Timer.periodic(interval, (timer) {
       _write('BEAT', 'app viva (${timer.tick * interval.inSeconds}s)');
-    });*/
+    });
+    info('Heartbeat iniciado cada ${interval.inSeconds}s');
   }
 
   static void stopHeartbeat() {

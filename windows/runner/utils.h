@@ -16,4 +16,7 @@ std::string Utf8FromUtf16(const wchar_t* utf16_string);
 // encoded in UTF-8. Returns an empty std::vector<std::string> on failure.
 std::vector<std::string> GetCommandLineArguments();
 
+// Appends a bootstrap line to %TEMP%\punto_venta_native.log (pre-Dart).
+void NativeBootLog(const char* message);
+
 #endif  // RUNNER_UTILS_H_

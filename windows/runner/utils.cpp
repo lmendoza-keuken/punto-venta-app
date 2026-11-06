@@ -6,6 +6,37 @@
 #include <windows.h>
 
 #include <iostream>
+#include <string>
+
+void NativeBootLog(const char* message) {
+  wchar_t temp_path[MAX_PATH] = {0};
+  const DWORD len = ::GetTempPathW(MAX_PATH, temp_path);
+  if (len == 0 || len > MAX_PATH) {
+    return;
+  }
+
+  std::wstring path(temp_path);
+  path += L"punto_venta_native.log";
+
+  SYSTEMTIME st;
+  ::GetLocalTime(&st);
+  char line[512];
+  sprintf_s(
+      line, sizeof(line),
+      "[%04d-%02d-%02dT%02d:%02d:%02d.%03d] [NATIVE] %s\n",
+      st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond,
+      st.wMilliseconds, message ? message : "(null)");
+
+  HANDLE file = ::CreateFileW(
+      path.c_str(), FILE_APPEND_DATA, FILE_SHARE_READ, nullptr, OPEN_ALWAYS,
+      FILE_ATTRIBUTE_NORMAL, nullptr);
+  if (file == INVALID_HANDLE_VALUE) {
+    return;
+  }
+  DWORD written = 0;
+  ::WriteFile(file, line, static_cast<DWORD>(strlen(line)), &written, nullptr);
+  ::CloseHandle(file);
+}
 
 void CreateAndAttachConsole() {
   if (::AllocConsole()) {
