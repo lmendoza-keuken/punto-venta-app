@@ -108,12 +108,14 @@ class CustomerDisplayLineItem extends Equatable {
   final String quantityLabel;
   final double unitPrice;
   final double lineTotal;
+  final bool isOnSale;
 
   const CustomerDisplayLineItem({
     required this.name,
     required this.quantityLabel,
     required this.unitPrice,
     required this.lineTotal,
+    this.isOnSale = false,
   });
 
   Map<String, dynamic> toJson() => {
@@ -121,6 +123,7 @@ class CustomerDisplayLineItem extends Equatable {
         'quantityLabel': quantityLabel,
         'unitPrice': unitPrice,
         'lineTotal': lineTotal,
+        'isOnSale': isOnSale,
       };
 
   factory CustomerDisplayLineItem.fromJson(Map<String, dynamic> json) {
@@ -129,11 +132,13 @@ class CustomerDisplayLineItem extends Equatable {
       quantityLabel: json['quantityLabel'] as String? ?? '',
       unitPrice: (json['unitPrice'] as num?)?.toDouble() ?? 0,
       lineTotal: (json['lineTotal'] as num?)?.toDouble() ?? 0,
+      isOnSale: json['isOnSale'] as bool? ?? false,
     );
   }
 
   @override
-  List<Object?> get props => [name, quantityLabel, unitPrice, lineTotal];
+  List<Object?> get props =>
+      [name, quantityLabel, unitPrice, lineTotal, isOnSale];
 }
 
 /// Último producto del log (mismo preview que el carrito en modo scanner).
@@ -371,6 +376,7 @@ class CustomerDisplaySnapshot extends Equatable {
       quantityLabel: quantityLabel,
       unitPrice: unit,
       lineTotal: lineTotal,
+      isOnSale: item.product.isOnSale,
     );
   }
 

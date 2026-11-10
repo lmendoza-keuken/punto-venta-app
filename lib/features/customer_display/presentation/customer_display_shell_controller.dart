@@ -26,7 +26,8 @@ class CustomerDisplayShellController extends StatefulWidget {
 }
 
 class _CustomerDisplayShellControllerState
-    extends State<CustomerDisplayShellController> {
+    extends State<CustomerDisplayShellController>
+    with WidgetsBindingObserver {
   late final CustomerDisplayService _service;
   StreamSubscription<bool>? _enabledSub;
   String? _lastRoute;
@@ -35,10 +36,25 @@ class _CustomerDisplayShellControllerState
   void initState() {
     super.initState();
     _service = di.sl<CustomerDisplayService>();
+    WidgetsBinding.instance.addObserver(this);
     _enabledSub = _service.enabledChanges.listen(_onEnabledChanged);
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => _onRoute(widget.currentRoute),
     );
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.paused:
+      case AppLifecycleState.hidden:
+      case AppLifecycleState.detached:
+        unawaited(_service.stop());
+      case AppLifecycleState.resumed:
+        unawaited(_pushForRoute(widget.currentRoute));
+      case AppLifecycleState.inactive:
+        break;
+    }
   }
 
   void _onEnabledChanged(bool enabled) {
@@ -56,6 +72,7 @@ class _CustomerDisplayShellControllerState
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     unawaited(_enabledSub?.cancel());
     unawaited(_service.stop());
     super.dispose();

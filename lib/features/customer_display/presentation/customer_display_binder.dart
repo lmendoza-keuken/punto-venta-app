@@ -27,7 +27,8 @@ class CustomerDisplayBinder extends StatefulWidget {
   State<CustomerDisplayBinder> createState() => _CustomerDisplayBinderState();
 }
 
-class _CustomerDisplayBinderState extends State<CustomerDisplayBinder> {
+class _CustomerDisplayBinderState extends State<CustomerDisplayBinder>
+    with WidgetsBindingObserver {
   /// Pausa tras el último scan antes de IPC. Más alto = cajero más fluido;
   /// la vista cliente se actualiza un frame después del burst.
   static const _cartIdleDebounce = Duration(milliseconds: 90);
@@ -42,6 +43,7 @@ class _CustomerDisplayBinderState extends State<CustomerDisplayBinder> {
   bool _showingLockAd = false;
   bool _syncInFlight = false;
   bool _dirty = false;
+  bool _forceNextSync = false;
   String? _pendingQrLabel;
   String? _pendingQrPayload;
   bool _pendingClearQr = false;
@@ -52,8 +54,27 @@ class _CustomerDisplayBinderState extends State<CustomerDisplayBinder> {
     super.initState();
     _service = di.sl<CustomerDisplayService>();
     _prefs = di.sl<SharedPreferences>();
+    WidgetsBinding.instance.addObserver(this);
     _enabledSub = _service.enabledChanges.listen(_onEnabledChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrap());
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    if (!_service.isEnabled || !mounted) return;
+    _forceNextSync = true;
+    unawaited(_resumeDisplay());
+  }
+
+  Future<void> _resumeDisplay() async {
+    try {
+      await _service.start();
+      if (!mounted) return;
+      _requestSync(immediate: true);
+    } catch (e, st) {
+      AppLogger.error('CustomerDisplayBinder: resume falló', e, st);
+    }
   }
 
   void _onEnabledChanged(bool enabled) {
@@ -79,6 +100,7 @@ class _CustomerDisplayBinderState extends State<CustomerDisplayBinder> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     unawaited(_enabledSub?.cancel());
     _doneTimer?.cancel();
     _cartIdleTimer?.cancel();
@@ -206,11 +228,17 @@ class _CustomerDisplayBinderState extends State<CustomerDisplayBinder> {
       qrDetail: qrDetail,
       clearQr: clearQr,
     );
-    if (snapshot == null || snapshot == _lastSent) {
+    if (snapshot == null) {
       if (_dirty) _kickFlush();
       _scheduleLockScreen();
       return;
     }
+    if (snapshot == _lastSent && !_forceNextSync) {
+      if (_dirty) _kickFlush();
+      _scheduleLockScreen();
+      return;
+    }
+    _forceNextSync = false;
 
     _syncInFlight = true;
     _lastSent = snapshot;

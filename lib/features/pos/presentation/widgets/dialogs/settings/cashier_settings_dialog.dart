@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/core/widgets/responsive_dialog_width.dart';
+import 'package:punto_venta_app/features/customer_display/data/pta_sub_screen.dart';
 import 'package:punto_venta_app/features/customer_display/domain/customer_display_service.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
 
@@ -50,6 +51,7 @@ class _CustomerDisplaySettingsTileState
     extends State<CustomerDisplaySettingsTile> {
   final CustomerDisplayService _service = di.sl<CustomerDisplayService>();
   bool? _available;
+  bool _subScreen = false;
   bool _enabled = false;
   bool _busy = false;
 
@@ -63,8 +65,12 @@ class _CustomerDisplaySettingsTileState
 
   Future<void> _detect() async {
     final available = await _service.isAvailable();
+    final sub = await PtaSubScreen.isAvailable();
     if (!mounted) return;
-    setState(() => _available = available);
+    setState(() {
+      _available = available;
+      _subScreen = sub;
+    });
   }
 
   Future<void> _onChanged(bool value) async {
@@ -110,7 +116,7 @@ class _CustomerDisplaySettingsTileState
 
     if (_available != true) {
       return Text(
-        'Este equipo no tiene un segundo monitor disponible.',
+        'Este equipo no tiene pantalla cliente (monitor / LCD SubScreen).',
         style: Theme.of(
           context,
         ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
@@ -118,58 +124,70 @@ class _CustomerDisplaySettingsTileState
     }
 
     final subtitle = _enabled
-        ? 'Activada en este equipo. Se abre sola al iniciar.'
-        : 'Segundo monitor detectado. Al activarla se abre y este equipo la recuerda.';
+        ? (_subScreen
+            ? 'LCD PTA activo. Sigue el carrito del POS.'
+            : 'Activada en este equipo. Se abre sola al iniciar.')
+        : (_subScreen
+            ? 'LCD SubScreen detectado. Al activarla muestra el carrito.'
+            : 'Segundo monitor detectado. Al activarla se abre y este equipo la recuerda.');
 
-    return Container(
-      padding: const EdgeInsets.only(left: 8, right: 4),
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: Colors.teal.withValues(alpha: 0.3),
-          width: 1.5,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.only(left: 8, right: 4),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: Colors.teal.withValues(alpha: 0.3),
+              width: 1.5,
+            ),
+            borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Colors.teal.withValues(alpha: 0.1),
+                  borderRadius:
+                      BorderRadius.circular(AppDimensions.borderRadiusM),
+                ),
+                child: Icon(
+                  _subScreen
+                      ? Icons.smartphone
+                      : Icons.desktop_windows_outlined,
+                  color: Colors.teal,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: AppDimensions.paddingM),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Pantalla cliente',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.teal,
+                          ),
+                    ),
+                    const SizedBox(height: AppDimensions.paddingXS),
+                    Text(
+                      subtitle,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.grey[600],
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(value: _enabled, onChanged: _busy ? null : _onChanged),
+            ],
+          ),
         ),
-        borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: Colors.teal.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
-            ),
-            child: const Icon(
-              Icons.desktop_windows_outlined,
-              color: Colors.teal,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: AppDimensions.paddingM),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Pantalla cliente',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.teal,
-                  ),
-                ),
-                const SizedBox(height: AppDimensions.paddingXS),
-                Text(
-                  subtitle,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
-                ),
-              ],
-            ),
-          ),
-          Switch(value: _enabled, onChanged: _busy ? null : _onChanged),
-        ],
-      ),
+      ],
     );
   }
 }

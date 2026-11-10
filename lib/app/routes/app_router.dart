@@ -28,7 +28,11 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/cash_register/cas
 import 'package:punto_venta_app/features/customer_display/presentation/customer_display_shell_controller.dart';
 
 class AppRouter {
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
+
   static final GoRouter router = GoRouter(
+    navigatorKey: navigatorKey,
     initialLocation: RoutePaths.splash,
     routes: [
       // Auth routes (sin sidebar)
