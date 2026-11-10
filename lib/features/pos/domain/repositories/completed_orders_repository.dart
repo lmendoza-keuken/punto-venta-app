@@ -5,6 +5,7 @@ abstract class CompletedOrdersRepository {
   // Local methods
   Future<List<CompletedOrder>> getCompletedOrders();
   Future<void> saveCompletedOrder(CompletedOrder order);
+  Future<void> clearLocalCompletedOrdersCache();
   Future<List<CompletedOrder>> getOrdersByDateRange(
       DateTime startDate, DateTime endDate);
   Future<CompletedOrder?> getOrderById(String orderId);

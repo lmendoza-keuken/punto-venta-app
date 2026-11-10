@@ -50,7 +50,7 @@ class CompleteOrderUsecase {
       branchId: printJob.branchId,
     );
 
-    await repository.saveCompletedOrder(order);
+    await repository.clearLocalCompletedOrdersCache();
 
     return order;
   }
@@ -113,7 +113,7 @@ class CompleteOrderUsecase {
       templateType: templateType,
     );
 
-    await repository.saveCompletedOrder(order);
+    await repository.clearLocalCompletedOrdersCache();
 
     return order;
   }

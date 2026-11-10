@@ -5,7 +5,6 @@ import 'package:punto_venta_app/features/pos/data/datasources/branch_local_datas
 import 'package:punto_venta_app/features/pos/data/datasources/vat_category_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/client_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/tax_local_datasource.dart';
-import 'package:punto_venta_app/features/pos/data/models/completed_order_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/invoice_payload_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/product_model.dart';
 import 'package:punto_venta_app/features/pos/data/models/tax_model.dart';
@@ -62,11 +61,15 @@ class CompletedOrdersRepositoryImpl implements CompletedOrdersRepository {
   @override
   Future<void> saveCompletedOrder(CompletedOrder order) async {
     try {
-      final orderModel = CompletedOrderModel.fromEntity(order);
-      await localDataSource.saveCompletedOrder(orderModel);
+      await localDataSource.clearLocalCache();
     } catch (e) {
-      throw Exception('Error al guardar orden completada: $e');
+      throw Exception('Error al limpiar cache local de órdenes: $e');
     }
+  }
+
+  @override
+  Future<void> clearLocalCompletedOrdersCache() async {
+    await localDataSource.clearLocalCache();
   }
 
   @override

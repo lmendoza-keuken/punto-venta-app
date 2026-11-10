@@ -246,9 +246,9 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         caeQrCode: caeQrCode,
       );
 
-      ConfirmSaleFlowLog.step('save_completed_order');
+      ConfirmSaleFlowLog.step('clear_local_completed_orders_cache');
       await completeOrderUsecase.fromPrintJob(finalPrintJob);
-      ConfirmSaleFlowLog.step('completed_order_saved');
+      ConfirmSaleFlowLog.step('local_completed_orders_cache_done');
 
       UpdateCheckResult? pendingUpdate;
       try {
