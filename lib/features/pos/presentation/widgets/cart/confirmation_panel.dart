@@ -25,6 +25,7 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_state.dart'
 import 'package:punto_venta_app/features/pos/presentation/widgets/cart/confirmation/checkout_confirmation/checkout_confirmation_view.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/mercado_pago/mercado_pago_qr_panel_view.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/pvs/pvs_qr_panel_view.dart';
+import 'package:punto_venta_app/core/utils/confirm_sale_flow_logger.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
 import 'package:punto_venta_app/features/customer_display/presentation/customer_display_sync.dart';
 import 'package:punto_venta_app/injection_container.dart' as di;
@@ -511,6 +512,15 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
     final confirmationCubit = context.read<CheckoutConfirmationCubit>();
     final payments = confirmationCubit.state.selectedPayments;
 
+    ConfirmSaleFlowLog.start(
+      detail:
+          'payments=${payments.length} total=${confirmationCubit.state.receivedAmount}',
+    );
+    ConfirmSaleFlowLog.step(
+      'confirm_click',
+      detail: 'paymentIds=${payments.map((p) => p.id).join(",")}',
+    );
+
     PaymentMethod? mpPayment;
     PaymentMethod? pvsPayment;
     for (final pm in payments) {
@@ -523,9 +533,14 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
     }
 
     if (mpPayment != null) {
+      ConfirmSaleFlowLog.step(
+        'mp_qr_precheck',
+        detail: 'paymentId=${mpPayment.id} amount=${mpPayment.amount}',
+      );
       final hasCredentials =
           await di.sl<MercadoPagoRepository>().hasValidCredentials();
       if (!hasCredentials) {
+        ConfirmSaleFlowLog.fail('mp_credentials_missing');
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -540,6 +555,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
 
       final amount = mpPayment.amount ?? 0.0;
       if (amount <= 0) {
+        ConfirmSaleFlowLog.fail('mp_amount_invalid');
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -552,13 +568,22 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
 
       final mpIndex = payments.indexWhere((pm) => pm.id == mpPayment!.id);
       if (!context.mounted) return;
+      ConfirmSaleFlowLog.step(
+        'mp_qr_waiting',
+        detail: 'paymentIndex=$mpIndex amount=$amount',
+      );
       _setMpQrStep(_MpQrStep(amount: amount, paymentIndex: mpIndex));
       return;
     }
 
     if (pvsPayment != null) {
+      ConfirmSaleFlowLog.step(
+        'pvs_qr_precheck',
+        detail: 'paymentId=${pvsPayment.id} amount=${pvsPayment.amount}',
+      );
       final amount = pvsPayment.amount ?? 0.0;
       if (amount <= 0) {
+        ConfirmSaleFlowLog.fail('pvs_amount_invalid');
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -573,6 +598,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
           await di.sl<AuthLocalDataSource>().getCachedEnterprise();
       final enterpriseId = enterprise?.id;
       if (enterpriseId == null) {
+        ConfirmSaleFlowLog.fail('pvs_enterprise_missing');
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -588,6 +614,7 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
             paymentMethodId: pvsPayment.id,
           );
       if (credentials == null) {
+        ConfirmSaleFlowLog.fail('pvs_credentials_missing');
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -602,6 +629,10 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
 
       final pvsIndex = payments.indexWhere((pm) => pm.id == pvsPayment!.id);
       if (!context.mounted) return;
+      ConfirmSaleFlowLog.step(
+        'pvs_qr_waiting',
+        detail: 'paymentIndex=$pvsIndex amount=$amount',
+      );
       _setPvsQrStep(_PvsQrStep(
         amount: amount,
         paymentIndex: pvsIndex,
@@ -610,10 +641,15 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
       return;
     }
 
+    ConfirmSaleFlowLog.step('direct_process_sale');
     _processSale(context);
   }
 
   void _onMpQrApproved(BuildContext context, MpPaymentResult result) {
+    ConfirmSaleFlowLog.step(
+      'mp_qr_approved',
+      detail: 'paymentId=${result.paymentId} orderId=${result.orderId}',
+    );
     final confirmationCubit = context.read<CheckoutConfirmationCubit>();
     final step = _mpQrStep;
     if (step != null && step.paymentIndex >= 0) {
@@ -632,6 +668,10 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
   }
 
   void _onPvsQrApproved(BuildContext context, PvsPaymentResult result) {
+    ConfirmSaleFlowLog.step(
+      'pvs_qr_approved',
+      detail: 'paymentId=${result.paymentId} orderId=${result.orderId}',
+    );
     final confirmationCubit = context.read<CheckoutConfirmationCubit>();
     final step = _pvsQrStep;
     if (step != null && step.paymentIndex >= 0) {
@@ -649,11 +689,13 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
   }
 
   void _exitMpQrStep() {
+    ConfirmSaleFlowLog.fail('mp_qr_cancelled');
     _setMpQrStep(null);
     _clearCustomerDisplayQr();
   }
 
   void _exitPvsQrStep() {
+    ConfirmSaleFlowLog.fail('pvs_qr_cancelled');
     _setPvsQrStep(null);
     _clearCustomerDisplayQr();
   }
@@ -665,15 +707,24 @@ class _ConfirmationPanelState extends State<ConfirmationPanel> {
   }
 
   void _processSale(BuildContext context) {
+    ConfirmSaleFlowLog.step('process_sale_start');
     final paymentMethodsState = context.read<PaymentMethodsBloc>().state;
     final selectedPaymentMethod = paymentMethodsState is PaymentMethodsLoaded
         ? paymentMethodsState.selectedPaymentMethod
         : null;
 
+    ConfirmSaleFlowLog.step('build_process_sale_event');
     final event =
         context.read<CheckoutConfirmationCubit>().buildProcessSaleEvent(
               fallbackPaymentMethod: selectedPaymentMethod,
             );
+    ConfirmSaleFlowLog.step(
+      'dispatch_process_sale',
+      detail:
+          'items=${event.items.length} total=${event.total} '
+          'payments=${event.paymentMethods?.length ?? 0} '
+          'branchId=${event.branchId}',
+    );
     context.read<CheckoutBloc>().add(event);
   }
 

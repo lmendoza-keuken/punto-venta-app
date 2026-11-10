@@ -323,6 +323,7 @@ productImagesRepository: sl(),
         priceListLocalDataSource: sl(),
         fetchBranchesUsecase: sl(),
         fetchReturnReasonsUsecase: sl(),
+        getTaxesUsecase: sl(),
       ));
   sl.registerFactory(() => CartBloc(
         manageCartUsecase: sl(),

@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -7,7 +6,6 @@ class AppLogger {
   static File? _file;
   static String logPath = '';
   static bool _stdoutUsable = false;
-  static Timer? _heartbeat;
   static int _currentBytes = 0;
 
   /// Tamaño máximo del archivo activo antes de rotar.
@@ -78,21 +76,6 @@ class AppLogger {
       '(max ${maxBytes ~/ 1024}KB x $maxFiles archivos)',
     );
     bootProbe('AppLogger.init done logPath=$logPath');
-  }
-
-  /// Latido periódico: si el log se corta sin más latidos, el proceso murió
-  /// (crash nativo). Si los latidos siguen, la app quedó colgada.
-  static void startHeartbeat({Duration interval = const Duration(seconds: 5)}) {
-    _heartbeat?.cancel();
-    _heartbeat = Timer.periodic(interval, (timer) {
-      _write('BEAT', 'app viva (${timer.tick * interval.inSeconds}s)');
-    });
-    info('Heartbeat iniciado cada ${interval.inSeconds}s');
-  }
-
-  static void stopHeartbeat() {
-    _heartbeat?.cancel();
-    _heartbeat = null;
   }
 
   static void info(String message) => _write('INFO', message);

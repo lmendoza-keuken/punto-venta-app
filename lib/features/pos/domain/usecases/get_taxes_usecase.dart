@@ -6,7 +6,7 @@ class GetTaxesUsecase {
 
   GetTaxesUsecase(this.repository);
 
-  Future<List<TaxModel>> call() async {
-    return await repository.getTaxes();
+  Future<List<TaxModel>> call({bool forceRefresh = false}) async {
+    return await repository.getTaxes(forceRefresh: forceRefresh);
   }
 }

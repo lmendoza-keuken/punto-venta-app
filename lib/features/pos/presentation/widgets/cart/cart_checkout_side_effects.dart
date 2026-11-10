@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
+import 'package:punto_venta_app/core/utils/confirm_sale_flow_logger.dart';
 import 'package:punto_venta_app/features/app_update/presentation/widgets/update_available_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_event.dart';
@@ -35,10 +36,27 @@ class CartCheckoutSideEffects extends StatelessWidget {
                   uiState is UiLoaded ? uiState.cartMode : CartMode.sale;
               final pendingUpdate = checkoutState.pendingUpdate;
 
+              ConfirmSaleFlowLog.step(
+                'checkout_success_side_effect',
+                detail:
+                    'cartMode=$cartMode ticketId=${checkoutState.printJob.ticketId}',
+              );
+
               if (cartMode != CartMode.returnMode) {
+                ConfirmSaleFlowLog.step(
+                  'dispatch_print_ticket',
+                  detail:
+                      'ticketId=${checkoutState.printJob.ticketId} '
+                      'template=${checkoutState.printJob.templateType}',
+                );
                 context.read<PrinterBloc>().add(PrintTicket(
                       printJob: checkoutState.printJob,
                     ));
+              } else {
+                ConfirmSaleFlowLog.end(
+                  'success_no_print',
+                  detail: 'cartMode=returnMode',
+                );
               }
 
               context.read<CartBloc>().add(ClearCart());
@@ -64,6 +82,10 @@ class CartCheckoutSideEffects extends StatelessWidget {
                 });
               }
             } else if (checkoutState is CheckoutError) {
+              ConfirmSaleFlowLog.fail(
+                'checkout_error_ui',
+                checkoutState.message,
+              );
               showDialog(
                 context: context,
                 barrierDismissible: false,
@@ -82,6 +104,10 @@ class CartCheckoutSideEffects extends StatelessWidget {
         BlocListener<PrinterBloc, PrinterState>(
           listener: (context, printerState) {
             if (printerState is PrinterSuccess) {
+              ConfirmSaleFlowLog.end(
+                'print_success',
+                detail: printerState.message,
+              );
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(printerState.message),
@@ -89,6 +115,7 @@ class CartCheckoutSideEffects extends StatelessWidget {
                 ),
               );
             } else if (printerState is PrinterError) {
+              ConfirmSaleFlowLog.fail('print_error', printerState.message);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(printerState.message),

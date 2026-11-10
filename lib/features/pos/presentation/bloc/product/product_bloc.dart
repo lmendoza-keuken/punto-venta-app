@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:punto_venta_app/core/utils/app_logger.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_branches_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_return_reasons_usecase.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_products_usecase.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/get_taxes_usecase.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/price_list_local_datasource.dart';
 import 'product_event.dart';
 import 'product_state.dart';
@@ -13,6 +15,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
   final PriceListLocalDataSource priceListLocalDataSource;
   final FetchBranchesUsecase fetchBranchesUsecase;
   final FetchReturnReasonsUsecase fetchReturnReasonsUsecase;
+  final GetTaxesUsecase getTaxesUsecase;
   StreamSubscription<List<Product>>? _productsSubscription;
 
   ProductBloc({
@@ -20,6 +23,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     required this.priceListLocalDataSource,
     required this.fetchBranchesUsecase,
     required this.fetchReturnReasonsUsecase,
+    required this.getTaxesUsecase,
   }) : super(ProductInitial()) {
     on<LoadProducts>(_onLoadProducts);
     on<ProductsUpdated>(_onProductsUpdated);
@@ -41,6 +45,18 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
       try {
         await fetchReturnReasonsUsecase(forceRefresh: forceRefresh);
       } catch (_) {}
+    }());
+    unawaited(() async {
+      try {
+        final taxes =
+            await getTaxesUsecase(forceRefresh: forceRefresh);
+        AppLogger.info(
+          'ProductBloc: taxes prefetch ok count=${taxes.length} '
+          'forceRefresh=$forceRefresh',
+        );
+      } catch (e) {
+        AppLogger.warn('ProductBloc: taxes prefetch fail error=$e');
+      }
     }());
   }
 

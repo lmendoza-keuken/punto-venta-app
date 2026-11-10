@@ -103,7 +103,6 @@ void main(List<String> args) {
     await _signInAnonymously();
 
     AppLogger.info('Boot stage=runApp');
-    AppLogger.startHeartbeat();
     runApp(const MyApp());
     AppLogger.info('Boot stage=runApp scheduled');
   }, (error, stackTrace) {

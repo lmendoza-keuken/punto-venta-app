@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'package:punto_venta_app/core/constants/ticket_template_types.dart';
+import 'package:punto_venta_app/core/utils/confirm_sale_flow_logger.dart';
 import 'package:punto_venta_app/features/auth/data/datasources/auth_local_datasources.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/pdv_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/price_list_local_datasource.dart';
@@ -68,9 +69,14 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
     ProcessSale event,
     Emitter<CheckoutState> emit,
   ) async {
+    ConfirmSaleFlowLog.step(
+      'checkout_bloc_process_sale',
+      detail: 'items=${event.items.length} total=${event.total}',
+    );
     emit(const CheckoutProcessing());
 
     try {
+      ConfirmSaleFlowLog.step('load_local_context');
       // Obtener datos necesarios
       final user = await authLocalDataSource.getCachedUser();
       final priceList = await priceListLocalDataSource.getCurrentPriceList();
@@ -85,14 +91,26 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
       final branch = branchIdToUse != null
           ? await branchLocalDataSource.getBranchById(branchIdToUse)
           : null;
+      ConfirmSaleFlowLog.step(
+        'local_context_ready',
+        detail:
+            'cashier=${user?.id} branchId=$branchIdToUse '
+            'branchNumber=$branchNumber priceList=$priceList '
+            'afip=${branch?.afipAvailable}',
+      );
 
-      // Calcular impuestos usando el caso de uso centralizado
+      ConfirmSaleFlowLog.step(
+        'calculate_order_taxes_local',
+        detail: 'source=pdv_branch_vat_cache items=${event.items.length}',
+      );
+      final taxCalcSw = Stopwatch()..start();
       final taxResult = await calculateOrderTaxesUseCase(
         items: event.items,
         subtotal: event.subtotal,
         totalIva: event.totalIva,
         client: event.client,
       );
+      taxCalcSw.stop();
 
       final iibbAmount = taxResult.iibbAmount;
       final iibbPercentage = taxResult.iibbPercentage;
@@ -101,6 +119,13 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
       final internalTaxAmount = taxResult.internalTaxAmount;
       final internalTaxRate = taxResult.internalTaxRate;
       final totalWithIibb = taxResult.totalAmount;
+      ConfirmSaleFlowLog.step(
+        'calculate_order_taxes_local_done',
+        detail:
+            'calcElapsedMs=${taxCalcSw.elapsedMilliseconds} '
+            'totalWithTaxes=$totalWithIibb iibb=$iibbAmount '
+            'vatPerception=$vatPerceptionAmount internalTax=$internalTaxAmount',
+      );
 
       // Determinar template automáticamente
       TicketTemplateType templateType = TicketTemplateType.standard;
@@ -113,8 +138,13 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
       FiscalIssuerData? fiscalData;
       if (branch?.afipAvailable == true && config?.branchId != null) {
         try {
+          ConfirmSaleFlowLog.step('load_fiscal_issuer_data');
           fiscalData = await fiscalIssuerDataRepository.getFiscalIssuerData();
         } catch (e) {
+          ConfirmSaleFlowLog.step(
+            'fiscal_issuer_data_fail',
+            detail: '$e',
+          );
           print('Error al obtener datos fiscales: $e');
         }
       }
@@ -122,6 +152,10 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
       final currentTicketId =
           sharedPreferences.getString('current_ticket_id') ?? const Uuid().v4();
 
+      ConfirmSaleFlowLog.step(
+        'build_temp_print_job',
+        detail: 'ticketId=$currentTicketId template=$templateType',
+      );
       // Crear PrintJob (sin ticketId definitivo)
       final tempPrintJob = PrintJob(
         ticketId: currentTicketId,
@@ -152,8 +186,15 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         templateType: templateType,
       );
 
+      ConfirmSaleFlowLog.step('send_invoice_start');
       // Enviar factura y obtener ticketId y description
       final invoiceResponse = await sendInvoiceUseCase(tempPrintJob);
+      ConfirmSaleFlowLog.step(
+        'send_invoice_done',
+        detail:
+            'ticketId=${invoiceResponse.ticketId} '
+            'description=${invoiceResponse.description}',
+      );
 
       // Eliminar el ticketId de SharedPreferences tras una respuesta exitosa del backend
       await sharedPreferences.remove('current_ticket_id');
@@ -165,6 +206,10 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
       final detailedTaxes = invoiceResponse.detailedTaxes;
       final caeQrCode = invoiceResponse.caeQrCode;
 
+      ConfirmSaleFlowLog.step(
+        'build_final_print_job',
+        detail: 'ticketId=$ticketId detailedTaxes=$detailedTaxes',
+      );
       // PrintJob final con el ticketId y description
       final finalPrintJob = PrintJob(
         ticketId: ticketId,
@@ -201,20 +246,28 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         caeQrCode: caeQrCode,
       );
 
+      ConfirmSaleFlowLog.step('save_completed_order');
       await completeOrderUsecase.fromPrintJob(finalPrintJob);
+      ConfirmSaleFlowLog.step('completed_order_saved');
 
       UpdateCheckResult? pendingUpdate;
       try {
+        ConfirmSaleFlowLog.step('track_comprobante_update_check');
         pendingUpdate = await trackComprobanteAndMaybeCheckUpdate();
       } catch (_) {
         pendingUpdate = null;
       }
 
+      ConfirmSaleFlowLog.step(
+        'checkout_success_emit',
+        detail: 'ticketId=$ticketId',
+      );
       emit(CheckoutSuccess(
         printJob: finalPrintJob,
         pendingUpdate: pendingUpdate,
       ));
     } catch (e) {
+      ConfirmSaleFlowLog.fail('checkout_error', e);
       emit(CheckoutError(message: _extractErrorMessage(e)));
     }
   }

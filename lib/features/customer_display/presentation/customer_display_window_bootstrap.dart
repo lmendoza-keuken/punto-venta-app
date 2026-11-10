@@ -97,7 +97,6 @@ Future<void> runCustomerDisplayWindow(String argumentsJson) async {
   }
 
   AppLogger.info('CustomerDisplay window: runApp');
-  AppLogger.startHeartbeat();
   runApp(
     WindowsFullscreenHotkeys(
       windowedBounds: targetBounds,

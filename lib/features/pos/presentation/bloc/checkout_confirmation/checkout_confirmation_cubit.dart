@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:punto_venta_app/core/utils/confirm_sale_flow_logger.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_item.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/payment_method.dart';
@@ -323,6 +324,7 @@ class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
   }
 
   ProcessSale buildProcessSaleEvent({PaymentMethod? fallbackPaymentMethod}) {
+    ConfirmSaleFlowLog.step('map_process_sale_event_start');
     final cartState = cartBloc.state;
     final clientsState = clientsBloc.state;
 
@@ -337,7 +339,7 @@ class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
     final selectedClient =
         clientsState is ClientsLoaded ? clientsState.selectedClient : null;
 
-    return ProcessSale(
+    final event = ProcessSale(
       items: items,
       logItems: logItems,
       total: total,
@@ -353,6 +355,17 @@ class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
       change: state.change,
       branchId: state.activeBranchId,
     );
+    ConfirmSaleFlowLog.step(
+      'map_process_sale_event_done',
+      detail:
+          'items=${items.length} logItems=${logItems.length} '
+          'subtotal=$subtotal total=$total totalIva=$totalIva '
+          'clientId=${selectedClient?.id} '
+          'payments=${event.paymentMethods?.length ?? 0} '
+          'received=${state.receivedAmount} change=${state.change} '
+          'branchId=${state.activeBranchId}',
+    );
+    return event;
   }
 
   void selectBranch(int branchId) {
