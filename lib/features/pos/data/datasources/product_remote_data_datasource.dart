@@ -18,7 +18,7 @@ part 'product_remote_data_datasource.g.dart';
 abstract class ProductService {
   factory ProductService(Dio dio, {String baseUrl}) = _ProductService;
 
-  @GET('/articles/')
+  @GET('articles/')
   Future<List<ProductModel>> getProducts({
     @Query('skip') int skip = 0,
     @Query('limit') int limit = 1000,
@@ -26,31 +26,31 @@ abstract class ProductService {
     @Query('list_id') int? listId,
   });
 
-  @GET('/articles/{article_id}')
+  @GET('articles/{article_id}')
   Future<ProductModel> getProductById({
     @Path('article_id') required int articleId,
     @Query('list_id') required int listId,
   });
 
-  @GET('/barcodes/')
+  @GET('barcodes/')
   Future<List<BarcodeModel>> getBarcodes({
     @Query('skip') int skip = 0,
     @Query('limit') int limit = 10000,
   });
 
-  @GET('/barcodes/{barcode_id}')
+  @GET('barcodes/{barcode_id}')
   Future<ProductModel> getProductByBarcode({
     @Path('barcode_id') required String barcodeId,
     @Query('list_id') required int listId,
   });
 
-  @GET('/prices_list/')
+  @GET('prices_list/')
   Future<List<PrecioArticuloModel>> getPricesList({
     @Query('skip') int skip = 0,
     @Query('limit') int limit = 10000,
   });
 
-  @GET('/categories/')
+  @GET('categories/')
   Future<List<CategoryModel>> getCategories({
     @Query('skip') int skip = 0,
     @Query('limit') int limit = 10000,

@@ -10,10 +10,10 @@ part 'ticket_config_remote_datasource.g.dart';
 abstract class TicketConfigService {
   factory TicketConfigService(Dio dio, {String baseUrl}) = _TicketConfigService;
 
-  @GET('/ticket_config/')
+  @GET('ticket_config/')
   Future<TicketConfigModel> getTicketConfig();
 
-  @PUT('/ticket_config/')
+  @PUT('ticket_config/')
   Future<TicketConfigModel> updateTicketConfig(@Body() TicketConfigModel config);
 }
 

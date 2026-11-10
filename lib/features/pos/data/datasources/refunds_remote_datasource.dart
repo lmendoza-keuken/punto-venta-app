@@ -14,10 +14,10 @@ part 'refunds_remote_datasource.g.dart';
 abstract class RefundsService {
   factory RefundsService(Dio dio, {String baseUrl}) = _RefundsService;
 
-  @GET('/refunds/reasons')
+  @GET('refunds/reasons')
   Future<List<RefundReasonModel>> getRefundReasons();
 
-  @POST('/refunds/cash')
+  @POST('refunds/cash')
   Future<dynamic> processCashRefund(@Body() Map<String, dynamic> body);
 }
 

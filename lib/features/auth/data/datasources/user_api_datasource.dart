@@ -11,7 +11,7 @@ part 'user_api_datasource.g.dart';
 abstract class UserApiService {
   factory UserApiService(Dio dio, {String baseUrl}) = _UserApiService;
 
-  @POST('/users/login-cashier')
+  @POST('users/login-cashier')
   Future<dynamic> authenticateUser(@Body() Map<String, dynamic> body);
 }
 

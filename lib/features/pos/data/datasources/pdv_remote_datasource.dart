@@ -15,21 +15,21 @@ part 'pdv_remote_datasource.g.dart';
 abstract class PdvService {
   factory PdvService(Dio dio, {String baseUrl}) = _PdvService;
 
-  @GET('/configuration/')
+  @GET('configuration/')
   Future<PdvConfigResponseModel> fetchPdvConfig();
 
-  @PUT('/configuration/')
+  @PUT('configuration/')
   Future<PdvConfigResponseModel> updatePdvConfig(
       @Body() Map<String, dynamic> body);
 
-  @GET('/branches/')
+  @GET('branches/')
   Future<List<BranchResponseModel>> fetchBranches(
       {@Query('skip') int skip = 0, @Query('limit') int limit = 100});
 
-  @GET('/cash-account/')
+  @GET('cash-account/')
   Future<CashRegisterStatusModel> fetchCashRegisterStatus();
 
-  @PUT('/cash-account/')
+  @PUT('cash-account/')
   Future<CashRegisterStatusModel> updateCashRegisterStatus(
       @Body() Map<String, dynamic> body);
 }

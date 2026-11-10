@@ -10,7 +10,7 @@ part 'vat_category_remote_datasource.g.dart';
 abstract class VatCategoryService {
   factory VatCategoryService(Dio dio, {String baseUrl}) = _VatCategoryService;
 
-  @GET('/vat-categories/')
+  @GET('vat-categories/')
   Future<List<VatCategoryModel>> getVatCategories();
 }
 

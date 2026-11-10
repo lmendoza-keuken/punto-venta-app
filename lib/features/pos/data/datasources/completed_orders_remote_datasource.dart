@@ -11,13 +11,13 @@ abstract class CompletedOrdersService {
   factory CompletedOrdersService(Dio dio, {String baseUrl}) =
       _CompletedOrdersService;
 
-  @GET('/tickets/')
+  @GET('tickets/')
   Future<List<InvoicePayload>> getAllTickets(
       {@Query('skip') int skip = 0,
       @Query('limit') int limit = 10,
       @Query('type_code') String? typeCode});
 
-  @GET('/tickets/')
+  @GET('tickets/')
   Future<List<InvoicePayload>> getTicketsByDateRange(
       {@Query('start_date') required String startDate,
       @Query('end_date') String? endDate,
@@ -25,7 +25,7 @@ abstract class CompletedOrdersService {
       @Query('limit') int limit = 10,
       @Query('type_code') String? typeCode});
 
-  @GET('/tickets/{id}')
+  @GET('tickets/{id}')
   Future<InvoicePayload> getTicketById(@Path('id') String id);
 }
 

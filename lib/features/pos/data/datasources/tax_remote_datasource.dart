@@ -10,7 +10,7 @@ part 'tax_remote_datasource.g.dart';
 abstract class TaxService {
   factory TaxService(Dio dio, {String baseUrl}) = _TaxService;
 
-  @GET('/taxes/')
+  @GET('taxes/')
   Future<List<TaxModel>> getTaxes();
 }
 

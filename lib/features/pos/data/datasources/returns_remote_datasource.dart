@@ -16,19 +16,19 @@ part 'returns_remote_datasource.g.dart';
 abstract class ReturnsService {
   factory ReturnsService(Dio dio, {String baseUrl}) = _ReturnsService;
 
-  @GET('/returns/reasons')
+  @GET('returns/reasons')
   Future<List<ReturnReasonModel>> getReturnReasons();
 
-  @GET('/returns/')
+  @GET('returns/')
   Future<List<SaleReturnModel>> getReturns({@Query('date') String? date});
 
-  @POST('/returns/total')
+  @POST('returns/total')
   Future<dynamic> processTotalReturn(@Body() Map<String, dynamic> body);
 
-  @POST('/returns/partial')
+  @POST('returns/partial')
   Future<dynamic> processPartialReturn(@Body() Map<String, dynamic> body);
 
-  @POST('/returns/qr-refund')
+  @POST('returns/qr-refund')
   Future<dynamic> associateQrRefund(@Body() Map<String, dynamic> body);
 }
 

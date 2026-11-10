@@ -11,11 +11,11 @@ part 'supplier_remote_datasource.g.dart';
 abstract class SupplierService {
   factory SupplierService(Dio dio, {String baseUrl}) = _SupplierService;
 
-  @GET('/suppliers/')
+  @GET('suppliers/')
   Future<List<SupplierResponseModel>> getSuppliers(
       {@Query('skip') int skip = 0, @Query('limit') int limit = 10000});
 
-  @POST('/suppliers/reception/')
+  @POST('suppliers/reception/')
   Future<void> makePayment(@Body() SupplierPaymentRequest request);
 }
 

@@ -13,23 +13,23 @@ part 'settlements_remote_datasource.g.dart';
 abstract class SettlementsService {
   factory SettlementsService(Dio dio, {String baseUrl}) = _SettlementsService;
 
-  @GET('/settlements/pending/collectors')
+  @GET('settlements/pending/collectors')
   Future<List<PendingCollectorsResponseModel>> getPendingCollectors(
       {@Query('date') required String date});
 
-  @GET('/settlements/pending/{collector_id}')
+  @GET('settlements/pending/{collector_id}')
   Future<PendingCollectorsDetailResponseModel> getPendingCollectorDetail(
       {@Path('collector_id') required String collectorId,
         @Query('date') required String date
       });
 
-  @GET('/settlements/pending/{collector_id}/canceled_items')
+  @GET('settlements/pending/{collector_id}/canceled_items')
   Future<List<PendingCanceledTicketModel>> getPendingCanceledItems({
     @Path('collector_id') required String collectorId,
     @Query('date') required String date,
   });
 
-  @GET('/settlements/pending/{collector_id}/disposed_items')
+  @GET('settlements/pending/{collector_id}/disposed_items')
   Future<List<PendingDisposedGroupModel>> getPendingDisposedItems({
     @Path('collector_id') required String collectorId,
     @Query('date') required String date,

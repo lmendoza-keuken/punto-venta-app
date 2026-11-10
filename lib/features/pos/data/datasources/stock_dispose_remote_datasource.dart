@@ -14,17 +14,17 @@ part 'stock_dispose_remote_datasource.g.dart';
 abstract class StockDisposeService {
   factory StockDisposeService(Dio dio, {String baseUrl}) = _StockDisposeService;
 
-  @GET('/stock/dispose-reasons')
+  @GET('stock/dispose-reasons')
   Future<List<DisposeReasonModel>> getDisposeReasons();
 
-  @POST('/stock/dispose-reasons')
+  @POST('stock/dispose-reasons')
   Future<DisposeReasonModel> createDisposeReason(
       @Body() Map<String, dynamic> body);
 
-  @DELETE('/stock/dispose-reasons/{reason_id}')
+  @DELETE('stock/dispose-reasons/{reason_id}')
   Future<void> deleteDisposeReason(@Path('reason_id') int reasonId);
 
-  @POST('/stock/dispose')
+  @POST('stock/dispose')
   Future<StockDisposeResponseModel> disposeStock(
       @Body() Map<String, dynamic> body);
 }

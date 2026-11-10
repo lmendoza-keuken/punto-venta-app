@@ -11,7 +11,7 @@ abstract class PriceListTypesService {
   factory PriceListTypesService(Dio dio, {String baseUrl}) =
       _PriceListTypesService;
 
-  @GET('/price-list-types/')
+  @GET('price-list-types/')
   Future<List<PriceListTypeResponseModel>> fetchPriceListTypes(
       {@Query('skip') int skip = 0, @Query('limit') int limit = 100});
 }

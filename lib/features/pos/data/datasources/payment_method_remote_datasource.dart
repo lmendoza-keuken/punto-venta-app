@@ -12,13 +12,13 @@ abstract class PaymentMethodService {
   factory PaymentMethodService(Dio dio, {String baseUrl}) =
       _PaymentMethodService;
 
-  @GET('/payment_methods/')
+  @GET('payment_methods/')
   Future<List<PaymentMethodModel>> getPaymentMethods();
 
-  @GET('/configuration/payment_methods/')
+  @GET('configuration/payment_methods/')
   Future<PaymentMethodsConfigModel> getPaymentMethodsConfig();
 
-  @PUT('/configuration/payment_methods/')
+  @PUT('configuration/payment_methods/')
   Future<dynamic> updatePaymentMethodsConfig(
       @Body() Map<String, dynamic> body);
 }

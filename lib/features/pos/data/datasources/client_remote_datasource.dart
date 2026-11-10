@@ -10,7 +10,7 @@ part 'client_remote_datasource.g.dart';
 abstract class ClientService {
   factory ClientService(Dio dio, {String baseUrl}) = _ClientService;
 
-  @GET('/pdv/')
+  @GET('pdv/')
   Future<List<Client>> getClients(
       {@Query('skip') int skip = 0, @Query('limit') int limit = 10000});
 }

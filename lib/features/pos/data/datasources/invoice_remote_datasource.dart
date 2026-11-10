@@ -17,7 +17,7 @@ part 'invoice_remote_datasource.g.dart';
 abstract class InvoiceService {
   factory InvoiceService(Dio dio, {String baseUrl}) = _InvoiceService;
 
-  @POST('/tickets/')
+  @POST('tickets/')
   Future<dynamic> sendInvoice(@Body() Map<String, dynamic> body);
 }
 
