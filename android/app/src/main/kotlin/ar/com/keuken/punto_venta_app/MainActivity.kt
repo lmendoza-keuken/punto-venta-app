@@ -5,18 +5,26 @@ import io.flutter.embedding.engine.FlutterEngine
 
 class MainActivity : FlutterActivity() {
     private var subScreenChannel: SubScreenChannel? = null
+    private var thermalPrinterChannel: ThermalPrinterChannel? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        val messenger = flutterEngine.dartExecutor.binaryMessenger
         subScreenChannel = SubScreenChannel(
             context = this,
-            messenger = flutterEngine.dartExecutor.binaryMessenger,
+            messenger = messenger,
+        )
+        thermalPrinterChannel = ThermalPrinterChannel(
+            context = this,
+            messenger = messenger,
         )
     }
 
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
         subScreenChannel?.dispose()
         subScreenChannel = null
+        thermalPrinterChannel?.dispose()
+        thermalPrinterChannel = null
         super.cleanUpFlutterEngine(flutterEngine)
     }
 
@@ -28,6 +36,8 @@ class MainActivity : FlutterActivity() {
     override fun onDestroy() {
         subScreenChannel?.dispose()
         subScreenChannel = null
+        thermalPrinterChannel?.dispose()
+        thermalPrinterChannel = null
         super.onDestroy()
     }
 }

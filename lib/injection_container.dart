@@ -69,6 +69,7 @@ import 'package:punto_venta_app/features/pos/data/datasources/ticket_config_loca
 import 'package:punto_venta_app/features/pos/data/datasources/ticket_config_remote_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/payment_method_remote_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/price_list_local_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/printer_builtin_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/pdv_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/pdv_remote_datasource.dart';
@@ -571,11 +572,16 @@ productImagesRepository: sl(),
     sl.registerLazySingleton<PrinterSocketDatasource>(
       () => PrinterSocketDatasourceImpl(),
     );
+    // Térmica integrada PTA0130 (Android); en otras plataformas isAvailable=false.
+    sl.registerLazySingleton<PrinterBuiltinDatasource>(
+      () => PrinterBuiltinDatasource(),
+    );
 
     // Repository para Desktop/Mobile
     sl.registerLazySingleton<PrinterRepository>(
       () => PrinterRepositoryImpl(
         printerDatasource: sl(),
+        builtinDatasource: sl(),
       ),
     );
   }

@@ -1,7 +1,8 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/utils/confirm_sale_flow_logger.dart';
-import 'package:punto_venta_app/features/pos/domain/usecases/print_ticket_usecase.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/print_ticket_usecase.dart';
 import 'printer_event.dart';
 import 'printer_state.dart';
 
@@ -35,7 +36,8 @@ class PrinterBloc extends Bloc<PrinterEvent, PrinterState> {
       final config = event.config ?? await printerLocalDataSource.getPrinterConfig();
       ConfirmSaleFlowLog.step(
         'print_usecase_start',
-        detail: 'ip=${config.ip} port=${config.port}',
+        detail:
+            'mode=${config.outputMode.name} ip=${config.ip} port=${config.port}',
       );
       final printSw = Stopwatch()..start();
       final success = await printTicketUsecase(
@@ -55,6 +57,17 @@ class PrinterBloc extends Bloc<PrinterEvent, PrinterState> {
         emit(const PrinterError(
             'No se pudo conectar con la impresora. Verifica la configuración.'));
       }
+    } on PlatformException catch (e) {
+      ConfirmSaleFlowLog.step(
+        'print_ticket_platform',
+        detail: 'code=${e.code} message=${e.message}',
+      );
+      final msg = switch (e.code) {
+        'no_paper' => 'Impresora sin papel. Cargá rollo e intentá de nuevo.',
+        'overheat' => 'Impresora sobrecalentada. Esperá un momento.',
+        _ => e.message ?? 'Error de impresora (${e.code})',
+      };
+      emit(PrinterError(msg));
     } catch (e) {
       ConfirmSaleFlowLog.step('print_ticket_exception', detail: '$e');
       emit(PrinterError('Error de conexión con la impresora: ${e.toString()}'));

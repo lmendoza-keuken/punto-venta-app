@@ -30,6 +30,7 @@ class SubScreenChannel(
     private var initialized = false
 
     init {
+        TelpoHiddenApi.releaseReflectionLimit()
         channel.setMethodCallHandler(this)
     }
 
@@ -81,6 +82,7 @@ class SubScreenChannel(
 
     private fun resolveManager(): Any? {
         manager?.let { return it }
+        TelpoHiddenApi.releaseReflectionLimit()
         return try {
             val clazz = Class.forName(MANAGER_CLASS)
             val svc = context.getSystemService(SERVICE_NAME)
