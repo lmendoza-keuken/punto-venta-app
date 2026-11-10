@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../../../domain/usecases/manage_cart_usecase.dart';
 import '../../../domain/entities/cart_item.dart';
 import '../../../domain/entities/cart_log_entry.dart';
+import '../../../domain/entities/product.dart';
 import 'cart_event.dart';
 import 'cart_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/internal_tax_calculator.dart';
@@ -51,22 +52,14 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     final totalConIva = subtotal + totalIva + internalTax;
 
     final currentLog = _getCurrentLog();
-
-    final entry = CartLogEntry(
-      id: _randomId(),
-      type: CartActionType.add,
-      item: CartItem(
-        product: event.product,
-        quantity: event.quantity,
-        iva: event.product.vat,
-        isWeighted: event.isWeighted ?? false,
-        weightKg: event.weightKg,
-        pricePerKg: event.pricePerKg,
-      ),
-      timestamp: DateTime.now(),
+    final newLog = _appendOrMergeAddLog(
+      currentLog,
+      product: event.product,
+      quantity: event.quantity,
+      isWeighted: event.isWeighted ?? false,
+      weightKg: event.weightKg,
+      pricePerKg: event.pricePerKg,
     );
-
-    final newLog = List<CartLogEntry>.from(currentLog)..add(entry);
 
     emit(CartLoaded(
       items: newItems,
@@ -219,6 +212,62 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       return (state as CartLoaded).log;
     }
     return [];
+  }
+
+  /// Si el último log es un add del mismo producto, acumula cantidad.
+  /// Solo corta cuando cambia el producto (o el tipo de acción).
+  List<CartLogEntry> _appendOrMergeAddLog(
+    List<CartLogEntry> currentLog, {
+    required Product product,
+    required int quantity,
+    required bool isWeighted,
+    double? weightKg,
+    double? pricePerKg,
+  }) {
+    final now = DateTime.now();
+    if (currentLog.isNotEmpty) {
+      final last = currentLog.last;
+      final sameProduct = last.type == CartActionType.add &&
+          last.item.product.id == product.id &&
+          (last.item.isWeighted ?? false) == isWeighted;
+
+      if (sameProduct) {
+        final mergedItem = last.item.copyWith(
+          quantity: last.item.quantity + quantity,
+          weightKg: isWeighted
+              ? (last.item.weightKg ?? 0.0) + (weightKg ?? 0.0)
+              : last.item.weightKg,
+          pricePerKg: isWeighted
+              ? (last.item.pricePerKg ?? 0.0) + (pricePerKg ?? 0.0)
+              : last.item.pricePerKg,
+        );
+        final updated = List<CartLogEntry>.from(currentLog);
+        updated[updated.length - 1] = CartLogEntry(
+          id: last.id,
+          type: CartActionType.add,
+          item: mergedItem,
+          timestamp: now,
+        );
+        return updated;
+      }
+    }
+
+    return List<CartLogEntry>.from(currentLog)
+      ..add(
+        CartLogEntry(
+          id: _randomId(),
+          type: CartActionType.add,
+          item: CartItem(
+            product: product,
+            quantity: quantity,
+            iva: product.vat,
+            isWeighted: isWeighted,
+            weightKg: weightKg,
+            pricePerKg: pricePerKg,
+          ),
+          timestamp: now,
+        ),
+      );
   }
 
   String _randomId() {
