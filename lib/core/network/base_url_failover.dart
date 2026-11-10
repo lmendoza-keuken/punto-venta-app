@@ -24,30 +24,63 @@ class BaseUrlFailover {
   /// Runs [action], rotating baseUrl and retrying on timeout/connection errors.
   static Future<T> runWithFailover<T>(Future<T> Function() action) async {
     final attempted = <String>{};
+    final overallSw = Stopwatch()..start();
 
     while (true) {
       final currentUrl = ApiConfig.activeBaseUrl;
       attempted.add(currentUrl);
+      final attemptSw = Stopwatch()..start();
 
       try {
-        return await action();
+        final result = await action();
+        attemptSw.stop();
+        overallSw.stop();
+        AppLogger.info(
+          'BaseUrlFailover: success '
+          'baseUrl=$currentUrl '
+          'attemptElapsedMs=${attemptSw.elapsedMilliseconds} '
+          'totalElapsedMs=${overallSw.elapsedMilliseconds} '
+          'attempts=${attempted.length} '
+          'urlChanged=${attempted.length > 1}',
+        );
+        return result;
       } catch (e) {
+        attemptSw.stop();
         if (!isUnreachable(e)) {
+          AppLogger.warn(
+            'BaseUrlFailover: non-retryable error on $currentUrl '
+            'elapsedMs=${attemptSw.elapsedMilliseconds} '
+            'error=$e',
+          );
           rethrow;
         }
 
         AppLogger.warn(
-          'BaseUrlFailover: unreachable on $currentUrl, trying next URL...',
+          'BaseUrlFailover: unreachable on $currentUrl '
+          'elapsedMs=${attemptSw.elapsedMilliseconds}, '
+          'trying next URL... attempted=$attempted',
         );
 
+        final previousUrl = currentUrl;
         final switched = ApiConfig.switchToNextBaseUrl();
         if (!switched || attempted.contains(ApiConfig.activeBaseUrl)) {
+          overallSw.stop();
+          AppLogger.error(
+            'BaseUrlFailover: no more URLs to try '
+            'lastUrl=$previousUrl '
+            'totalElapsedMs=${overallSw.elapsedMilliseconds} '
+            'attempted=$attempted',
+          );
           rethrow;
         }
 
-        await _persistActiveBaseUrl(ApiConfig.activeBaseUrl);
+        final nextUrl = ApiConfig.activeBaseUrl;
+        await _persistActiveBaseUrl(nextUrl);
         AppLogger.info(
-          'BaseUrlFailover: switched to ${ApiConfig.activeBaseUrl}',
+          'BaseUrlFailover: URL changed '
+          'from=$previousUrl '
+          'to=$nextUrl '
+          'attempt=${attempted.length + 1}',
         );
       }
     }
