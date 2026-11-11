@@ -20,7 +20,7 @@ class QrCodeImageBuilder {
     // Márgenes y espaciados
     const double topBottomMargin = 20.0;
     const double spacing = 15.0;
-    final double fontSize = width > 500 ? 17.0 : 15.0;
+    final double fontSize = width > 500 ? 19.0 : 17.0;
 
     final qr = Barcode.qrCode();
     final List<BarcodeElement> rawElements = [];

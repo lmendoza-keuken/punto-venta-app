@@ -35,7 +35,9 @@ class PtaLcdView extends StatelessWidget {
           color: _bgFor(snapshot.mode),
           child: switch (snapshot.mode) {
             CustomerDisplayMode.idle => const _IdleLcd(),
-            CustomerDisplayMode.advertising => _AdvertisingLcd(snapshot: snapshot),
+            CustomerDisplayMode.advertising => _AdvertisingLcd(
+              snapshot: snapshot,
+            ),
             CustomerDisplayMode.cart => _CartLcd(snapshot: snapshot),
             CustomerDisplayMode.payment => _PaymentLcd(snapshot: snapshot),
             CustomerDisplayMode.done => _DoneLcd(snapshot: snapshot),
@@ -46,13 +48,13 @@ class PtaLcdView extends StatelessWidget {
   }
 
   static Color _bgFor(CustomerDisplayMode mode) => switch (mode) {
-        CustomerDisplayMode.payment => const Color(0xFF1B5E20),
-        CustomerDisplayMode.done => const Color(0xFF0D47A1),
-        // Idle ≠ azul del init nativo, para distinguir “widget pintó” vs “solo init”.
-        CustomerDisplayMode.idle => const Color(0xFF102A43),
-        CustomerDisplayMode.advertising => const Color(0xFF0B6E4F),
-        CustomerDisplayMode.cart => const Color(0xFF0F172A),
-      };
+    CustomerDisplayMode.payment => const Color(0xFF1B5E20),
+    CustomerDisplayMode.done => const Color(0xFF0D47A1),
+    // Idle ≠ azul del init nativo, para distinguir “widget pintó” vs “solo init”.
+    CustomerDisplayMode.idle => const Color(0xFF102A43),
+    CustomerDisplayMode.advertising => const Color(0xFF0B6E4F),
+    CustomerDisplayMode.cart => const Color(0xFF0F172A),
+  };
 }
 
 class _IdleLcd extends StatelessWidget {
@@ -100,10 +102,7 @@ class _PaymentLcd extends StatelessWidget {
     final phase = snapshot.qrPhase;
 
     if (snapshot.isProcessing) {
-      return _PaymentAmountOnly(
-        total: total,
-        caption: 'Procesando…',
-      );
+      return _PaymentAmountOnly(total: total, caption: 'Procesando…');
     }
 
     if (qrLabel != null &&
@@ -117,7 +116,9 @@ class _PaymentLcd extends StatelessWidget {
         padding: const EdgeInsets.all(8),
         child: Row(
           children: [
-            Expanded(child: _PaymentAmountColumn(total: total, label: qrLabel)),
+            Expanded(
+              child: _PaymentAmountColumn(total: total, label: qrLabel),
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: Column(
@@ -142,7 +143,10 @@ class _PaymentLcd extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.white70, fontSize: 11),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 11,
+                      ),
                     ),
                   ],
                 ],
@@ -178,10 +182,7 @@ class _PaymentLcd extends StatelessWidget {
       );
     }
 
-    return _PaymentAmountOnly(
-      total: total,
-      caption: 'Aguarde en caja',
-    );
+    return _PaymentAmountOnly(total: total, caption: 'Aguarde en caja');
   }
 
   static ({IconData icon, Color color, String title}) _qrStatus(
@@ -189,30 +190,30 @@ class _PaymentLcd extends StatelessWidget {
   ) {
     return switch (phase) {
       CustomerDisplayQrPhase.approved => (
-          icon: Icons.check_circle,
-          color: const Color(0xFF86EFAC),
-          title: '¡Aprobado!',
-        ),
+        icon: Icons.check_circle,
+        color: const Color(0xFF86EFAC),
+        title: '¡Aprobado!',
+      ),
       CustomerDisplayQrPhase.rejected => (
-          icon: Icons.cancel,
-          color: const Color(0xFFFCA5A5),
-          title: 'Rechazado',
-        ),
+        icon: Icons.cancel,
+        color: const Color(0xFFFCA5A5),
+        title: 'Rechazado',
+      ),
       CustomerDisplayQrPhase.expired => (
-          icon: Icons.timer_off,
-          color: const Color(0xFFFDE68A),
-          title: 'Expirado',
-        ),
+        icon: Icons.timer_off,
+        color: const Color(0xFFFDE68A),
+        title: 'Expirado',
+      ),
       CustomerDisplayQrPhase.pending => (
-          icon: Icons.hourglass_top,
-          color: const Color(0xFFFDBA74),
-          title: 'Confirmando…',
-        ),
+        icon: Icons.hourglass_top,
+        color: const Color(0xFFFDBA74),
+        title: 'Confirmando…',
+      ),
       CustomerDisplayQrPhase.none || CustomerDisplayQrPhase.ready => (
-          icon: Icons.qr_code,
-          color: Colors.white70,
-          title: 'QR',
-        ),
+        icon: Icons.qr_code,
+        color: Colors.white70,
+        title: 'QR',
+      ),
     };
   }
 }
@@ -290,10 +291,7 @@ class _PaymentAmountColumn extends StatelessWidget {
 }
 
 class _PaymentAmountOnly extends StatelessWidget {
-  const _PaymentAmountOnly({
-    required this.total,
-    required this.caption,
-  });
+  const _PaymentAmountOnly({required this.total, required this.caption});
 
   final String total;
   final String caption;
@@ -414,9 +412,7 @@ class _LcdQrBox extends StatelessWidget {
               child: Center(
                 child: AspectRatio(
                   aspectRatio: 1,
-                  child: CustomPaint(
-                    painter: _LcdQrPainter(data),
-                  ),
+                  child: CustomPaint(painter: _LcdQrPainter(data)),
                 ),
               ),
             ),
@@ -473,8 +469,11 @@ class _LcdQrPainter extends CustomPainter {
       ..color = Colors.black
       ..isAntiAlias = false;
     try {
-      for (final element
-          in qr.make(data, width: size.width, height: size.height)) {
+      for (final element in qr.make(
+        data,
+        width: size.width,
+        height: size.height,
+      )) {
         if (element is BarcodeBar && element.black) {
           canvas.drawRect(
             Rect.fromLTWH(
@@ -540,7 +539,8 @@ class _AdvertisingLcd extends StatelessWidget {
     final product = products[index];
     final imageUrl = product.imageUrl?.trim();
     final hasUrl = imageUrl != null && imageUrl.isNotEmpty;
-    final showRegular = product.isOnSale &&
+    final showRegular =
+        product.isOnSale &&
         product.regularPrice != null &&
         product.regularPrice! > product.unitPrice;
 
@@ -577,11 +577,7 @@ class _AdvertisingLcd extends StatelessWidget {
                     else
                       const _LcdImagePlaceholder(),
                     if (product.isOnSale)
-                      const Positioned(
-                        top: 6,
-                        right: 6,
-                        child: _OfferBadge(),
-                      ),
+                      const Positioned(top: 6, right: 6, child: _OfferBadge()),
                   ],
                 ),
               ),
@@ -670,11 +666,59 @@ class _CartLcd extends StatelessWidget {
         ? AppColors.primary
         : (last.isAdd ? const Color(0xFF2E7D32) : const Color(0xFFC62828));
 
-    // Últimos ítems del carrito (cabe ~5 líneas en 320×240).
-    const maxLines = 9;
+    // Lista acotada para no pelear con el bloque grande del último producto.
+    const maxLines = 5;
     final items = snapshot.items;
     final start = (items.length - maxLines).clamp(0, items.length);
     final visible = items.sublist(start);
+
+    final lastProductBlock = Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFF134E4A),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (last != null && last.isOnSale) ...[
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: _OfferBadge(),
+            ),
+            const SizedBox(height: 4),
+          ],
+          Text(
+            last?.name ?? '',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              height: 1.1,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              '${last?.quantityLabel ?? ''} · ${last?.lineTotal.formatToCurrency() ?? ''}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                color: Color(0xFF99F6E4),
+                height: 1.05,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
 
     return ColoredBox(
       color: const Color(0xFF0F172A),
@@ -682,9 +726,10 @@ class _CartLcd extends StatelessWidget {
         padding: const EdgeInsets.all(6),
         child: Column(
           children: [
+            // Total del carrito
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+              padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 8),
               decoration: BoxDecoration(
                 color: const Color(0xFF134E4A),
                 borderRadius: BorderRadius.circular(8),
@@ -719,119 +764,97 @@ class _CartLcd extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
+            // Todo el resto en Expanded: no puede overflow el Column de 240px.
             Expanded(
-              child: Row(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SizedBox(
-                    width: 110,
-                    child: _LcdImageFrame(
-                      borderColor: badgeColor,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        clipBehavior: Clip.hardEdge,
-                        children: [
-                          if (hasUrl)
-                            _LcdProductImage(
-                              imageUrl: imageUrl,
-                              error: const _LcdImagePlaceholder(),
-                            )
-                          else
-                            const _LcdImagePlaceholder(),
-                          if (last != null)
-                            Positioned(
-                              top: 4,
-                              left: 4,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 5,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: badgeColor,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  last.isAdd ? 'OK' : '−',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w800,
-                                  ),
+                  // Imagen + lista arriba, debajo del TOTAL.
+                  Flexible(
+                    child: ClipRect(
+                      child: Align(
+                        alignment: Alignment.topLeft,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              width: 100,
+                              height: 80,
+                              child: _LcdImageFrame(
+                                borderColor: badgeColor,
+                                child: Stack(
+                                  fit: StackFit.expand,
+                                  clipBehavior: Clip.hardEdge,
+                                  children: [
+                                    if (hasUrl)
+                                      _LcdProductImage(
+                                        imageUrl: imageUrl,
+                                        fit: BoxFit.cover,
+                                        error: const _LcdImagePlaceholder(),
+                                      )
+                                    else
+                                      const _LcdImagePlaceholder(),
+                                    if (last != null)
+                                      Positioned(
+                                        top: 4,
+                                        left: 4,
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 5,
+                                            vertical: 2,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: badgeColor,
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                          ),
+                                          child: Text(
+                                            last.isAdd ? 'OK' : '−',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w800,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                  ],
                                 ),
                               ),
                             ),
-                        ],
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  const Divider(
+                                    height: 1,
+                                    thickness: 1,
+                                    color: Color(0xFF334155),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  if (visible.isEmpty)
+                                    const Text(
+                                      'Sin artículos',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Color(0xFF94A3B8),
+                                      ),
+                                    )
+                                  else
+                                    for (final item in visible)
+                                      _CartLineRow(item: item),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (last != null) ...[
-                          Row(
-                            children: [
-                              if (last.isOnSale) ...[
-                                const _OfferBadge(),
-                                const SizedBox(width: 4),
-                              ],
-                              Expanded(
-                                child: Text(
-                                  last.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          Text(
-                            '${last.quantityLabel} · ${last.lineTotal.formatToCurrency()}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF99F6E4),
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          const Divider(
-                            height: 1,
-                            thickness: 1,
-                            color: Color(0xFF334155),
-                          ),
-                          const SizedBox(height: 4),
-                        ],
-                        Expanded(
-                          child: visible.isEmpty
-                              ? const Align(
-                                  alignment: Alignment.topLeft,
-                                  child: Text(
-                                    'Sin artículos',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Color(0xFF94A3B8),
-                                    ),
-                                  ),
-                                )
-                              : Column(
-                                  children: [
-                                    for (final item in visible)
-                                      _CartLineRow(item: item),
-                                  ],
-                                ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  lastProductBlock,
                 ],
               ),
             ),
@@ -853,10 +876,7 @@ class _CartLineRow extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 2),
       child: Row(
         children: [
-          if (item.isOnSale) ...[
-            const _OfferBadge(),
-            const SizedBox(width: 3),
-          ],
+          // if (item.isOnSale) ...[const _OfferBadge(), const SizedBox(width: 3)],
           Expanded(
             child: Text(
               '${item.quantityLabel} ${item.name}',
@@ -893,21 +913,14 @@ class _LcdImagePlaceholder extends StatelessWidget {
   Widget build(BuildContext context) {
     return ColoredBox(
       color: const Color(0xFFF1F5F9),
-      child: Icon(
-        Icons.inventory_2,
-        color: Colors.grey.shade400,
-        size: 44,
-      ),
+      child: Icon(Icons.inventory_2, color: Colors.grey.shade400, size: 44),
     );
   }
 }
 
 /// Marco blanco con borde; recorta la imagen al radio (DecoratedBox no clippea).
 class _LcdImageFrame extends StatelessWidget {
-  const _LcdImageFrame({
-    required this.borderColor,
-    required this.child,
-  });
+  const _LcdImageFrame({required this.borderColor, required this.child});
 
   final Color borderColor;
   final Widget child;
@@ -931,23 +944,25 @@ class _LcdImageFrame extends StatelessWidget {
 class _LcdProductImage extends StatelessWidget {
   const _LcdProductImage({
     required this.imageUrl,
+    this.fit = BoxFit.contain,
     this.error,
   });
 
   final String imageUrl;
+  final BoxFit fit;
   final Widget? error;
 
   @override
   Widget build(BuildContext context) {
     final url = imageUrl.trim();
-    final fallback = error ??
-        Icon(Icons.inventory_2, color: Colors.grey.shade400, size: 40);
+    final fallback =
+        error ?? Icon(Icons.inventory_2, color: Colors.grey.shade400, size: 40);
 
     Widget image;
     if (ProductImage.isAssetUrl(url)) {
       image = Image.asset(
         ProductImage.assetPathFromUrl(url),
-        fit: BoxFit.contain,
+        fit: fit,
         alignment: Alignment.center,
         gaplessPlayback: true,
         errorBuilder: (_, __, ___) => fallback,
@@ -955,7 +970,7 @@ class _LcdProductImage extends StatelessWidget {
     } else if (url.startsWith('assets/')) {
       image = Image.asset(
         url,
-        fit: BoxFit.contain,
+        fit: fit,
         alignment: Alignment.center,
         gaplessPlayback: true,
         errorBuilder: (_, __, ___) => fallback,
@@ -963,7 +978,7 @@ class _LcdProductImage extends StatelessWidget {
     } else {
       image = Image(
         image: NetworkImage(url),
-        fit: BoxFit.contain,
+        fit: fit,
         alignment: Alignment.center,
         gaplessPlayback: true,
         // Sin fade: si no, toImage captura el placeholder vacío.
@@ -975,8 +990,6 @@ class _LcdProductImage extends StatelessWidget {
       );
     }
 
-    return ClipRect(
-      child: SizedBox.expand(child: image),
-    );
+    return ClipRect(child: SizedBox.expand(child: image));
   }
 }
