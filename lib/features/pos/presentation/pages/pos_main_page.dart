@@ -436,9 +436,10 @@ class _PosMainPageState extends State<PosMainPage> {
                             ),
                           if (isBarcodeMode)
                             Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
+                              padding: const EdgeInsets.only(bottom: 4),
                               child: Row(
                                 children: [
+                                  const CartModeMenuButton(),
                                   const Text(
                                     'Total',
                                     style:

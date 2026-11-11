@@ -12,23 +12,48 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_event.dart'
 import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/refund/refund_dialog.dart';
 
-class CartPanelHeader extends StatelessWidget {
-  const CartPanelHeader({super.key});
+String cartModeLabel(CartMode mode) {
+  switch (mode) {
+    case CartMode.sale:
+      return 'Venta';
+    case CartMode.returnMode:
+      return 'Devolución';
+    case CartMode.disposeMode:
+      return 'Descarte';
+  }
+}
+
+Color cartModeColor(CartMode mode) {
+  switch (mode) {
+    case CartMode.sale:
+      return AppColors.primary;
+    case CartMode.returnMode:
+      return AppColors.warning;
+    case CartMode.disposeMode:
+      return Colors.brown.shade600;
+  }
+}
+
+IconData cartModeIcon(CartMode mode) {
+  switch (mode) {
+    case CartMode.sale:
+      return Icons.shopping_cart_outlined;
+    case CartMode.returnMode:
+      return Icons.assignment_return_outlined;
+    case CartMode.disposeMode:
+      return Icons.delete_forever_outlined;
+  }
+}
+
+/// Hamburguesa: cambiar modo / reintegro / vaciar carrito.
+class CartModeMenuButton extends StatelessWidget {
+  const CartModeMenuButton({super.key, this.iconColor = Colors.black87});
+
+  final Color iconColor;
 
   void _changeMode(BuildContext context, CartMode mode) {
     context.read<UiBloc>().add(SetCartMode(mode));
     context.read<CartBloc>().add(ClearCart());
-  }
-
-  String _modeLabel(CartMode mode) {
-    switch (mode) {
-      case CartMode.sale:
-        return 'Venta';
-      case CartMode.returnMode:
-        return 'Devolución';
-      case CartMode.disposeMode:
-        return 'Descarte';
-    }
   }
 
   void _showChangeModeConfirmation(BuildContext context, CartMode toMode) {
@@ -46,7 +71,7 @@ class CartPanelHeader extends StatelessWidget {
       builder: (dialogContext) => AlertDialog(
         title: const Text('Limpiar Pedido'),
         content: Text(
-          'Al cambiar a modo ${_modeLabel(toMode)}, '
+          'Al cambiar a modo ${cartModeLabel(toMode)}, '
           'se limpiará el pedido actual. ¿Desea continuar?',
         ),
         actions: [
@@ -90,27 +115,142 @@ class CartPanelHeader extends StatelessWidget {
     );
   }
 
-  Color _modeColor(CartMode mode) {
-    switch (mode) {
-      case CartMode.sale:
-        return AppColors.primary;
-      case CartMode.returnMode:
-        return AppColors.warning;
-      case CartMode.disposeMode:
-        return Colors.brown.shade600;
-    }
+  PopupMenuItem<String> _modeMenuItem({
+    required String value,
+    required String label,
+    required IconData icon,
+    required bool selected,
+    required Color selectedColor,
+  }) {
+    return PopupMenuItem<String>(
+      value: value,
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            color: selected ? selectedColor : Colors.grey,
+            size: 20,
+          ),
+          const SizedBox(width: 10),
+          Text(
+            label,
+            style: TextStyle(
+              fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+              color: selected ? selectedColor : Colors.black87,
+            ),
+          ),
+          if (selected) ...[
+            const Spacer(),
+            Icon(Icons.check, color: selectedColor, size: 18),
+          ],
+        ],
+      ),
+    );
   }
 
-  IconData _modeIcon(CartMode mode) {
-    switch (mode) {
-      case CartMode.sale:
-        return Icons.shopping_cart_outlined;
-      case CartMode.returnMode:
-        return Icons.assignment_return_outlined;
-      case CartMode.disposeMode:
-        return Icons.delete_forever_outlined;
-    }
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<CartBloc, CartState>(
+      builder: (context, cartState) {
+        final hasItems = cartState is CartLoaded &&
+            (cartState.items.isNotEmpty || cartState.log.isNotEmpty);
+
+        return BlocBuilder<UiBloc, UiState>(
+          builder: (context, uiState) {
+            final cartMode =
+                uiState is UiLoaded ? uiState.cartMode : CartMode.sale;
+
+            return PopupMenuButton<String>(
+              icon: Icon(Icons.menu, color: iconColor),
+              tooltip: 'Cambiar modo / vaciar / reintegro',
+              onSelected: (value) {
+                if (value == 'venta' && cartMode != CartMode.sale) {
+                  _showChangeModeConfirmation(context, CartMode.sale);
+                } else if (value == 'devolucion' &&
+                    cartMode != CartMode.returnMode) {
+                  _showChangeModeConfirmation(context, CartMode.returnMode);
+                } else if (value == 'descarte' &&
+                    cartMode != CartMode.disposeMode) {
+                  _showChangeModeConfirmation(context, CartMode.disposeMode);
+                } else if (value == 'vaciar') {
+                  _showClearCartConfirmation(context);
+                } else if (value == 'reintegro') {
+                  showRefundDialog(context);
+                }
+              },
+              itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                _modeMenuItem(
+                  value: 'venta',
+                  label: 'Venta',
+                  icon: Icons.shopping_cart_outlined,
+                  selected: cartMode == CartMode.sale,
+                  selectedColor: AppColors.primary,
+                ),
+                _modeMenuItem(
+                  value: 'devolucion',
+                  label: 'Devolución',
+                  icon: Icons.assignment_return_outlined,
+                  selected: cartMode == CartMode.returnMode,
+                  selectedColor: AppColors.warning,
+                ),
+                _modeMenuItem(
+                  value: 'descarte',
+                  label: 'Descarte (mal estado)',
+                  icon: Icons.delete_forever_outlined,
+                  selected: cartMode == CartMode.disposeMode,
+                  selectedColor: Colors.brown.shade600,
+                ),
+                const PopupMenuItem<String>(
+                  value: 'reintegro',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.monetization_on_outlined,
+                        color: Colors.grey,
+                        size: 20,
+                      ),
+                      SizedBox(width: 10),
+                      Text(
+                        'Reintegro de dinero',
+                        style: TextStyle(
+                          fontWeight: FontWeight.normal,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuItem<String>(
+                  value: 'vaciar',
+                  enabled: hasItems,
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.delete_outline,
+                        color: hasItems ? AppColors.error : Colors.grey,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        'Vaciar',
+                        style: TextStyle(
+                          color: hasItems ? AppColors.error : Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
+}
+
+class CartPanelHeader extends StatelessWidget {
+  const CartPanelHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -130,14 +270,12 @@ class CartPanelHeader extends StatelessWidget {
       child: BlocBuilder<CartBloc, CartState>(
         builder: (context, cartState) {
           final total = cartState is CartLoaded ? cartState.totalConIva : 0.0;
-          final hasItems = cartState is CartLoaded &&
-              (cartState.items.isNotEmpty || cartState.log.isNotEmpty);
 
           return BlocBuilder<UiBloc, UiState>(
             builder: (context, uiState) {
               final cartMode =
                   uiState is UiLoaded ? uiState.cartMode : CartMode.sale;
-              final modeColor = _modeColor(cartMode);
+              final modeColor = cartModeColor(cartMode);
 
               return Column(
                 children: [
@@ -161,14 +299,14 @@ class CartPanelHeader extends StatelessWidget {
                             Row(
                               children: [
                                 Icon(
-                                  _modeIcon(cartMode),
+                                  cartModeIcon(cartMode),
                                   size: 14,
                                   color: modeColor,
                                 ),
                                 const SizedBox(width: 4),
                                 Flexible(
                                   child: Text(
-                                    _modeLabel(cartMode),
+                                    cartModeLabel(cartMode),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
@@ -183,97 +321,7 @@ class CartPanelHeader extends StatelessWidget {
                           ],
                         ),
                       ),
-                      PopupMenuButton<String>(
-                            icon: const Icon(Icons.menu, color: Colors.black87),
-                            tooltip: 'Cambiar modo / vaciar / reintegro',
-                            onSelected: (value) {
-                              if (value == 'venta' &&
-                                  cartMode != CartMode.sale) {
-                                _showChangeModeConfirmation(
-                                    context, CartMode.sale);
-                              } else if (value == 'devolucion' &&
-                                  cartMode != CartMode.returnMode) {
-                                _showChangeModeConfirmation(
-                                    context, CartMode.returnMode);
-                              } else if (value == 'descarte' &&
-                                  cartMode != CartMode.disposeMode) {
-                                _showChangeModeConfirmation(
-                                    context, CartMode.disposeMode);
-                              } else if (value == 'vaciar') {
-                                _showClearCartConfirmation(context);
-                              } else if (value == 'reintegro') {
-                                showRefundDialog(context);
-                              }
-                            },
-                            itemBuilder: (BuildContext context) =>
-                                <PopupMenuEntry<String>>[
-                              _modeMenuItem(
-                                value: 'venta',
-                                label: 'Venta',
-                                icon: Icons.shopping_cart_outlined,
-                                selected: cartMode == CartMode.sale,
-                                selectedColor: AppColors.primary,
-                              ),
-                              _modeMenuItem(
-                                value: 'devolucion',
-                                label: 'Devolución',
-                                icon: Icons.assignment_return_outlined,
-                                selected: cartMode == CartMode.returnMode,
-                                selectedColor: AppColors.warning,
-                              ),
-                              _modeMenuItem(
-                                value: 'descarte',
-                                label: 'Descarte (mal estado)',
-                                icon: Icons.delete_forever_outlined,
-                                selected: cartMode == CartMode.disposeMode,
-                                selectedColor: Colors.brown.shade600,
-                              ),
-                              const PopupMenuItem<String>(
-                                value: 'reintegro',
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.monetization_on_outlined,
-                                      color: Colors.grey,
-                                      size: 20,
-                                    ),
-                                    SizedBox(width: 10),
-                                    Text(
-                                      'Reintegro de dinero',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.normal,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              PopupMenuItem<String>(
-                                value: 'vaciar',
-                                enabled: hasItems,
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.delete_outline,
-                                      color: hasItems
-                                          ? AppColors.error
-                                          : Colors.grey,
-                                      size: 20,
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Text(
-                                      'Vaciar',
-                                      style: TextStyle(
-                                        color: hasItems
-                                            ? AppColors.error
-                                            : Colors.grey,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
+                      const CartModeMenuButton(),
                     ],
                   ),
                   Container(
@@ -305,39 +353,6 @@ class CartPanelHeader extends StatelessWidget {
             },
           );
         },
-      ),
-    );
-  }
-
-  PopupMenuItem<String> _modeMenuItem({
-    required String value,
-    required String label,
-    required IconData icon,
-    required bool selected,
-    required Color selectedColor,
-  }) {
-    return PopupMenuItem<String>(
-      value: value,
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            color: selected ? selectedColor : Colors.grey,
-            size: 20,
-          ),
-          const SizedBox(width: 10),
-          Text(
-            label,
-            style: TextStyle(
-              fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-              color: selected ? selectedColor : Colors.black87,
-            ),
-          ),
-          if (selected) ...[
-            const Spacer(),
-            Icon(Icons.check, color: selectedColor, size: 18),
-          ],
-        ],
       ),
     );
   }

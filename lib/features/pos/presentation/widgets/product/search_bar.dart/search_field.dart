@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
@@ -36,14 +37,22 @@ class _SearchFieldState extends State<SearchField> {
     super.dispose();
   }
 
+  void _hideSoftKeyboard() {
+    SystemChannels.textInput.invokeMethod('TextInput.hide');
+  }
+
+  /// Mantiene foco para el scanner, sin abrir teclado soft.
   void _requestFocus({bool retryAfterSnackBar = false}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _focusNode.requestFocus();
+      _hideSoftKeyboard();
 
       if (retryAfterSnackBar) {
         Future.delayed(const Duration(milliseconds: 100), () {
-          if (mounted) _focusNode.requestFocus();
+          if (!mounted) return;
+          _focusNode.requestFocus();
+          _hideSoftKeyboard();
         });
       }
     });
@@ -83,6 +92,9 @@ class _SearchFieldState extends State<SearchField> {
             controller: widget.controller,
             focusNode: _focusNode,
             autofocus: widget.autofocus || isBarcodeMode,
+            // En barcode: acepta scanner físico sin teclado soft.
+            keyboardType:
+                isBarcodeMode ? TextInputType.none : TextInputType.text,
             textInputAction: TextInputAction.done,
             decoration: InputDecoration(
               contentPadding: const EdgeInsets.symmetric(
