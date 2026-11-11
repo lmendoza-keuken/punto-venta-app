@@ -95,9 +95,10 @@ abstract class BaseTicketTemplate {
           commands.add(TicketCommand.text("COPIA"));
           commands.add(TicketCommand.feedLine());
           commands.add(TicketCommand.text("NO VALIDA COMO FACTURA"));
-        } else {
-          commands.add(TicketCommand.text("DOCUMENTO VALIDO COMO FACTURA"));
-        }
+        } 
+        // else {
+        //   commands.add(TicketCommand.text("DOCUMENTO VALIDO COMO FACTURA"));
+        // }
       }
       commands.add(TicketCommand.bold(false));
       commands.add(TicketCommand.feedLine());
@@ -253,18 +254,16 @@ abstract class BaseTicketTemplate {
       final lineTotal = isWeighted
           ? displayPrice * (item.weightKg ?? 0.0)
           : displayPrice * item.quantity;
-      final totalLabel = '$sign ${lineTotal.formatToCurrency()}';
+      final totalLabel = '$sign${lineTotal.formatToCurrency()}'.trim();
 
       final qtyLabel = isWeighted
           ? '$sign${(item.weightKg ?? 0.0).toStringAsFixed(3)} kg'
           : '$sign${item.quantity}';
-      final line = '  $qtyLabel x ${displayPrice.formatToCurrency()}';
-
-      final totalSpaces = lineWidth - line.length - totalLabel.length;
-      final spacer = totalSpaces > 0 ? ' ' * totalSpaces : ' ';
-
-      commands.add(TicketCommand.text('$line$spacer$totalLabel'));
-      commands.add(TicketCommand.feedLine());
+      // lineWithValue: IP usa 48 cols, PTA0130 reespacia a ~32 (58 mm).
+      // Evita pad a 48 que en PTA se parte y deja el total en otra línea.
+      final qtyPriceLabel =
+          '  $qtyLabel x ${displayPrice.formatToCurrency()}';
+      commands.add(TicketCommand.lineWithValue(qtyPriceLabel, totalLabel));
     }
 
     commands.add(TicketCommand.text(buildSeparator('-')));

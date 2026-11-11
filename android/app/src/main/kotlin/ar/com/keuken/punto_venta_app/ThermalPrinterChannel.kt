@@ -247,10 +247,20 @@ class ThermalPrinterChannel(
                     applySize()
                 }
                 "lineWithValue" -> {
-                    val label = cmd["label"] as? String ?: ""
-                    val value = cmd["value"] as? String ?: ""
-                    val spaces = (LINE_CHARS - label.length - value.length).coerceAtLeast(1)
-                    emitText(label + " ".repeat(spaces) + value)
+                    val label = (cmd["label"] as? String ?: "").trimEnd()
+                    val value = (cmd["value"] as? String ?: "").trim()
+                    // Pad a 32 cols. Si no entra, value en la línea siguiente
+                    // alineado a la derecha (evita softWrap dejando el $ colgado).
+                    if (label.length + value.length + 1 <= LINE_CHARS) {
+                        val spaces = LINE_CHARS - label.length - value.length
+                        emitText(label + " ".repeat(spaces) + value)
+                    } else {
+                        if (label.isNotEmpty()) emitText(label.take(LINE_CHARS))
+                        if (value.isNotEmpty()) {
+                            val pad = (LINE_CHARS - value.length).coerceAtLeast(0)
+                            emitText(" ".repeat(pad) + value.take(LINE_CHARS))
+                        }
+                    }
                 }
                 "image" -> {
                     flushText()
