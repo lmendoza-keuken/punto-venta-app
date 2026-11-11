@@ -21,6 +21,7 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        // dispose → shutdownLcd síncrono (negro + release) antes de desarmar el engine.
         subScreenChannel?.dispose()
         subScreenChannel = null
         thermalPrinterChannel?.dispose()
@@ -28,12 +29,12 @@ class MainActivity : FlutterActivity() {
         super.cleanUpFlutterEngine(flutterEngine)
     }
 
-    override fun onStop() {
-        subScreenChannel?.releasePower()
-        super.onStop()
-    }
+    // No apagar LCD en onStop/pause: eso flasha al volver. Solo al destruir.
 
     override fun onDestroy() {
+        // Swipe desde recientes / finish(): último chance de negro+release
+        // antes de que el proceso muera. Force-stop desde Settings no llega acá.
+        subScreenChannel?.shutdownLcd("onDestroy")
         subScreenChannel?.dispose()
         subScreenChannel = null
         thermalPrinterChannel?.dispose()

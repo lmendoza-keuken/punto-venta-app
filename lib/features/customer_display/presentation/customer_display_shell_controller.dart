@@ -46,12 +46,14 @@ class _CustomerDisplayShellControllerState
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state) {
-      case AppLifecycleState.paused:
-      case AppLifecycleState.hidden:
+      // No stop() en paused/hidden: release+re-init del SubScreen SPI provoca
+      // parpadeo blanco/nieve y reconexión lenta al volver al POS.
       case AppLifecycleState.detached:
         unawaited(_service.stop());
       case AppLifecycleState.resumed:
         unawaited(_pushForRoute(widget.currentRoute));
+      case AppLifecycleState.paused:
+      case AppLifecycleState.hidden:
       case AppLifecycleState.inactive:
         break;
     }

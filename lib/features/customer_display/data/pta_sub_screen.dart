@@ -81,6 +81,25 @@ class PtaSubScreen {
     }
   }
 
+  /// Cierre controlado: negro + settle SPI + release (nativo síncrono).
+  /// Await esto **antes** de [SystemNavigator.pop] / matar el proceso.
+  static Future<PtaSubScreenResult> shutdown() async {
+    if (!_isAndroid) {
+      return const PtaSubScreenResult(ok: false, code: -1);
+    }
+    try {
+      final map = await _channel.invokeMapMethod<String, dynamic>('shutdown');
+      final result = PtaSubScreenResult.fromMap(map);
+      AppLogger.info(
+        'PtaSubScreen.shutdown code=${result.code} ok=${result.ok}',
+      );
+      return result;
+    } catch (e, st) {
+      AppLogger.error('PtaSubScreen.shutdown', e, st);
+      return PtaSubScreenResult(ok: false, code: -1, error: '$e');
+    }
+  }
+
   /// Prueba de hardware: color sólido + texto opcional (auto-init).
   static Future<PtaSubScreenResult> showColor(
     int argb, {
@@ -118,6 +137,8 @@ class PtaSubScreen {
       return const PtaSubScreenResult(ok: false, code: -1);
     }
     try {
+      // Sin timeout corto: abortar a los 8s mientras init nativo sigue
+      // bloqueado deja el SPI en ERR_BUSY (61448) y el LCD en nieve.
       final map = await _channel.invokeMapMethod<String, dynamic>(
         'showBitmap',
         {'bytes': bytes, 'x': x, 'y': y},
@@ -144,7 +165,7 @@ class PtaSubScreen {
     try {
       AppLogger.info('PtaSubScreen.showImageAsset path=$assetPath');
       final data = await rootBundle.load(assetPath);
-      return showBitmap(data.buffer.asUint8List());
+      return await showBitmap(data.buffer.asUint8List());
     } catch (e, st) {
       AppLogger.error('PtaSubScreen.showImageAsset', e, st);
       return PtaSubScreenResult(ok: false, code: -1, error: '$e');
@@ -171,7 +192,7 @@ class PtaSubScreen {
           );
         }
         final bytes = await consolidateHttpClientResponseBytes(response);
-        return showBitmap(bytes);
+        return await showBitmap(bytes);
       } finally {
         client.close(force: true);
       }
@@ -192,6 +213,7 @@ class PtaSubScreen {
   ///
   /// Solo el snapshot más reciente gana: si llega otro sync mientras se
   /// captura, el bitmap viejo se descarta (evita LCD “pegado” al carrito anterior).
+  /// No re-inicializa el SPI: eso flashaba blanco/nieve entre frames.
   /// Para cambiar el diseño: editá `presentation/widgets/pta_lcd_view.dart`.
   static Future<PtaSubScreenResult> showSnapshot(
     CustomerDisplaySnapshot snapshot,
@@ -230,20 +252,11 @@ class PtaSubScreen {
           );
           return;
         }
-        final init = await PtaSubScreen.init();
-        if (!init.ok) {
-          done.complete(init);
-          return;
-        }
-        if (gen != _snapshotGen) {
-          done.complete(
-            const PtaSubScreenResult(ok: true, code: 0, error: 'superseded'),
-          );
-          return;
-        }
+        // Warm init en paralelo con la captura: el SPI del PTA tarda ~5s en
+        // el primer init; si esperamos a showBitmap, se suma al capture.
+        final warmInit = init();
 
         // Camino principal: widget PtaLcdView → PNG → LCD.
-        // showColor con label solo si la captura falla (no es el UI final).
         Uint8List? png;
         try {
           png = await capturePtaLcdSnapshot(
@@ -258,6 +271,12 @@ class PtaSubScreen {
             st,
           );
         }
+
+        final warm = await warmInit;
+        AppLogger.info(
+          'PtaSubScreen.showSnapshot: warm init '
+          'ok=${warm.ok} code=${warm.code}',
+        );
 
         if (gen != _snapshotGen) {
           AppLogger.info(

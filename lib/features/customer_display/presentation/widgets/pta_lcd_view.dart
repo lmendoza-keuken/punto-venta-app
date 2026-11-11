@@ -705,7 +705,7 @@ class _CartLcd extends StatelessWidget {
           Align(
             alignment: Alignment.centerRight,
             child: Text(
-              '${last?.quantityLabel ?? ''} · ${last?.lineTotal.formatToCurrency() ?? ''}',
+              '${last?.quantityLabel ?? ''} x ${last?.unitPrice.formatToCurrency() ?? ''}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
