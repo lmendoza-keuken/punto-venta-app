@@ -110,7 +110,7 @@ class ProductCard extends StatelessWidget {
                                         .textTheme
                                         .bodySmall
                                         ?.copyWith(
-                                          fontSize: isCompact ? 7 : 8,
+                                          fontSize: isCompact ? 9 : 10,
                                           fontWeight: FontWeight.bold,
                                           color: Colors.white,
                                         ),
@@ -127,12 +127,12 @@ class ProductCard extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Text(
-                                    'En carrito: $quantityInCart',
+                                    'CANT: $quantityInCart',
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodySmall
                                         ?.copyWith(
-                                          fontSize: isCompact ? 7 : 8,
+                                          fontSize: isCompact ? 9 : 10,
                                           fontWeight: FontWeight.bold,
                                           color: Colors.white,
                                         ),

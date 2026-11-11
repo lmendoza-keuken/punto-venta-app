@@ -125,7 +125,7 @@ class PosAppBar extends StatelessWidget {
                   const SizedBox(width: AppDimensions.paddingM),
                   DynamicDateTime(
                     compact: isCompact,
-                    style: TextStyle(fontSize: isCompact ? 12 : 14),
+                    style: TextStyle(fontSize: isCompact ? 16 : 18),
                   ),
                   if (user != null && !isCompact)
                     Padding(

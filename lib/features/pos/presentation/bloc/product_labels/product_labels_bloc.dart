@@ -4,23 +4,24 @@ import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/get_products_usecase.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/label_image_builder.dart';
 import 'package:punto_venta_app/features/pos/presentation/utils/templates/base_ticket_template.dart';
-import 'package:punto_venta_app/features/pos/data/datasources/printer_socket_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/price_list_local_datasource.dart';
+import 'package:punto_venta_app/features/pos/domain/entities/printer_config.dart';
+import 'package:punto_venta_app/features/pos/domain/repositories/printer_repository.dart';
 import 'product_labels_event.dart';
 import 'product_labels_state.dart';
 
 class ProductLabelsBloc extends Bloc<ProductLabelsEvent, ProductLabelsState> {
   final GetProductsUsecase getProductsUsecase;
   final PriceListLocalDataSource priceListLocalDataSource;
-  final PrinterSocketDatasource? printerDataSource;
+  final PrinterRepository printerRepository;
   final PrinterLocalDataSource printerLocalDataSource;
   StreamSubscription<List<Product>>? _productsSubscription;
 
   ProductLabelsBloc({
     required this.getProductsUsecase,
     required this.priceListLocalDataSource,
-    this.printerDataSource,
+    required this.printerRepository,
     required this.printerLocalDataSource,
   }) : super(ProductLabelsInitial()) {
     on<LoadProducts>(_onLoadProducts);
@@ -181,54 +182,59 @@ class ProductLabelsBloc extends Bloc<ProductLabelsEvent, ProductLabelsState> {
     emit(ProductLabelsPrinting(selectedProducts));
 
     try {
-      if (printerDataSource == null) {
-        throw Exception('Impresora no configurada');
-      }
-
-      // Obtener configuración de la impresora
       final config = await printerLocalDataSource.getPrinterConfig();
 
-      if (config.ip.isEmpty) {
+      // Misma regla que tickets: auto/builtin → PTA; network → IP.
+      if (config.outputMode == PrinterOutputMode.network &&
+          config.ip.trim().isEmpty) {
         throw Exception(
-            'No hay una dirección IP configurada para la impresora');
+          'No hay una dirección IP configurada para la impresora',
+        );
       }
 
-      // Conectar a la impresora
-      final connected = await printerDataSource!.connect(config);
+      final connected = await printerRepository.connect(config);
       if (!connected) {
         throw Exception('No se pudo conectar con la impresora');
       }
 
-      int labelSize = config.labelType == 0 ? 8 * 72 : 8 * 52;
+      final forPta = printerRepository.isUsingBuiltin;
+      // IP: tamaño de config. PTA: layout propio 384×240 (no reusa el de red).
+      final labelSize = forPta
+          ? LabelImageBuilder.ptaWidth
+          : (config.labelType == 0 ? 8 * 72 : 8 * 52);
 
-      // Imprimir etiquetas
       for (final product in selectedProducts) {
-        // Generar imagen de la etiqueta
-        final imageBytes =
-            await LabelImageBuilder.buildProductLabelImage(product);
+        final imageBytes = await LabelImageBuilder.buildProductLabelImage(
+          product,
+          forPta: forPta,
+        );
 
-        final commands = [
-          TicketCommand.image(imageBytes, labelSize),
-          TicketCommand.feedLine(),
-          TicketCommand.cutPaper(),
-        ];
+        // PTA: corta entre etiquetas (paperCut). IP: feed + cut ESC/POS.
+        final commands = forPta
+            ? [
+                TicketCommand.image(imageBytes, labelSize),
+                TicketCommand.cutPaper(walkLines: 14),
+              ]
+            : [
+                TicketCommand.image(imageBytes, labelSize),
+                TicketCommand.feedLine(),
+                TicketCommand.cutPaper(),
+              ];
 
-        final success = await printerDataSource!.printCommands(commands);
+        final success = await printerRepository.printCommands(commands);
         if (!success) {
           throw Exception('Error al imprimir etiqueta de ${product.name}');
         }
       }
 
-      // Desconectar de la impresora
-      await printerDataSource!.disconnect();
+      await printerRepository.disconnect();
 
       emit(ProductLabelsPrintSuccess(selectedProducts.length));
 
       emit(currentState.copyWith(selectedProducts: []));
     } catch (e) {
-      // Asegurar desconexión en caso de error
       try {
-        await printerDataSource?.disconnect();
+        await printerRepository.disconnect();
       } catch (_) {}
 
       emit(ProductLabelsPrintError(e.toString()));

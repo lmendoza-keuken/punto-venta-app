@@ -72,7 +72,7 @@ class PtaThermalPrinter {
       );
       final ok = map?['ok'] == true;
       AppLogger.info(
-        'PtaThermalPrinter.printCommands ok=$ok count=${commands.length}',
+        'PtaThermalPrinter.printCommands ok=$ok count=${commands.length} cut=${map?['cut']} status=${map?['status']}',
       );
       return ok;
     } on PlatformException catch (e, st) {

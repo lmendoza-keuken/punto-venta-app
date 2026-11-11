@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/app/routes/route_paths.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/price_list_local_datasource.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
+import 'package:punto_venta_app/features/pos/domain/repositories/printer_repository.dart';
+import 'package:punto_venta_app/features/pos/domain/usecases/get_products_usecase.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product_labels/product_labels_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product_labels/product_labels_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product_labels/product_labels_state.dart';
@@ -15,10 +19,10 @@ class ProductLabelsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => ProductLabelsBloc(
-        getProductsUsecase: di.sl(),
-        priceListLocalDataSource: di.sl(),
-        printerDataSource: di.sl(),
-        printerLocalDataSource: di.sl(),
+        getProductsUsecase: di.sl<GetProductsUsecase>(),
+        priceListLocalDataSource: di.sl<PriceListLocalDataSource>(),
+        printerRepository: di.sl<PrinterRepository>(),
+        printerLocalDataSource: di.sl<PrinterLocalDataSource>(),
       )..add(const LoadProducts()),
       child: const _ProductLabelsPageContent(),
     );

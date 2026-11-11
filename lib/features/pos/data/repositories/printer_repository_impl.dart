@@ -7,6 +7,7 @@ import 'package:punto_venta_app/features/pos/data/datasources/printer_web_dataso
 import 'package:punto_venta_app/features/pos/domain/entities/print_job.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/printer_config.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/printer_repository.dart';
+import 'package:punto_venta_app/features/pos/presentation/utils/templates/base_ticket_template.dart';
 
 class PrinterRepositoryImpl implements PrinterRepository {
   final PrinterSocketDatasource? printerDatasource;
@@ -24,6 +25,9 @@ class PrinterRepositoryImpl implements PrinterRepository {
               (!kIsWeb && printerDatasource != null),
           'Debe proporcionar el datasource correcto según la plataforma',
         );
+
+  @override
+  bool get isUsingBuiltin => _usingBuiltin;
 
   bool get _isAndroid =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
@@ -96,5 +100,19 @@ class PrinterRepositoryImpl implements PrinterRepository {
     return kIsWeb
         ? webDatasource!.printTicket(printJob)
         : printerDatasource!.printTicket(printJob);
+  }
+
+  @override
+  Future<bool> printCommands(List<TicketCommand> commands) {
+    if (_usingBuiltin && builtinDatasource != null) {
+      return builtinDatasource!.printCommands(commands);
+    }
+    if (kIsWeb) {
+      AppLogger.info(
+        'PrinterRepository.printCommands: no soportado en web',
+      );
+      return Future.value(false);
+    }
+    return printerDatasource!.printCommands(commands);
   }
 }

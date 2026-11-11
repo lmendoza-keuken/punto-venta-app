@@ -118,7 +118,10 @@ class PrinterBuiltinDatasource {
           'value': command.value as int,
         };
       case TicketCommandType.cutPaper:
-        return {'type': 'cutPaper'};
+        return {
+          'type': 'cutPaper',
+          'walkLines': (command.value as int?) ?? 14,
+        };
     }
   }
 }

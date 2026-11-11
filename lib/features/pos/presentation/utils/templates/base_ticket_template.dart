@@ -622,8 +622,9 @@ class TicketCommand {
       TicketCommand._(TicketCommandType.setBarcodeWidth, width);
   factory TicketCommand.setBarcodeHRIPosition(int position) =>
       TicketCommand._(TicketCommandType.setBarcodeHRIPosition, position);
-  factory TicketCommand.cutPaper() =>
-      TicketCommand._(TicketCommandType.cutPaper);
+  /// [walkLines] solo aplica en PTA (avance Telpo antes de [paperCut]). Default 14 (demo Telpo).
+  factory TicketCommand.cutPaper({int walkLines = 14}) =>
+      TicketCommand._(TicketCommandType.cutPaper, walkLines);
   factory TicketCommand.lineWithValue(String label, String value) =>
       TicketCommand._(TicketCommandType.lineWithValue, {
         'label': label,

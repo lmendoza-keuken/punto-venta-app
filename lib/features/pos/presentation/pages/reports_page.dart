@@ -146,7 +146,7 @@ class _ReportsPageState extends State<ReportsPage>
               TabBar(
                 controller: _tabController,
                 labelColor: AppColors.primary,
-                unselectedLabelColor: Colors.grey,
+                unselectedLabelColor: Colors.black,
                 indicatorColor: AppColors.primary,
                 tabs: const [
                   Tab(

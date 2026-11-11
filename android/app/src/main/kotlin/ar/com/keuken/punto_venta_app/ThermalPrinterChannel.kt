@@ -175,6 +175,8 @@ class ThermalPrinterChannel(
         var expectTemplateLf = false
         // feedLines adicionales acumulados (se vacían al emitir contenido).
         var pendingBlankFeeds = 0
+        var didCut = false
+        var lastCutResult: String? = null
         var widthMul = 1
         var heightMul = 1
 
@@ -283,21 +285,34 @@ class ThermalPrinterChannel(
                 }
                 "cutPaper" -> {
                     flushText()
-                    runCatching { invokeVoid("walkPaper", 2) }
-                    runCatching { invokeVoid("cutPaper") }
+                    // Demo Telpo: walkPaper(14) y luego paperCut().
+                    val walk = (cmd["walkLines"] as? Number)?.toInt() ?: 14
+                    if (walk > 0) {
+                        runCatching { invokeVoid("walkPaper", walk) }
+                            .onFailure { Log.w(TAG, "walkPaper before cut failed", it) }
+                    }
+                    lastCutResult = invokePaperCut()
+                    didCut = true
                 }
                 else -> { /* ignore unknown */ }
             }
         }
 
         flushText()
-        runCatching { invokeVoid("walkPaper", 2) }
+        // Si ya cortó, no avanzar más (evita cola en blanco en etiquetas).
+        if (!didCut) {
+            runCatching { invokeVoid("walkPaper", 14) }
+        }
         val status = runCatching { invokeInt("checkStatus") }.getOrNull()
-        Log.i(TAG, "printCommands done count=${commands.size} status=$status")
+        Log.i(
+            TAG,
+            "printCommands done count=${commands.size} status=$status cut=$lastCutResult",
+        )
         return mapOf(
             "ok" to true,
             "backend" to "thermal_printer_service",
             "status" to status,
+            "cut" to lastCutResult,
         )
     }
 
@@ -380,6 +395,58 @@ class ThermalPrinterChannel(
                 throw IllegalStateException("ThermalPrinter connect failed")
             }
         }
+    }
+
+    /**
+     * Intenta cortar con todas las APIs Telpo conocidas.
+     * Devuelve el método que respondió sin excepción, o el error.
+     *
+     * Nota: varios PTA0130 solo tienen cuchilla de rasgado (sin motor);
+     * en ese caso paperCut puede “ok” o fallar y el papel no se corta.
+     */
+    private fun invokePaperCut(): String {
+        logCutRelatedMethods()
+
+        val named = listOf("paperCut", "paperCutAll", "cutPaper")
+        for (name in named) {
+            val err = runCatching { invokeVoid(name) }.exceptionOrNull()
+            if (err == null) {
+                val status = runCatching { invokeInt("checkStatus") }.getOrNull()
+                Log.i(TAG, "$name ok status=$status")
+                return "$name:ok:status=$status"
+            }
+            Log.w(TAG, "$name failed: ${err.message}")
+        }
+
+        // ESC/POS full cut (GS V 0) / partial (GS V 1).
+        val escCuts = listOf(
+            "esc_full" to byteArrayOf(0x1D, 0x56, 0x00),
+            "esc_partial" to byteArrayOf(0x1D, 0x56, 0x01),
+            "esc_partial_feed" to byteArrayOf(0x1D, 0x56, 0x42, 0x00),
+        )
+        for ((label, bytes) in escCuts) {
+            val err = runCatching {
+                invokeVoid("sendCommand", bytes, bytes.size)
+            }.exceptionOrNull()
+            if (err == null) {
+                Log.i(TAG, "$label sendCommand ok")
+                return "$label:ok"
+            }
+            Log.w(TAG, "$label failed: ${err.message}")
+        }
+
+        Log.e(TAG, "No cutter API worked on this device")
+        return "failed"
+    }
+
+    private fun logCutRelatedMethods() {
+        val clazz = managerClass ?: return
+        val names = (clazz.methods + clazz.declaredMethods)
+            .map { it.name }
+            .distinct()
+            .filter { it.contains("cut", ignoreCase = true) || it.contains("Cut") || it == "sendCommand" || it == "walkPaper" }
+            .sorted()
+        Log.i(TAG, "printer methods(cut/walk/send)=${names.joinToString(",")}")
     }
 
     private fun invokeVoid(name: String, vararg args: Any?) {

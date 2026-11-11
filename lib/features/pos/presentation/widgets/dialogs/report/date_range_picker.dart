@@ -38,14 +38,17 @@ class DateRangePicker extends StatelessWidget {
   Widget _buildWide() {
     return Row(
       children: [
-        const Text('Fecha inicio: '),
+        const Text('Fecha inicio: ', style: TextStyle(color: Colors.black)),
         const SizedBox(width: AppDimensions.paddingS),
         _DateChip(
           label: DateFormat('dd/MM/yyyy').format(selectedDate),
           onTap: _selectStartDate,
         ),
         const SizedBox(width: AppDimensions.paddingM),
-        const Text('Fecha fin (opcional): '),
+        const Text(
+          'Fecha fin (opcional): ',
+          style: TextStyle(color: Colors.black),
+        ),
         const SizedBox(width: AppDimensions.paddingS),
         _DateChip(
           label: selectedEndDate != null
@@ -64,6 +67,10 @@ class DateRangePicker extends StatelessWidget {
         const SizedBox(width: AppDimensions.paddingM),
         ElevatedButton(
           onPressed: onUpdate,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+          ),
           child: const Text('Actualizar'),
         ),
       ],
@@ -110,6 +117,10 @@ class DateRangePicker extends StatelessWidget {
           width: double.infinity,
           child: ElevatedButton(
             onPressed: onUpdate,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('Actualizar'),
           ),
         ),
@@ -159,6 +170,7 @@ class _LabeledDateField extends StatelessWidget {
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 fontWeight: FontWeight.w600,
+                color: Colors.black,
               ),
         ),
         const SizedBox(height: 4),
@@ -204,10 +216,11 @@ class _DateChip extends StatelessWidget {
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Colors.black),
                 ),
               )
             else
-              Text(label),
+              Text(label, style: const TextStyle(color: Colors.black)),
           ],
         ),
       ),
