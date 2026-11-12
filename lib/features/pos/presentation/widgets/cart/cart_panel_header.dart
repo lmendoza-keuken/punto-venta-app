@@ -69,10 +69,10 @@ class CartModeMenuButton extends StatelessWidget {
       barrierDismissible: false,
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Limpiar Pedido'),
+        title: const Text('Limpiar Ticket'),
         content: Text(
           'Al cambiar a modo ${cartModeLabel(toMode)}, '
-          'se limpiará el pedido actual. ¿Desea continuar?',
+          'se limpiará el ticket actual. ¿Desea continuar?',
         ),
         actions: [
           TextButton(
@@ -96,7 +96,7 @@ class CartModeMenuButton extends StatelessWidget {
       barrierDismissible: false,
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Limpiar Pedido'),
+        title: const Text('Limpiar Ticket'),
         content: const Text('¿Está seguro de que desea limpiar el carrito?'),
         actions: [
           TextButton(

@@ -56,7 +56,7 @@ class _LoadSavedOrdersDialogState extends State<LoadSavedOrdersDialog> {
           children: [
             Icon(Icons.restore, color: AppColors.primary),
             SizedBox(width: AppDimensions.paddingS),
-            Text('Reanudar Pedido'),
+            Text('Reanudar Ticket'),
           ],
         ),
         content: SizedBox(
@@ -79,7 +79,7 @@ class _LoadSavedOrdersDialogState extends State<LoadSavedOrdersDialog> {
                         ),
                         const SizedBox(height: AppDimensions.paddingM),
                         Text(
-                          'No hay pedidos guardados',
+                          'No hay tickets guardados',
                           style:
                               Theme.of(context).textTheme.titleMedium?.copyWith(
                                     color: Colors.grey.shade600,
@@ -92,7 +92,7 @@ class _LoadSavedOrdersDialogState extends State<LoadSavedOrdersDialog> {
 
                 return Column(
                   children: [
-                    // Lista de pedidos
+                    // Lista de tickets
                     Expanded(
                       child: ListView.builder(
                         itemCount: state.orders.length,
@@ -151,7 +151,7 @@ class _LoadSavedOrdersDialogState extends State<LoadSavedOrdersDialog> {
                       ),
                     ),
 
-                    // Información del pedido seleccionado
+                    // Información del ticket seleccionado
                     if (selectedOrder != null)
                       Container(
                         margin:
@@ -166,7 +166,7 @@ class _LoadSavedOrdersDialogState extends State<LoadSavedOrdersDialog> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Artículos en el pedido:',
+                              'Artículos en el ticket:',
                               style: Theme.of(context)
                                   .textTheme
                                   .titleMedium
@@ -205,7 +205,7 @@ class _LoadSavedOrdersDialogState extends State<LoadSavedOrdersDialog> {
                       const Icon(Icons.error, color: AppColors.error, size: 64),
                       const SizedBox(height: AppDimensions.paddingM),
                       Text(
-                        'Error al cargar pedidos',
+                        'Error al cargar tickets',
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: AppDimensions.paddingS),
@@ -246,7 +246,7 @@ class _LoadSavedOrdersDialogState extends State<LoadSavedOrdersDialog> {
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Cargar Pedido'),
+            child: const Text('Cargar Ticket'),
           ),
         ],
       ),
@@ -258,7 +258,7 @@ class _LoadSavedOrdersDialogState extends State<LoadSavedOrdersDialog> {
       barrierDismissible: false,
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Eliminar Pedido'),
+        title: const Text('Eliminar Ticket'),
         content: Text('¿Estás seguro de que quieres eliminar "${order.name}"?'),
         actions: [
           TextButton(

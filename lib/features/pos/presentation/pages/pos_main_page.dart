@@ -163,7 +163,11 @@ class _PosMainPageState extends State<PosMainPage> {
                     child: BlocBuilder<CartBloc, CartState>(
                       builder: (context, state) {
                         if (state is! CartLoaded || state.log.isEmpty) {
-                          return const CartEmptyWidget();
+                          return CartEmptyWidget(
+                            lastSaleChange: state is CartLoaded
+                                ? state.lastSaleChange
+                                : null,
+                          );
                         }
                         return ListView.builder(
                           controller: scrollController,
@@ -428,10 +432,15 @@ class _PosMainPageState extends State<PosMainPage> {
         builder: (context, state) {
           final lastEntry =
               state is CartLoaded ? _lastLogEntry(state.log) : null;
+          final lastSaleChange =
+              state is CartLoaded ? state.lastSaleChange : null;
           return ScannerModeContent(
-            key: ValueKey(lastEntry?.id ?? 'empty-dense'),
+            key: ValueKey(
+              lastEntry?.id ?? 'empty-dense-${lastSaleChange ?? 0}',
+            ),
             lastEntry: lastEntry,
             dense: true,
+            lastSaleChange: lastSaleChange,
           );
         },
       ),
@@ -485,8 +494,8 @@ class _PosMainPageState extends State<PosMainPage> {
                                     Expanded(
                                       child: Text(
                                         itemCount == 0
-                                            ? 'Ver pedido'
-                                            : 'Ver pedido ($itemCount)',
+                                            ? 'Ver ticket'
+                                            : 'Ver ticket ($itemCount)',
                                         style: const TextStyle(
                                           fontWeight: FontWeight.w600,
                                           color: AppColors.textPrimary,

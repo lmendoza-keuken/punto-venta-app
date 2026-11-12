@@ -6,7 +6,7 @@ abstract class CartState extends Equatable {
   const CartState();
 
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
 class CartInitial extends CartState {}
@@ -21,6 +21,9 @@ class CartLoaded extends CartState {
   final double internalTax;
   final double totalConIva;
 
+  /// Vuelto de la última venta; vive hasta el próximo AddToCart.
+  final double? lastSaleChange;
+
   const CartLoaded({
     required this.items,
     required this.total,
@@ -30,6 +33,7 @@ class CartLoaded extends CartState {
     required this.totalIva,
     required this.internalTax,
     required this.totalConIva,
+    this.lastSaleChange,
   });
 
   CartLoaded copyWith({
@@ -41,6 +45,8 @@ class CartLoaded extends CartState {
     double? totalIva,
     double? internalTax,
     double? totalConIva,
+    double? lastSaleChange,
+    bool clearLastSaleChange = false,
   }) {
     return CartLoaded(
       items: items ?? this.items,
@@ -51,11 +57,14 @@ class CartLoaded extends CartState {
       totalIva: totalIva ?? this.totalIva,
       internalTax: internalTax ?? this.internalTax,
       totalConIva: totalConIva ?? this.totalConIva,
+      lastSaleChange: clearLastSaleChange
+          ? null
+          : (lastSaleChange ?? this.lastSaleChange),
     );
   }
 
   @override
-  List<Object> get props => [
+  List<Object?> get props => [
         items,
         total,
         totalItems,
@@ -64,6 +73,7 @@ class CartLoaded extends CartState {
         totalIva,
         internalTax,
         totalConIva,
+        lastSaleChange,
       ];
 }
 

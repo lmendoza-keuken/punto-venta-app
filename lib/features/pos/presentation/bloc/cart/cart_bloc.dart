@@ -61,6 +61,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       pricePerKg: event.pricePerKg,
     );
 
+    // Al agregar un producto se limpia el vuelto de la venta anterior.
     emit(CartLoaded(
       items: newItems,
       total: total,
@@ -70,6 +71,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       totalIva: totalIva,
       internalTax: internalTax,
       totalConIva: totalConIva,
+      lastSaleChange: null,
     ));
   }
 
@@ -102,6 +104,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       totalIva: totalIva,
       internalTax: internalTax,
       totalConIva: totalConIva,
+      lastSaleChange: null,
     ));
   }
 
@@ -158,20 +161,24 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       totalIva: totalIva,
       internalTax: internalTax,
       totalConIva: totalConIva,
+      lastSaleChange: state is CartLoaded
+          ? (state as CartLoaded).lastSaleChange
+          : null,
     ));
   }
 
   void _onClearCart(ClearCart event, Emitter<CartState> emit) {
     sharedPreferences.remove('current_ticket_id');
-    emit(const CartLoaded(
-      items: [],
+    emit(CartLoaded(
+      items: const [],
       total: 0.0,
       totalItems: 0,
-      log: [],
+      log: const [],
       subtotal: 0.0,
       totalIva: 0.0,
       internalTax: 0.0,
       totalConIva: 0.0,
+      lastSaleChange: event.lastSaleChange,
     ));
   }
 

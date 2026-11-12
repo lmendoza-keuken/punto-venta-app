@@ -48,9 +48,9 @@ class SavedOrdersBloc extends Bloc<SavedOrdersEvent, SavedOrdersState> {
         clientName: event.clientName,
         ticketId: ticketId,
       );
-      emit(const OrderSaved('Pedido guardado exitosamente'));
+      emit(const OrderSaved('Ticket guardado exitosamente'));
 
-      // Recargar la lista de pedidos guardados
+      // Recargar la lista de tickets guardados
       final orders = await loadSavedOrdersUsecase();
       emit(SavedOrdersLoaded(orders));
     } catch (e) {
@@ -64,9 +64,9 @@ class SavedOrdersBloc extends Bloc<SavedOrdersEvent, SavedOrdersState> {
   ) async {
     try {
       await loadSavedOrdersUsecase.deleteOrder(event.orderId);
-      emit(const OrderDeleted('Pedido eliminado exitosamente'));
+      emit(const OrderDeleted('Ticket eliminado exitosamente'));
 
-      // Recargar la lista de pedidos guardados
+      // Recargar la lista de tickets guardados
       final orders = await loadSavedOrdersUsecase();
       emit(SavedOrdersLoaded(orders));
     } catch (e) {
@@ -83,7 +83,7 @@ class SavedOrdersBloc extends Bloc<SavedOrdersEvent, SavedOrdersState> {
       if (order != null) {
         emit(OrderLoadedById(order));
       } else {
-        emit(const SavedOrdersError('Pedido no encontrado'));
+        emit(const SavedOrdersError('Ticket no encontrado'));
       }
     } catch (e) {
       emit(SavedOrdersError(e.toString()));

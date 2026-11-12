@@ -7,7 +7,7 @@ abstract class CartEvent extends Equatable {
   const CartEvent();
 
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
 class AddToCart extends CartEvent {
@@ -46,4 +46,13 @@ class RemoveQuantityFromCart extends CartEvent {
   List<Object> get props => [productId, quantity, weightKg ?? 0, pricePerKg ?? 0];
 }
 
-class ClearCart extends CartEvent {}
+class ClearCart extends CartEvent {
+  /// Vuelto de la última venta confirmada. Se muestra en carrito vacío
+  /// hasta que se agregue un producto. Si es null, se limpia.
+  final double? lastSaleChange;
+
+  const ClearCart({this.lastSaleChange});
+
+  @override
+  List<Object?> get props => [lastSaleChange];
+}

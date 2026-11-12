@@ -123,17 +123,22 @@ class _CartPanelState extends State<CartPanel> {
                                                 key: ValueKey(
                                                   _lastLogEntry(state.log)
                                                           ?.id ??
-                                                      'empty',
+                                                      'empty-${state.lastSaleChange}',
                                                 ),
                                                 lastEntry: _lastLogEntry(
                                                   state.log,
                                                 ),
+                                                lastSaleChange:
+                                                    state.lastSaleChange,
                                               )
                                             : Padding(
                                                 padding: const EdgeInsets.all(
                                                     AppDimensions.paddingS),
                                                 child: state.log.isEmpty
-                                                    ? const CartEmptyWidget()
+                                                    ? CartEmptyWidget(
+                                                        lastSaleChange:
+                                                            state.lastSaleChange,
+                                                      )
                                                     : ListView.builder(
                                                         controller:
                                                             _scrollController,

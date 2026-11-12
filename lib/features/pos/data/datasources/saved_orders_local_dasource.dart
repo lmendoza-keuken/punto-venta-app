@@ -32,7 +32,7 @@ class SavedOrdersLocalDataSourceImpl implements SavedOrdersLocalDataSource {
   Future<void> saveOrder(SavedOrderModel order) async {
     final orders = await getSavedOrders();
 
-    // Verificar si ya existe un pedido con el mismo ID y actualizar
+    // Verificar si ya existe un ticket con el mismo ID y actualizar
     final existingIndex = orders.indexWhere((o) => o.id == order.id);
     if (existingIndex != -1) {
       orders[existingIndex] = order;

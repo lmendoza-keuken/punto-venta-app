@@ -155,6 +155,8 @@ class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
     ));
     // Al agregar, se permite completar el restante si aún se edita el 1er método.
     _paymentDistributionLocked = false;
+    // Efectivo no edita monto: siempre absorbe el remanente.
+    _syncCashAmountsToRemaining(updated, totalAmount);
     final result = calculateChangeAndAmounts(updated, totalAmount);
     emit(state.copyWith(
       selectedPayments: updated,
@@ -172,6 +174,8 @@ class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
     if (updated.length == 1) {
       updated[0] = updated[0].copyWith(amount: totalAmount);
       _paymentDistributionLocked = false;
+    } else {
+      _syncCashAmountsToRemaining(updated, totalAmount);
     }
 
     final result = calculateChangeAndAmounts(updated, totalAmount);
@@ -187,6 +191,9 @@ class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
 
   void updatePaymentAmount(int index, double amount, double totalAmount) {
     if (index >= state.selectedPayments.length) return;
+    // Efectivo no tiene monto editable; su amount es el remanente.
+    if (_isCashMethod(state.selectedPayments[index])) return;
+
     final updated = List<PaymentMethod>.from(state.selectedPayments);
     updated[index] = updated[index].copyWith(amount: amount);
 
@@ -197,6 +204,9 @@ class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
       // Editar el primero (aún sin tocar el segundo): completa el restante.
       _rebalanceRemainingAmount(updated, index, totalAmount);
     }
+
+    // Efectivo siempre toma el remanente para el vuelto genérico.
+    _syncCashAmountsToRemaining(updated, totalAmount);
 
     final result = calculateChangeAndAmounts(updated, totalAmount);
     emit(state.copyWith(
@@ -215,7 +225,7 @@ class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
 
     // En un solo método (efectivo), el amount sigue al recibido (tope = total)
     // para que al agregar otro método la precarga del restante funcione.
-    // Con varios métodos, el amount se edita aparte y no se toca acá.
+    // Con varios métodos, el amount de efectivo es el remanente (no el recibido).
     double? newAmount = pm.amount;
     if (isCash && updated.length == 1) {
       if (receivedAmount == null) {
@@ -231,6 +241,10 @@ class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
       receivedAmount: receivedAmount,
       clearReceivedAmount: receivedAmount == null,
     );
+
+    if (isCash && updated.length > 1) {
+      _syncCashAmountsToRemaining(updated, totalAmount);
+    }
 
     final result = calculateChangeAndAmounts(updated, totalAmount);
     emit(state.copyWith(
@@ -255,11 +269,42 @@ class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
         pm.shortDescription.toLowerCase().contains('efectivo');
   }
 
+  /// Efectivo no edita "monto a pagar": su amount es siempre el remanente
+  /// respecto de los demás métodos, para calcular vuelto = paga con − amount.
+  void _syncCashAmountsToRemaining(
+      List<PaymentMethod> updated, double totalAmount) {
+    if (updated.length <= 1) return;
+
+    double nonCashSum = 0.0;
+    final cashIndexes = <int>[];
+    for (int i = 0; i < updated.length; i++) {
+      if (_isCashMethod(updated[i])) {
+        cashIndexes.add(i);
+      } else {
+        nonCashSum += updated[i].amount ?? 0.0;
+      }
+    }
+    if (cashIndexes.isEmpty) return;
+
+    double remaining =
+        double.parse((totalAmount - nonCashSum).toStringAsFixed(2));
+    if (remaining < 0.0) remaining = 0.0;
+
+    for (int k = 0; k < cashIndexes.length; k++) {
+      final i = cashIndexes[k];
+      final amount = k == 0 ? remaining : 0.0;
+      updated[i] = updated[i].copyWith(amount: amount);
+    }
+  }
+
   void _rebalanceRemainingAmount(
       List<PaymentMethod> updated, int sourceIndex, double totalAmount) {
     if (updated.length <= 1) return;
 
     final targetIndex = (sourceIndex + 1) % updated.length;
+    // Si el destino es efectivo, _syncCashAmountsToRemaining lo ajusta después.
+    if (_isCashMethod(updated[targetIndex])) return;
+
     double sumOthers = 0.0;
     for (int j = 0; j < updated.length; j++) {
       if (j != targetIndex) {
@@ -272,7 +317,6 @@ class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
     final targetPm = updated[targetIndex];
     updated[targetIndex] = targetPm.copyWith(
       amount: double.parse(remaining.toStringAsFixed(2)),
-      clearReceivedAmount: _isCashMethod(targetPm),
     );
   }
 

@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/utils/extensions.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/payment_method.dart';
@@ -71,57 +69,50 @@ class PaymentRowWidget extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: amountController,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [CurrencyInputFormatter()],
-                    decoration: const InputDecoration(
-                      labelText: 'Monto a pagar',
-                      prefixText: '\$ ',
-                      border: OutlineInputBorder(),
-                      contentPadding:
-                          EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    ),
-                    onChanged: onAmountChanged,
-                    onTap: () {
-                      amountController.selection = TextSelection(
-                        baseOffset: 0,
-                        extentOffset: amountController.text.length,
-                      );
-                    },
-                  ),
+            // Efectivo: solo "Paga con". El monto a pagar es el remanente
+            // (se calcula en el cubit) para obtener un vuelto genérico.
+            if (isCash && receivedController != null)
+              TextFormField(
+                controller: receivedController,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [CurrencyInputFormatter()],
+                decoration: const InputDecoration(
+                  labelText: 'Paga con (Recibido)',
+                  prefixText: '\$ ',
+                  border: OutlineInputBorder(),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 ),
-                if (isCash && receivedController != null) ...[
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
-                      controller: receivedController,
-                      keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true),
-                      inputFormatters: [CurrencyInputFormatter()],
-                      decoration: const InputDecoration(
-                        labelText: 'Paga con (Recibido)',
-                        prefixText: '\$ ',
-                        border: OutlineInputBorder(),
-                        contentPadding:
-                            EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      ),
-                      onChanged: onReceivedAmountChanged,
-                      onTap: () {
-                        receivedController!.selection = TextSelection(
-                          baseOffset: 0,
-                          extentOffset: receivedController!.text.length,
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ],
-            ),
+                onChanged: onReceivedAmountChanged,
+                onTap: () {
+                  receivedController!.selection = TextSelection(
+                    baseOffset: 0,
+                    extentOffset: receivedController!.text.length,
+                  );
+                },
+              )
+            else
+              TextFormField(
+                controller: amountController,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [CurrencyInputFormatter()],
+                decoration: const InputDecoration(
+                  labelText: 'Monto a pagar',
+                  prefixText: '\$ ',
+                  border: OutlineInputBorder(),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+                onChanged: onAmountChanged,
+                onTap: () {
+                  amountController.selection = TextSelection(
+                    baseOffset: 0,
+                    extentOffset: amountController.text.length,
+                  );
+                },
+              ),
             if (detailsWidget != null) detailsWidget!,
           ],
         ),

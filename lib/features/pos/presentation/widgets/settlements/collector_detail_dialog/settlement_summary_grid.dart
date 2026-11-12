@@ -49,6 +49,7 @@ class SettlementSummaryGrid extends StatelessWidget {
               title: 'Facturación',
               count: detail.invoiceCount ?? 0,
               total: (detail.invoiceTotal ?? 0.0).formatToCurrency(),
+              totalColor: AppColors.success,
               isDark: isDark,
               compact: compact,
             ),
@@ -56,6 +57,7 @@ class SettlementSummaryGrid extends StatelessWidget {
               title: 'Notas de Crédito',
               count: detail.creditNoteCount ?? 0,
               total: (detail.creditNoteTotal ?? 0.0).formatToCurrency(),
+              totalColor: AppColors.error,
               isDark: isDark,
               compact: compact,
             ),
@@ -63,6 +65,7 @@ class SettlementSummaryGrid extends StatelessWidget {
               title: 'Artículos Cancelados',
               count: canceledCount,
               total: '$canceledCount unid.',
+              totalColor: AppColors.warning,
               isDark: isDark,
               compact: compact,
               showTotalOnly: true,
@@ -73,6 +76,7 @@ class SettlementSummaryGrid extends StatelessWidget {
                 title: 'Artículos Descartados',
                 count: disposedCount,
                 total: '$disposedCount unid.',
+                totalColor: AppColors.error,
                 isDark: isDark,
                 compact: compact,
                 showTotalOnly: true,
@@ -88,6 +92,7 @@ class SettlementSummaryGrid extends StatelessWidget {
     required String title,
     required int count,
     required String total,
+    required Color totalColor,
     required bool isDark,
     required bool compact,
     bool showTotalOnly = false,
@@ -119,7 +124,7 @@ class SettlementSummaryGrid extends StatelessWidget {
                     fontWeight: FontWeight.w500,
                     color: isDark
                         ? AppColors.darkTextSecondary
-                        : AppColors.textSecondary,
+                        : AppColors.textPrimary,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -143,7 +148,7 @@ class SettlementSummaryGrid extends StatelessWidget {
             style: TextStyle(
               fontSize: compact ? 16 : 18,
               fontWeight: FontWeight.bold,
-              color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+              color: totalColor,
             ),
           ),
           if (!showTotalOnly) ...[
@@ -157,7 +162,7 @@ class SettlementSummaryGrid extends StatelessWidget {
                 height: 1.2,
                 color: isDark
                     ? AppColors.darkTextSecondary
-                    : AppColors.textSecondary,
+                    : AppColors.textPrimary,
               ),
             ),
           ],

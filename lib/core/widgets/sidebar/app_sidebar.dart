@@ -193,7 +193,7 @@ class _AppSidebarState extends State<AppSidebar> {
                     child: SingleChildScrollView(
                       child: Column(
                         children: [
-                          // Guardar pedido
+                          // Guardar ticket
                           _buildNavItem(
                             context,
                             isSelected: _isSaveOrderDialogOpen,
@@ -202,13 +202,13 @@ class _AppSidebarState extends State<AppSidebar> {
                             child: SidebarItem(
                               icon: Icons.save_outlined,
                               isHighlighted: _isSaveOrderDialogOpen,
-                              tooltip: 'Guardar Pedido',
+                              tooltip: 'Guardar Ticket',
                               showLabel: showLabel,
                               onTap: () => _handleSaveOrder(context),
                             ),
                           ),
                           const SizedBox(height: 8),
-                          // Cargar pedido guardado
+                          // Cargar ticket guardado
                           _buildNavItem(
                             context,
                             isSelected: _isLoadSavedOrdersDialogOpen,
@@ -217,7 +217,7 @@ class _AppSidebarState extends State<AppSidebar> {
                             child: SidebarItem(
                               icon: Icons.folder_open_outlined,
                               isHighlighted: _isLoadSavedOrdersDialogOpen,
-                              tooltip: 'Cargar Pedido',
+                              tooltip: 'Cargar Ticket',
                               showLabel: showLabel,
                               onTap: () => _handleLoadOrder(context),
                             ),
@@ -414,7 +414,7 @@ class _AppSidebarState extends State<AppSidebar> {
     }
   }
 
-  // Guardar pedido
+  // Guardar ticket
   void _handleSaveOrder(BuildContext context) async {
     final cartState = context.read<CartBloc>().state;
     if (cartState is CartLoaded && cartState.items.isNotEmpty) {
@@ -441,20 +441,20 @@ class _AppSidebarState extends State<AppSidebar> {
     }
   }
 
-  // Cargar pedido guardado
+  // Cargar ticket guardado
   void _handleLoadOrder(BuildContext context) async {
     // Verificar si hay items en el carrito actual
     final cartState = context.read<CartBloc>().state;
     if (cartState is CartLoaded && cartState.items.isNotEmpty) {
-      // Preguntar si desea guardar el pedido actual
+      // Preguntar si desea guardar el ticket actual
 
       final shouldSave = await showDialog<bool>(
         barrierDismissible: false,
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Pedido en curso'),
+          title: const Text('Ticket en curso'),
           content: const Text(
-            '¿Desea guardar el pedido actual antes de cargar otro?',
+            '¿Desea guardar el ticket actual antes de cargar otro?',
           ),
           actions: [
             TextButton(
@@ -487,7 +487,7 @@ class _AppSidebarState extends State<AppSidebar> {
       if (shouldSave == null) return;
     }
 
-    // Proceder a cargar el pedido guardado
+    // Proceder a cargar el ticket guardado
     setState(() => _isLoadSavedOrdersDialogOpen = true);
     final result = await showDialog<SavedOrder>(
       barrierDismissible: false,
@@ -501,7 +501,7 @@ class _AppSidebarState extends State<AppSidebar> {
       );
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Pedido "${result.name}" cargado exitosamente'),
+          content: Text('Ticket "${result.name}" cargado exitosamente'),
           backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
         ),

@@ -42,25 +42,27 @@ class ChangeAndAmountsResult {
   ChangeAndAmountsResult({required this.receivedAmount, required this.change});
 }
 
-ChangeAndAmountsResult calculateChangeAndAmounts(List<PaymentMethod> selectedPayments, double totalAmount) {
+ChangeAndAmountsResult calculateChangeAndAmounts(
+    List<PaymentMethod> selectedPayments, double totalAmount) {
   double totalReceived = 0.0;
-  double totalChange = 0.0;
 
   for (final pm in selectedPayments) {
     final isCash = pm.description.toLowerCase().contains('efectivo') ||
         pm.shortDescription.toLowerCase().contains('efectivo');
     final amount = pm.amount ?? 0.0;
 
+    // Efectivo aporta lo recibido ("Paga con"); el resto aporta su monto.
     if (isCash) {
-      final rec = pm.receivedAmount ?? amount;
-      totalReceived += rec;
-      if (rec > amount) {
-        totalChange += (rec - amount);
-      }
+      totalReceived += pm.receivedAmount ?? amount;
     } else {
       totalReceived += amount;
     }
   }
+
+  // Vuelto genérico: lo recibido de más respecto del total de la venta.
+  final rawChange =
+      double.parse((totalReceived - totalAmount).toStringAsFixed(2));
+  final totalChange = rawChange > 0 ? rawChange : 0.0;
 
   return ChangeAndAmountsResult(
     receivedAmount: totalReceived,

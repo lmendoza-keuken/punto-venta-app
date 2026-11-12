@@ -18,7 +18,7 @@ class AppStrings {
       'No hay cliente cargado. Por defecto se facturará como Consumidor Final (Factura B).';
   static const String resetToDefaultClient = 'Volver al cliente por defecto';
   static const String catalog = 'Catálogo';
-  static const String cartSummary = 'Resumen del Pedido';
+  static const String cartSummary = 'Resumen del Ticket';
   static const String article = 'Artículo';
   static const String price = 'Precio';
   static const String quantity = 'Cant.';
@@ -28,7 +28,7 @@ class AppStrings {
 
   // Actions
   static const String report = 'Reporte';
-  static const String saveOrder = 'Guardar pedido';
+  static const String saveOrder = 'Guardar ticket';
   static const String resume = 'Reanudar';
   static const String selectClient = 'Seleccionar cliente';
   static const String addClient = 'Agregar cliente';

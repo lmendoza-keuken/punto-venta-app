@@ -3,6 +3,7 @@ import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/core/utils/extensions.dart';
 import 'package:punto_venta_app/features/pos/data/models/pending_collectors_detail_response_model.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/cart/confirmation/confirmation_helpers.dart';
 
 class SettlementPaymentsBreakdown extends StatelessWidget {
   final List<PaymentBreakdown>? payments;
@@ -109,6 +110,8 @@ class SettlementPaymentsBreakdown extends StatelessWidget {
             itemBuilder: (context, index) {
               final payment = payments![index];
               final amountVal = payment.totalAmount ?? 0.0;
+              final description = payment.description ?? 'Método Desconocido';
+              final icon = getPaymentMethodIcon(description, description);
 
               return Padding(
                 padding: const EdgeInsets.symmetric(
@@ -116,25 +119,39 @@ class SettlementPaymentsBreakdown extends StatelessWidget {
                   vertical: AppDimensions.paddingM,
                 ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      payment.description ?? 'Método Desconocido',
-                      style: TextStyle(
-                        fontSize: 14,
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
                         color: isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.textPrimary,
+                            ? AppColors.sidebarDarkSurface
+                            : Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        icon,
+                        color: AppColors.success,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        description,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: isDark
+                              ? AppColors.darkTextPrimary
+                              : AppColors.textPrimary,
+                        ),
                       ),
                     ),
                     Text(
                       amountVal.formatToCurrency(),
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.textPrimary,
+                        color: AppColors.success,
                       ),
                     ),
                   ],

@@ -266,7 +266,7 @@ class _DisposedItemsDialogContentState extends State<_DisposedItemsDialogContent
                             fontSize: 14,
                             color: isDark
                                 ? AppColors.darkTextSecondary
-                                : AppColors.textSecondary,
+                                : AppColors.textPrimary,
                           ),
                         ),
                         const SizedBox(height: AppDimensions.paddingM),
@@ -307,7 +307,7 @@ class _DisposedItemsDialogContentState extends State<_DisposedItemsDialogContent
                           style: TextStyle(
                             color: isDark
                                 ? AppColors.darkTextSecondary
-                                : AppColors.textSecondary,
+                                : AppColors.textPrimary,
                           ),
                         ),
                       ],
@@ -450,8 +450,8 @@ class _AggregatedDisposedList extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 12,
                               color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.textSecondary,
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.textPrimary,
                             ),
                           ),
                         ],
@@ -461,8 +461,8 @@ class _AggregatedDisposedList extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 12,
                             color: isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.textSecondary,
+                                ? AppColors.darkTextPrimary
+                                : AppColors.textPrimary,
                           ),
                         ),
                       ],
@@ -481,7 +481,7 @@ class _AggregatedDisposedList extends StatelessWidget {
                     Icons.chevron_right,
                     color: isDark
                         ? AppColors.darkTextSecondary
-                        : AppColors.textSecondary,
+                        : AppColors.textPrimary,
                   ),
                 ],
               ),
@@ -571,7 +571,7 @@ class _RelatedDisposedGroupsDialog extends StatelessWidget {
                             fontSize: 14,
                             color: isDark
                                 ? AppColors.darkTextSecondary
-                                : AppColors.textSecondary,
+                                : AppColors.textPrimary,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -605,7 +605,7 @@ class _RelatedDisposedGroupsDialog extends StatelessWidget {
                     onPressed: () => Navigator.of(context).pop(),
                     color: isDark
                         ? AppColors.darkTextSecondary
-                        : AppColors.textSecondary,
+                        : AppColors.textPrimary,
                   ),
                 ],
               ),
@@ -720,8 +720,8 @@ class _DisposedGroupCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 12,
                           color: isDark
-                              ? AppColors.darkTextSecondary
-                              : AppColors.textSecondary,
+                              ? AppColors.darkTextPrimary
+                              : AppColors.textPrimary,
                         ),
                       ),
                     ],
@@ -829,8 +829,8 @@ class _DisposedGroupItemsDialog extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 12,
                               color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.textSecondary,
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.textPrimary,
                             ),
                           ),
                         ],
@@ -916,8 +916,8 @@ class _DisposedGroupItemsDialog extends StatelessWidget {
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: isDark
-                                              ? AppColors.darkTextSecondary
-                                              : AppColors.textSecondary,
+                                              ? AppColors.darkTextPrimary
+                                              : AppColors.textPrimary,
                                         ),
                                       ),
                                     ],

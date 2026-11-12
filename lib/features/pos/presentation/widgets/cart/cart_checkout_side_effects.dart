@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
@@ -17,6 +18,8 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_event.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/common/error_dialog.dart';
+
+const bool kSkipCheckoutPrint = kDebugMode;
 
 /// Shared checkout/printer side-effects used by expanded CartPanel and compact shell.
 class CartCheckoutSideEffects extends StatelessWidget {
@@ -42,7 +45,7 @@ class CartCheckoutSideEffects extends StatelessWidget {
                     'cartMode=$cartMode ticketId=${checkoutState.printJob.ticketId}',
               );
 
-              if (cartMode != CartMode.returnMode) {
+              if (cartMode != CartMode.returnMode && !kSkipCheckoutPrint) {
                 ConfirmSaleFlowLog.step(
                   'dispatch_print_ticket',
                   detail:
@@ -55,11 +58,19 @@ class CartCheckoutSideEffects extends StatelessWidget {
               } else {
                 ConfirmSaleFlowLog.end(
                   'success_no_print',
-                  detail: 'cartMode=returnMode',
+                  detail: kSkipCheckoutPrint
+                      ? 'kSkipCheckoutPrint=true'
+                      : 'cartMode=returnMode',
                 );
               }
 
-              context.read<CartBloc>().add(ClearCart());
+              final saleChange = checkoutState.printJob.change;
+              final persistChange = cartMode == CartMode.sale &&
+                  saleChange != null &&
+                  saleChange > 0;
+              context.read<CartBloc>().add(ClearCart(
+                    lastSaleChange: persistChange ? saleChange : null,
+                  ));
               context.read<CheckoutBloc>().add(const ResetCheckout());
               context.read<ClientsBloc>().add(ResetToDefaultClientEvent());
 

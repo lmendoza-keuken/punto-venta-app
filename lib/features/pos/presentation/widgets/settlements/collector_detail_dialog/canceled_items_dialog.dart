@@ -450,8 +450,8 @@ class _AggregatedItemsList extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 12,
                               color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.textSecondary,
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.textPrimary,
                             ),
                           ),
                         ],
@@ -461,8 +461,8 @@ class _AggregatedItemsList extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 12,
                             color: isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.textSecondary,
+                                ? AppColors.darkTextPrimary
+                                : AppColors.textPrimary,
                           ),
                         ),
                       ],
@@ -595,8 +595,8 @@ class _RelatedTicketsDialog extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 12,
                               color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.textSecondary,
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.textPrimary,
                             ),
                           ),
                         ],
@@ -732,8 +732,8 @@ class _CanceledTicketCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 12,
                           color: isDark
-                              ? AppColors.darkTextSecondary
-                              : AppColors.textSecondary,
+                              ? AppColors.darkTextPrimary
+                              : AppColors.textPrimary,
                         ),
                       ),
                     ],
@@ -841,8 +841,8 @@ class _CanceledTicketItemsDialog extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 12,
                               color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.textSecondary,
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.textPrimary,
                             ),
                           ),
                         ],
@@ -927,8 +927,8 @@ class _CanceledTicketItemsDialog extends StatelessWidget {
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: isDark
-                                              ? AppColors.darkTextSecondary
-                                              : AppColors.textSecondary,
+                                              ? AppColors.darkTextPrimary
+                                              : AppColors.textPrimary,
                                         ),
                                       ),
                                     ],

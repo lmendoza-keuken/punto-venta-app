@@ -43,7 +43,7 @@ class _SaveOrderDialogState extends State<SaveOrderDialog> {
     // Generar nombre por defecto
     final now = DateTime.now();
     _nameController.text =
-        'Pedido ${now.day}/${now.month}/${now.year} ${now.hour}:${now.minute.toString().padLeft(2, '0')}';
+        'Ticket ${now.day}/${now.month}/${now.year} ${now.hour}:${now.minute.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -85,7 +85,7 @@ class _SaveOrderDialogState extends State<SaveOrderDialog> {
           children: [
             Icon(Icons.save, color: AppColors.primary),
             SizedBox(width: AppDimensions.paddingS),
-            Text('Guardar Pedido'),
+            Text('Guardar Ticket'),
           ],
         ),
         content: SizedBox(
@@ -97,7 +97,7 @@ class _SaveOrderDialogState extends State<SaveOrderDialog> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Información del pedido
+                  // Información del ticket
                   Container(
                     padding: const EdgeInsets.all(AppDimensions.paddingM),
                     decoration: BoxDecoration(
@@ -142,13 +142,13 @@ class _SaveOrderDialogState extends State<SaveOrderDialog> {
                   ),
                   const SizedBox(height: AppDimensions.paddingM),
 
-                  // Nombre del pedido
+                  // Nombre del ticket
                   CustomTextField(
-                    label: 'Nombre del pedido *',
+                    label: 'Nombre del ticket *',
                     controller: _nameController,
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'El nombre del pedido es requerido';
+                        return 'El nombre del ticket es requerido';
                       }
                       return null;
                     },
