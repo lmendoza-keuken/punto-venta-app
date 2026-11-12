@@ -1,0 +1,18 @@
+---
+description: Project agent context for punto_venta_app — read docs hub before architecture/API/UI work
+alwaysApply: true
+---
+
+# Project context
+
+Before changing architecture, APIs, multiplatform behavior, or screen flows, read:
+
+- `docs/PROJECT_CONTEXT.md` (hub)
+- Then the relevant doc: `docs/architecture.md`, `docs/endpoints.md`, `docs/platforms.md`, `docs/features-map.md`
+
+Procedural checklists:
+
+- New/changed HTTP endpoint → `docs/skills/add-endpoint/SKILL.md` and update `docs/endpoints.md`
+- New/changed screen flow → `docs/skills/view-flow/SKILL.md` and update `docs/features-map.md`
+
+Setup/env (FVM, Windows toolchain) stays in root `README.md`. Do not duplicate inventories in this rule.
