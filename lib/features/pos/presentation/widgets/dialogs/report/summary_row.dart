@@ -110,7 +110,7 @@ class SummaryRow extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: metric.color,
-                      fontSize: compact ? 16 : null,
+                      fontSize: 18,
                     ),
               ),
             ),

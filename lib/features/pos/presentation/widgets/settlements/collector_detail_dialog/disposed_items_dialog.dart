@@ -218,7 +218,7 @@ class _DisposedItemsDialogContentState extends State<_DisposedItemsDialogContent
             labelColor: AppColors.primary,
             unselectedLabelColor: isDark
                 ? AppColors.darkTextSecondary
-                : AppColors.textSecondary,
+                : Colors.black,
             indicatorColor: AppColors.primary,
             tabs: const [
               Tab(text: 'Por artículo'),

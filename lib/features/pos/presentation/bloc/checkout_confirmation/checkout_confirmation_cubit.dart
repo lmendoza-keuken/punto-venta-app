@@ -38,6 +38,10 @@ class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
   PdvConfig? _pdvConfig;
   CartMode _cartMode = CartMode.sale;
 
+  /// Cuando el usuario edita un método secundario, se bloquea el auto-balance.
+  /// Sigue permitido completar el restante al editar el primer método o al agregar.
+  bool _paymentDistributionLocked = false;
+
   CheckoutConfirmationCubit({
     required this.fetchReturnReasonsUsecase,
     required this.fetchDisposeReasonsUsecase,
@@ -125,6 +129,7 @@ class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
             state.selectedPayments.first.id != method.id)) {
       final payments = [method.copyWith(amount: totalAmount)];
       final result = calculateChangeAndAmounts(payments, totalAmount);
+      _paymentDistributionLocked = false;
       emit(state.copyWith(
         selectedPayments: payments,
         receivedAmount: result.receivedAmount,
@@ -139,7 +144,17 @@ class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
   void addPaymentMethod(
       PaymentMethod method, double defaultAmount, double totalAmount) {
     final updated = List<PaymentMethod>.from(state.selectedPayments);
-    updated.add(method.copyWith(amount: defaultAmount));
+    final allocated =
+        updated.fold<double>(0.0, (sum, pm) => sum + (pm.amount ?? 0.0));
+    final remaining =
+        double.parse((totalAmount - allocated).toStringAsFixed(2));
+    // Precarga: el nuevo método recibe el restante por cobrar.
+    final preloadAmount = remaining > 0 ? remaining : defaultAmount;
+    updated.add(method.copyWith(
+      amount: preloadAmount > 0 ? preloadAmount : 0.0,
+    ));
+    // Al agregar, se permite completar el restante si aún se edita el 1er método.
+    _paymentDistributionLocked = false;
     final result = calculateChangeAndAmounts(updated, totalAmount);
     emit(state.copyWith(
       selectedPayments: updated,
@@ -156,6 +171,7 @@ class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
 
     if (updated.length == 1) {
       updated[0] = updated[0].copyWith(amount: totalAmount);
+      _paymentDistributionLocked = false;
     }
 
     final result = calculateChangeAndAmounts(updated, totalAmount);
@@ -174,7 +190,13 @@ class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
     final updated = List<PaymentMethod>.from(state.selectedPayments);
     updated[index] = updated[index].copyWith(amount: amount);
 
-    _rebalanceRemainingAmount(updated, index, totalAmount);
+    // Si el usuario edita un método secundario, bloquea el auto-balance.
+    if (index > 0) {
+      _paymentDistributionLocked = true;
+    } else if (!_paymentDistributionLocked && updated.length > 1) {
+      // Editar el primero (aún sin tocar el segundo): completa el restante.
+      _rebalanceRemainingAmount(updated, index, totalAmount);
+    }
 
     final result = calculateChangeAndAmounts(updated, totalAmount);
     emit(state.copyWith(
@@ -188,32 +210,19 @@ class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
       int index, double? receivedAmount, double totalAmount) {
     if (index >= state.selectedPayments.length) return;
     final updated = List<PaymentMethod>.from(state.selectedPayments);
-
-    // Para evitar un bucle de retroalimentación donde el monto se limita por el balanceo
-    // calculado en la pulsación anterior, calculamos el tope máximo (cap) sumando únicamente
-    // los métodos que no son ni el actual (index) ni el que va a recibir el balanceo (targetIndex).
-    double fixedSum = 0.0;
-    int targetIndex = index;
-    if (updated.length > 1) {
-      targetIndex = (index + 1) % updated.length;
-      for (int j = 0; j < updated.length; j++) {
-        if (j != index && j != targetIndex) {
-          fixedSum += updated[j].amount ?? 0.0;
-        }
-      }
-    }
-    double cap = totalAmount - fixedSum;
-    if (cap < 0.0) cap = 0.0;
-
     final pm = updated[index];
     final isCash = _isCashMethod(pm);
 
+    // En un solo método (efectivo), el amount sigue al recibido (tope = total)
+    // para que al agregar otro método la precarga del restante funcione.
+    // Con varios métodos, el amount se edita aparte y no se toca acá.
     double? newAmount = pm.amount;
-    if (isCash) {
+    if (isCash && updated.length == 1) {
       if (receivedAmount == null) {
         newAmount = 0.0;
       } else {
-        newAmount = receivedAmount < cap ? receivedAmount : cap;
+        newAmount =
+            receivedAmount < totalAmount ? receivedAmount : totalAmount;
       }
     }
 
@@ -222,8 +231,6 @@ class CheckoutConfirmationCubit extends Cubit<CheckoutConfirmationState> {
       receivedAmount: receivedAmount,
       clearReceivedAmount: receivedAmount == null,
     );
-
-    _rebalanceRemainingAmount(updated, index, totalAmount);
 
     final result = calculateChangeAndAmounts(updated, totalAmount);
     emit(state.copyWith(

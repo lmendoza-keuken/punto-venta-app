@@ -44,9 +44,10 @@ class ProductLabelCard extends StatelessWidget {
               const SizedBox(height: 4),
               _buildCode(),
               const Spacer(flex: 1),
-              if (product.barcodes != null && product.barcodes!.isNotEmpty)
+              if (product.barcodes != null && product.barcodes!.isNotEmpty) ...[
                 _buildBarcode(),
-              const SizedBox(height: 4),
+                const SizedBox(height: 4),
+              ],
               _buildPrice(),
             ],
           ),
@@ -62,9 +63,10 @@ class ProductLabelCard extends StatelessWidget {
           child: Text(
             product.name,
             style: const TextStyle(
-              fontSize: 12,
+              fontSize: 14,
               fontWeight: FontWeight.bold,
               height: 1.15,
+              color: AppColors.textPrimary,
             ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -110,7 +112,7 @@ class ProductLabelCard extends StatelessWidget {
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
       style: TextStyle(
-        fontSize: 10,
+        fontSize: 12,
         color: Colors.grey[600],
       ),
     );
@@ -119,13 +121,13 @@ class ProductLabelCard extends StatelessWidget {
   Widget _buildBarcode() {
     return Row(
       children: [
-        Icon(Icons.qr_code, size: 14, color: Colors.grey[600]),
+        Icon(Icons.qr_code, size: 16, color: Colors.grey[600]),
         const SizedBox(width: 3),
         Expanded(
           child: Text(
             product.barcodes!.first.barcode.toString(),
             style: TextStyle(
-              fontSize: 10,
+              fontSize: 12,
               color: Colors.grey[600],
             ),
             maxLines: 1,
@@ -157,7 +159,7 @@ class ProductLabelCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 10,
+                    fontSize: 12,
                     fontWeight: FontWeight.bold,
                     fontStyle: FontStyle.italic,
                     color: Colors.grey[600],
@@ -204,7 +206,7 @@ class ProductLabelCard extends StatelessWidget {
               maxLines: 1,
               softWrap: false,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color:
                     product.isOnSale ? AppColors.warning : AppColors.primary,

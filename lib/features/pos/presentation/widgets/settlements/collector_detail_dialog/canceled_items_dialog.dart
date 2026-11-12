@@ -218,7 +218,7 @@ class _CanceledItemsDialogContentState extends State<_CanceledItemsDialogContent
             labelColor: AppColors.primary,
             unselectedLabelColor: isDark
                 ? AppColors.darkTextSecondary
-                : AppColors.textSecondary,
+                : Colors.black,
             indicatorColor: AppColors.primary,
             tabs: const [
               Tab(text: 'Por artículo'),

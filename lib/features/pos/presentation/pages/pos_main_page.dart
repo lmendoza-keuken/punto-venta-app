@@ -427,6 +427,7 @@ class _PosMainPageState extends State<PosMainPage> {
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         color: AppColors.primary,
+                                        fontSize: 20,
                                       ),
                                     ),
                                     const Icon(Icons.keyboard_arrow_up),
@@ -450,7 +451,7 @@ class _PosMainPageState extends State<PosMainPage> {
                                     total.formatToCurrency(),
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 18,
+                                      fontSize: 20,
                                       color: AppColors.primary,
                                     ),
                                   ),

@@ -26,10 +26,10 @@ class ProductLabelsGrid extends StatelessWidget {
                 ? 2
                 : 1;
         final mainAxisExtent = crossAxisCount == 1
-            ? 128.0
+            ? 156.0
             : crossAxisCount == 2
-                ? 140.0
-                : 160.0;
+                ? 164.0
+                : 176.0;
         final padding = width < LayoutSpec.compactBreakpoint
             ? AppDimensions.paddingM
             : AppDimensions.paddingL;

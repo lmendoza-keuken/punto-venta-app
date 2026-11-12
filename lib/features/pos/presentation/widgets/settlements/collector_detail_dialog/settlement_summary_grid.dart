@@ -33,7 +33,7 @@ class SettlementSummaryGrid extends StatelessWidget {
                 : 1;
         final compact = constraints.maxWidth < LayoutSpec.compactBreakpoint;
         // Fixed height so title + amount + "N comprobantes" always fit on mobile.
-        final mainAxisExtent = compact ? 96.0 : 108.0;
+        final mainAxisExtent = 108.0;
 
         return GridView(
           shrinkWrap: true,
@@ -115,7 +115,7 @@ class SettlementSummaryGrid extends StatelessWidget {
                 child: Text(
                   title,
                   style: TextStyle(
-                    fontSize: compact ? 11 : 12,
+                    fontSize: compact ? 12 : 14,
                     fontWeight: FontWeight.w500,
                     color: isDark
                         ? AppColors.darkTextSecondary
@@ -141,7 +141,7 @@ class SettlementSummaryGrid extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: compact ? 14 : 16,
+              fontSize: compact ? 16 : 18,
               fontWeight: FontWeight.bold,
               color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
             ),
@@ -153,7 +153,8 @@ class SettlementSummaryGrid extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: compact ? 11 : 12,
+                height: 1.2,
                 color: isDark
                     ? AppColors.darkTextSecondary
                     : AppColors.textSecondary,

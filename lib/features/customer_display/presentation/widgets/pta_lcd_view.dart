@@ -705,13 +705,13 @@ class _CartLcd extends StatelessWidget {
           Align(
             alignment: Alignment.centerRight,
             child: Text(
-              '${last?.quantityLabel ?? ''} x ${last?.unitPrice.formatToCurrency() ?? ''}',
+              '${(last?.quantityLabel ?? '').replaceFirst('+', '')} x ${last?.unitPrice.formatToCurrency() ?? ''}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w900,
-                color: Color(0xFF99F6E4),
+                color: Colors.white,
                 height: 1.05,
               ),
             ),
@@ -741,7 +741,7 @@ class _CartLcd extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF99F6E4),
+                      color: Colors.white,
                       letterSpacing: 0.6,
                     ),
                   ),
@@ -810,7 +810,7 @@ class _CartLcd extends StatelessWidget {
                                                 BorderRadius.circular(8),
                                           ),
                                           child: Text(
-                                            last.isAdd ? 'OK' : '−',
+                                            last.isAdd ? '+' : '−',
                                             style: const TextStyle(
                                               color: Colors.white,
                                               fontSize: 10,

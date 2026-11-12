@@ -130,7 +130,7 @@ class SettlementPaymentsBreakdown extends StatelessWidget {
                     Text(
                       amountVal.formatToCurrency(),
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: isDark
                             ? AppColors.darkTextPrimary
