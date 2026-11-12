@@ -29,19 +29,15 @@ class CollectorDetailDialog extends StatelessWidget {
       create: (context) => di.sl<SettlementsBloc>()
         ..add(FetchPendingCollectorDetail(collectorId: collectorId, date: date)),
       child: Dialog(
-        insetPadding: const EdgeInsets.symmetric(
-          horizontal: AppDimensions.paddingM,
-          vertical: AppDimensions.paddingL,
-        ),
+        insetPadding: AppDimensions.nestedDialogInsetPadding,
+        constraints: AppDimensions.nestedDialogConstraints,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
         ),
         clipBehavior: Clip.antiAlias,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: AppDimensions.dialogWidth(context, 720),
-            maxHeight: MediaQuery.sizeOf(context).height * 0.9,
-          ),
+        child: SizedBox(
+          width: AppDimensions.dialogWidth(context, 720),
+          height: AppDimensions.dialogFractionHeight(context, 0.85),
           child: _CollectorDetailDialogContent(
             collectorId: collectorId,
             collectorName: collectorName,
@@ -192,6 +188,7 @@ class _CollectorDetailDialogContent extends StatelessWidget {
                         onCanceledItemsTap: () {
                           showDialog(
                             barrierDismissible: false,
+                            useRootNavigator: true,
                             context: context,
                             builder: (_) => CanceledItemsDialog(
                               collectorId: collectorId,
@@ -203,6 +200,7 @@ class _CollectorDetailDialogContent extends StatelessWidget {
                         onDisposedItemsTap: () {
                           showDialog(
                             barrierDismissible: false,
+                            useRootNavigator: true,
                             context: context,
                             builder: (_) => DisposedItemsDialog(
                               collectorId: collectorId,

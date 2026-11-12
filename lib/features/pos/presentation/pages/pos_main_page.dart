@@ -467,6 +467,8 @@ class _PosMainPageState extends State<PosMainPage> {
                                             : 'Ver pedido ($itemCount)',
                                         style: const TextStyle(
                                           fontWeight: FontWeight.w600,
+                                          color: AppColors.textPrimary,
+                                          fontSize: 16,
                                         ),
                                       ),
                                     ),
@@ -492,7 +494,7 @@ class _PosMainPageState extends State<PosMainPage> {
                                   const Text(
                                     'Total',
                                     style:
-                                        TextStyle(fontWeight: FontWeight.w600),
+                                        TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary, fontSize: 18),
                                   ),
                                   const Spacer(),
                                   Text(

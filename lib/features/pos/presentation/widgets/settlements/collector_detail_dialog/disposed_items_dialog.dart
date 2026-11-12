@@ -30,13 +30,15 @@ class DisposedItemsDialog extends StatelessWidget {
           date: date,
         )),
       child: Dialog(
+        insetPadding: AppDimensions.nestedDialogInsetPadding,
+        constraints: AppDimensions.nestedDialogConstraints,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
         ),
         clipBehavior: Clip.antiAlias,
         child: SizedBox(
-          width: MediaQuery.of(context).size.width * 0.75,
-          height: MediaQuery.of(context).size.height * 0.7,
+          width: AppDimensions.dialogWidth(context, 720),
+          height: AppDimensions.dialogFractionHeight(context, 0.85),
           child: _DisposedItemsDialogContent(
             collectorId: collectorId,
             collectorName: collectorName,
@@ -367,6 +369,7 @@ class _DisposedItemsDialogContentState extends State<_DisposedItemsDialogContent
   ) {
     showDialog(
       barrierDismissible: false,
+      useRootNavigator: true,
       context: context,
       builder: (_) => _RelatedDisposedGroupsDialog(item: item),
     );
@@ -378,6 +381,7 @@ class _DisposedItemsDialogContentState extends State<_DisposedItemsDialogContent
   ) {
     showDialog(
       barrierDismissible: false,
+      useRootNavigator: true,
       context: context,
       builder: (_) => _DisposedGroupItemsDialog(group: group),
     );
@@ -537,13 +541,15 @@ class _RelatedDisposedGroupsDialog extends StatelessWidget {
       });
 
     return Dialog(
+      insetPadding: AppDimensions.nestedDialogInsetPadding,
+      constraints: AppDimensions.nestedDialogConstraints,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
       ),
       clipBehavior: Clip.antiAlias,
       child: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.65,
-        height: MediaQuery.of(context).size.height * 0.55,
+        width: AppDimensions.dialogWidth(context, 720),
+        height: AppDimensions.dialogFractionHeight(context, 0.85),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -620,6 +626,7 @@ class _RelatedDisposedGroupsDialog extends StatelessWidget {
                     onTap: () {
                       showDialog(
                         barrierDismissible: false,
+                        useRootNavigator: true,
                         context: context,
                         builder: (_) =>
                             _DisposedGroupItemsDialog(group: group),
@@ -769,13 +776,15 @@ class _DisposedGroupItemsDialog extends StatelessWidget {
     final timestamp = _formatDisposedTimestamp(group.timestamp);
 
     return Dialog(
+      insetPadding: AppDimensions.nestedDialogInsetPadding,
+      constraints: AppDimensions.nestedDialogConstraints,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
       ),
       clipBehavior: Clip.antiAlias,
       child: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.65,
-        height: MediaQuery.of(context).size.height * 0.55,
+        width: AppDimensions.dialogWidth(context, 720),
+        height: AppDimensions.dialogFractionHeight(context, 0.85),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

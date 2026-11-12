@@ -5,10 +5,12 @@ import 'package:punto_venta_app/core/utils/utils.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_state.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/dialogs/product/product_quantity_dialog.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/product/empty_products_widget.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/product/product_card.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_state.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/product/search_bar.dart/search_weight_helper.dart';
 
 class ProductGrid extends StatelessWidget {
   final List<Product> products;
@@ -77,6 +79,28 @@ class ProductGrid extends StatelessWidget {
                   hasInsufficientQuantity: hasInsufficientQuantity,
                   onTap: () => onProductTap(
                       product, uiState.selectedQuantity, uiState.isDeleteMode),
+                  onLongPress: isProductWeighted(product)
+                      ? null
+                      : () async {
+                          final targetQuantity =
+                              await showProductQuantityDialog(
+                            context,
+                            product: product,
+                            initialQuantity: quantityInCart,
+                            isDeleteMode: uiState.isDeleteMode,
+                          );
+                          if (targetQuantity == null) return;
+                          if (!context.mounted) return;
+
+                          final delta = targetQuantity - quantityInCart;
+                          if (delta == 0) return;
+
+                          if (delta > 0) {
+                            onProductTap(product, delta, false);
+                          } else {
+                            onProductTap(product, -delta, true);
+                          }
+                        },
                 );
               },
             );

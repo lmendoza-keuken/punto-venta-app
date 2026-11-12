@@ -9,6 +9,7 @@ import 'package:punto_venta_app/features/pos/presentation/widgets/product/produc
 class ProductCard extends StatelessWidget {
   final Product product;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
   final bool isInDeleteMode;
   final bool isCompact;
   final int selectedQuantity;
@@ -21,6 +22,7 @@ class ProductCard extends StatelessWidget {
     super.key,
     required this.product,
     required this.onTap,
+    this.onLongPress,
     this.isInDeleteMode = false,
     this.isCompact = false,
     this.selectedQuantity = 1,
@@ -45,6 +47,7 @@ class ProductCard extends StatelessWidget {
       ),
       child: InkWell(
         onTap: onTap,
+        onLongPress: onLongPress,
         borderRadius: cardRadius,
         child: Stack(
           children: [
@@ -132,7 +135,7 @@ class ProductCard extends StatelessWidget {
                                         .textTheme
                                         .bodySmall
                                         ?.copyWith(
-                                          fontSize: isCompact ? 10 : 12,
+                                          fontSize: isCompact ? 11 : 13,
                                           fontWeight: FontWeight.bold,
                                           color: Colors.white,
                                         ),

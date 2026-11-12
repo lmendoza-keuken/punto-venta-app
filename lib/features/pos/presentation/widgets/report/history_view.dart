@@ -44,56 +44,98 @@ class _HistoryViewState extends State<HistoryView> {
           child: Row(
             children: [
               FilterChip(
-                label: const Text('Todos'),
+                label: Text(
+                  'Todos',
+                  style: TextStyle(
+                    color: widget.ticketFilter == 'all'
+                        ? Colors.white
+                        : AppColors.textPrimary,
+                  ),
+                ),
                 selected: widget.ticketFilter == 'all',
                 onSelected: (selected) {
                   if (selected) {
                     widget.onFilterChanged('all');
                   }
                 },
-                selectedColor: AppColors.primary,
+                color: WidgetStateProperty.resolveWith((states) {
+                  if (states.contains(WidgetState.selected)) {
+                    return AppColors.primary;
+                  }
+                  return AppColors.surface;
+                }),
+                checkmarkColor: Colors.white,
+                side: BorderSide(
+                  color: widget.ticketFilter == 'all'
+                      ? AppColors.primary
+                      : Colors.grey.shade300,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
-                  side: BorderSide(
-                    color: Colors.grey.shade300,
-                    width: 1.0,
-                  ),
                 ),
               ),
               const SizedBox(width: AppDimensions.paddingS),
               FilterChip(
-                label: const Text('Facturas'),
+                label: Text(
+                  'Facturas',
+                  style: TextStyle(
+                    color: widget.ticketFilter == 'invoices'
+                        ? Colors.white
+                        : AppColors.textPrimary,
+                  ),
+                ),
                 selected: widget.ticketFilter == 'invoices',
                 onSelected: (selected) {
                   if (selected) {
                     widget.onFilterChanged('invoices');
                   }
                 },
-                selectedColor: AppColors.primary,
+                color: WidgetStateProperty.resolveWith((states) {
+                  if (states.contains(WidgetState.selected)) {
+                    return AppColors.primary;
+                  }
+                  return AppColors.surface;
+                }),
+                checkmarkColor: Colors.white,
+                side: BorderSide(
+                  color: widget.ticketFilter == 'invoices'
+                      ? AppColors.primary
+                      : Colors.grey.shade300,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
-                  side: BorderSide(
-                    color: Colors.grey.shade300,
-                    width: 1.0,
-                  ),
                 ),
               ),
               const SizedBox(width: AppDimensions.paddingS),
               FilterChip(
-                label: const Text('Notas de Crédito'),
+                label: Text(
+                  'Notas de Crédito',
+                  style: TextStyle(
+                    color: widget.ticketFilter == 'credit_notes'
+                        ? Colors.white
+                        : AppColors.textPrimary,
+                  ),
+                ),
                 selected: widget.ticketFilter == 'credit_notes',
                 onSelected: (selected) {
                   if (selected) {
                     widget.onFilterChanged('credit_notes');
                   }
                 },
-                selectedColor: AppColors.primary,
+                color: WidgetStateProperty.resolveWith((states) {
+                  if (states.contains(WidgetState.selected)) {
+                    return AppColors.primary;
+                  }
+                  return AppColors.surface;
+                }),
+                checkmarkColor: Colors.white,
+                side: BorderSide(
+                  color: widget.ticketFilter == 'credit_notes'
+                      ? AppColors.primary
+                      : Colors.grey.shade300,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
-                  side: BorderSide(
-                    color: Colors.grey.shade300,
-                    width: 1.0,
-                  ),
                 ),
               ),
             ],

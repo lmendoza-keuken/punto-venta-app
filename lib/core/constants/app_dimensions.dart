@@ -72,7 +72,40 @@ class AppDimensions {
 
   /// Cap dialog preferred width to the current viewport.
   static double dialogWidth(BuildContext context, double preferred) {
-    final max = MediaQuery.sizeOf(context).width - paddingL * 2;
+    final max = screenSize(context).width - paddingL * 2;
     return math.min(preferred, math.max(0, max));
   }
+
+  static Size screenSize(BuildContext context) {
+    final view = View.maybeOf(context);
+    if (view != null) {
+      final dpr = view.devicePixelRatio;
+      if (dpr > 0) {
+        return view.physicalSize / dpr;
+      }
+    }
+    final rootNav = Navigator.maybeOf(context, rootNavigator: true);
+    final rootContext = rootNav?.context;
+    if (rootContext != null && rootContext.mounted) {
+      return MediaQuery.sizeOf(rootContext);
+    }
+    return MediaQuery.sizeOf(context);
+  }
+
+  static double dialogFractionWidth(BuildContext context, double fraction) {
+    return screenSize(context).width * fraction;
+  }
+
+  static double dialogFractionHeight(BuildContext context, double fraction) {
+    return screenSize(context).height * fraction;
+  }
+
+  static const EdgeInsets nestedDialogInsetPadding = EdgeInsets.symmetric(
+    horizontal: paddingM,
+    vertical: paddingL,
+  );
+
+  static const BoxConstraints nestedDialogConstraints = BoxConstraints(
+    minWidth: 280,
+  );
 }

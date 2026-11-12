@@ -303,6 +303,7 @@ class _DensePreview extends StatelessWidget {
                               Theme.of(context).textTheme.bodySmall?.copyWith(
                                     fontWeight: FontWeight.w700,
                                     color: actionColor,
+                                    fontSize: 18,
                                   ),
                         ),
                       ),

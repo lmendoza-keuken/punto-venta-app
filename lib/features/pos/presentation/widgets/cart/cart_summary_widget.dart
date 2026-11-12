@@ -41,7 +41,7 @@ class CartSummary extends StatelessWidget {
       case CartMode.disposeMode:
         return Colors.brown.shade600;
       case CartMode.sale:
-        return AppColors.green;
+        return AppColors.confirmButton;
     }
   }
 

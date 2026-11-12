@@ -23,7 +23,8 @@ class DateRangePicker extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final compact = constraints.maxWidth < LayoutSpec.compactBreakpoint ||
+        final compact =
+            constraints.maxWidth < LayoutSpec.compactBreakpoint ||
             LayoutSpec.of(context).isCompact;
 
         return Container(
@@ -81,48 +82,59 @@ class DateRangePicker extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _LabeledDateField(
-          label: 'Fecha inicio',
-          child: _DateChip(
-            label: DateFormat('dd/MM/yyyy').format(selectedDate),
-            onTap: _selectStartDate,
-            expanded: true,
-          ),
-        ),
-        const SizedBox(height: AppDimensions.paddingS),
-        _LabeledDateField(
-          label: 'Fecha fin (opcional)',
-          child: Row(
-            children: [
-              Expanded(
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _LabeledDateField(
+                label: 'Fecha inicio',
                 child: _DateChip(
-                  label: selectedEndDate != null
-                      ? DateFormat('dd/MM/yyyy').format(selectedEndDate!)
-                      : 'Sin seleccionar',
-                  onTap: _selectEndDate,
+                  label: DateFormat('dd/MM/yyyy').format(selectedDate),
+                  onTap: _selectStartDate,
                   expanded: true,
                 ),
               ),
-              if (selectedEndDate != null)
-                IconButton(
-                  icon: const Icon(Icons.clear, size: 20),
-                  onPressed: () => onEndDateChanged(null),
-                  tooltip: 'Limpiar fecha fin',
+            ),
+            const SizedBox(width: AppDimensions.paddingM),
+            Expanded(
+              child: _LabeledDateField(
+                label: 'Fecha fin (opcional)',
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _DateChip(
+                        label: selectedEndDate != null
+                            ? DateFormat('dd/MM/yyyy').format(selectedEndDate!)
+                            : 'Sin seleccionar',
+                        onTap: _selectEndDate,
+                        expanded: true,
+                      ),
+                    ),
+                    if (selectedEndDate != null)
+                      IconButton(
+                        icon: const Icon(Icons.clear, size: 20),
+                        onPressed: () => onEndDateChanged(null),
+                        tooltip: 'Limpiar fecha fin',
+                        visualDensity: VisualDensity.compact,
+                        constraints: const BoxConstraints(
+                          minWidth: 36,
+                          minHeight: 36,
+                        ),
+                      ),
+                  ],
                 ),
-            ],
-          ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: AppDimensions.paddingM),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: onUpdate,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Actualizar'),
+        ElevatedButton(
+          onPressed: onUpdate,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
           ),
+          child: const Text('Actualizar'),
         ),
       ],
     );
@@ -168,10 +180,8 @@ class _LabeledDateField extends StatelessWidget {
       children: [
         Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: Colors.black,
-              ),
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(fontWeight: FontWeight.w600, color: Colors.black),
         ),
         const SizedBox(height: 4),
         child,
@@ -208,7 +218,11 @@ class _DateChip extends StatelessWidget {
         child: Row(
           mainAxisSize: expanded ? MainAxisSize.max : MainAxisSize.min,
           children: [
-            const Icon(Icons.calendar_today, size: 16, color: AppColors.primary),
+            const Icon(
+              Icons.calendar_today,
+              size: 16,
+              color: AppColors.primary,
+            ),
             const SizedBox(width: AppDimensions.paddingS),
             if (expanded)
               Expanded(
