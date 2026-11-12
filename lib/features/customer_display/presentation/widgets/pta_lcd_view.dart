@@ -95,6 +95,27 @@ class _PaymentLcd extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Expanded(child: _buildBody()),
+        const Padding(
+          padding: EdgeInsets.only(bottom: 6),
+          child: Text(
+            'www.keuken.com.ar',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBody() {
     final total = snapshot.totalConIva.formatToCurrency();
     final qrLabel = snapshot.qrLabel?.trim();
     final payload = snapshot.qrPayload?.trim();
@@ -113,7 +134,7 @@ class _PaymentLcd extends StatelessWidget {
             (phase == CustomerDisplayQrPhase.pending && !hasPayload))) {
       final status = _qrStatus(phase);
       return Padding(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
         child: Row(
           children: [
             Expanded(
@@ -159,7 +180,7 @@ class _PaymentLcd extends StatelessWidget {
 
     if (qrLabel != null && qrLabel.isNotEmpty) {
       return Padding(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
         child: Row(
           children: [
             Expanded(
