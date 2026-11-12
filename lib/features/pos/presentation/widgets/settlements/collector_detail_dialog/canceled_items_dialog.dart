@@ -369,7 +369,6 @@ class _CanceledItemsDialogContentState extends State<_CanceledItemsDialogContent
   ) {
     showDialog(
       barrierDismissible: false,
-      useRootNavigator: true,
       context: context,
       builder: (_) => _RelatedTicketsDialog(item: item),
     );
@@ -381,7 +380,6 @@ class _CanceledItemsDialogContentState extends State<_CanceledItemsDialogContent
   ) {
     showDialog(
       barrierDismissible: false,
-      useRootNavigator: true,
       context: context,
       builder: (_) => _CanceledTicketItemsDialog(ticket: ticket),
     );
@@ -638,7 +636,6 @@ class _RelatedTicketsDialog extends StatelessWidget {
                     onTap: () {
                       showDialog(
                         barrierDismissible: false,
-                        useRootNavigator: true,
                         context: context,
                         builder: (_) =>
                             _CanceledTicketItemsDialog(ticket: ticket),

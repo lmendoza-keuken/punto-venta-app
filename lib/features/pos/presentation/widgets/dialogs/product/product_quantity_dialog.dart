@@ -13,7 +13,6 @@ Future<int?> showProductQuantityDialog(
   return showDialog<int>(
     context: context,
     barrierDismissible: false,
-    useRootNavigator: true,
     builder: (_) => ProductQuantityDialog(
       product: product,
       initialQuantity: initialQuantity.clamp(0, 999),

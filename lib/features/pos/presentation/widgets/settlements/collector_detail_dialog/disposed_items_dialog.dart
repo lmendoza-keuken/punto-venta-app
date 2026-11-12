@@ -369,7 +369,6 @@ class _DisposedItemsDialogContentState extends State<_DisposedItemsDialogContent
   ) {
     showDialog(
       barrierDismissible: false,
-      useRootNavigator: true,
       context: context,
       builder: (_) => _RelatedDisposedGroupsDialog(item: item),
     );
@@ -381,7 +380,6 @@ class _DisposedItemsDialogContentState extends State<_DisposedItemsDialogContent
   ) {
     showDialog(
       barrierDismissible: false,
-      useRootNavigator: true,
       context: context,
       builder: (_) => _DisposedGroupItemsDialog(group: group),
     );
@@ -626,7 +624,6 @@ class _RelatedDisposedGroupsDialog extends StatelessWidget {
                     onTap: () {
                       showDialog(
                         barrierDismissible: false,
-                        useRootNavigator: true,
                         context: context,
                         builder: (_) =>
                             _DisposedGroupItemsDialog(group: group),

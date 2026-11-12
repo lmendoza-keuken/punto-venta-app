@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/core/utils/extensions.dart';
+import 'package:punto_venta_app/core/utils/navigator_popup.dart';
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_state.dart';
 import 'package:punto_venta_app/features/pos/domain/usecases/fetch_pdv_config_usecase.dart';
@@ -185,30 +186,51 @@ class _PosMainPageState extends State<PosMainPage> {
     );
   }
 
-  /// Evita que un segundo `popRoute` del mismo gesto (Android) abra "Salir"
-  /// justo después de cerrar el confirmation panel.
-  DateTime? _confirmationClosedAt;
+  /// Evita que un segundo `popRoute` del mismo gesto (Android) cierre la app
+  /// o abra "Salir" justo después de cerrar un dialog / confirmation panel.
+  DateTime? _backConsumedAt;
+
+  static const _backConsumeWindow = Duration(milliseconds: 600);
+
+  bool get _backWasJustConsumed =>
+      _backConsumedAt != null &&
+      DateTime.now().difference(_backConsumedAt!) < _backConsumeWindow;
+
+  void _markBackConsumed() {
+    _backConsumedAt = DateTime.now();
+  }
 
   void _handleSystemBack(BuildContext context) {
+    if (_backWasJustConsumed) {
+      _backConsumedAt = null;
+      return;
+    }
+
+    // Solo cerrar dialogs/modals — nunca pop de rutas del shell/go_router.
+    final rootNavigator = Navigator.of(context, rootNavigator: true);
+    if (popNavigatorPopup(rootNavigator)) {
+      _markBackConsumed();
+      return;
+    }
+
+    final localNavigator = Navigator.of(context);
+    if (popNavigatorPopup(localNavigator)) {
+      _markBackConsumed();
+      return;
+    }
+
     final uiState = context.read<UiBloc>().state;
     final showConfirmation =
         uiState is UiLoaded && uiState.showConfirmationPanel;
 
     // Con el panel abierto (compact overlay o wide), back solo lo cierra.
     if (showConfirmation) {
-      _confirmationClosedAt = DateTime.now();
+      _markBackConsumed();
       context.read<UiBloc>().add(CloseConfirmationPanel());
       return;
     }
 
-    final closedJustNow = _confirmationClosedAt != null &&
-        DateTime.now().difference(_confirmationClosedAt!) <
-            const Duration(milliseconds: 600);
-    if (closedJustNow) {
-      _confirmationClosedAt = null;
-      return;
-    }
-
+    _markBackConsumed();
     showDialog<void>(
       barrierDismissible: false,
       context: context,
@@ -226,7 +248,7 @@ class _PosMainPageState extends State<PosMainPage> {
           ),
         ],
       ),
-    );
+    ).whenComplete(_markBackConsumed);
   }
 
   @override

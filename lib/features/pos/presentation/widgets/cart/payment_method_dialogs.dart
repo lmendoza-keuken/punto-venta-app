@@ -13,7 +13,6 @@ void showPaymentMethodsSelectorDialog({
 }) {
   showDialog(
     barrierDismissible: false,
-    useRootNavigator: true,
     context: context,
     builder: (BuildContext dialogContext) {
       final maxHeight = MediaQuery.sizeOf(dialogContext).height * 0.6;
@@ -162,7 +161,6 @@ void showAddPaymentMethodDialog({
 
   showDialog(
     barrierDismissible: false,
-    useRootNavigator: true,
     context: context,
     builder: (BuildContext dialogContext) {
       final maxHeight = MediaQuery.sizeOf(dialogContext).height * 0.6;

@@ -188,7 +188,6 @@ class _CollectorDetailDialogContent extends StatelessWidget {
                         onCanceledItemsTap: () {
                           showDialog(
                             barrierDismissible: false,
-                            useRootNavigator: true,
                             context: context,
                             builder: (_) => CanceledItemsDialog(
                               collectorId: collectorId,
@@ -200,7 +199,6 @@ class _CollectorDetailDialogContent extends StatelessWidget {
                         onDisposedItemsTap: () {
                           showDialog(
                             barrierDismissible: false,
-                            useRootNavigator: true,
                             context: context,
                             builder: (_) => DisposedItemsDialog(
                               collectorId: collectorId,

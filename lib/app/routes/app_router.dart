@@ -31,6 +31,10 @@ class AppRouter {
   static final GlobalKey<NavigatorState> navigatorKey =
       GlobalKey<NavigatorState>();
 
+  /// Navigator anidado del [ShellRoute] (páginas con sidebar).
+  static final GlobalKey<NavigatorState> shellNavigatorKey =
+      GlobalKey<NavigatorState>();
+
   static final GoRouter router = GoRouter(
     navigatorKey: navigatorKey,
     initialLocation: RoutePaths.splash,
@@ -78,6 +82,7 @@ class AppRouter {
 
       // Main app routes (con sidebar)
       ShellRoute(
+        navigatorKey: shellNavigatorKey,
         builder: (context, state, child) {
           return MainLayoutShell(
             currentRoute: state.matchedLocation,
