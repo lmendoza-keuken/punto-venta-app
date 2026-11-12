@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:punto_venta_app/app/routes/route_paths.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/price_list_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/data/datasources/printer_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/domain/repositories/printer_repository.dart';
@@ -40,25 +39,17 @@ class _ProductLabelsPageContent extends StatefulWidget {
 class _ProductLabelsPageContentState extends State<_ProductLabelsPageContent> {
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) {
-          Navigator.of(context).pushReplacementNamed(RoutePaths.pos);
-        }
-      },
-      child: Scaffold(
-        body: Column(
-          children: [
-            const ProductLabelsHeader(),
-            Expanded(
-              child: BlocConsumer<ProductLabelsBloc, ProductLabelsState>(
-                listener: _handleStateChanges,
-                builder: _buildBody,
-              ),
+    return Scaffold(
+      body: Column(
+        children: [
+          const ProductLabelsHeader(),
+          Expanded(
+            child: BlocConsumer<ProductLabelsBloc, ProductLabelsState>(
+              listener: _handleStateChanges,
+              builder: _buildBody,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -93,6 +84,11 @@ class _ProductLabelsPageContentState extends State<_ProductLabelsPageContent> {
 
     if (state is ProductLabelsLoaded) {
       return ProductLabelsGrid(state: state);
+    }
+
+    // One-shot tras escanear: el grid sigue con el estado previo.
+    if (state is ProductLabelsBarcodeResult) {
+      return ProductLabelsGrid(state: state.previous);
     }
 
     if (state is ProductLabelsPrinting) {

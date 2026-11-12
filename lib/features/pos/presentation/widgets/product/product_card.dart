@@ -132,7 +132,7 @@ class ProductCard extends StatelessWidget {
                                         .textTheme
                                         .bodySmall
                                         ?.copyWith(
-                                          fontSize: isCompact ? 9 : 10,
+                                          fontSize: isCompact ? 10 : 12,
                                           fontWeight: FontWeight.bold,
                                           color: Colors.white,
                                         ),
@@ -170,7 +170,8 @@ class ProductCard extends StatelessWidget {
                         'Código: ${product.id}',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               fontSize: isCompact ? 12 : 10,
-                              color: AppColors.textHint,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
                             ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,6 +9,7 @@ import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/core/constants/app_string.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_state.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/common/barcode_scanner_page.dart';
 
 class SearchField extends StatefulWidget {
   final TextEditingController controller;
@@ -136,6 +139,15 @@ class _SearchFieldState extends State<SearchField> {
     _focusForScanner(retryAfterSnackBar: true);
   }
 
+  static bool get _isAndroidCameraAvailable =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+
+  Future<void> _openCameraScanner() async {
+    final code = await BarcodeScannerPage.open(context);
+    if (!mounted || code == null || code.trim().isEmpty) return;
+    await _handleSubmitted(code.trim());
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<UiBloc, UiState>(
@@ -158,6 +170,8 @@ class _SearchFieldState extends State<SearchField> {
           isBarcodeMode: isBarcodeMode,
           fromUserTap: _keyboardFromUserTap,
         );
+        final showCameraScan = isBarcodeMode && _isAndroidCameraAvailable;
+        final showClear = widget.controller.text.isNotEmpty;
 
         return SizedBox(
           width: double.infinity,
@@ -206,11 +220,29 @@ class _SearchFieldState extends State<SearchField> {
                           color: AppColors.primary,
                         ),
                 ),
-                suffixIcon: widget.controller.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear,
-                            color: AppColors.textSecondary),
-                        onPressed: widget.onClearSearch,
+                suffixIconConstraints: (showClear || showCameraScan)
+                    ? const BoxConstraints(minWidth: 0, minHeight: 0)
+                    : null,
+                suffixIcon: (showClear || showCameraScan)
+                    ? Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (showClear)
+                            IconButton(
+                              icon: const Icon(Icons.clear,
+                                  color: AppColors.textSecondary),
+                              onPressed: widget.onClearSearch,
+                            ),
+                          if (showCameraScan)
+                            IconButton(
+                              tooltip: 'Escanear con cámara',
+                              icon: const Icon(
+                                Icons.qr_code_scanner,
+                                color: AppColors.primary,
+                              ),
+                              onPressed: _openCameraScanner,
+                            ),
+                        ],
                       )
                     : null,
                 border: OutlineInputBorder(

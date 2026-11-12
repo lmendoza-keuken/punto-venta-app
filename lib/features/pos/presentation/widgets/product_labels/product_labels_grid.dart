@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
+import 'package:punto_venta_app/core/utils/utils.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product_labels/product_labels_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/product_labels/product_label_card.dart';
 
@@ -19,28 +20,24 @@ class ProductLabelsGrid extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final crossAxisCount = width >= 1100
-            ? 3
-            : width >= LayoutSpec.compactBreakpoint
-                ? 2
-                : 1;
-        final mainAxisExtent = crossAxisCount == 1
-            ? 156.0
-            : crossAxisCount == 2
-                ? 164.0
-                : 176.0;
-        final padding = width < LayoutSpec.compactBreakpoint
-            ? AppDimensions.paddingM
-            : AppDimensions.paddingL;
+        final crossAxisCount = calculateCrossAxisCount(constraints.maxWidth);
 
         return GridView.builder(
-          padding: EdgeInsets.all(padding),
+          padding: EdgeInsets.all(
+            constraints.maxWidth < LayoutSpec.compactBreakpoint
+                ? AppDimensions.paddingM
+                : AppDimensions.paddingL,
+          ),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
-            mainAxisExtent: mainAxisExtent,
-            crossAxisSpacing: AppDimensions.paddingM,
-            mainAxisSpacing: AppDimensions.paddingM,
+            // Sin imagen: altura fija compacta (no el ratio de product cards).
+            mainAxisExtent: crossAxisCount >= 4
+                ? 128
+                : crossAxisCount >= 3
+                    ? 136
+                    : 148,
+            crossAxisSpacing: calculateSpacing(crossAxisCount),
+            mainAxisSpacing: calculateSpacing(crossAxisCount),
           ),
           itemCount: state.products.length,
           itemBuilder: (context, index) {
@@ -50,6 +47,7 @@ class ProductLabelsGrid extends StatelessWidget {
             return ProductLabelCard(
               product: product,
               isSelected: isSelected,
+              isCompact: crossAxisCount >= 2,
             );
           },
         );

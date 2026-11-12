@@ -90,6 +90,7 @@ class PosAppBar extends StatelessWidget {
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14,
+                                  color: AppColors.textPrimary,
                                 ),
                               ),
                             ],
@@ -100,13 +101,16 @@ class PosAppBar extends StatelessWidget {
                   ),
                   if (!isCompact) ...[
                     const SizedBox(width: AppDimensions.paddingS),
-                    const Text('|', style: TextStyle(fontSize: 14)),
+                    const Text('|',
+                        style: TextStyle(
+                            fontSize: 14, color: AppColors.textPrimary)),
                     const SizedBox(width: AppDimensions.paddingS),
                     Text(
                       'ID: ${user?.id ?? "N/A"}',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ],
@@ -116,17 +120,22 @@ class PosAppBar extends StatelessWidget {
                       if (state is ProductLoaded) {
                         return Text(
                           '# Lista: ${state.currentPriceList}',
-                          style: const TextStyle(fontSize: 14),
+                          style: const TextStyle(
+                              fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
                         );
                       }
                       return const SizedBox.shrink();
                     },
                   ),
-                  const SizedBox(width: AppDimensions.paddingM),
-                  DynamicDateTime(
-                    compact: isCompact,
-                    style: TextStyle(fontSize: isCompact ? 16 : 18),
-                  ),
+                  // En wide el reloj sigue en el flujo horizontal.
+                  if (!isCompact) ...[
+                    const SizedBox(width: AppDimensions.paddingM),
+                    const DynamicDateTime(
+                      compact: false,
+                      style: TextStyle(
+                          fontSize: 18, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
+                    ),
+                  ],
                   if (user != null && !isCompact)
                     Padding(
                       padding: const EdgeInsets.only(left: 8.0),
@@ -142,6 +151,7 @@ class PosAppBar extends StatelessWidget {
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                       ),
@@ -150,6 +160,15 @@ class PosAppBar extends StatelessWidget {
               ),
             ),
           ),
+          if (isCompact)
+            const Padding(
+              padding: EdgeInsets.only(left: AppDimensions.paddingS),
+              child: DynamicDateTime(
+                compact: true,
+                style: TextStyle(
+                    fontSize: 16, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
+              ),
+            ),
         ],
       ),
     );

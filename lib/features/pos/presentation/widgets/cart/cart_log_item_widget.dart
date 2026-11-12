@@ -59,7 +59,7 @@ class CartLogItemWidget extends StatelessWidget {
                     style: Theme.of(context)
                         .textTheme
                         .bodyMedium
-                        ?.copyWith(fontWeight: FontWeight.w600),
+                        ?.copyWith(fontWeight: FontWeight.w600, color: AppColors.textPrimary),
                   ),
                   const SizedBox(height: 4),
                   Row(
@@ -69,7 +69,7 @@ class CartLogItemWidget extends StatelessWidget {
                             ? '$sign${entry.item.weightKg} kg'
                             : '$sign${entry.item.quantity}',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey.shade600,
+                            color: AppColors.textPrimary,
                             fontWeight: FontWeight.bold),
                       ),
                       Flexible(
@@ -78,7 +78,7 @@ class CartLogItemWidget extends StatelessWidget {
                           style: Theme.of(context)
                               .textTheme
                               .bodySmall
-                              ?.copyWith(color: Colors.grey.shade600),
+                              ?.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w500),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -95,7 +95,7 @@ class CartLogItemWidget extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context)
                     .textTheme
-                    .bodyMedium
+                    .bodyLarge
                     ?.copyWith(fontWeight: FontWeight.bold, color: color),
               ),
             ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
@@ -184,11 +185,58 @@ class _PosMainPageState extends State<PosMainPage> {
     );
   }
 
+  /// Evita que un segundo `popRoute` del mismo gesto (Android) abra "Salir"
+  /// justo después de cerrar el confirmation panel.
+  DateTime? _confirmationClosedAt;
+
+  void _handleSystemBack(BuildContext context) {
+    final uiState = context.read<UiBloc>().state;
+    final showConfirmation =
+        uiState is UiLoaded && uiState.showConfirmationPanel;
+
+    // Con el panel abierto (compact overlay o wide), back solo lo cierra.
+    if (showConfirmation) {
+      _confirmationClosedAt = DateTime.now();
+      context.read<UiBloc>().add(CloseConfirmationPanel());
+      return;
+    }
+
+    final closedJustNow = _confirmationClosedAt != null &&
+        DateTime.now().difference(_confirmationClosedAt!) <
+            const Duration(milliseconds: 600);
+    if (closedJustNow) {
+      _confirmationClosedAt = null;
+      return;
+    }
+
+    showDialog<void>(
+      barrierDismissible: false,
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Salir'),
+        content: const Text('¿Seguro que quieres salir de la app?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => SystemNavigator.pop(),
+            child: const Text('Salir'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return CustomerDisplayBinder(
       child: PopScope(
         canPop: false,
+        onPopInvokedWithResult: (didPop, result) {
+          if (!didPop) _handleSystemBack(context);
+        },
         child: BlocListener<ClientsBloc, ClientsState>(
           listenWhen: (previous, current) {
             if (previous is ClientsLoaded && current is ClientsLoaded) {

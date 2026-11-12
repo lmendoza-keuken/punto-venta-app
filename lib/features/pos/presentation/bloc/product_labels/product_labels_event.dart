@@ -71,3 +71,13 @@ class PrintSelectedLabels extends ProductLabelsEvent {
 class SelectAllVisibleProducts extends ProductLabelsEvent {
   const SelectAllVisibleProducts();
 }
+
+/// Selecciona (sin desmarcar) el producto cuyo barcode / id coincide.
+class SelectProductByBarcode extends ProductLabelsEvent {
+  final String barcode;
+
+  const SelectProductByBarcode(this.barcode);
+
+  @override
+  List<Object> get props => [barcode];
+}

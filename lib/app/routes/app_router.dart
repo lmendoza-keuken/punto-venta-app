@@ -1,8 +1,8 @@
 import 'package:go_router/go_router.dart';
 import 'package:punto_venta_app/core/utils/app_logger.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:punto_venta_app/core/widgets/shell_pop_scope.dart';
 import 'package:punto_venta_app/core/widgets/sidebar/sidebar.dart';
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_event.dart';
@@ -88,6 +88,7 @@ class AppRouter {
           GoRoute(
             path: RoutePaths.pos,
             builder: (BuildContext context, GoRouterState state) {
+              // PosMainPage maneja el back (cierra confirmation panel / diálogo salir).
               return BlocProvider(
                 create: (_) => di.sl<CashRegisterCubit>()..fetchStatus(),
                 child: const PosMainPage(),
@@ -97,40 +98,46 @@ class AppRouter {
           GoRoute(
             path: RoutePaths.stock,
             builder: (BuildContext context, GoRouterState state) {
-              return const StockManagementPage();
+              return const ShellPopScope(child: StockManagementPage());
             },
           ),
           GoRoute(
             path: RoutePaths.reports,
             builder: (BuildContext context, GoRouterState state) {
-              return BlocProvider(
-                create: (_) => di.sl<ReportsBloc>(),
-                child: const ReportsPage(),
+              return ShellPopScope(
+                child: BlocProvider(
+                  create: (_) => di.sl<ReportsBloc>(),
+                  child: const ReportsPage(),
+                ),
               );
             },
           ),
           GoRoute(
             path: RoutePaths.productLabels,
             builder: (BuildContext context, GoRouterState state) {
-              return const ProductLabelsPage();
+              return const ShellPopScope(child: ProductLabelsPage());
             },
           ),
           GoRoute(
             path: RoutePaths.pendingSettlements,
             builder: (BuildContext context, GoRouterState state) {
-              return BlocProvider(
-                create: (_) => di.sl<SettlementsBloc>(),
-                child: const PendingSettlementsPage(),
+              return ShellPopScope(
+                child: BlocProvider(
+                  create: (_) => di.sl<SettlementsBloc>(),
+                  child: const PendingSettlementsPage(),
+                ),
               );
             },
           ),
           GoRoute(
             path: RoutePaths.supplierPayments,
             builder: (BuildContext context, GoRouterState state) {
-              return BlocProvider(
-                create: (_) =>
-                    di.sl<SupplierPaymentsBloc>()..add(LoadSuppliersEvent()),
-                child: const SupplierPaymentsPage(),
+              return ShellPopScope(
+                child: BlocProvider(
+                  create: (_) =>
+                      di.sl<SupplierPaymentsBloc>()..add(LoadSuppliersEvent()),
+                  child: const SupplierPaymentsPage(),
+                ),
               );
             },
           ),
@@ -138,8 +145,10 @@ class AppRouter {
             path: RoutePaths.settings,
             builder: (BuildContext context, GoRouterState state) {
               // TODO: Crear SettingsPage
-              return const Scaffold(
-                body: Center(child: Text('Configuración - Próximamente')),
+              return const ShellPopScope(
+                child: Scaffold(
+                  body: Center(child: Text('Configuración - Próximamente')),
+                ),
               );
             },
           ),
@@ -167,41 +176,16 @@ class MainLayoutShell extends StatelessWidget {
         final user = authState is AuthAuthenticated ? authState.user : null;
         final isAdmin = user?.role == UserRole.admin;
 
-        return PopScope(
-          canPop: false,
-          onPopInvokedWithResult: (didPop, result) {
-            if (!didPop) {
-              showDialog(
-                barrierDismissible: false,
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Salir'),
-                  content: const Text('¿Seguro que quieres salir de la app?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => context.pop(),
-                      child: const Text('Cancelar'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => SystemNavigator.pop(),
-                      child: const Text('Salir'),
-                    ),
-                  ],
-                ),
-              );
-            }
-          },
-          child: CustomerDisplayShellController(
+        return CustomerDisplayShellController(
+          currentRoute: currentRoute,
+          child: MainLayout(
             currentRoute: currentRoute,
-            child: MainLayout(
-              currentRoute: currentRoute,
-              isAdmin: isAdmin,
-              onLogout: () {
-                context.read<AuthBloc>().add(LogoutEvent());
-                context.go(RoutePaths.login);
-              },
-              child: child,
-            ),
+            isAdmin: isAdmin,
+            onLogout: () {
+              context.read<AuthBloc>().add(LogoutEvent());
+              context.go(RoutePaths.login);
+            },
+            child: child,
           ),
         );
       },

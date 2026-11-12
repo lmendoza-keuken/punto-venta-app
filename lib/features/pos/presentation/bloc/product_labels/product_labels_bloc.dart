@@ -33,6 +33,7 @@ class ProductLabelsBloc extends Bloc<ProductLabelsEvent, ProductLabelsState> {
     on<ClearSelection>(_onClearSelection);
     on<PrintSelectedLabels>(_onPrintSelectedLabels);
     on<SelectAllVisibleProducts>(_onSelectAllVisibleProducts);
+    on<SelectProductByBarcode>(_onSelectProductByBarcode);
   }
 
   Future<void> _onSelectAllVisibleProducts(
@@ -161,6 +162,59 @@ class ProductLabelsBloc extends Bloc<ProductLabelsEvent, ProductLabelsState> {
 
     final currentState = state as ProductLabelsLoaded;
     emit(currentState.copyWith(selectedProducts: []));
+  }
+
+  Future<void> _onSelectProductByBarcode(
+    SelectProductByBarcode event,
+    Emitter<ProductLabelsState> emit,
+  ) async {
+    if (state is! ProductLabelsLoaded) return;
+    final currentState = state as ProductLabelsLoaded;
+    final code = event.barcode.trim();
+    if (code.isEmpty) return;
+
+    final match = _findProductByBarcode(currentState.allProducts, code);
+    if (match == null) {
+      emit(ProductLabelsBarcodeResult(
+        barcode: code,
+        product: null,
+        previous: currentState,
+      ));
+      emit(currentState);
+      return;
+    }
+
+    final selected = List<Product>.from(currentState.selectedProducts);
+    if (!selected.any((p) => p.id == match.id)) {
+      selected.add(match);
+    }
+
+    final next = currentState.copyWith(
+      selectedProducts: selected,
+      searchQuery: code,
+    );
+    emit(ProductLabelsBarcodeResult(
+      barcode: code,
+      product: match,
+      previous: next,
+    ));
+    emit(next);
+  }
+
+  Product? _findProductByBarcode(List<Product> products, String code) {
+    final normalized = code.trim();
+    // Match exacto por barcode o id.
+    for (final product in products) {
+      if (product.id.toString() == normalized) return product;
+      final barcodes = product.barcodes;
+      if (barcodes == null) continue;
+      for (final b in barcodes) {
+        if (b.barcode != null && b.barcode.toString() == normalized) {
+          return product;
+        }
+      }
+    }
+    return null;
   }
 
   Future<void> _onPrintSelectedLabels(

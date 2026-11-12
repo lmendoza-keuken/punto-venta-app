@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import 'package:punto_venta_app/app/routes/route_paths.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/features/auth/prensetation/bloc/auth_bloc.dart';
@@ -101,14 +100,7 @@ class _SupplierPaymentsPageState extends State<SupplierPaymentsPage> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) {
-          Navigator.of(context).pushReplacementNamed(RoutePaths.pos);
-        }
-      },
-      child: Scaffold(
+    return Scaffold(
         backgroundColor:
             isDark ? AppColors.darkBackground : AppColors.background,
         body: BlocListener<SupplierPaymentsBloc, SupplierPaymentsState>(
@@ -202,7 +194,6 @@ class _SupplierPaymentsPageState extends State<SupplierPaymentsPage> {
             },
           ),
         ),
-      ),
     );
   }
 

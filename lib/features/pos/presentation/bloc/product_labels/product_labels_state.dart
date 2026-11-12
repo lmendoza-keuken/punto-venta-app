@@ -113,3 +113,21 @@ class ProductLabelsPrintError extends ProductLabelsState {
   @override
   List<Object> get props => [message];
 }
+
+/// Resultado de escanear un barcode en etiquetas (one-shot para snackbars).
+class ProductLabelsBarcodeResult extends ProductLabelsState {
+  final String barcode;
+  final Product? product;
+  final ProductLabelsLoaded previous;
+
+  const ProductLabelsBarcodeResult({
+    required this.barcode,
+    required this.product,
+    required this.previous,
+  });
+
+  bool get found => product != null;
+
+  @override
+  List<Object?> get props => [barcode, product, previous];
+}

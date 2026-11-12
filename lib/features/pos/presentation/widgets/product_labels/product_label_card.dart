@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
+import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/core/utils/extensions.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/product.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/product_labels/product_labels_bloc.dart';
@@ -9,23 +10,34 @@ import 'package:punto_venta_app/features/pos/presentation/bloc/product_labels/pr
 class ProductLabelCard extends StatelessWidget {
   final Product product;
   final bool isSelected;
+  final bool isCompact;
 
   const ProductLabelCard({
     super.key,
     required this.product,
     required this.isSelected,
+    this.isCompact = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final cardRadius = BorderRadius.circular(AppDimensions.borderRadiusM);
+    final priceWithVat =
+        ((product.price ?? 0) * (product.vat / 100)) + (product.price ?? 0);
+    final regularPriceWithVat = product.regularPrice != null
+        ? ((product.regularPrice! * (product.vat / 100)) +
+            product.regularPrice!)
+        : null;
+
     return Card(
+      elevation: isSelected ? 4 : 2,
       margin: EdgeInsets.zero,
-      elevation: isSelected ? 6 : 1,
+      clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: cardRadius,
         side: BorderSide(
           color: isSelected ? AppColors.primary : Colors.transparent,
-          width: 2,
+          width: isSelected ? 2 : 0,
         ),
       ),
       child: InkWell(
@@ -34,187 +46,148 @@ class ProductLabelCard extends StatelessWidget {
               .read<ProductLabelsBloc>()
               .add(ToggleProductSelection(product));
         },
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: cardRadius,
         child: Padding(
-          padding: const EdgeInsets.all(10),
+          padding: EdgeInsets.all(
+            isCompact ? AppDimensions.paddingS : AppDimensions.paddingM,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(),
-              const SizedBox(height: 4),
-              _buildCode(),
-              const Spacer(flex: 1),
-              if (product.barcodes != null && product.barcodes!.isNotEmpty) ...[
-                _buildBarcode(),
-                const SizedBox(height: 4),
-              ],
-              _buildPrice(),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            product.name,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              height: 1.15,
-              color: AppColors.textPrimary,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        if (product.isOnSale)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-            margin: const EdgeInsets.only(right: 4),
-            decoration: BoxDecoration(
-              color: AppColors.warning,
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: const Text(
-              'OFERTA',
-              style: TextStyle(
-                fontSize: 8,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        if (isSelected)
-          Container(
-            padding: const EdgeInsets.all(3),
-            decoration: const BoxDecoration(
-              color: AppColors.primary,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.check,
-              color: Colors.white,
-              size: 14,
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildCode() {
-    return Text(
-      'Código: ${product.id}',
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: TextStyle(
-        fontSize: 12,
-        color: Colors.grey[600],
-      ),
-    );
-  }
-
-  Widget _buildBarcode() {
-    return Row(
-      children: [
-        Icon(Icons.qr_code, size: 16, color: Colors.grey[600]),
-        const SizedBox(width: 3),
-        Expanded(
-          child: Text(
-            product.barcodes!.first.barcode.toString(),
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPrice() {
-    final priceWithVat =
-        ((product.price ?? 0) * (product.vat / 100)) + (product.price ?? 0);
-    final regularPriceWithVat = product.regularPrice != null
-        ? ((product.regularPrice! * (product.vat / 100)) +
-            product.regularPrice!)
-        : null;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (product.isOnSale && regularPriceWithVat != null)
-          Row(
-            children: [
-              Flexible(
-                child: Text(
-                  regularPriceWithVat.formatToCurrency(),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    fontStyle: FontStyle.italic,
-                    color: Colors.grey[600],
-                    decoration: TextDecoration.lineThrough,
-                    decorationColor: Colors.grey[600],
-                  ),
-                ),
-              ),
-              if (regularPriceWithVat > 0) ...[
-                const SizedBox(width: 4),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                  decoration: BoxDecoration(
-                    color: AppColors.warning,
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                  child: Text(
-                    '-${(((regularPriceWithVat - priceWithVat) / regularPriceWithVat) * 100).toStringAsFixed(0)}%',
-                    style: const TextStyle(
-                      fontSize: 8,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      product.description.trim(),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontSize: isCompact ? 14 : 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                            height: 1.15,
+                          ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  if (product.isOnSale) ...[
+                    const SizedBox(width: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.warning,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        'OFERTA',
+                        style: TextStyle(
+                          fontSize: isCompact ? 9 : 10,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                  if (isSelected) ...[
+                    const SizedBox(width: 4),
+                    Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: const BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.check,
+                        color: Colors.white,
+                        size: 14,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Código: ${product.id}',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontSize: isCompact ? 13 : 12,
+                      fontWeight: FontWeight.w400,
+                      color: AppColors.textPrimary,
+                    ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (product.barcodes != null && product.barcodes!.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.barcode_reader,
+                      size: isCompact ? 12 : 11,
+                      color: AppColors.textSecondary,
+                    ),
+                    const SizedBox(width: 5),
+                    Expanded(
+                      child: Text(
+                        product.barcodes!.first.barcode.toString(),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              fontSize: isCompact ? 13 : 12,
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
               ],
+              const Spacer(),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      product.categoryDescription.trim(),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontSize: 10,
+                            color: AppColors.textSecondary,
+                          ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (product.isOnSale && regularPriceWithVat != null)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: Text(
+                        regularPriceWithVat.formatToCurrency(),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  decoration: TextDecoration.lineThrough,
+                                  decorationColor: AppColors.textSecondary,
+                                  fontSize: isCompact ? 12 : 11,
+                                  fontWeight: FontWeight.bold,
+                                  fontStyle: FontStyle.italic,
+                                  color: AppColors.textSecondary,
+                                ),
+                      ),
+                    ),
+                  Text(
+                    priceWithVat.formatToCurrency(),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontSize: isCompact ? 14 : 13,
+                          fontWeight: FontWeight.bold,
+                          color: product.isOnSale
+                              ? AppColors.warning
+                              : AppColors.primary,
+                        ),
+                  ),
+                ],
+              ),
             ],
           ),
-        if (product.isOnSale) const SizedBox(height: 2),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.centerLeft,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: product.isOnSale
-                  ? AppColors.warning.withValues(alpha: 0.15)
-                  : AppColors.primary.withAlpha(25),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              priceWithVat.formatToCurrency(),
-              maxLines: 1,
-              softWrap: false,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color:
-                    product.isOnSale ? AppColors.warning : AppColors.primary,
-              ),
-            ),
-          ),
         ),
-      ],
+      ),
     );
   }
 }

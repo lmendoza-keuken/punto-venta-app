@@ -104,7 +104,7 @@ class _CategoryTabsState extends State<CategoryTabs> {
                               : AppColors.textPrimary,
                           fontWeight: isSelected
                               ? FontWeight.w600
-                              : FontWeight.normal,
+                              : FontWeight.w500,
                           height: 1.1,
                         ),
                   ),

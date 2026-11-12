@@ -154,7 +154,8 @@ class LastScannedProductPreview extends StatelessWidget {
           Text(
             'Código: ${product.id}',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textHint,
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w500,
                 ),
           ),
           const SizedBox(height: 8),
@@ -172,7 +173,8 @@ class LastScannedProductPreview extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey.shade700,
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w500,
                 ),
           ),
         ],
@@ -321,7 +323,8 @@ class _DensePreview extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey.shade700,
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w500,
                           height: 1.2,
                         ),
                   ),

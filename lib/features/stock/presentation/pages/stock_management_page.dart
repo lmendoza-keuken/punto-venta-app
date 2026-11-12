@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:punto_venta_app/app/routes/route_paths.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/core/widgets/loading_indicator.dart';
@@ -49,14 +48,7 @@ class _StockManagementViewState extends State<_StockManagementView> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) {
-          Navigator.of(context).pushReplacementNamed(RoutePaths.pos);
-        }
-      },
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(
           title: const Text('Gestión de Stock'),
           backgroundColor: AppColors.primary,
@@ -286,7 +278,6 @@ class _StockManagementViewState extends State<_StockManagementView> {
           label: const Text('Nuevo Producto'),
           backgroundColor: AppColors.primary,
         ),
-      ),
     );
   }
 
