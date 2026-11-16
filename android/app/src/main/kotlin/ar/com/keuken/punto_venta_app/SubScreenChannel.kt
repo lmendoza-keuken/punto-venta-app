@@ -331,18 +331,19 @@ class SubScreenChannel(
             decoded
         }
         try {
-            val code = invokeShow(scaled, x, y)
-            Log.i(TAG, "showBitmap invokeShow code=$code ${w}x$h")
-            if (code != 0) {
-                Log.e(TAG, "showBitmap invokeShow code=$code → release")
-                runCatching { invokeInt("release") }
-                initialized = false
+            // ERR_BUSY (61448): SPI ocupado. Backoff; sin release (→ nieve).
+            val delaysMs = longArrayOf(0L, 120L, 280L, 450L, 700L)
+            var code = -1
+            for (i in delaysMs.indices) {
+                if (delaysMs[i] > 0) sleepQuiet(delaysMs[i])
+                code = invokeShow(scaled, x, y)
+                Log.i(TAG, "showBitmap attempt=${i + 1} code=$code ${w}x$h")
+                if (code == 0 || code != ERR_BUSY) break
+                Log.e(TAG, "showBitmap BUSY → retry sin release")
             }
             return mapOf("code" to code, "ok" to (code == 0))
         } catch (e: Exception) {
-            Log.e(TAG, "showBitmap failed → release", e)
-            runCatching { invokeInt("release") }
-            initialized = false
+            Log.e(TAG, "showBitmap failed (sesión intacta)", e)
             throw e
         } finally {
             scaled.recycle()

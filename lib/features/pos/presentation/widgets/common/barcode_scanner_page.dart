@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/common/scan_beep.dart';
 
 /// Pantalla de cámara para escanear un código de barras (Android).
 /// Devuelve el valor escaneado o `null` si se cancela.
@@ -54,6 +55,7 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
     if (raw.isEmpty) return;
 
     _handled = true;
+    ScanBeep.play();
     Navigator.of(context).pop(raw);
   }
 

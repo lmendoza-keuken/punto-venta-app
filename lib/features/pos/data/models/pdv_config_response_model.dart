@@ -40,6 +40,8 @@ abstract class PdvConfigResponseModel with _$PdvConfigResponseModel {
     @JsonKey(name: 'check_update_period') int? checkUpdatePeriod,
     @JsonKey(name: 'show_total_sale_to_cashier')
     bool? showTotalSaleToCashier,
+    @JsonKey(name: 'auto_camera_barcode_scan')
+    bool? autoCameraBarcodeScan,
     @JsonKey(name: 'id') int? id,
     @JsonKey(name: 'non_default_client_branch_id') int? nonDefaultClientBranchId,
   }) = _PdvConfigResponseModel;

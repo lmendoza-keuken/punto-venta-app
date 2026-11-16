@@ -7,6 +7,8 @@ class PdvConfig {
   final int? creditNoteDaysLimit;
   final int? checkUpdatePeriod;
   final bool? showTotalSaleToCashier;
+  /// Escaneo continuo con cámara en el buscador POS (modo barcode), sin fullscreen.
+  final bool? autoCameraBarcodeScan;
 
   const PdvConfig({
     this.pdvId,
@@ -17,6 +19,7 @@ class PdvConfig {
     this.creditNoteDaysLimit,
     this.checkUpdatePeriod,
     this.showTotalSaleToCashier,
+    this.autoCameraBarcodeScan,
   });
 
   PdvConfig copyWith({
@@ -28,6 +31,7 @@ class PdvConfig {
     int? creditNoteDaysLimit,
     int? checkUpdatePeriod,
     bool? showTotalSaleToCashier,
+    bool? autoCameraBarcodeScan,
   }) {
     return PdvConfig(
       pdvId: pdvId ?? this.pdvId,
@@ -40,6 +44,8 @@ class PdvConfig {
       checkUpdatePeriod: checkUpdatePeriod ?? this.checkUpdatePeriod,
       showTotalSaleToCashier:
           showTotalSaleToCashier ?? this.showTotalSaleToCashier,
+      autoCameraBarcodeScan:
+          autoCameraBarcodeScan ?? this.autoCameraBarcodeScan,
     );
   }
 
@@ -52,6 +58,7 @@ class PdvConfig {
         'credit_note_days_limit': creditNoteDaysLimit,
         'check_update_period': checkUpdatePeriod,
         'show_total_sale_to_cashier': showTotalSaleToCashier,
+        'auto_camera_barcode_scan': autoCameraBarcodeScan,
       };
 
   Map<String, dynamic> toUpdateJson() {
@@ -69,6 +76,9 @@ class PdvConfig {
     }
     if (showTotalSaleToCashier != null) {
       data['show_total_sale_to_cashier'] = showTotalSaleToCashier;
+    }
+    if (autoCameraBarcodeScan != null) {
+      data['auto_camera_barcode_scan'] = autoCameraBarcodeScan;
     }
     return data;
   }
@@ -90,6 +100,8 @@ class PdvConfig {
         checkUpdatePeriod: json['check_update_period'] as int?,
         showTotalSaleToCashier:
             json['show_total_sale_to_cashier'] as bool?,
+        autoCameraBarcodeScan:
+            json['auto_camera_barcode_scan'] as bool?,
       );
 }
 

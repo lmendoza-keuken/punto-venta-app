@@ -114,6 +114,7 @@ class _CartPanelState extends State<CartPanel> {
                                   final subtotal = state.subtotal;
                                   final totalIva = state.totalIva;
                                   final totalConIva = state.totalConIva;
+                                  final lastEntry = _lastLogEntry(state.log);
 
                                   return Column(
                                     children: [
@@ -121,13 +122,11 @@ class _CartPanelState extends State<CartPanel> {
                                         child: isBarcodeMode
                                             ? ScannerModeContent(
                                                 key: ValueKey(
-                                                  _lastLogEntry(state.log)
-                                                          ?.id ??
-                                                      'empty-${state.lastSaleChange}',
+                                                  lastEntry != null
+                                                      ? '${lastEntry.id}-${lastEntry.timestamp.millisecondsSinceEpoch}'
+                                                      : 'empty-${state.lastSaleChange}',
                                                 ),
-                                                lastEntry: _lastLogEntry(
-                                                  state.log,
-                                                ),
+                                                lastEntry: lastEntry,
                                                 lastSaleChange:
                                                     state.lastSaleChange,
                                               )

@@ -435,8 +435,11 @@ class _PosMainPageState extends State<PosMainPage> {
           final lastSaleChange =
               state is CartLoaded ? state.lastSaleChange : null;
           return ScannerModeContent(
+            // Incluir timestamp: el merge reusa el mismo id.
             key: ValueKey(
-              lastEntry?.id ?? 'empty-dense-${lastSaleChange ?? 0}',
+              lastEntry != null
+                  ? '${lastEntry.id}-${lastEntry.timestamp.millisecondsSinceEpoch}'
+                  : 'empty-dense-${lastSaleChange ?? 0}',
             ),
             lastEntry: lastEntry,
             dense: true,

@@ -97,8 +97,8 @@ Queries típicas: `skip`, `limit`, `list_id`, `is_suspended_sale`.
 
 | Method | Path | Service / file |
 |--------|------|----------------|
-| GET | `configuration/` | `PdvService` — `pdv_remote_datasource.dart` |
-| PUT | `configuration/` | idem |
+| GET | `configuration/` | `PdvService` — `pdv_remote_datasource.dart` (incl. `auto_camera_barcode_scan`) |
+| PUT | `configuration/` | idem (body puede incluir `auto_camera_barcode_scan`) |
 | GET | `branches/` | idem |
 | GET | `cash-account/` | idem |
 | PUT | `cash-account/` | idem |

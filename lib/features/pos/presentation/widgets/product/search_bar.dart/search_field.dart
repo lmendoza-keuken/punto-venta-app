@@ -7,9 +7,12 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
 import 'package:punto_venta_app/core/constants/app_string.dart';
+import 'package:punto_venta_app/features/pos/data/datasources/pdv_local_datasource.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/ui/ui_state.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/common/auto_barcode_scanner_host.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/common/barcode_scanner_page.dart';
+import 'package:punto_venta_app/injection_container.dart' as di;
 
 class SearchField extends StatefulWidget {
   final TextEditingController controller;
@@ -39,14 +42,33 @@ class _SearchFieldState extends State<SearchField> {
   bool _keyboardFromUserTap = false;
   bool _openingKeyboard = false;
 
+  /// Preferencia PDV: escaneo continuo con cámara (sin fullscreen).
+  bool _autoCameraBarcodeScan = false;
+
+  /// Solo aplica con auto-scan: false = cámara escuchando.
+  bool _autoScanPaused = false;
+
   @override
   void initState() {
     super.initState();
     _focusNode.addListener(_onFocusChange);
+    _loadAutoCameraPref();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _focusForScanner();
     });
+  }
+
+  Future<void> _loadAutoCameraPref() async {
+    try {
+      final config = await di.sl<PdvLocalDataSource>().getPdvConfig();
+      if (!mounted) return;
+      setState(() {
+        _autoCameraBarcodeScan = config?.autoCameraBarcodeScan ?? false;
+      });
+    } catch (_) {
+      // Sin cache / error: queda false (comportamiento actual).
+    }
   }
 
   @override
@@ -148,6 +170,16 @@ class _SearchFieldState extends State<SearchField> {
     await _handleSubmitted(code.trim());
   }
 
+  void _toggleAutoScanPause() {
+    setState(() => _autoScanPaused = !_autoScanPaused);
+  }
+
+  Future<void> _onAutoCode(String code) async {
+    final trimmed = code.trim();
+    if (trimmed.isEmpty) return;
+    await _handleSubmitted(trimmed);
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<UiBloc, UiState>(
@@ -161,6 +193,11 @@ class _SearchFieldState extends State<SearchField> {
       listener: (context, state) {
         if (state is UiLoaded) {
           _focusForScanner();
+          // Relee preferencia al entrar/salir de barcode (p.ej. tras guardar PDV).
+          _loadAutoCameraPref();
+          if (!state.isBarcodeSearchEnabled && _autoScanPaused) {
+            setState(() => _autoScanPaused = false);
+          }
         }
       },
       builder: (context, state) {
@@ -170,103 +207,128 @@ class _SearchFieldState extends State<SearchField> {
           isBarcodeMode: isBarcodeMode,
           fromUserTap: _keyboardFromUserTap,
         );
+        final useAutoCamera = isBarcodeMode &&
+            _isAndroidCameraAvailable &&
+            _autoCameraBarcodeScan;
+        final autoScanActive = useAutoCamera && !_autoScanPaused;
         final showCameraScan = isBarcodeMode && _isAndroidCameraAvailable;
         final showClear = widget.controller.text.isNotEmpty;
 
-        return SizedBox(
-          width: double.infinity,
-          height: AppDimensions.buttonHeightm,
-          child: Listener(
-            behavior: HitTestBehavior.translucent,
-            onPointerDown: (_) {
-              if (!_keyboardFromUserTap) {
-                _onUserTap();
-              }
-            },
-            child: TextField(
-              // Key fuerza remount al cambiar none ↔ number/text (IME Android).
-              key: ValueKey(
-                'search-kb-${_keyboardFromUserTap ? (isBarcodeMode ? 'num' : 'text') : 'none'}',
+        return Stack(
+          children: [
+            if (useAutoCamera)
+              AutoBarcodeScannerHost(
+                enabled: autoScanActive,
+                onCode: _onAutoCode,
               ),
-              controller: widget.controller,
-              focusNode: _focusNode,
-              autofocus: false,
-              keyboardType: keyboardType,
-              textInputAction: TextInputAction.done,
-              inputFormatters: isBarcodeMode && _keyboardFromUserTap
-                  ? <TextInputFormatter>[
-                      FilteringTextInputFormatter.digitsOnly,
-                    ]
-                  : null,
-              decoration: InputDecoration(
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 0,
-                ),
-                hintText: isBarcodeMode
-                    ? AppStrings.searchBarCodeHint
-                    : AppStrings.searchHint,
-                prefixIcon: IconButton(
-                  tooltip: 'Abrir teclado',
-                  onPressed: _onUserTap,
-                  icon: isBarcodeMode
-                      ? const FaIcon(
-                          FontAwesomeIcons.barcode,
-                          color: AppColors.primary,
-                          size: 22,
-                        )
-                      : const Icon(
-                          Icons.search,
-                          color: AppColors.primary,
-                        ),
-                ),
-                suffixIconConstraints: (showClear || showCameraScan)
-                    ? const BoxConstraints(minWidth: 0, minHeight: 0)
-                    : null,
-                suffixIcon: (showClear || showCameraScan)
-                    ? Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (showClear)
-                            IconButton(
-                              icon: const Icon(Icons.clear,
-                                  color: AppColors.textSecondary),
-                              onPressed: widget.onClearSearch,
+            SizedBox(
+              width: double.infinity,
+              height: AppDimensions.buttonHeightm,
+              child: Listener(
+                behavior: HitTestBehavior.translucent,
+                onPointerDown: (_) {
+                  if (!_keyboardFromUserTap) {
+                    _onUserTap();
+                  }
+                },
+                child: TextField(
+                  // Key fuerza remount al cambiar none ↔ number/text (IME Android).
+                  key: ValueKey(
+                    'search-kb-${_keyboardFromUserTap ? (isBarcodeMode ? 'num' : 'text') : 'none'}',
+                  ),
+                  controller: widget.controller,
+                  focusNode: _focusNode,
+                  autofocus: false,
+                  keyboardType: keyboardType,
+                  textInputAction: TextInputAction.done,
+                  inputFormatters: isBarcodeMode && _keyboardFromUserTap
+                      ? <TextInputFormatter>[
+                          FilteringTextInputFormatter.digitsOnly,
+                        ]
+                      : null,
+                  decoration: InputDecoration(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 0,
+                    ),
+                    hintText: isBarcodeMode
+                        ? AppStrings.searchBarCodeHint
+                        : AppStrings.searchHint,
+                    prefixIcon: IconButton(
+                      tooltip: 'Abrir teclado',
+                      onPressed: _onUserTap,
+                      icon: isBarcodeMode
+                          ? const FaIcon(
+                              FontAwesomeIcons.barcode,
+                              color: AppColors.primary,
+                              size: 22,
+                            )
+                          : const Icon(
+                              Icons.search,
+                              color: AppColors.primary,
                             ),
-                          if (showCameraScan)
-                            IconButton(
-                              tooltip: 'Escanear con cámara',
-                              icon: const Icon(
-                                Icons.qr_code_scanner,
-                                color: AppColors.primary,
-                              ),
-                              onPressed: _openCameraScanner,
-                            ),
-                        ],
-                      )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius:
-                      BorderRadius.circular(AppDimensions.borderRadiusM),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    suffixIconConstraints: (showClear || showCameraScan)
+                        ? const BoxConstraints(minWidth: 0, minHeight: 0)
+                        : null,
+                    suffixIcon: (showClear || showCameraScan)
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (showClear)
+                                IconButton(
+                                  icon: const Icon(Icons.clear,
+                                      color: AppColors.textSecondary),
+                                  onPressed: widget.onClearSearch,
+                                ),
+                              if (showCameraScan)
+                                IconButton(
+                                  tooltip: useAutoCamera
+                                      ? (_autoScanPaused
+                                          ? 'Reanudar escaneo automático'
+                                          : 'Pausar escaneo automático')
+                                      : 'Escanear con cámara',
+                                  icon: Icon(
+                                    useAutoCamera && _autoScanPaused
+                                        ? Icons.qr_code_scanner_outlined
+                                        : Icons.qr_code_scanner,
+                                    color: useAutoCamera
+                                        ? (_autoScanPaused
+                                            ? AppColors.textSecondary
+                                            : AppColors.success)
+                                        : AppColors.primary,
+                                  ),
+                                  onPressed: useAutoCamera
+                                      ? _toggleAutoScanPause
+                                      : _openCameraScanner,
+                                ),
+                            ],
+                          )
+                        : null,
+                    border: OutlineInputBorder(
+                      borderRadius:
+                          BorderRadius.circular(AppDimensions.borderRadiusM),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius:
+                          BorderRadius.circular(AppDimensions.borderRadiusM),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius:
+                          BorderRadius.circular(AppDimensions.borderRadiusM),
+                      borderSide: const BorderSide(
+                          color: AppColors.primary, width: 2),
+                    ),
+                    filled: true,
+                  ),
+                  onChanged: isBarcodeMode ? null : widget.onSearchChanged,
+                  onSubmitted: _handleSubmitted,
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius:
-                      BorderRadius.circular(AppDimensions.borderRadiusM),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius:
-                      BorderRadius.circular(AppDimensions.borderRadiusM),
-                  borderSide:
-                      const BorderSide(color: AppColors.primary, width: 2),
-                ),
-                filled: true,
               ),
-              onChanged: isBarcodeMode ? null : widget.onSearchChanged,
-              onSubmitted: _handleSubmitted,
             ),
-          ),
+          ],
         );
       },
     );

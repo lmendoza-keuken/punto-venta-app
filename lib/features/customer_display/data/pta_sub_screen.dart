@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:punto_venta_app/core/utils/app_logger.dart';
 import 'package:punto_venta_app/features/customer_display/data/pta_lcd_capture.dart';
 import 'package:punto_venta_app/features/customer_display/domain/customer_display_snapshot.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/common/camera_lcd_coordinator.dart';
 
 /// Cliente Dart del LCD SPI del PTA0130 (Binder `SubScreen`, 320×240).
 ///
@@ -227,6 +228,8 @@ class PtaSubScreen {
     final done = Completer<PtaSubScreenResult>();
 
     _snapshotGate = _snapshotGate.catchError((_) {}).then((_) async {
+      // Frame viejo: no avisa al auto-scan (si no, rearma la cámara antes
+      // de pintar el qty final → LCD se queda en 4 de 6).
       if (gen != _snapshotGen) {
         done.complete(
           const PtaSubScreenResult(ok: true, code: 0, error: 'superseded'),
@@ -235,75 +238,67 @@ class PtaSubScreen {
       }
       final snap = _queuedSnapshot ?? snapshot;
       try {
-        final info = await getInfo();
-        if (gen != _snapshotGen) {
-          done.complete(
-            const PtaSubScreenResult(ok: true, code: 0, error: 'superseded'),
-          );
-          return;
-        }
-        if (!info.available) {
-          done.complete(
-            const PtaSubScreenResult(
+        // Micro-pause del analyzer solo en captura+SPI (sesión cámara viva).
+        final result = await CameraLcdCoordinator.duringSpiWrite(() async {
+          final info = await getInfo();
+          if (gen != _snapshotGen) {
+            return const PtaSubScreenResult(
+              ok: true,
+              code: 0,
+              error: 'superseded',
+            );
+          }
+          if (!info.available) {
+            return const PtaSubScreenResult(
               ok: false,
               code: 61442,
               error: 'no_device',
-            ),
-          );
-          return;
-        }
-        // Warm init en paralelo con la captura: el SPI del PTA tarda ~5s en
-        // el primer init; si esperamos a showBitmap, se suma al capture.
-        final warmInit = init();
+            );
+          }
 
-        // Camino principal: widget PtaLcdView → PNG → LCD.
-        Uint8List? png;
-        try {
-          png = await capturePtaLcdSnapshot(
-            snap,
-            width: info.width ?? 320,
-            height: info.height ?? 240,
-          );
-        } catch (e, st) {
-          AppLogger.error(
-            'PtaSubScreen.showSnapshot: captura widget falló → fallback color',
-            e,
-            st,
-          );
-        }
+          Uint8List? png;
+          try {
+            png = await capturePtaLcdSnapshot(
+              snap,
+              width: info.width ?? 320,
+              height: info.height ?? 240,
+            );
+          } catch (e, st) {
+            AppLogger.error(
+              'PtaSubScreen.showSnapshot: captura widget falló → fallback color',
+              e,
+              st,
+            );
+          }
 
-        final warm = await warmInit;
-        AppLogger.info(
-          'PtaSubScreen.showSnapshot: warm init '
-          'ok=${warm.ok} code=${warm.code}',
-        );
+          if (gen != _snapshotGen) {
+            AppLogger.info(
+              'PtaSubScreen.showSnapshot: descarta frame viejo '
+              'mode=${snap.mode.name} gen=$gen current=$_snapshotGen',
+            );
+            return const PtaSubScreenResult(
+              ok: true,
+              code: 0,
+              error: 'superseded',
+            );
+          }
 
-        if (gen != _snapshotGen) {
+          if (png == null) {
+            return await showColor(
+              _fallbackColor(snap),
+              label: _fallbackLabel(snap),
+            );
+          }
+
+          final shown = await showBitmap(png);
           AppLogger.info(
-            'PtaSubScreen.showSnapshot: descarta frame viejo '
-            'mode=${snap.mode.name} gen=$gen current=$_snapshotGen',
+            'PtaSubScreen.showSnapshot: widget→bitmap '
+            'mode=${snap.mode.name} ok=${shown.ok} code=${shown.code} '
+            'total=${snap.totalConIva} lastQty=${snap.lastProduct?.quantityLabel}',
           );
-          done.complete(
-            const PtaSubScreenResult(ok: true, code: 0, error: 'superseded'),
-          );
-          return;
-        }
-
-        if (png == null) {
-          final fallback = await showColor(
-            _fallbackColor(snap),
-            label: _fallbackLabel(snap),
-          );
-          done.complete(fallback);
-          return;
-        }
-
-        final shown = await showBitmap(png);
-        AppLogger.info(
-          'PtaSubScreen.showSnapshot: widget→bitmap '
-          'mode=${snap.mode.name} ok=${shown.ok} code=${shown.code}',
-        );
-        done.complete(shown);
+          return shown;
+        });
+        done.complete(result);
       } catch (e, st) {
         AppLogger.error('PtaSubScreen.showSnapshot', e, st);
         if (!done.isCompleted) {

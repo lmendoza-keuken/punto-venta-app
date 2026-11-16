@@ -67,6 +67,7 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
   int? _creditNoteDaysLimit;
   int? _checkUpdatePeriod;
   bool _showTotalSaleToCashier = false;
+  bool _autoCameraBarcodeScan = false;
 
   @override
   void initState() {
@@ -146,6 +147,8 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
         config.checkUpdatePeriod?.toString() ?? '';
     _showTotalSaleToCashier =
         config.showTotalSaleToCashier ?? false;
+    _autoCameraBarcodeScan =
+        config.autoCameraBarcodeScan ?? false;
 
     _syncSelectedClientFromConfig();
   }
@@ -477,6 +480,21 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                                   });
                                 },
                               ),
+                              SwitchListTile(
+                                contentPadding: EdgeInsets.zero,
+                                title: const Text(
+                                  'Escaneo automático con cámara',
+                                ),
+                                subtitle: const Text(
+                                  'En el POS (modo código de barras), la cámara detecta códigos sin abrir la vista de escáner',
+                                ),
+                                value: _autoCameraBarcodeScan,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _autoCameraBarcodeScan = value;
+                                  });
+                                },
+                              ),
                               const SizedBox(height: 8),
                             ],
                           ],
@@ -527,6 +545,8 @@ class _PdvSettingsDialogContentState extends State<_PdvSettingsDialogContent> {
                               _pdvConfig?.checkUpdatePeriod,
                           showTotalSaleToCashier:
                               _showTotalSaleToCashier,
+                          autoCameraBarcodeScan:
+                              _autoCameraBarcodeScan,
                         );
 
                         context

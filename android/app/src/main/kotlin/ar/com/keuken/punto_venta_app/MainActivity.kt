@@ -6,6 +6,7 @@ import io.flutter.embedding.engine.FlutterEngine
 class MainActivity : FlutterActivity() {
     private var subScreenChannel: SubScreenChannel? = null
     private var thermalPrinterChannel: ThermalPrinterChannel? = null
+    private var scanBeepChannel: ScanBeepChannel? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -18,6 +19,7 @@ class MainActivity : FlutterActivity() {
             context = this,
             messenger = messenger,
         )
+        scanBeepChannel = ScanBeepChannel(messenger = messenger)
     }
 
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
@@ -26,6 +28,8 @@ class MainActivity : FlutterActivity() {
         subScreenChannel = null
         thermalPrinterChannel?.dispose()
         thermalPrinterChannel = null
+        scanBeepChannel?.dispose()
+        scanBeepChannel = null
         super.cleanUpFlutterEngine(flutterEngine)
     }
 
@@ -39,6 +43,8 @@ class MainActivity : FlutterActivity() {
         subScreenChannel = null
         thermalPrinterChannel?.dispose()
         thermalPrinterChannel = null
+        scanBeepChannel?.dispose()
+        scanBeepChannel = null
         super.onDestroy()
     }
 }

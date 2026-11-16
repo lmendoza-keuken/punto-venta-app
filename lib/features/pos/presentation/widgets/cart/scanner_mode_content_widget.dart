@@ -24,7 +24,14 @@ class ScannerModeContent extends StatelessWidget {
       );
     }
 
-    return LastScannedProductPreview(entry: lastEntry!, dense: dense);
+    return LastScannedProductPreview(
+      key: ValueKey(
+        '${lastEntry!.id}-${lastEntry!.timestamp.millisecondsSinceEpoch}-'
+        '${lastEntry!.item.quantity}',
+      ),
+      entry: lastEntry!,
+      dense: dense,
+    );
   }
 }
 

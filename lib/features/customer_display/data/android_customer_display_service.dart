@@ -213,38 +213,43 @@ class AndroidCustomerDisplayService implements CustomerDisplayService {
 
   @override
   Future<void> sync(CustomerDisplaySnapshot snapshot) async {
-    _last = snapshot;
     if (!_started) {
-      // No encadenar start() en cada scan si el LCD está fallando: eso
-      // re-captura overlay + SPI y congela la tablet. El poll de reconnect
-      // reintenta con backoff.
+      // No marcar como enviado en el binder: rethrow para reintentar.
       if (isEnabled && !_startInFlight) {
         unawaited(start());
       }
-      return;
+      throw StateError('customer_display_not_started');
     }
+
+    _last = snapshot;
 
     if (_backend == _AndroidDisplayBackend.subScreen) {
       await _syncSubScreen(snapshot);
       return;
     }
 
-    try {
-      await _displayManager.transferDataToPresentation(
-        jsonEncode(snapshot.toJson()),
-      );
-    } catch (e, st) {
-      AppLogger.error('CustomerDisplay Android: sync falló', e, st);
-    }
+    await _displayManager.transferDataToPresentation(
+      jsonEncode(snapshot.toJson()),
+    );
   }
 
   Future<void> _syncSubScreen(CustomerDisplaySnapshot snapshot) async {
-    try {
-      await PtaSubScreen.showSnapshot(snapshot);
-      _scheduleAdRotation(snapshot);
-    } catch (e, st) {
-      AppLogger.error('CustomerDisplay Android: SubScreen sync falló', e, st);
+    final result = await PtaSubScreen.showSnapshot(snapshot);
+    // superseded: este snapshot NO se pintó; el binder no debe marcar lastSent
+    // (si no el LCD se queda en qty intermedia, ej. 4 de 6).
+    if (result.error == 'superseded') {
+      throw const CustomerDisplaySupersededException();
     }
+    if (!result.ok) {
+      // 61448 = SPI BUSY (cámara en paralelo). Reintento suave, no es crash.
+      if (result.code == 61448) {
+        throw const CustomerDisplayBusyException(code: 61448);
+      }
+      throw StateError(
+        'subscreen_sync_failed code=${result.code} error=${result.error}',
+      );
+    }
+    _scheduleAdRotation(snapshot);
   }
 
   void _scheduleAdRotation(CustomerDisplaySnapshot snapshot) {

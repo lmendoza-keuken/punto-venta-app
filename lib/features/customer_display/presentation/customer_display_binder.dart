@@ -8,6 +8,7 @@ import 'package:punto_venta_app/features/customer_display/domain/customer_displa
 import 'package:punto_venta_app/features/customer_display/domain/customer_display_snapshot.dart';
 import 'package:punto_venta_app/features/customer_display/presentation/customer_display_advertising.dart';
 import 'package:punto_venta_app/features/customer_display/presentation/customer_display_sync.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/common/camera_lcd_coordinator.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_bloc.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/cart/cart_state.dart';
 import 'package:punto_venta_app/features/pos/presentation/bloc/checkout/checkout_bloc.dart';
@@ -32,6 +33,14 @@ class _CustomerDisplayBinderState extends State<CustomerDisplayBinder>
   /// Pausa tras el último scan antes de IPC. Más alto = cajero más fluido;
   /// la vista cliente se actualiza un frame después del burst.
   static const _cartIdleDebounce = Duration(milliseconds: 90);
+
+  /// Auto-cámara: coalescer bursts y dar aire al SPI tras micro-pause.
+  static const _cartIdleDebounceWithCamera = Duration(milliseconds: 280);
+
+  /// Tras ERR_BUSY (61448): backoff, sin martillar.
+  static const _busyRetryDebounce = Duration(milliseconds: 1000);
+
+  int _busyFailStreak = 0;
 
   late final CustomerDisplayService _service;
   late final SharedPreferences _prefs;
@@ -187,7 +196,10 @@ class _CustomerDisplayBinderState extends State<CustomerDisplayBinder>
 
     // Trailing-only: mientras sigue escaneando, reinicia el timer y no hace IPC.
     _cartIdleTimer?.cancel();
-    _cartIdleTimer = Timer(_cartIdleDebounce, _kickFlush);
+    final debounce = CameraLcdCoordinator.autoCameraActive
+        ? _cartIdleDebounceWithCamera
+        : _cartIdleDebounce;
+    _cartIdleTimer = Timer(debounce, _kickFlush);
   }
 
   void _kickFlush() {
@@ -241,16 +253,41 @@ class _CustomerDisplayBinderState extends State<CustomerDisplayBinder>
     _forceNextSync = false;
 
     _syncInFlight = true;
-    _lastSent = snapshot;
+    var busyFail = false;
     try {
       await _service.sync(snapshot);
+      _lastSent = snapshot;
+      _busyFailStreak = 0;
+    } on CustomerDisplaySupersededException {
+      AppLogger.info('CustomerDisplayBinder: sync superseded → re-flush');
+      _dirty = true;
+    } on CustomerDisplayBusyException catch (e) {
+      // Esperado con cámara+LCD en paralelo: reintento suave.
+      busyFail = true;
+      _busyFailStreak++;
+      _dirty = true;
+      if (_busyFailStreak == 1 || _busyFailStreak % 5 == 0) {
+        AppLogger.info(
+          'CustomerDisplayBinder: LCD BUSY code=${e.code} '
+          'streak=$_busyFailStreak → retry',
+        );
+      }
     } catch (e, st) {
       AppLogger.error('CustomerDisplayBinder: sync falló', e, st);
+      _dirty = true;
     } finally {
       _syncInFlight = false;
       if (_dirty) {
         _cartIdleTimer?.cancel();
-        _cartIdleTimer = Timer(_cartIdleDebounce, _kickFlush);
+        final debounce = busyFail
+            ? Duration(
+                milliseconds: _busyRetryDebounce.inMilliseconds *
+                    (1 + _busyFailStreak.clamp(0, 3)),
+              )
+            : (CameraLcdCoordinator.autoCameraActive
+                ? _cartIdleDebounceWithCamera
+                : _cartIdleDebounce);
+        _cartIdleTimer = Timer(debounce, _kickFlush);
       } else {
         _scheduleLockScreen();
       }

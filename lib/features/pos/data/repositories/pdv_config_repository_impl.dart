@@ -37,7 +37,8 @@ class PdvConfigRepositoryImpl implements PdvConfigRepository {
         'offlineMode=${data.offlineMode} '
         'creditNoteDaysLimit=${data.creditNoteDaysLimit} '
         'checkUpdatePeriod=${data.checkUpdatePeriod} '
-        'showTotalSaleToCashier=${data.showTotalSaleToCashier}',
+        'showTotalSaleToCashier=${data.showTotalSaleToCashier} '
+        'autoCameraBarcodeScan=${data.autoCameraBarcodeScan}',
       );
 
       final remoteConfig = PdvConfig(
@@ -47,6 +48,7 @@ class PdvConfigRepositoryImpl implements PdvConfigRepository {
         creditNoteDaysLimit: data.creditNoteDaysLimit,
         checkUpdatePeriod: data.checkUpdatePeriod,
         showTotalSaleToCashier: data.showTotalSaleToCashier,
+        autoCameraBarcodeScan: data.autoCameraBarcodeScan,
         nonDefaultClientBranchId: data.nonDefaultClientBranchId,
       );
 
@@ -62,6 +64,8 @@ class PdvConfigRepositoryImpl implements PdvConfigRepository {
             remoteConfig.checkUpdatePeriod ?? localConfig?.checkUpdatePeriod,
         showTotalSaleToCashier: remoteConfig.showTotalSaleToCashier ??
             localConfig?.showTotalSaleToCashier,
+        autoCameraBarcodeScan: remoteConfig.autoCameraBarcodeScan ??
+            localConfig?.autoCameraBarcodeScan,
       );
       AppLogger.info(
         'PdvConfigRepo: merge final pdvId=${finalData.pdvId} '

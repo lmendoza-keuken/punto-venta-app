@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
+import 'package:punto_venta_app/core/utils/app_logger.dart';
 import 'package:punto_venta_app/core/utils/extensions.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/product/product_image.dart';
 
-class LastScannedProductPreview extends StatelessWidget {
+class LastScannedProductPreview extends StatefulWidget {
   final CartLogEntry entry;
   final bool dense;
 
@@ -16,7 +17,55 @@ class LastScannedProductPreview extends StatelessWidget {
   });
 
   @override
+  State<LastScannedProductPreview> createState() =>
+      _LastScannedProductPreviewState();
+}
+
+class _LastScannedProductPreviewState extends State<LastScannedProductPreview>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _blink;
+
+  @override
+  void initState() {
+    super.initState();
+    // DEBUG: 1.5s rojo encima. Después lo suavizamos.
+    _blink = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+    _triggerFlash('init');
+  }
+
+  @override
+  void didUpdateWidget(covariant LastScannedProductPreview oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.entry.timestamp != widget.entry.timestamp ||
+        oldWidget.entry.id != widget.entry.id ||
+        oldWidget.entry.item.quantity != widget.entry.item.quantity) {
+      _triggerFlash('update');
+    }
+  }
+
+  void _triggerFlash(String reason) {
+    AppLogger.info(
+      'LastScannedFlash $reason dense=${widget.dense} '
+      'id=${widget.entry.id} qty=${widget.entry.item.quantity} '
+      'ts=${widget.entry.timestamp.millisecondsSinceEpoch}',
+    );
+    _blink
+      ..stop()
+      ..forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _blink.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final entry = widget.entry;
     final isAdd = entry.type == CartActionType.add;
     final actionColor = isAdd ? AppColors.success : AppColors.error;
     final actionLabel = isAdd ? 'Agregado' : 'Eliminado';
@@ -47,22 +96,99 @@ class LastScannedProductPreview extends StatelessWidget {
         ? '$sign${entry.item.weightKg ?? 0} kg'
         : '$sign${entry.item.quantity}';
 
-    if (dense) {
-      return _DensePreview(
-        productName: product.name,
-        productId: product.id,
-        hasImage: hasImage,
-        imageUrl: product.imageUrl,
-        actionColor: actionColor,
-        actionLabel: actionLabel,
-        actionIcon: actionIcon,
-        quantityLabel: quantityLabel,
-        priceLine:
-            '${unitPrice.formatToCurrency()}${isWeighted ? ' / kg' : ''}  ·  ${lineTotal.formatToCurrency()}',
-        entryId: entry.id,
-      );
-    }
+    final content = widget.dense
+        ? _DensePreview(
+            productName: product.name,
+            productId: product.id,
+            hasImage: hasImage,
+            imageUrl: product.imageUrl,
+            actionColor: actionColor,
+            actionLabel: actionLabel,
+            actionIcon: actionIcon,
+            quantityLabel: quantityLabel,
+            priceLine:
+                '${unitPrice.formatToCurrency()}${isWeighted ? ' / kg' : ''}  ·  ${lineTotal.formatToCurrency()}',
+            entryId: entry.id,
+          )
+        : _FullPreview(
+            productName: product.name,
+            productId: product.id,
+            hasImage: hasImage,
+            imageUrl: product.imageUrl,
+            actionColor: actionColor,
+            actionLabel: actionLabel,
+            actionIcon: actionIcon,
+            quantityLabel: quantityLabel,
+            priceLine:
+                '${unitPrice.formatToCurrency()}${isWeighted ? ' / kg' : ''}  ·  ${lineTotal.formatToCurrency()}',
+            entryId: entry.id,
+          );
 
+    // DEBUG: rojo ENCIMA del card (antes quedaba atrás del fondo opaco).
+    return AnimatedBuilder(
+      animation: _blink,
+      builder: (context, child) {
+        // Triángulo: 0 → 1 → 0 en 1.5s
+        final raw = _blink.value;
+        final t = raw < 0.5 ? raw * 2 : (1.0 - raw) * 2;
+        return Stack(
+          fit: StackFit.passthrough,
+          children: [
+            child!,
+            if (t > 0.02)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: ColoredBox(
+                    color: Color.fromRGBO(255, 0, 0, 0.75 * t),
+                    child: const Center(
+                      child: Text(
+                        'FLASH',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 28,
+                          letterSpacing: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+      child: content,
+    );
+  }
+}
+
+class _FullPreview extends StatelessWidget {
+  final String productName;
+  final dynamic productId;
+  final bool hasImage;
+  final String? imageUrl;
+  final Color actionColor;
+  final String actionLabel;
+  final IconData actionIcon;
+  final String quantityLabel;
+  final String priceLine;
+  final dynamic entryId;
+
+  const _FullPreview({
+    required this.productName,
+    required this.productId,
+    required this.hasImage,
+    required this.imageUrl,
+    required this.actionColor,
+    required this.actionLabel,
+    required this.actionIcon,
+    required this.quantityLabel,
+    required this.priceLine,
+    required this.entryId,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(AppDimensions.paddingM),
       child: Column(
@@ -86,9 +212,9 @@ class LastScannedProductPreview extends StatelessWidget {
                   if (hasImage)
                     ProductImage(
                       key: ValueKey(
-                        'scanner-img-${entry.id}-${product.id}-${product.imageUrl}',
+                        'scanner-img-$entryId-$productId-$imageUrl',
                       ),
-                      imageUrl: product.imageUrl!,
+                      imageUrl: imageUrl!,
                       fit: BoxFit.contain,
                       width: double.infinity,
                       height: double.infinity,
@@ -142,7 +268,7 @@ class LastScannedProductPreview extends StatelessWidget {
           ),
           const SizedBox(height: AppDimensions.paddingM),
           Text(
-            product.name,
+            productName,
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -152,7 +278,7 @@ class LastScannedProductPreview extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Código: ${product.id}',
+            'Código: $productId',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w500,
@@ -168,7 +294,7 @@ class LastScannedProductPreview extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '${unitPrice.formatToCurrency()}${isWeighted ? ' / kg' : ''}  ·  ${lineTotal.formatToCurrency()}',
+            priceLine,
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,

@@ -1,5 +1,19 @@
 import 'customer_display_snapshot.dart';
 
+/// El snapshot no se pintó porque el gate SPI priorizó uno más nuevo.
+class CustomerDisplaySupersededException implements Exception {
+  const CustomerDisplaySupersededException();
+}
+
+/// SPI ocupado (p.ej. 61448) con cámara en paralelo — reintento suave.
+class CustomerDisplayBusyException implements Exception {
+  const CustomerDisplayBusyException({this.code = 61448});
+  final int code;
+
+  @override
+  String toString() => 'CustomerDisplayBusyException(code=$code)';
+}
+
 /// Contrato para empujar la vista de cliente a una segunda ventana/display.
 abstract class CustomerDisplayService {
   /// Windows o Android. En otras plataformas el toggle no se muestra.
