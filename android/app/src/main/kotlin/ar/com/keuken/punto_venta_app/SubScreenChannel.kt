@@ -9,6 +9,7 @@ import android.graphics.Paint
 import android.graphics.Typeface
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.util.Log
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
@@ -38,6 +39,10 @@ class SubScreenChannel(
     private var managerClass: Class<*>? = null
     private var initialized = false
     @Volatile private var shutDown = false
+    /** true mientras corre un show en el worker (SPI ocupado). */
+    @Volatile private var isSubscreenBusy = false
+    /** Reloj del último show (OK o fail) para gap mínimo entre bitmaps. */
+    @Volatile private var lastShowAtMs = 0L
 
     init {
         TelpoHiddenApi.releaseReflectionLimit()
@@ -226,7 +231,10 @@ class SubScreenChannel(
         return mapOf("code" to code, "ok" to (code == 0 || code == ERR_ALREADY_INIT))
     }
 
-    /** Siempre release previo; si 61448 BUSY, release + retry. */
+    /**
+     * Arranque pre-cámara (d90129b): release + init, un solo retry.
+     * Los retries largos/soft-only saturaban el SPI (ENOMEM → nieve).
+     */
     private fun initWithBusyRetry(): Int {
         Log.i(TAG, "init: pre-release")
         runCatching { invokeInt("release") }
@@ -282,9 +290,11 @@ class SubScreenChannel(
         val h = invokeInt("getScreenHeight").coerceIn(1, 240)
         val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         bmp.eraseColor(argb)
-        val code = invokeShow(bmp, 0, 0)
-        bmp.recycle()
-        return code
+        return try {
+            showBitmapWithPolicy(bmp, 0, 0)
+        } finally {
+            bmp.recycle()
+        }
     }
 
     private fun showColor(argb: Int, label: String?): Map<String, Any?> {
@@ -311,14 +321,28 @@ class SubScreenChannel(
                 y += lineHeight
             }
         }
-        val code = invokeShow(bmp, 0, 0)
-        bmp.recycle()
-        return mapOf("code" to code, "ok" to (code == 0))
+        return try {
+            val code = showBitmapWithPolicy(bmp, 0, 0)
+            mapOf("code" to code, "ok" to (code == 0))
+        } finally {
+            bmp.recycle()
+        }
     }
 
     private fun showBitmapBytes(bytes: ByteArray, x: Int, y: Int): Map<String, Any?> {
         ensureManager()
-        ensureReady(coverWithBlack = true)
+        if (!initialized) {
+            val initResult = doInit(coverWithBlack = true)
+            if (initResult["ok"] != true) {
+                val code = (initResult["code"] as? Int) ?: ERR_BUSY
+                Log.e(TAG, "showBitmap aborted: init failed code=$code")
+                return mapOf(
+                    "code" to code,
+                    "ok" to false,
+                    "error" to "init_failed",
+                )
+            }
+        }
         val decoded = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
             ?: return mapOf("code" to ERR_INVALID, "ok" to false, "error" to "decode_failed")
         val w = invokeInt("getScreenWidth").coerceIn(1, 320)
@@ -331,16 +355,7 @@ class SubScreenChannel(
             decoded
         }
         try {
-            // ERR_BUSY (61448): SPI ocupado. Backoff; sin release (→ nieve).
-            val delaysMs = longArrayOf(0L, 120L, 280L, 450L, 700L)
-            var code = -1
-            for (i in delaysMs.indices) {
-                if (delaysMs[i] > 0) sleepQuiet(delaysMs[i])
-                code = invokeShow(scaled, x, y)
-                Log.i(TAG, "showBitmap attempt=${i + 1} code=$code ${w}x$h")
-                if (code == 0 || code != ERR_BUSY) break
-                Log.e(TAG, "showBitmap BUSY → retry sin release")
-            }
+            val code = showBitmapWithPolicy(scaled, x, y)
             return mapOf("code" to code, "ok" to (code == 0))
         } catch (e: Exception) {
             Log.e(TAG, "showBitmap failed (sesión intacta)", e)
@@ -348,6 +363,52 @@ class SubScreenChannel(
         } finally {
             scaled.recycle()
         }
+    }
+
+    /**
+     * Gap mínimo + RGB_565 + máx 2 intentos ante BUSY (sin release).
+     * El executor ya serializa; el gap evita saturar el bus SPI/UART del PTA.
+     */
+    private fun showBitmapWithPolicy(source: Bitmap, x: Int, y: Int): Int {
+        waitMinShowGap()
+        if (isSubscreenBusy) {
+            Log.w(TAG, "showBitmap skipped overlapping busy")
+            return ERR_BUSY
+        }
+        isSubscreenBusy = true
+        val rgb565 = toRgb565(source)
+        try {
+            // OEM: 1 retry @ ~200ms; no martillar el bus.
+            var code = invokeShow(rgb565, x, y)
+            Log.i(TAG, "showBitmap attempt=1 code=$code ${rgb565.width}x${rgb565.height} rgb565")
+            if (code == ERR_BUSY) {
+                Log.e(TAG, "showBitmap BUSY → retry 200ms sin release")
+                sleepQuiet(BUSY_RETRY_MS)
+                code = invokeShow(rgb565, x, y)
+                Log.i(TAG, "showBitmap attempt=2 code=$code")
+            }
+            return code
+        } finally {
+            if (rgb565 !== source) rgb565.recycle()
+            lastShowAtMs = SystemClock.uptimeMillis()
+            isSubscreenBusy = false
+        }
+    }
+
+    private fun waitMinShowGap() {
+        val last = lastShowAtMs
+        if (last <= 0L) return
+        val elapsed = SystemClock.uptimeMillis() - last
+        val remain = MIN_SHOW_GAP_MS - elapsed
+        if (remain > 0) {
+            Log.i(TAG, "showBitmap gap wait ${remain}ms")
+            sleepQuiet(remain)
+        }
+    }
+
+    private fun toRgb565(source: Bitmap): Bitmap {
+        if (source.config == Bitmap.Config.RGB_565) return source
+        return source.copy(Bitmap.Config.RGB_565, false) ?: source
     }
 
     private fun ensureManager() {
@@ -416,5 +477,8 @@ class SubScreenChannel(
         private const val ERR_BUSY = 61448
 
         private const val SHUTDOWN_SETTLE_MS = 100L
+        /** Gap mínimo entre shows (OEM: 300–500ms). */
+        private const val MIN_SHOW_GAP_MS = 280L
+        private const val BUSY_RETRY_MS = 200L
     }
 }

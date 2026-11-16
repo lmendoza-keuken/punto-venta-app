@@ -7,8 +7,8 @@ import 'package:punto_venta_app/features/pos/presentation/widgets/common/scan_be
 
 /// Escáner continuo (estilo pistola).
 ///
-/// Sesión siempre montada mientras [enabled]. Durante el write SPI del LCD
-/// solo hace [MobileScannerController.pause] (micro-pause); no dispose.
+/// Sesión montada mientras [enabled]. Tras cada código: slot LCD
+/// (`pause` analyzer → onCode → wait paint OK/timeout → `start`). Sin dispose.
 class AutoBarcodeScannerHost extends StatefulWidget {
   final bool enabled;
   final Future<void> Function(String code) onCode;
@@ -73,6 +73,7 @@ class _AutoBarcodeScannerHostState extends State<AutoBarcodeScannerHost> {
   @override
   void dispose() {
     CameraLcdCoordinator.autoCameraActive = false;
+    CameraLcdCoordinator.endScanLcdSlot();
     unawaited(_spiSub?.cancel());
     _cameraOp = _cameraOp.catchError((_) {}).then((_) => _tearDown());
     super.dispose();
@@ -151,7 +152,6 @@ class _AutoBarcodeScannerHostState extends State<AutoBarcodeScannerHost> {
       return;
     }
 
-    // Micro-pause: pausa frames, mantiene sesión (no stop/dispose).
     try {
       while (controller.value.isStarting) {
         await Future<void>.delayed(const Duration(milliseconds: 30));
@@ -211,11 +211,28 @@ class _AutoBarcodeScannerHostState extends State<AutoBarcodeScannerHost> {
 
     _busy = true;
     _lastAcceptedAt = now;
+    // Slot: pause analyzer mientras carrito + LCD pintan.
+    // Más aire: el binder debounced + SPI gap; no rearrmar cámara a los 1s.
+    CameraLcdCoordinator.beginScanLcdSlot(
+      timeout: const Duration(milliseconds: 2200),
+    );
+    _spiQuiet = true;
+    _syncAnalyzer();
+
     try {
+      await _cameraOp.catchError((_) {});
       ScanBeep.play();
       await widget.onCode(raw);
+      await CameraLcdCoordinator.waitForScanLcdSlot();
     } finally {
-      _busy = false;
+      CameraLcdCoordinator.endScanLcdSlot();
+      _spiQuiet = CameraLcdCoordinator.spiQuietRequested;
+      if (mounted) {
+        _busy = false;
+        _syncCamera();
+      } else {
+        _busy = false;
+      }
     }
   }
 

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:punto_venta_app/core/constants/app_colors.dart';
 import 'package:punto_venta_app/core/constants/app_dimensions.dart';
-import 'package:punto_venta_app/core/utils/app_logger.dart';
 import 'package:punto_venta_app/core/utils/extensions.dart';
 import 'package:punto_venta_app/features/pos/domain/entities/cart_log_entry.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/product/product_image.dart';
@@ -24,16 +23,23 @@ class LastScannedProductPreview extends StatefulWidget {
 class _LastScannedProductPreviewState extends State<LastScannedProductPreview>
     with SingleTickerProviderStateMixin {
   late final AnimationController _blink;
+  late final Animation<double> _glow;
 
   @override
   void initState() {
     super.initState();
-    // DEBUG: 1.5s rojo encima. Después lo suavizamos.
+    // Pulso borde: engrose + blur (2 picos cortos).
     _blink = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 560),
     );
-    _triggerFlash('init');
+    _glow = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: 1.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.15), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 0.15, end: 1.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.0), weight: 1.2),
+    ]).animate(CurvedAnimation(parent: _blink, curve: Curves.easeInOut));
+    _triggerFlash();
   }
 
   @override
@@ -42,16 +48,11 @@ class _LastScannedProductPreviewState extends State<LastScannedProductPreview>
     if (oldWidget.entry.timestamp != widget.entry.timestamp ||
         oldWidget.entry.id != widget.entry.id ||
         oldWidget.entry.item.quantity != widget.entry.item.quantity) {
-      _triggerFlash('update');
+      _triggerFlash();
     }
   }
 
-  void _triggerFlash(String reason) {
-    AppLogger.info(
-      'LastScannedFlash $reason dense=${widget.dense} '
-      'id=${widget.entry.id} qty=${widget.entry.item.quantity} '
-      'ts=${widget.entry.timestamp.millisecondsSinceEpoch}',
-    );
+  void _triggerFlash() {
     _blink
       ..stop()
       ..forward(from: 0);
@@ -96,70 +97,75 @@ class _LastScannedProductPreviewState extends State<LastScannedProductPreview>
         ? '$sign${entry.item.weightKg ?? 0} kg'
         : '$sign${entry.item.quantity}';
 
-    final content = widget.dense
-        ? _DensePreview(
-            productName: product.name,
-            productId: product.id,
-            hasImage: hasImage,
-            imageUrl: product.imageUrl,
-            actionColor: actionColor,
-            actionLabel: actionLabel,
-            actionIcon: actionIcon,
-            quantityLabel: quantityLabel,
-            priceLine:
-                '${unitPrice.formatToCurrency()}${isWeighted ? ' / kg' : ''}  ·  ${lineTotal.formatToCurrency()}',
-            entryId: entry.id,
-          )
-        : _FullPreview(
-            productName: product.name,
-            productId: product.id,
-            hasImage: hasImage,
-            imageUrl: product.imageUrl,
-            actionColor: actionColor,
-            actionLabel: actionLabel,
-            actionIcon: actionIcon,
-            quantityLabel: quantityLabel,
-            priceLine:
-                '${unitPrice.formatToCurrency()}${isWeighted ? ' / kg' : ''}  ·  ${lineTotal.formatToCurrency()}',
-            entryId: entry.id,
-          );
+    final priceLine =
+        '${unitPrice.formatToCurrency()}${isWeighted ? ' / kg' : ''}  ·  ${lineTotal.formatToCurrency()}';
 
-    // DEBUG: rojo ENCIMA del card (antes quedaba atrás del fondo opaco).
-    return AnimatedBuilder(
-      animation: _blink,
-      builder: (context, child) {
-        // Triángulo: 0 → 1 → 0 en 1.5s
-        final raw = _blink.value;
-        final t = raw < 0.5 ? raw * 2 : (1.0 - raw) * 2;
-        return Stack(
-          fit: StackFit.passthrough,
-          children: [
-            child!,
-            if (t > 0.02)
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: ColoredBox(
-                    color: Color.fromRGBO(255, 0, 0, 0.75 * t),
-                    child: const Center(
-                      child: Text(
-                        'FLASH',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 28,
-                          letterSpacing: 2,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        );
-      },
-      child: content,
+    if (widget.dense) {
+      return _DensePreview(
+        productName: product.name,
+        productId: product.id,
+        hasImage: hasImage,
+        imageUrl: product.imageUrl,
+        actionColor: actionColor,
+        actionLabel: actionLabel,
+        actionIcon: actionIcon,
+        quantityLabel: quantityLabel,
+        priceLine: priceLine,
+        entryId: entry.id,
+        glow: _glow,
+      );
+    }
+
+    return _FullPreview(
+      productName: product.name,
+      productId: product.id,
+      hasImage: hasImage,
+      imageUrl: product.imageUrl,
+      actionColor: actionColor,
+      actionLabel: actionLabel,
+      actionIcon: actionIcon,
+      quantityLabel: quantityLabel,
+      priceLine: priceLine,
+      entryId: entry.id,
+      glow: _glow,
     );
   }
+}
+
+/// Borde + sombra animados (t=0 reposo, t=1 pico).
+BoxDecoration _glowDecoration({
+  required Color actionColor,
+  required double t,
+  required BorderRadius borderRadius,
+  Color? fill,
+}) {
+  final borderColor = Color.lerp(
+    actionColor.withValues(alpha: 0.35),
+    actionColor,
+    t,
+  )!;
+  return BoxDecoration(
+    color: fill ?? Colors.grey.shade100,
+    borderRadius: borderRadius,
+    border: Border.all(
+      color: borderColor,
+      width: 2 + 3 * t,
+    ),
+    boxShadow: t > 0.04
+        ? [
+            BoxShadow(
+              color: actionColor.withValues(alpha: 0.55 * t),
+              blurRadius: 14 * t,
+              spreadRadius: 1.5 * t,
+            ),
+            BoxShadow(
+              color: actionColor.withValues(alpha: 0.25 * t),
+              blurRadius: 28 * t,
+              spreadRadius: 0,
+            ),
+          ]
+        : null,
+  );
 }
 
 class _FullPreview extends StatelessWidget {
@@ -173,6 +179,7 @@ class _FullPreview extends StatelessWidget {
   final String quantityLabel;
   final String priceLine;
   final dynamic entryId;
+  final Animation<double> glow;
 
   const _FullPreview({
     required this.productName,
@@ -185,27 +192,32 @@ class _FullPreview extends StatelessWidget {
     required this.quantityLabel,
     required this.priceLine,
     required this.entryId,
+    required this.glow,
   });
 
   @override
   Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(AppDimensions.borderRadiusM);
+
     return Padding(
       padding: const EdgeInsets.all(AppDimensions.paddingM),
       child: Column(
         children: [
           Expanded(
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius:
-                    BorderRadius.circular(AppDimensions.borderRadiusM),
-                border: Border.all(
-                  color: actionColor.withValues(alpha: 0.35),
-                  width: 2,
-                ),
-              ),
-              clipBehavior: Clip.antiAlias,
+            child: AnimatedBuilder(
+              animation: glow,
+              builder: (context, child) {
+                return Container(
+                  width: double.infinity,
+                  decoration: _glowDecoration(
+                    actionColor: actionColor,
+                    t: glow.value,
+                    borderRadius: radius,
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: child,
+                );
+              },
               child: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -320,6 +332,7 @@ class _DensePreview extends StatelessWidget {
   final String quantityLabel;
   final String priceLine;
   final dynamic entryId;
+  final Animation<double> glow;
 
   const _DensePreview({
     required this.productName,
@@ -332,27 +345,32 @@ class _DensePreview extends StatelessWidget {
     required this.quantityLabel,
     required this.priceLine,
     required this.entryId,
+    required this.glow,
   });
 
   @override
   Widget build(BuildContext context) {
     const imageSize = 72.0;
+    final radius = BorderRadius.circular(AppDimensions.borderRadiusM);
 
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppDimensions.paddingS,
         vertical: AppDimensions.paddingS,
       ),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(AppDimensions.borderRadiusM),
-          border: Border.all(
-            color: actionColor.withValues(alpha: 0.35),
-            width: 2,
-          ),
-        ),
-        padding: const EdgeInsets.all(AppDimensions.paddingS),
+      child: AnimatedBuilder(
+        animation: glow,
+        builder: (context, child) {
+          return Container(
+            decoration: _glowDecoration(
+              actionColor: actionColor,
+              t: glow.value,
+              borderRadius: radius,
+            ),
+            padding: const EdgeInsets.all(AppDimensions.paddingS),
+            child: child,
+          );
+        },
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [

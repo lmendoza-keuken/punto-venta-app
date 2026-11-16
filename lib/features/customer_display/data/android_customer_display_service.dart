@@ -9,6 +9,7 @@ import 'package:punto_venta_app/features/customer_display/data/pta_sub_screen.da
 import 'package:punto_venta_app/features/customer_display/domain/customer_display_prefs.dart';
 import 'package:punto_venta_app/features/customer_display/domain/customer_display_service.dart';
 import 'package:punto_venta_app/features/customer_display/domain/customer_display_snapshot.dart';
+import 'package:punto_venta_app/features/pos/presentation/widgets/common/camera_lcd_coordinator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 enum _AndroidDisplayBackend { none, presentation, subScreen }
@@ -72,6 +73,7 @@ class AndroidCustomerDisplayService implements CustomerDisplayService {
     if (!isEnabled) return;
 
     if (_started && _backend == _AndroidDisplayBackend.subScreen) {
+      // showSnapshot ya usa duringSpiWrite cuando auto-cam está activa.
       await PtaSubScreen.showSnapshot(_last);
       return;
     }
@@ -85,10 +87,19 @@ class AndroidCustomerDisplayService implements CustomerDisplayService {
       _startReconnectPolling();
 
       // PTA0130: LCD SPI vía Binder SubScreen (no es Display Android).
-      // _started solo después de un frame real. Si falla tras init, shutdown
-      // limpia la nieve; si no, el carro no actualiza y el LCD queda 40s+ en basura.
+      // Arranque como pre-cámara: un warm init // captura → un paint.
+      // Si auto-cam está on, quiet breve para no pelear el bus en el init.
       if (await _hasSubScreen()) {
-        AppLogger.info('CustomerDisplay Android: SubScreen — empujando primer frame');
+        AppLogger.info(
+          'CustomerDisplay Android: SubScreen — empujando primer frame',
+        );
+        if (CameraLcdCoordinator.autoCameraActive) {
+          CameraLcdCoordinator.beginBusyRecoverQuiet(
+            timeout: const Duration(seconds: 15),
+          );
+          await Future<void>.delayed(const Duration(milliseconds: 300));
+        }
+
         final shown = await PtaSubScreen.showSnapshot(_last);
         final realFrame = shown.ok && shown.error != 'superseded';
         if (!realFrame) {
@@ -102,6 +113,7 @@ class AndroidCustomerDisplayService implements CustomerDisplayService {
         _backend = _AndroidDisplayBackend.subScreen;
         _started = true;
         _clearStartBackoff();
+        CameraLcdCoordinator.reportLcdPaintOk();
         AppLogger.info('CustomerDisplay Android: SubScreen LCD activo');
         return;
       }
@@ -259,10 +271,12 @@ class AndroidCustomerDisplayService implements CustomerDisplayService {
     if (snapshot.adProducts.length < 2) return;
 
     // Misma cadencia que CustomerDisplayAdCarousel (_autoPlay = 4s).
+    // showSnapshot → duringSpiWrite (micro-pause cámara si auto-cam activa).
     _adRotateTimer = Timer.periodic(const Duration(seconds: 4), (_) async {
       if (!_started || _backend != _AndroidDisplayBackend.subScreen) return;
       if (_last.mode != CustomerDisplayMode.advertising) return;
       if (_last.adProducts.length < 2) return;
+      if (CameraLcdCoordinator.inScanLcdSlot) return;
       try {
         await PtaSubScreen.showSnapshot(_last);
       } catch (e, st) {

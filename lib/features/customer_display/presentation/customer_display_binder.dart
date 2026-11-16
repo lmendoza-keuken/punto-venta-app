@@ -34,11 +34,14 @@ class _CustomerDisplayBinderState extends State<CustomerDisplayBinder>
   /// la vista cliente se actualiza un frame después del burst.
   static const _cartIdleDebounce = Duration(milliseconds: 90);
 
-  /// Auto-cámara: coalescer bursts y dar aire al SPI tras micro-pause.
-  static const _cartIdleDebounceWithCamera = Duration(milliseconds: 280);
+  /// Auto-cámara: coalescer bursts (gap SPI nativo ~280ms).
+  static const _cartIdleDebounceWithCamera = Duration(milliseconds: 260);
 
-  /// Tras ERR_BUSY (61448): backoff, sin martillar.
-  static const _busyRetryDebounce = Duration(milliseconds: 1000);
+  /// Tras ERR_BUSY: reintento corto fijo.
+  static const _busyRetryDebounce = Duration(milliseconds: 380);
+
+  /// Esperando start/init SubScreen (puede tardar varios segundos).
+  static const _notStartedDebounce = Duration(milliseconds: 1500);
 
   int _busyFailStreak = 0;
 
@@ -254,39 +257,53 @@ class _CustomerDisplayBinderState extends State<CustomerDisplayBinder>
 
     _syncInFlight = true;
     var busyFail = false;
+    var waitingStart = false;
     try {
       await _service.sync(snapshot);
       _lastSent = snapshot;
       _busyFailStreak = 0;
+      CameraLcdCoordinator.reportLcdPaintOk();
     } on CustomerDisplaySupersededException {
       AppLogger.info('CustomerDisplayBinder: sync superseded → re-flush');
       _dirty = true;
+      // El frame ganador sigue en el gate; forzar otro flush del latest.
+      _forceNextSync = true;
     } on CustomerDisplayBusyException catch (e) {
-      // Esperado con cámara+LCD en paralelo: reintento suave.
       busyFail = true;
       _busyFailStreak++;
       _dirty = true;
+      _forceNextSync = true;
+      // Cámara quieta mientras reintentamos (si no, rearma y re-BUSY).
+      CameraLcdCoordinator.beginBusyRecoverQuiet();
       if (_busyFailStreak == 1 || _busyFailStreak % 5 == 0) {
         AppLogger.info(
           'CustomerDisplayBinder: LCD BUSY code=${e.code} '
-          'streak=$_busyFailStreak → retry',
+          'streak=$_busyFailStreak → retry ${_busyRetryDebounce.inMilliseconds}ms',
         );
+      }
+    } on StateError catch (e, st) {
+      _dirty = true;
+      _forceNextSync = true;
+      waitingStart = e.message == 'customer_display_not_started';
+      if (!waitingStart) {
+        AppLogger.error('CustomerDisplayBinder: sync falló', e, st);
       }
     } catch (e, st) {
       AppLogger.error('CustomerDisplayBinder: sync falló', e, st);
       _dirty = true;
+      _forceNextSync = true;
     } finally {
       _syncInFlight = false;
       if (_dirty) {
         _cartIdleTimer?.cancel();
+        // not_started: no martillar cada 90ms mientras init SPI corre 5–10s.
         final debounce = busyFail
-            ? Duration(
-                milliseconds: _busyRetryDebounce.inMilliseconds *
-                    (1 + _busyFailStreak.clamp(0, 3)),
-              )
-            : (CameraLcdCoordinator.autoCameraActive
-                ? _cartIdleDebounceWithCamera
-                : _cartIdleDebounce);
+            ? _busyRetryDebounce
+            : waitingStart
+                ? _notStartedDebounce
+                : (CameraLcdCoordinator.autoCameraActive
+                    ? _cartIdleDebounceWithCamera
+                    : _cartIdleDebounce);
         _cartIdleTimer = Timer(debounce, _kickFlush);
       } else {
         _scheduleLockScreen();

@@ -10,27 +10,43 @@ import 'package:punto_venta_app/features/customer_display/domain/customer_displa
 import 'package:punto_venta_app/features/customer_display/presentation/widgets/pta_lcd_view.dart';
 import 'package:punto_venta_app/features/pos/presentation/widgets/product/product_image.dart';
 
+/// La captura quedó obsoleta (llegó un snapshot más nuevo).
+class PtaLcdCaptureAborted implements Exception {
+  const PtaLcdCaptureAborted();
+}
+
+String? _lastPrecachedUrl;
+DateTime? _lastPrecachedAt;
+
 /// Renderiza el widget [PtaLcdView] (320×240) y devuelve PNG.
 Future<Uint8List> capturePtaLcdSnapshot(
   CustomerDisplaySnapshot snapshot, {
   int width = 320,
   int height = 240,
+  bool Function()? shouldAbort,
 }) async {
-  // Overlay.of(navigatorContext) FALLA: el Overlay es hijo del Navigator,
-  // no ancestro. Hay que usar NavigatorState.overlay.
+  void checkAbort() {
+    if (shouldAbort?.call() == true) {
+      throw const PtaLcdCaptureAborted();
+    }
+  }
+
   final nav = AppRouter.navigatorKey.currentState;
   final overlay = nav?.overlay;
   if (overlay == null) {
     throw StateError('Sin Overlay del Navigator para capturar LCD');
   }
 
+  checkAbort();
   await _precacheProductImage(overlay.context, snapshot);
+  checkAbort();
 
   return _captureViaOverlay(
     overlay,
     snapshot,
     width: width,
     height: height,
+    shouldAbort: shouldAbort,
   );
 }
 
@@ -39,11 +55,17 @@ Future<Uint8List> _captureViaOverlay(
   CustomerDisplaySnapshot snapshot, {
   required int width,
   required int height,
+  bool Function()? shouldAbort,
 }) async {
+  void checkAbort() {
+    if (shouldAbort?.call() == true) {
+      throw const PtaLcdCaptureAborted();
+    }
+  }
+
   final boundaryKey = GlobalKey();
   late OverlayEntry entry;
 
-  // Widget real 320×240. Opacity AFUERA del boundary (toImage = alpha pleno).
   entry = OverlayEntry(
     maintainState: true,
     builder: (_) => Positioned(
@@ -81,15 +103,27 @@ Future<Uint8List> _captureViaOverlay(
   overlay.insert(entry);
   try {
     await WidgetsBinding.instance.endOfFrame;
-    final hasImage =
-        (snapshot.lastProduct?.imageUrl?.trim().isNotEmpty ?? false) ||
-            (snapshot.adProducts.isNotEmpty &&
-                (snapshot.adProducts.first.imageUrl?.trim().isNotEmpty ??
-                    false));
-    await Future<void>.delayed(
-      Duration(milliseconds: hasImage ? 180 : 50),
-    );
+    checkAbort();
+
+    final url = snapshot.lastProduct?.imageUrl?.trim() ??
+        (snapshot.adProducts.isNotEmpty
+            ? snapshot.adProducts.first.imageUrl?.trim()
+            : null);
+    final hasImage = url != null && url.isNotEmpty;
+    final recentlyCached = hasImage &&
+        url == _lastPrecachedUrl &&
+        _lastPrecachedAt != null &&
+        DateTime.now().difference(_lastPrecachedAt!) <
+            const Duration(seconds: 12);
+
+    // Misma imagen en burst: no esperar 180ms otra vez.
+    final settleMs = !hasImage
+        ? 40
+        : (recentlyCached ? 70 : 140);
+    await Future<void>.delayed(Duration(milliseconds: settleMs));
+    checkAbort();
     await WidgetsBinding.instance.endOfFrame;
+    checkAbort();
 
     final boundary = boundaryKey.currentContext?.findRenderObject()
         as RenderRepaintBoundary?;
@@ -105,10 +139,12 @@ Future<Uint8List> _captureViaOverlay(
     }
     if (boundary.debugNeedsPaint) {
       await WidgetsBinding.instance.endOfFrame;
+      checkAbort();
     }
 
     final image = await boundary.toImage(pixelRatio: 1);
     try {
+      checkAbort();
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       if (byteData == null) {
         throw StateError('toByteData PNG falló');
@@ -140,6 +176,13 @@ Future<void> _precacheProductImage(
           : null);
   if (url == null || url.isEmpty) return;
 
+  if (url == _lastPrecachedUrl &&
+      _lastPrecachedAt != null &&
+      DateTime.now().difference(_lastPrecachedAt!) <
+          const Duration(seconds: 12)) {
+    return;
+  }
+
   try {
     final ImageProvider provider;
     if (ProductImage.isAssetUrl(url)) {
@@ -153,6 +196,8 @@ Future<void> _precacheProductImage(
       const Duration(seconds: 2),
       onTimeout: () {},
     );
+    _lastPrecachedUrl = url;
+    _lastPrecachedAt = DateTime.now();
   } catch (e) {
     AppLogger.warn('PtaLcdCapture: precache falló ($e)');
   }

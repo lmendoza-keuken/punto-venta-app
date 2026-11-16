@@ -155,9 +155,16 @@ class _SearchFieldState extends State<SearchField> {
     }
   }
 
+  bool get _confirmationOpen {
+    final ui = context.read<UiBloc>().state;
+    return ui is UiLoaded && ui.showConfirmationPanel;
+  }
+
   Future<void> _handleSubmitted(String value) async {
+    if (_confirmationOpen) return;
     await widget.onSubmitted(value);
     if (!mounted) return;
+    if (_confirmationOpen) return;
     _focusForScanner(retryAfterSnackBar: true);
   }
 
@@ -207,9 +214,11 @@ class _SearchFieldState extends State<SearchField> {
           isBarcodeMode: isBarcodeMode,
           fromUserTap: _keyboardFromUserTap,
         );
+        final confirmationOpen = uiState.showConfirmationPanel;
         final useAutoCamera = isBarcodeMode &&
             _isAndroidCameraAvailable &&
-            _autoCameraBarcodeScan;
+            _autoCameraBarcodeScan &&
+            !confirmationOpen;
         final autoScanActive = useAutoCamera && !_autoScanPaused;
         final showCameraScan = isBarcodeMode && _isAndroidCameraAvailable;
         final showClear = widget.controller.text.isNotEmpty;

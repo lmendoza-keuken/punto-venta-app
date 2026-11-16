@@ -23,8 +23,17 @@ class PtaSubScreen {
   static CustomerDisplaySnapshot? _queuedSnapshot;
   static Future<void> _snapshotGate = Future<void>.value();
 
+  static PtaSubScreenInfo? _cachedInfo;
+  static DateTime? _cachedInfoAt;
+  static const _infoCacheTtl = Duration(seconds: 8);
+
   static bool get _isAndroid =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+
+  static void _invalidateInfoCache() {
+    _cachedInfo = null;
+    _cachedInfoAt = null;
+  }
 
   /// `true` si el framework expone el servicio `SubScreen`.
   static Future<bool> isAvailable() async {
@@ -39,12 +48,24 @@ class PtaSubScreen {
   }
 
   /// Info del LCD. `available` exige device `/dev/tp_spi_lcd`.
-  static Future<PtaSubScreenInfo> getInfo() async {
+  /// Cache corto: evita IPC SPI en cada paint de carrito.
+  static Future<PtaSubScreenInfo> getInfo({bool force = false}) async {
     if (!_isAndroid) return const PtaSubScreenInfo.unavailable();
+    final cached = _cachedInfo;
+    final at = _cachedInfoAt;
+    if (!force &&
+        cached != null &&
+        at != null &&
+        DateTime.now().difference(at) < _infoCacheTtl) {
+      return cached;
+    }
     try {
       final map = await _channel.invokeMapMethod<String, dynamic>('getInfo');
       if (map == null) return const PtaSubScreenInfo.unavailable();
-      return PtaSubScreenInfo.fromMap(map);
+      final info = PtaSubScreenInfo.fromMap(map);
+      _cachedInfo = info;
+      _cachedInfoAt = DateTime.now();
+      return info;
     } catch (e, st) {
       AppLogger.error('PtaSubScreen.getInfo', e, st);
       return const PtaSubScreenInfo.unavailable();
@@ -74,6 +95,7 @@ class PtaSubScreen {
     try {
       final map = await _channel.invokeMapMethod<String, dynamic>('release');
       final result = PtaSubScreenResult.fromMap(map);
+      _invalidateInfoCache();
       AppLogger.info('PtaSubScreen.release code=${result.code} ok=${result.ok}');
       return result;
     } catch (e, st) {
@@ -91,6 +113,7 @@ class PtaSubScreen {
     try {
       final map = await _channel.invokeMapMethod<String, dynamic>('shutdown');
       final result = PtaSubScreenResult.fromMap(map);
+      _invalidateInfoCache();
       AppLogger.info(
         'PtaSubScreen.shutdown code=${result.code} ok=${result.ok}',
       );
@@ -152,7 +175,9 @@ class PtaSubScreen {
       return result;
     } catch (e, st) {
       AppLogger.error('PtaSubScreen.showBitmap', e, st);
-      return PtaSubScreenResult(ok: false, code: -1, error: '$e');
+      final msg = '$e';
+      final code = msg.contains('61448') ? 61448 : -1;
+      return PtaSubScreenResult(ok: false, code: code, error: msg);
     }
   }
 
@@ -214,6 +239,11 @@ class PtaSubScreen {
   ///
   /// Solo el snapshot más reciente gana: si llega otro sync mientras se
   /// captura, el bitmap viejo se descarta (evita LCD “pegado” al carrito anterior).
+  /// Latest-wins: cada llamada invalida la anterior (`_snapshotGen`).
+  /// Solo el gen actual captura/pinta; los viejos abortan y no liberan el
+  /// slot de cámara. SPI en vuelo no se cancela (hardware), pero si mientras
+  /// corría llegó uno nuevo, ese paint viejo no cuenta como OK.
+  ///
   /// No re-inicializa el SPI: eso flashaba blanco/nieve entre frames.
   /// Para cambiar el diseño: editá `presentation/widgets/pta_lcd_view.dart`.
   static Future<PtaSubScreenResult> showSnapshot(
@@ -227,42 +257,60 @@ class PtaSubScreen {
     _queuedSnapshot = snapshot;
     final done = Completer<PtaSubScreenResult>();
 
+    const superseded = PtaSubScreenResult(
+      ok: true,
+      code: 0,
+      error: 'superseded',
+    );
+
+    bool isLatest() => gen == _snapshotGen;
+
     _snapshotGate = _snapshotGate.catchError((_) {}).then((_) async {
-      // Frame viejo: no avisa al auto-scan (si no, rearma la cámara antes
-      // de pintar el qty final → LCD se queda en 4 de 6).
-      if (gen != _snapshotGen) {
-        done.complete(
-          const PtaSubScreenResult(ok: true, code: 0, error: 'superseded'),
-        );
+      // Ya hay uno más nuevo: no trabajar ni avisar al auto-scan.
+      if (!isLatest()) {
+        done.complete(superseded);
         return;
       }
+      // Siempre el snapshot más reciente encolado, no el de esta closure.
       final snap = _queuedSnapshot ?? snapshot;
       try {
-        // Micro-pause del analyzer solo en captura+SPI (sesión cámara viva).
-        final result = await CameraLcdCoordinator.duringSpiWrite(() async {
-          final info = await getInfo();
-          if (gen != _snapshotGen) {
-            return const PtaSubScreenResult(
-              ok: true,
-              code: 0,
-              error: 'superseded',
-            );
-          }
-          if (!info.available) {
-            return const PtaSubScreenResult(
+        // getInfo fuera del pause: cache hit = 0 SPI; miss no alarga el slot.
+        final info = await getInfo();
+        if (!isLatest()) {
+          done.complete(superseded);
+          return;
+        }
+        if (!info.available) {
+          done.complete(
+            const PtaSubScreenResult(
               ok: false,
               code: 61442,
               error: 'no_device',
-            );
-          }
+            ),
+          );
+          return;
+        }
+
+        // Arranque pre-cámara: warm init // captura (init SPI ~5s).
+        // Si ya está init, doInit es no-op (61444).
+        final warmInit = init();
+
+        // Micro-pause del analyzer solo en captura+show (sesión cámara viva).
+        final result = await CameraLcdCoordinator.duringSpiWrite(() async {
+          if (!isLatest()) return superseded;
+
+          final live = _queuedSnapshot ?? snap;
 
           Uint8List? png;
           try {
             png = await capturePtaLcdSnapshot(
-              snap,
+              live,
               width: info.width ?? 320,
               height: info.height ?? 240,
+              shouldAbort: () => !isLatest(),
             );
+          } on PtaLcdCaptureAborted {
+            return superseded;
           } catch (e, st) {
             AppLogger.error(
               'PtaSubScreen.showSnapshot: captura widget falló → fallback color',
@@ -271,46 +319,61 @@ class PtaSubScreen {
             );
           }
 
-          if (gen != _snapshotGen) {
+          final warm = await warmInit;
+          AppLogger.info(
+            'PtaSubScreen.showSnapshot: warm init '
+            'ok=${warm.ok} code=${warm.code}',
+          );
+
+          if (!isLatest()) {
             AppLogger.info(
               'PtaSubScreen.showSnapshot: descarta frame viejo '
-              'mode=${snap.mode.name} gen=$gen current=$_snapshotGen',
+              'mode=${live.mode.name} gen=$gen current=$_snapshotGen',
             );
-            return const PtaSubScreenResult(
-              ok: true,
-              code: 0,
-              error: 'superseded',
-            );
+            return superseded;
           }
 
           if (png == null) {
             return await showColor(
-              _fallbackColor(snap),
-              label: _fallbackLabel(snap),
+              _fallbackColor(live),
+              label: _fallbackLabel(live),
             );
           }
 
           final shown = await showBitmap(png);
+          if (!isLatest()) return superseded;
+
           AppLogger.info(
             'PtaSubScreen.showSnapshot: widget→bitmap '
-            'mode=${snap.mode.name} ok=${shown.ok} code=${shown.code} '
-            'total=${snap.totalConIva} lastQty=${snap.lastProduct?.quantityLabel}',
+            'mode=${live.mode.name} ok=${shown.ok} code=${shown.code} '
+            'total=${live.totalConIva} lastQty=${live.lastProduct?.quantityLabel}',
           );
           return shown;
         });
+        // Solo el frame que sigue siendo el último libera el slot post-scan.
+        if (result.ok && result.error != 'superseded' && isLatest()) {
+          CameraLcdCoordinator.reportLcdPaintOk();
+        }
         done.complete(result);
       } catch (e, st) {
         AppLogger.error('PtaSubScreen.showSnapshot', e, st);
-        if (!done.isCompleted) {
-          try {
-            final fallback = await showColor(
-              _fallbackColor(snapshot),
-              label: _fallbackLabel(snapshot),
-            );
-            done.complete(fallback);
-          } catch (_) {
-            done.complete(PtaSubScreenResult(ok: false, code: -1, error: '$e'));
+        if (done.isCompleted) return;
+        if (!isLatest()) {
+          done.complete(superseded);
+          return;
+        }
+        try {
+          final live = _queuedSnapshot ?? snapshot;
+          final fallback = await showColor(
+            _fallbackColor(live),
+            label: _fallbackLabel(live),
+          );
+          if (fallback.ok && isLatest()) {
+            CameraLcdCoordinator.reportLcdPaintOk();
           }
+          done.complete(isLatest() ? fallback : superseded);
+        } catch (_) {
+          done.complete(PtaSubScreenResult(ok: false, code: -1, error: '$e'));
         }
       }
     });
