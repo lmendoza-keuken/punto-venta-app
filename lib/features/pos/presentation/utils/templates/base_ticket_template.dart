@@ -465,7 +465,7 @@ abstract class BaseTicketTemplate {
       if (printJob.templateType == TicketTemplateType.whiteMarket) {
         textLines.add("Orientacion al Consumidor ");
         textLines.add("Provincia de Buenos Aires ");
-        textLines.add("0800-222-9042 (Ley 13133) ");
+        textLines.add("148 (Ley 13987) ");
       }
 
       final qrImageBytes = await QrCodeImageBuilder.buildQrCodeImage(
