@@ -6,6 +6,8 @@ class FiscalIssuerData {
   final String? postalCode;
   final String? activityStartDate;
   final String? vatCondition;
+  final String? legend1;
+  final String? legend2;
 
   const FiscalIssuerData({
     this.fiscalName,
@@ -15,6 +17,8 @@ class FiscalIssuerData {
     this.postalCode,
     this.activityStartDate,
     this.vatCondition,
+    this.legend1,
+    this.legend2,
   });
 
   FiscalIssuerData copyWith({
@@ -25,6 +29,8 @@ class FiscalIssuerData {
     String? postalCode,
     String? activityStartDate,
     String? vatCondition,
+    String? legend1,
+    String? legend2,
   }) {
     return FiscalIssuerData(
       fiscalName: fiscalName ?? this.fiscalName,
@@ -34,6 +40,8 @@ class FiscalIssuerData {
       postalCode: postalCode ?? this.postalCode,
       activityStartDate: activityStartDate ?? this.activityStartDate,
       vatCondition: vatCondition ?? this.vatCondition,
+      legend1: legend1 ?? this.legend1,
+      legend2: legend2 ?? this.legend2,
     );
   }
 
@@ -42,7 +50,7 @@ class FiscalIssuerData {
     return 'FiscalIssuerData(fiscalName: $fiscalName, cuit: $cuit, '
         'iibbCuit: $iibbCuit, address: $address, '
         'postalCode: $postalCode, activityStartDate: $activityStartDate, '
-        'vatCondition: $vatCondition, )';
+        'vatCondition: $vatCondition, legend1: $legend1, legend2: $legend2)';
   }
 
   @override
@@ -56,7 +64,9 @@ class FiscalIssuerData {
         other.address == address &&
         other.postalCode == postalCode &&
         other.activityStartDate == activityStartDate &&
-        other.vatCondition == vatCondition;
+        other.vatCondition == vatCondition &&
+        other.legend1 == legend1 &&
+        other.legend2 == legend2;
   }
 
   @override
@@ -67,6 +77,8 @@ class FiscalIssuerData {
         address.hashCode ^
         postalCode.hashCode ^
         activityStartDate.hashCode ^
-        vatCondition.hashCode;
+        vatCondition.hashCode ^
+        legend1.hashCode ^
+        legend2.hashCode;
   }
 }
