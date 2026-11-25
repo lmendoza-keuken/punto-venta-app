@@ -95,9 +95,10 @@ abstract class BaseTicketTemplate {
           commands.add(TicketCommand.text("COPIA"));
           commands.add(TicketCommand.feedLine());
           commands.add(TicketCommand.text("NO VALIDA COMO FACTURA"));
-        } else {
-          commands.add(TicketCommand.text("DOCUMENTO VALIDO COMO FACTURA"));
-        }
+        } 
+        // else {
+        //   commands.add(TicketCommand.text("DOCUMENTO VALIDO COMO FACTURA"));
+        // }
       }
       commands.add(TicketCommand.bold(false));
       commands.add(TicketCommand.feedLine());
