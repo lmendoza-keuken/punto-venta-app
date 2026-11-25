@@ -1015,10 +1015,14 @@ class _TicketPreviewContentState extends State<_TicketPreviewContent> {
               if (widget.ticket.caeDueDate != null) ...[
                 Text('Vencimiento CAE: ${widget.ticket.caeDueDate}'),
               ],
-              const SizedBox(height: 8),
-              const Text("Orientacion al Consumidor"),
-              const Text("Provincia de Buenos Aires"),
-              const Text("0800-222-9042 (Ley 13133)"),
+              if (_printJob?.fiscalIssuerData?.legend1 != null &&
+                  _printJob!.fiscalIssuerData!.legend1!.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(_printJob!.fiscalIssuerData!.legend1!),
+              ],
+              if (_printJob?.fiscalIssuerData?.legend2 != null &&
+                  _printJob!.fiscalIssuerData!.legend2!.isNotEmpty)
+                Text(_printJob!.fiscalIssuerData!.legend2!),
             ],
 
             const SizedBox(height: 16),

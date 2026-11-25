@@ -489,9 +489,8 @@ abstract class BaseTicketTemplate {
       }
 
       if (printJob.templateType == TicketTemplateType.whiteMarket) {
-        textLines.add("Orientacion al Consumidor ");
-        textLines.add("Provincia de Buenos Aires ");
-        textLines.add("0800-222-9042 (Ley 13133) ");
+        _addLegendLines(textLines, printJob.fiscalIssuerData?.legend1);
+        _addLegendLines(textLines, printJob.fiscalIssuerData?.legend2);
       }
 
       final qrImageBytes = await QrCodeImageBuilder.buildQrCodeImage(
@@ -530,6 +529,33 @@ abstract class BaseTicketTemplate {
   }
 
   // === UTILIDADES ===
+
+  static void _addLegendLines(List<String> textLines, String? legend) {
+    if (legend == null || legend.trim().isEmpty) return;
+    for (final line in _wrapLegend(legend.trim(), 28)) {
+      textLines.add('$line ');
+    }
+  }
+
+  static List<String> _wrapLegend(String text, int maxWidth) {
+    if (text.length <= maxWidth) return [text];
+
+    final lines = <String>[];
+    var currentLine = '';
+    for (final word in text.split(RegExp(r'\s+'))) {
+      if (word.isEmpty) continue;
+      if (currentLine.isEmpty) {
+        currentLine = word;
+      } else if ((currentLine.length + 1 + word.length) <= maxWidth) {
+        currentLine = '$currentLine $word';
+      } else {
+        lines.add(currentLine);
+        currentLine = word;
+      }
+    }
+    if (currentLine.isNotEmpty) lines.add(currentLine);
+    return lines;
+  }
 
   String buildSeparator(String char) {
     return char * lineWidth;

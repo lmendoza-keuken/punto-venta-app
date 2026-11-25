@@ -16,6 +16,8 @@ abstract class FiscalIssuerDataModel with _$FiscalIssuerDataModel {
     @JsonKey(name: 'city') String? postalCode,
     @JsonKey(name: 'business_start_date') String? activityStartDate,
     @JsonKey(name: 'vat_category') String? vatCondition,
+    @JsonKey(name: 'legend_1') String? legend1,
+    @JsonKey(name: 'legend_2') String? legend2,
   }) = _FiscalIssuerDataModel;
 
   factory FiscalIssuerDataModel.fromJson(Map<String, dynamic> json) =>
@@ -31,6 +33,8 @@ abstract class FiscalIssuerDataModel with _$FiscalIssuerDataModel {
       postalCode: postalCode,
       activityStartDate: activityStartDate,
       vatCondition: vatCondition,
+      legend1: legend1,
+      legend2: legend2,
     );
   }
 }
